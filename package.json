@@ -10,7 +10,10 @@
     "chain": "yarn workspace @molecule-ipnft/chain chain",
     "compile": "yarn workspace @molecule-ipnft/chain compile",
     "test:chain": "yarn workspace @molecule-ipnft/chain test",
-    "deploy": "yarn workspace @molecule-ipnft/chain deploy"
+    "deploy:local": "yarn workspace @molecule-ipnft/chain deploy",
+    "deploy:rinkeby": "yarn workspace @molecule-ipnft/chain deploy --network rinkeby",
+    "deploy:goerli": "yarn workspace @molecule-ipnft/chain deploy --network goerli",
+    "deploy:mainnet": "yarn workspace @molecule-ipnft/chain deploy --network mainnet"
   },
   "devDependencies": {
     "ts-node": "^9.1.1"

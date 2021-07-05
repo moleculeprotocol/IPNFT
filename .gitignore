@@ -1,0 +1,26 @@
+# CHAIN
+
+chain/node_modules/
+chain/artifacts/
+chain/cache/
+chain/.yarn/
+chain/yarn.lock
+chain/yarn-error.log
+chain/.env
+chain/.DS_Store
+chain/package-lock.json
+
+# YARN
+
+.yarn/*
+!.yarn/cache
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+.pnp.*
+.yarn/cache/
+.yarn/releases/
+
+node_modules/
