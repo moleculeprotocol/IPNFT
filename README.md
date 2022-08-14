@@ -2,6 +2,10 @@
 
 Template for NFT contracts tokenizing IP.
 
+## Deployments
+
+- Goerli Testnet: https://goerli.etherscan.io/address/0x9ac15c603e20f4402edead5e761adc0a8f469648#code
+
 ## Installation
 
 To work with this repository you have to install Foundry (https://getfoundry.sh).
