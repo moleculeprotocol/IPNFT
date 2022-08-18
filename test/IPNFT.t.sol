@@ -9,6 +9,7 @@ contract IPNFTTest is Test {
     string tokenSymbol = "IPNFT";
     IPNFT public token;
     address bob = address(0x1);
+    address alice = address(0x2);
     string testURI = "https://ipfs.io/ipfs/QmYwAPJzv5CZsnA9LqYKXfutJzBg68";
     string testURI2 = "https://arweave.net/QmYwAPJzv5CZsnA9LqYKXfutJzBg68";
     uint256 tokenPrice = 1 ether;
@@ -24,7 +25,7 @@ contract IPNFTTest is Test {
 
     // Mint a token as contract owner
     function testOwnerMint() public {
-        token.safeMint(address(0xBEEF), testURI);
+        token.safeMint(address(0xBEEF), testURI, true);
 
         assertEq(token.balanceOf(address(0xBEEF)), 1);
         assertEq(token.ownerOf(0), address(0xBEEF));
@@ -33,7 +34,7 @@ contract IPNFTTest is Test {
     // Mint a token as non-owner
     function testPublicMint() public {
         vm.startPrank(bob);
-        token.safeMint(address(0xBEEF), testURI);
+        token.safeMint(address(0xBEEF), testURI, true);
         vm.stopPrank();
 
         assertEq(token.balanceOf(address(0xBEEF)), 1);
@@ -41,12 +42,12 @@ contract IPNFTTest is Test {
     }
 
     function testTokenURI() public {
-        token.safeMint(address(0xBEEF), testURI);
+        token.safeMint(address(0xBEEF), testURI, true);
         assertEq(token.tokenURI(0), testURI);
     }
 
     function testBurn() public {
-        token.safeMint(bob, testURI);
+        token.safeMint(bob, testURI, true);
         vm.startPrank(bob);
         token.burn(0);
         vm.stopPrank();
@@ -58,14 +59,14 @@ contract IPNFTTest is Test {
     }
 
     function testOwnerTokenURIUpdate() public {
-        token.safeMint(bob, testURI);
+        token.safeMint(bob, testURI, true);
         assertEq(token.tokenURI(0), testURI);
         token.updateTokenURI(0, testURI2);
         assertEq(token.tokenURI(0), testURI2);
     }
 
      function testPublicTokenURIUpdate() public {
-        token.safeMint(bob, testURI);
+        token.safeMint(bob, testURI, true);
 
         vm.startPrank(bob);
         vm.expectRevert("Ownable: caller is not the owner");
@@ -76,7 +77,7 @@ contract IPNFTTest is Test {
      function testUpdatedPrice() public {
         token.updatePrice(1 ether);
         vm.expectRevert("Ether amount sent is not correct");
-        token.safeMint(bob, testURI);
+        token.safeMint(bob, testURI, true);
     }
 
     function testChargeableMint() public {
@@ -84,10 +85,42 @@ contract IPNFTTest is Test {
 
         vm.deal(bob, tokenPrice);
         vm.startPrank(bob);
-        token.safeMint{value: tokenPrice}(bob, testURI);
+        token.safeMint{value: tokenPrice}(bob, testURI, true);
         vm.stopPrank();
 
         assertEq(token.balanceOf(bob), 1);
         assertEq(token.ownerOf(0), bob);
+    }
+
+    function testTempMintAndFinalize() public {
+        vm.startPrank(bob);
+        token.safeMint(bob, testURI, false);
+        token.finalizeMetadata(0, testURI2);
+        vm.stopPrank();
+
+        assertEq(token.tokenURI(0), testURI2);
+    }
+
+    function testAlreadyFinalized() public {
+        vm.startPrank(bob);
+        token.safeMint(bob, testURI, true);
+        vm.expectRevert('Metadata was already finalized');
+        token.finalizeMetadata(0, testURI2);
+        vm.stopPrank();
+
+        assertEq(token.tokenURI(0), testURI);
+    }
+
+     function testForeignFinalizeFail() public {
+        vm.startPrank(bob);
+        token.safeMint(bob, testURI, true);
+        vm.stopPrank();
+
+        vm.startPrank(alice);
+        vm.expectRevert('ERC721: caller is not token owner or approved');
+        token.finalizeMetadata(0, testURI2);
+        vm.stopPrank();
+
+        assertEq(token.tokenURI(0), testURI);
     }
 }
