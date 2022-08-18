@@ -22,6 +22,7 @@ contract IPNFT is
     Counters.Counter private _tokenIdCounter;
 
     uint256 private _price = 0 ether;
+    mapping(uint => bool) public metadataFinalized;
 
     event TokenURIUpdated(uint256 tokenId, string uri);
 
@@ -37,13 +38,15 @@ contract IPNFT is
         _unpause();
     }
 
-    function safeMint(address to, string memory uri) public payable returns (uint256) {
+    function safeMint(address to, string memory uri, bool metadataIsFinalized) public payable returns (uint256) {
         require(msg.value == _price, "Ether amount sent is not correct");
 
         uint256 tokenId = _tokenIdCounter.current();
         _tokenIdCounter.increment();
         _safeMint(to, tokenId);
         _setTokenURI(tokenId, uri);
+        metadataFinalized[tokenId] = metadataIsFinalized;
+
         return tokenId;
     }
 
@@ -57,6 +60,13 @@ contract IPNFT is
     {
         _setTokenURI(tokenId, _tokenURI);
         emit TokenURIUpdated(tokenId, _tokenURI);
+    }
+
+    function finalizeMetadata(uint256 tokenId, string memory _tokenURI) public {
+        require(_isApprovedOrOwner(_msgSender(), tokenId), "ERC721: caller is not token owner or approved");
+        require(!metadataFinalized[tokenId], "Metadata was already finalized");
+        _setTokenURI(tokenId, _tokenURI);
+        metadataFinalized[tokenId] = true;
     }
 
     // Withdraw ETH from contract
