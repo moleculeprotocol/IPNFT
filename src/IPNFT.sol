@@ -46,6 +46,7 @@ contract IPNFT is
         _safeMint(to, tokenId);
         _setTokenURI(tokenId, uri);
         metadataFinalized[tokenId] = metadataIsFinalized;
+        emit TokenURIUpdated(tokenId, uri)
 
         return tokenId;
     }
@@ -54,19 +55,12 @@ contract IPNFT is
         _price = amount;
     }
 
-    function updateTokenURI(uint256 tokenId, string memory _tokenURI)
-        public
-        onlyOwner
-    {
-        _setTokenURI(tokenId, _tokenURI);
-        emit TokenURIUpdated(tokenId, _tokenURI);
-    }
-
     function finalizeMetadata(uint256 tokenId, string memory _tokenURI) public {
         require(_isApprovedOrOwner(_msgSender(), tokenId), "ERC721: caller is not token owner or approved");
         require(!metadataFinalized[tokenId], "Metadata was already finalized");
         _setTokenURI(tokenId, _tokenURI);
         metadataFinalized[tokenId] = true;
+        emit TokenURIUpdated(tokenId, _tokenURI)
     }
 
     // Withdraw ETH from contract
