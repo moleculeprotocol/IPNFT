@@ -24,7 +24,8 @@ contract IPNFT is
     uint256 private _price = 0 ether;
     mapping(uint => bool) public metadataFinalized;
 
-    event TokenURIUpdated(uint256 tokenId, string uri);
+    event TokenURIUpdated(uint256 tokenId, string tokenUri);
+    event TokenMinted(uint256 tokenId, string tokenUri, address owner, bool metadataIsFinalized)
 
     constructor(string memory _name, string memory _symbol)
         ERC721(_name, _symbol)
