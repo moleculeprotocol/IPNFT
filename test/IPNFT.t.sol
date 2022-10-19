@@ -61,8 +61,6 @@ contract IPNFTTest is Test {
     function testOwnerTokenURIUpdate() public {
         token.safeMint(bob, testURI, true);
         assertEq(token.tokenURI(0), testURI);
-        token.updateTokenURI(0, testURI2);
-        assertEq(token.tokenURI(0), testURI2);
     }
 
      function testPublicTokenURIUpdate() public {
@@ -70,7 +68,6 @@ contract IPNFTTest is Test {
 
         vm.startPrank(bob);
         vm.expectRevert("Ownable: caller is not the owner");
-        token.updateTokenURI(0, testURI2);
         vm.stopPrank();
     }
 

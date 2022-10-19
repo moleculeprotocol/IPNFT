@@ -25,7 +25,7 @@ contract IPNFT is
     mapping(uint => bool) public metadataFinalized;
 
     event TokenURIUpdated(uint256 tokenId, string tokenUri);
-    event TokenMinted(uint256 tokenId, string tokenUri, address owner, bool metadataIsFinalized)
+    event TokenMinted(uint256 tokenId, string tokenUri, address owner, bool metadataIsFinalized);
 
     constructor(string memory _name, string memory _symbol)
         ERC721(_name, _symbol)
@@ -47,7 +47,7 @@ contract IPNFT is
         _safeMint(to, tokenId);
         _setTokenURI(tokenId, uri);
         metadataFinalized[tokenId] = metadataIsFinalized;
-        emit TokenURIUpdated(tokenId, uri)
+
 
         return tokenId;
     }
@@ -61,7 +61,7 @@ contract IPNFT is
         require(!metadataFinalized[tokenId], "Metadata was already finalized");
         _setTokenURI(tokenId, _tokenURI);
         metadataFinalized[tokenId] = true;
-        emit TokenURIUpdated(tokenId, _tokenURI)
+        emit TokenURIUpdated(tokenId, _tokenURI);
     }
 
     // Withdraw ETH from contract
