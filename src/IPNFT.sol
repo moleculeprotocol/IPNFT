@@ -39,7 +39,7 @@ contract IPNFT is
         _unpause();
     }
 
-    function safeMint(address to, string memory uri, bool metadataIsFinalized) public payable returns (uint256) {
+    function safeMint(address to, string calldata uri, bool metadataIsFinalized) public payable returns (uint256) {
         require(msg.value == _price, "Ether amount sent is not correct");
 
         uint256 tokenId = _tokenIdCounter.current();
@@ -47,7 +47,7 @@ contract IPNFT is
         _safeMint(to, tokenId);
         _setTokenURI(tokenId, uri);
         metadataFinalized[tokenId] = metadataIsFinalized;
-
+        emit TokenMinted(tokenId, uri, to, metadataIsFinalized);
 
         return tokenId;
     }
@@ -56,7 +56,7 @@ contract IPNFT is
         _price = amount;
     }
 
-    function finalizeMetadata(uint256 tokenId, string memory _tokenURI) public {
+    function finalizeMetadata(uint256 tokenId, string calldata _tokenURI) public {
         require(_isApprovedOrOwner(_msgSender(), tokenId), "ERC721: caller is not token owner or approved");
         require(!metadataFinalized[tokenId], "Metadata was already finalized");
         _setTokenURI(tokenId, _tokenURI);
