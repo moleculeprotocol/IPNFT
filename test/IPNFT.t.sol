@@ -58,22 +58,6 @@ contract IPNFTTest is Test {
         token.ownerOf(0);
     }
 
-    function testOwnerTokenURIUpdate() public {
-        token.safeMint(bob, testURI, true);
-        assertEq(token.tokenURI(0), testURI);
-        token.updateTokenURI(0, testURI2);
-        assertEq(token.tokenURI(0), testURI2);
-    }
-
-     function testPublicTokenURIUpdate() public {
-        token.safeMint(bob, testURI, true);
-
-        vm.startPrank(bob);
-        vm.expectRevert("Ownable: caller is not the owner");
-        token.updateTokenURI(0, testURI2);
-        vm.stopPrank();
-    }
-
      function testUpdatedPrice() public {
         token.updatePrice(1 ether);
         vm.expectRevert("Ether amount sent is not correct");

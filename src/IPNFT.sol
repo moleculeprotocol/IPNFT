@@ -24,7 +24,8 @@ contract IPNFT is
     uint256 private _price = 0 ether;
     mapping(uint => bool) public metadataFinalized;
 
-    event TokenURIUpdated(uint256 tokenId, string uri);
+    event TokenURIUpdated(uint256 tokenId, string tokenUri);
+    event TokenMinted(uint256 tokenId, string tokenUri, address owner, bool metadataIsFinalized);
 
     constructor(string memory _name, string memory _symbol)
         ERC721(_name, _symbol)
@@ -38,7 +39,7 @@ contract IPNFT is
         _unpause();
     }
 
-    function safeMint(address to, string memory uri, bool metadataIsFinalized) public payable returns (uint256) {
+    function safeMint(address to, string calldata uri, bool metadataIsFinalized) public payable returns (uint256) {
         require(msg.value == _price, "Ether amount sent is not correct");
 
         uint256 tokenId = _tokenIdCounter.current();
@@ -46,6 +47,7 @@ contract IPNFT is
         _safeMint(to, tokenId);
         _setTokenURI(tokenId, uri);
         metadataFinalized[tokenId] = metadataIsFinalized;
+        emit TokenMinted(tokenId, uri, to, metadataIsFinalized);
 
         return tokenId;
     }
@@ -54,19 +56,12 @@ contract IPNFT is
         _price = amount;
     }
 
-    function updateTokenURI(uint256 tokenId, string memory _tokenURI)
-        public
-        onlyOwner
-    {
-        _setTokenURI(tokenId, _tokenURI);
-        emit TokenURIUpdated(tokenId, _tokenURI);
-    }
-
-    function finalizeMetadata(uint256 tokenId, string memory _tokenURI) public {
+    function finalizeMetadata(uint256 tokenId, string calldata _tokenURI) public {
         require(_isApprovedOrOwner(_msgSender(), tokenId), "ERC721: caller is not token owner or approved");
         require(!metadataFinalized[tokenId], "Metadata was already finalized");
         _setTokenURI(tokenId, _tokenURI);
         metadataFinalized[tokenId] = true;
+        emit TokenURIUpdated(tokenId, _tokenURI);
     }
 
     // Withdraw ETH from contract
