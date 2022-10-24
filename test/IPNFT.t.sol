@@ -5,6 +5,20 @@ import "forge-std/Test.sol";
 import "../src/IPNFT.sol";
 
 contract IPNFTTest is Test {
+    event Reserved(
+        string tokenURI,
+        address indexed reserver,
+        uint256 indexed reservationId
+    );
+
+    event TokenMinted(
+        string tokenURI,
+        address indexed owner,
+        uint256 indexed tokenId
+    );
+
+    event PermanentURI(string _value, uint256 indexed _id);
+
     string tokenName = "Molecule IP-NFT";
     string tokenSymbol = "IPNFT";
     IPNFT public token;
@@ -26,7 +40,11 @@ contract IPNFTTest is Test {
     // Reserve a token as contract owner
     function testOwnerReservation() public {
         vm.startPrank(bob);
+        vm.expectEmit(true, true, true, true);
+        // We emit the event we expect to see.
+        emit Reserved(testURI, bob, 0);
         token.reserve(testURI);
+
         (address reserver, ) = token.reservations(0);
         assertEq(reserver, bob);
         vm.expectRevert(bytes("ERC721: invalid token ID"));
@@ -41,6 +59,13 @@ contract IPNFTTest is Test {
         vm.startPrank(bob);
 
         token.reserve(testURI);
+
+        vm.expectEmit(true, false, false, true);
+        emit PermanentURI(testURI, 0);
+
+        vm.expectEmit(true, true, false, true);
+        emit TokenMinted(testURI, address(0xDEADBEEF), 0);
+
         token.mintReservation(address(0xDEADBEEF), 0);
         assertEq(token.ownerOf(0), address(0xDEADBEEF));
         assertEq(token.balanceOf(address(0xDEADBEEF)), 1);

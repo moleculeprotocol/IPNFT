@@ -33,9 +33,17 @@ contract IPNFT is
     mapping(uint256 => Reservation) public reservations;
 
     /// @dev also emitted for reservation updates
-    event Reserved(Reservation reservation, uint256 indexed reservationId);
+    event Reserved(
+        string tokenURI,
+        address indexed reserver,
+        uint256 indexed reservationId
+    );
 
-    event TokenMinted(string tokenURI, address owner, uint256 indexed tokenId);
+    event TokenMinted(
+        string tokenURI,
+        address indexed owner,
+        uint256 indexed tokenId
+    );
 
     /// @dev https://docs.opensea.io/docs/metadata-standards#freezing-metadata
     event PermanentURI(string _value, uint256 indexed _id);
@@ -98,7 +106,7 @@ contract IPNFT is
             reserver: _msgSender(),
             tokenURI: _tokenURI
         });
-        emit Reserved(reservations[reservationId], reservationId);
+        emit Reserved(_tokenURI, _msgSender(), reservationId);
         return reservationId;
     }
 
@@ -113,7 +121,7 @@ contract IPNFT is
         //require(frozen[tokenId] == false, "Metadata is frozen");
         //_setTokenURI(tokenId, _tokenURI);
         reservations[reservationId].tokenURI = _tokenURI;
-        emit Reserved(reservations[reservationId], reservationId);
+        emit Reserved(_tokenURI, _msgSender(), reservationId);
     }
 
     // Withdraw ETH from contract
