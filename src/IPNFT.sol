@@ -22,10 +22,11 @@ contract IPNFT is
     Counters.Counter private _tokenIdCounter;
 
     uint256 private _price = 0 ether;
-    mapping(uint => bool) public metadataFinalized;
+    mapping(uint => bool) public frozen;
 
     event TokenURIUpdated(uint256 tokenId, string tokenUri);
-    event TokenMinted(uint256 tokenId, string tokenUri, address owner, bool metadataIsFinalized);
+    event TokenMinted(uint256 tokenId, string tokenUri, address owner, bool frozen);
+    event PermanentURI(string _value, uint256 indexed _id);
 
     constructor(string memory _name, string memory _symbol)
         ERC721(_name, _symbol)
@@ -39,15 +40,15 @@ contract IPNFT is
         _unpause();
     }
 
-    function safeMint(address to, string calldata uri, bool metadataIsFinalized) public payable returns (uint256) {
+    function safeMint(address to, string calldata uri, bool initiallyFrozen) public payable returns (uint256) {
         require(msg.value == _price, "Ether amount sent is not correct");
 
         uint256 tokenId = _tokenIdCounter.current();
         _tokenIdCounter.increment();
         _safeMint(to, tokenId);
         _setTokenURI(tokenId, uri);
-        metadataFinalized[tokenId] = metadataIsFinalized;
-        emit TokenMinted(tokenId, uri, to, metadataIsFinalized);
+        frozen[tokenId] = initiallyFrozen;
+        emit TokenMinted(tokenId, uri, to, initiallyFrozen);
 
         return tokenId;
     }
@@ -56,12 +57,22 @@ contract IPNFT is
         _price = amount;
     }
 
-    function finalizeMetadata(uint256 tokenId, string calldata _tokenURI) public {
+    function updateTokenURI(uint256 tokenId, string calldata _tokenURI) external {
         require(_isApprovedOrOwner(_msgSender(), tokenId), "ERC721: caller is not token owner or approved");
-        require(!metadataFinalized[tokenId], "Metadata was already finalized");
-        _setTokenURI(tokenId, _tokenURI);
-        metadataFinalized[tokenId] = true;
+        require(frozen[tokenId] == false, "is leider final!");
+
+        if (_tokenURI.length == 0) {
+            revert("muddu string geben");
+        }
+        
+        _setTokenURI(_tokenURI);
         emit TokenURIUpdated(tokenId, _tokenURI);
+    }
+
+    function freeze(uint256 tokenId) {
+        require(_isApprovedOrOwner(_msgSender(), tokenId), "ERC721: caller is not token owner or approved");
+        frozen[tokenId] = true;
+        emit PermanentURI(this.tokenURI(tokenId), tokenId);
     }
 
     // Withdraw ETH from contract
