@@ -23,32 +23,45 @@ contract IPNFTTest is Test {
         assertEq(token.symbol(), tokenSymbol);
     }
 
-    // Mint a token as contract owner
-    function testOwnerMint() public {
-        token.safeMint(address(0xBEEF), testURI, true);
+    // Reserve a token as contract owner
+    function testOwnerReservation() public {
+        vm.startPrank(bob);
+        token.reserve(testURI);
+        (address reserver, ) = token.reservations(0);
+        assertEq(reserver, bob);
+        vm.expectRevert(bytes("ERC721: invalid token ID"));
+        assertEq(token.ownerOf(0), address(0x0));
 
-        assertEq(token.balanceOf(address(0xBEEF)), 1);
-        assertEq(token.ownerOf(0), address(0xBEEF));
+        //token.safeMint(address(0xBEEF), testURI, true);
+        assertEq(token.balanceOf(bob), 0);
     }
 
     // Mint a token as non-owner
-    function testPublicMint() public {
+    function testMintFromReservation() public {
         vm.startPrank(bob);
-        token.safeMint(address(0xBEEF), testURI, true);
-        vm.stopPrank();
 
-        assertEq(token.balanceOf(address(0xBEEF)), 1);
-        assertEq(token.ownerOf(0), address(0xBEEF));
+        token.reserve(testURI);
+        token.mintReservation(address(0xDEADBEEF), 0);
+        assertEq(token.ownerOf(0), address(0xDEADBEEF));
+        assertEq(token.balanceOf(address(0xDEADBEEF)), 1);
+
+        (address reserver, ) = token.reservations(0);
+        assertEq(reserver, address(0x0));
+
+        vm.stopPrank();
     }
 
     function testTokenURI() public {
-        token.safeMint(address(0xBEEF), testURI, true);
+        vm.startPrank(bob);
+        token.reserve(testURI);
+        token.mintReservation(bob, 0);
         assertEq(token.tokenURI(0), testURI);
     }
 
     function testBurn() public {
-        token.safeMint(bob, testURI, true);
         vm.startPrank(bob);
+        token.reserve(testURI);
+        token.mintReservation(bob, 0);
         token.burn(0);
         vm.stopPrank();
 
@@ -58,58 +71,48 @@ contract IPNFTTest is Test {
         token.ownerOf(0);
     }
 
-     function testUpdatedPrice() public {
+    function testUpdatedPrice() public {
         token.updatePrice(1 ether);
-        vm.expectRevert("Ether amount sent is not correct");
-        token.safeMint(bob, testURI, true);
+
+        vm.startPrank(bob);
+        token.reserve(testURI);
+        vm.expectRevert(bytes("Ether amount sent is not correct"));
+        token.mintReservation(bob, 0);
     }
 
     function testChargeableMint() public {
         token.updatePrice(tokenPrice);
-
         vm.deal(bob, tokenPrice);
         vm.startPrank(bob);
-        token.safeMint{value: tokenPrice}(bob, testURI, true);
+        token.reserve(testURI);
+        token.mintReservation{value: tokenPrice}(bob, 0);
         vm.stopPrank();
 
         assertEq(token.balanceOf(bob), 1);
         assertEq(token.ownerOf(0), bob);
     }
 
-    function testTempMintAndFinalize() public {
+    function testCantUpdateTokenURIOnMintedTokens() public {
         vm.startPrank(bob);
+        token.reserve(testURI);
+        token.mintReservation(bob, 0);
 
-        token.safeMint(bob, testURI, false);
-        token.updateTokenURI(0,testURI2);
-        token.freeze(0);
-
-        vm.expectRevert('Metadata is frozen');
-        token.updateTokenURI(0,"foo");
-
-        vm.stopPrank();
-
-        assertEq(token.tokenURI(0), testURI2);
-    }
-
-    function testAlreadyFinalized() public {
-        vm.startPrank(bob);
-        token.safeMint(bob, testURI, true);
-        vm.expectRevert('Metadata is frozen');
-        token.updateTokenURI(0,testURI2);
-        
+        vm.expectRevert("Reservation not valid or not owned by you");
+        token.updateTokenURI(0, testURI2);
         vm.stopPrank();
 
         assertEq(token.tokenURI(0), testURI);
     }
 
-     function testOnlyOwnerCanFreezeMetadata() public {
+    function testOnlyOwnerCanFreezeMetadata() public {
         vm.startPrank(bob);
-        token.safeMint(bob, testURI, false);
+        token.reserve(testURI);
+        token.mintReservation(bob, 0);
         vm.stopPrank();
 
         vm.startPrank(alice);
-        vm.expectRevert('ERC721: caller is not token owner or approved');
-        token.freeze(0);
+        vm.expectRevert("IP NFT: caller is not reserver");
+        token.mintReservation(address(0xDEADCAFE), 0);
         vm.stopPrank();
 
         assertEq(token.tokenURI(0), testURI);
