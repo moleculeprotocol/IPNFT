@@ -78,8 +78,14 @@ contract IPNFTTest is Test {
 
     function testTempMintAndFinalize() public {
         vm.startPrank(bob);
+
         token.safeMint(bob, testURI, false);
-        token.finalizeMetadata(0, testURI2);
+        token.updateTokenURI(0,testURI2);
+        token.freeze(0);
+
+        vm.expectRevert('Metadata is frozen');
+        token.updateTokenURI(0,"foo");
+
         vm.stopPrank();
 
         assertEq(token.tokenURI(0), testURI2);
@@ -88,8 +94,9 @@ contract IPNFTTest is Test {
     function testAlreadyFinalized() public {
         vm.startPrank(bob);
         token.safeMint(bob, testURI, true);
-        vm.expectRevert('Metadata was already finalized');
-        token.finalizeMetadata(0, testURI2);
+        vm.expectRevert('Metadata is frozen');
+        token.updateTokenURI(0,testURI2);
+        
         vm.stopPrank();
 
         assertEq(token.tokenURI(0), testURI);

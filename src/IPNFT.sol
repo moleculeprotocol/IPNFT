@@ -59,9 +59,9 @@ contract IPNFT is
 
     function updateTokenURI(uint256 tokenId, string calldata _tokenURI) external {
         require(_isApprovedOrOwner(_msgSender(), tokenId), "ERC721: caller is not token owner or approved");
-        require(frozen[tokenId] == false, "metadata already frozen");
+        require(frozen[tokenId] == false, "Metadata is frozen");
         
-        _setTokenURI(_tokenURI);
+        _setTokenURI(tokenId, _tokenURI);
         emit TokenURIUpdated(tokenId, _tokenURI);
     }
 
