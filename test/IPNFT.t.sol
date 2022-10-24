@@ -98,7 +98,7 @@ contract IPNFTTest is Test {
         token.mintReservation(bob, 0);
 
         vm.expectRevert("Reservation not valid or not owned by you");
-        token.updateTokenURI(0, testURI2);
+        token.updateReservation(0, testURI2);
         vm.stopPrank();
 
         assertEq(token.tokenURI(0), testURI);

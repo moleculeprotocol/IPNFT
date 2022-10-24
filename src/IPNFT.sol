@@ -32,8 +32,12 @@ contract IPNFT is
     mapping(uint256 => address) private _reserved;
     mapping(uint256 => Reservation) public reservations;
 
-    event TokenURIUpdated(uint256 tokenId, string tokenURI);
-    event TokenMinted(uint256 tokenId, string tokenURI, address owner);
+    /// @dev also emitted for reservation updates
+    event Reserved(Reservation reservation, uint256 indexed reservationId);
+
+    event TokenMinted(string tokenURI, address owner, uint256 indexed tokenId);
+
+    /// @dev https://docs.opensea.io/docs/metadata-standards#freezing-metadata
     event PermanentURI(string _value, uint256 indexed _id);
 
     constructor(string memory _name, string memory _symbol)
@@ -77,9 +81,9 @@ contract IPNFT is
 
         emit PermanentURI(reservations[reservationId].tokenURI, reservationId);
         emit TokenMinted(
-            reservationId,
             reservations[reservationId].tokenURI,
-            to
+            to,
+            reservationId
         );
 
         delete reservations[reservationId];
@@ -88,17 +92,17 @@ contract IPNFT is
     }
 
     function reserve(string memory _tokenURI) public returns (uint256) {
-        uint256 tokenId = _reservationCounter.current();
+        uint256 reservationId = _reservationCounter.current();
         _reservationCounter.increment();
-        reservations[tokenId] = Reservation({
+        reservations[reservationId] = Reservation({
             reserver: _msgSender(),
             tokenURI: _tokenURI
         });
-
-        return tokenId;
+        emit Reserved(reservations[reservationId], reservationId);
+        return reservationId;
     }
 
-    function updateTokenURI(uint256 reservationId, string calldata _tokenURI)
+    function updateReservation(uint256 reservationId, string calldata _tokenURI)
         external
     {
         require(
@@ -109,7 +113,7 @@ contract IPNFT is
         //require(frozen[tokenId] == false, "Metadata is frozen");
         //_setTokenURI(tokenId, _tokenURI);
         reservations[reservationId].tokenURI = _tokenURI;
-        emit TokenURIUpdated(reservationId, _tokenURI);
+        emit Reserved(reservations[reservationId], reservationId);
     }
 
     // Withdraw ETH from contract
