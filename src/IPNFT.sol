@@ -57,7 +57,7 @@ contract IPNFT is
         _price = amount;
     }
 
-    function updateTokenURI(uint256 tokenId, string calldata _tokenURI) external {
+    function updateTokenURI(uint256 tokenId, string memory _tokenURI) external {
         require(_isApprovedOrOwner(_msgSender(), tokenId), "ERC721: caller is not token owner or approved");
         require(frozen[tokenId] == false, "is leider final!");
 
@@ -69,7 +69,7 @@ contract IPNFT is
         emit TokenURIUpdated(tokenId, _tokenURI);
     }
 
-    function freeze(uint256 tokenId) {
+    function freeze(uint256 tokenId) external {
         require(_isApprovedOrOwner(_msgSender(), tokenId), "ERC721: caller is not token owner or approved");
         frozen[tokenId] = true;
         emit PermanentURI(this.tokenURI(tokenId), tokenId);
