@@ -102,14 +102,14 @@ contract IPNFTTest is Test {
         assertEq(token.tokenURI(0), testURI);
     }
 
-     function testForeignFinalizeFail() public {
+     function testOnlyOwnerCanFreezeMetadata() public {
         vm.startPrank(bob);
-        token.safeMint(bob, testURI, true);
+        token.safeMint(bob, testURI, false);
         vm.stopPrank();
 
         vm.startPrank(alice);
         vm.expectRevert('ERC721: caller is not token owner or approved');
-        token.finalizeMetadata(0, testURI2);
+        token.freeze(0);
         vm.stopPrank();
 
         assertEq(token.tokenURI(0), testURI);
