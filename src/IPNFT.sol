@@ -29,7 +29,6 @@ contract IPNFT is
     uint256 private _price = 0 ether;
     mapping(uint256 => bool) public frozen;
 
-    mapping(uint256 => address) private _reserved;
     mapping(uint256 => Reservation) public reservations;
 
     /// @dev also emitted for reservation updates
