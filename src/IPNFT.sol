@@ -27,7 +27,6 @@ contract IPNFT is
     }
 
     uint256 private _price = 0 ether;
-    mapping(uint256 => bool) public frozen;
 
     mapping(uint256 => Reservation) public reservations;
 
@@ -61,15 +60,6 @@ contract IPNFT is
 
     function updatePrice(uint256 amount) public onlyOwner {
         _price = amount;
-    }
-
-    function freeze(uint256 tokenId) external {
-        require(
-            _isApprovedOrOwner(_msgSender(), tokenId),
-            "ERC721: caller is not token owner or approved"
-        );
-        frozen[tokenId] = true;
-        emit PermanentURI(this.tokenURI(tokenId), tokenId);
     }
 
     function mintReservation(address to, uint256 reservationId)
@@ -117,8 +107,6 @@ contract IPNFT is
             "Reservation not valid or not owned by you"
         );
 
-        //require(frozen[tokenId] == false, "Metadata is frozen");
-        //_setTokenURI(tokenId, _tokenURI);
         reservations[reservationId].tokenURI = _tokenURI;
         emit Reserved(_tokenURI, _msgSender(), reservationId);
     }
