@@ -30,13 +30,15 @@ contract IPNFT is
 
     mapping(uint256 => Reservation) public reservations;
 
-    /// @dev also emitted for reservation updates
     event Reserved(
+        address indexed reserver,
+        uint256 indexed reservationId
+    );
+    event ReservationURIUpdated(
         string tokenURI,
         address indexed reserver,
         uint256 indexed reservationId
     );
-
     event TokenMinted(
         string tokenURI,
         address indexed owner,
@@ -88,18 +90,18 @@ contract IPNFT is
         return reservationId;
     }
 
-    function reserve(string memory _tokenURI) public returns (uint256) {
+    function reserve() public returns (uint256) {
         uint256 reservationId = _reservationCounter.current();
         _reservationCounter.increment();
         reservations[reservationId] = Reservation({
             reserver: _msgSender(),
-            tokenURI: _tokenURI
+            tokenURI: ""
         });
-        emit Reserved(_tokenURI, _msgSender(), reservationId);
+        emit Reserved(_msgSender(), reservationId);
         return reservationId;
     }
 
-    function updateReservation(uint256 reservationId, string calldata _tokenURI)
+    function updateReservationURI(uint256 reservationId, string calldata _tokenURI)
         external
     {
         require(
@@ -108,7 +110,7 @@ contract IPNFT is
         );
 
         reservations[reservationId].tokenURI = _tokenURI;
-        emit Reserved(_tokenURI, _msgSender(), reservationId);
+        emit ReservationURIUpdated(_tokenURI, _msgSender(), reservationId);
     }
 
     // Withdraw ETH from contract

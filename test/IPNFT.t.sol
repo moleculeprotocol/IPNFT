@@ -6,7 +6,6 @@ import "../src/IPNFT.sol";
 
 contract IPNFTTest is Test {
     event Reserved(
-        string tokenURI,
         address indexed reserver,
         uint256 indexed reservationId
     );
@@ -42,8 +41,9 @@ contract IPNFTTest is Test {
         vm.startPrank(bob);
         vm.expectEmit(true, true, true, true);
         // We emit the event we expect to see.
-        emit Reserved(testURI, bob, 0);
-        token.reserve(testURI);
+        emit Reserved(bob, 0);
+        uint256 reservationId = token.reserve();
+        token.updateReservationURI(reservationId, testURI);
 
         (address reserver, ) = token.reservations(0);
         assertEq(reserver, bob);
@@ -58,8 +58,8 @@ contract IPNFTTest is Test {
     function testMintFromReservation() public {
         vm.startPrank(bob);
 
-        token.reserve(testURI);
-
+        uint256 reservationId = token.reserve();
+        token.updateReservationURI(reservationId, testURI);
         vm.expectEmit(true, false, false, true);
         emit PermanentURI(testURI, 0);
 
@@ -78,14 +78,16 @@ contract IPNFTTest is Test {
 
     function testTokenURI() public {
         vm.startPrank(bob);
-        token.reserve(testURI);
+        uint256 reservationId = token.reserve();
+        token.updateReservationURI(reservationId, testURI);
         token.mintReservation(bob, 0);
         assertEq(token.tokenURI(0), testURI);
     }
 
     function testBurn() public {
         vm.startPrank(bob);
-        token.reserve(testURI);
+        uint256 reservationId = token.reserve();
+        token.updateReservationURI(reservationId, testURI);
         token.mintReservation(bob, 0);
         token.burn(0);
         vm.stopPrank();
@@ -100,7 +102,8 @@ contract IPNFTTest is Test {
         token.updatePrice(1 ether);
 
         vm.startPrank(bob);
-        token.reserve(testURI);
+        uint256 reservationId = token.reserve();
+        token.updateReservationURI(reservationId, testURI);
         vm.expectRevert(bytes("Ether amount sent is not correct"));
         token.mintReservation(bob, 0);
     }
@@ -109,7 +112,8 @@ contract IPNFTTest is Test {
         token.updatePrice(tokenPrice);
         vm.deal(bob, tokenPrice);
         vm.startPrank(bob);
-        token.reserve(testURI);
+        uint256 reservationId = token.reserve();
+        token.updateReservationURI(reservationId, testURI);
         token.mintReservation{value: tokenPrice}(bob, 0);
         vm.stopPrank();
 
@@ -119,11 +123,12 @@ contract IPNFTTest is Test {
 
     function testCantUpdateTokenURIOnMintedTokens() public {
         vm.startPrank(bob);
-        token.reserve(testURI);
+        uint256 reservationId = token.reserve();
+        token.updateReservationURI(reservationId, testURI);
         token.mintReservation(bob, 0);
 
         vm.expectRevert("Reservation not valid or not owned by you");
-        token.updateReservation(0, testURI2);
+        token.updateReservationURI(0, testURI2);
         vm.stopPrank();
 
         assertEq(token.tokenURI(0), testURI);
@@ -131,7 +136,8 @@ contract IPNFTTest is Test {
 
     function testOnlyOwnerCanFreezeMetadata() public {
         vm.startPrank(bob);
-        token.reserve(testURI);
+        uint256 reservationId = token.reserve();
+        token.updateReservationURI(reservationId, testURI);
         token.mintReservation(bob, 0);
         vm.stopPrank();
 
