@@ -1,3 +1,16 @@
+# Grabbing the current Contract builds
+
+Run `forge build` in the directory of the contracts
+Cd into the subgraph directory:
+
+If you have `jq` installed on your system (For Mac users `brew install jq`)
+Run `yarn create-ipnft-abi` and `yarn create-simpleOpenSea-abi`
+
+If not then:
+Run `node`
+Run `fs.writeFileSync('abis/IPNFT.json', JSON.stringify(JSON.parse(fs.readFileSync('../out/IPNFT.sol/IPNFT.json')),null,2));` to copy abi of IPNFT contract
+Run `fs.writeFileSync('abis/SimpleOpenSea.json', JSON.stringify(JSON.parse(fs.readFileSync('../out/SimpleOpenSea.sol/SimpleOpenSea.json')),null,2));` to copy abi of SimpleOpenSea Contract
+
 # How to run subgraph and contracts locally
 
 1. Startup local anvil node

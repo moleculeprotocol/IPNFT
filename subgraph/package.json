@@ -1,16 +1,19 @@
 {
-  "name": "IP-NFT-GOERLI",
+  "name": "IP-NFT",
   "license": "UNLICENSED",
   "scripts": {
     "codegen": "graph codegen",
     "build": "graph build",
-    "prepare:local": "mustache config/local.json subgraph.template.yaml > subgraph.yaml",
+    "create-ipnft-abi": "cat ../out/IPNFT.sol/IPNFT.json | jq .abi > ./abis/IPNFT.json",
+    "create-simpleOpenSea-abi": "cat ../out/SimpleOpenSea.sol/SimpleOpenSea.json | jq .abi > ./abis/SimpleOpenSea.json",
+    "create-simpleopensea-abi": "cat ../out/simpleopensea.sol/simpleopensea.json | yarn jqn .abi > ./abis/simpleopensea.json",
+    "prepare:local": "mustache config/local.js subgraph.template.yaml > subgraph.yaml",
     "prepare:goerli": "mustache config/goerli.json subgraph.template.yaml > subgraph.yaml",
     "prepare:mainnet": "mustache config/mainnet.json subgraph.template.yaml > subgraph.yaml",
-    "deploy": "graph deploy --node https://api.thegraph.com/deploy/ dorianwilhelm/IP-NFT-GOERLI",
-    "create-local": "graph create --node http://localhost:8020/ dorianwilhelm/IP-NFT-GOERLI",
-    "remove-local": "graph remove --node http://localhost:8020/ dorianwilhelm/IP-NFT-GOERLI",
-    "deploy-local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 dorianwilhelm/IP-NFT-GOERLI",
+    "deploy": "graph deploy --node https://api.thegraph.com/deploy/ moleculeprotocol/IP-NFT",
+    "create-local": "graph create --node http://localhost:8020/ moleculeprotocol/IP-NFT",
+    "remove-local": "graph remove --node http://localhost:8020/ moleculeprotocol/IP-NFT",
+    "deploy-local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 moleculeprotocol/IP-NFT",
     "test": "graph test"
   },
   "dependencies": {
