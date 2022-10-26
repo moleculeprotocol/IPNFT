@@ -4,4 +4,10 @@ out = 'out'
 libs = ['lib']
 solc_version = "0.8.17"
 
+[fmt]
+bracket_spacing = true
+line_length = 80
+tab_width = 4
+quote_style = 'double'
+
 # See more config options https://github.com/foundry-rs/foundry/tree/master/config
