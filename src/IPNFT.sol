@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.13;
+pragma solidity ^0.8.17;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
@@ -19,13 +19,33 @@ contract IPNFT is
 {
     using Counters for Counters.Counter;
 
-    Counters.Counter private _tokenIdCounter;
+    Counters.Counter private _reservationCounter;
+
+    struct Reservation {
+        address reserver;
+        string tokenURI;
+    }
 
     uint256 private _price = 0 ether;
-    mapping(uint => bool) public frozen;
 
-    event TokenURIUpdated(uint256 tokenId, string tokenUri);
-    event TokenMinted(uint256 tokenId, string tokenUri, address owner, bool frozen);
+    mapping(uint256 => Reservation) public reservations;
+
+    event Reserved(
+        address indexed reserver,
+        uint256 indexed reservationId
+    );
+    event ReservationURIUpdated(
+        string tokenURI,
+        address indexed reserver,
+        uint256 indexed reservationId
+    );
+    event TokenMinted(
+        string tokenURI,
+        address indexed owner,
+        uint256 indexed tokenId
+    );
+
+    /// @dev https://docs.opensea.io/docs/metadata-standards#freezing-metadata
     event PermanentURI(string _value, uint256 indexed _id);
 
     constructor(string memory _name, string memory _symbol)
@@ -40,35 +60,57 @@ contract IPNFT is
         _unpause();
     }
 
-    function safeMint(address to, string calldata uri, bool initiallyFrozen) public payable returns (uint256) {
-        require(msg.value == _price, "Ether amount sent is not correct");
-
-        uint256 tokenId = _tokenIdCounter.current();
-        _tokenIdCounter.increment();
-        _safeMint(to, tokenId);
-        _setTokenURI(tokenId, uri);
-        frozen[tokenId] = initiallyFrozen;
-        emit TokenMinted(tokenId, uri, to, initiallyFrozen);
-
-        return tokenId;
-    }
-
     function updatePrice(uint256 amount) public onlyOwner {
         _price = amount;
     }
 
-    function updateTokenURI(uint256 tokenId, string calldata _tokenURI) external {
-        require(_isApprovedOrOwner(_msgSender(), tokenId), "ERC721: caller is not token owner or approved");
-        require(frozen[tokenId] == false, "Metadata is frozen");
-        
-        _setTokenURI(tokenId, _tokenURI);
-        emit TokenURIUpdated(tokenId, _tokenURI);
+    function mintReservation(address to, uint256 reservationId)
+        public
+        payable
+        returns (uint256 tokenId)
+    {
+        require(msg.value == _price, "Ether amount sent is not correct");
+        require(
+            reservations[reservationId].reserver == _msgSender(),
+            "IP NFT: caller is not reserver"
+        );
+
+        _safeMint(to, reservationId);
+        _setTokenURI(reservationId, reservations[reservationId].tokenURI);
+
+        emit PermanentURI(reservations[reservationId].tokenURI, reservationId);
+        emit TokenMinted(
+            reservations[reservationId].tokenURI,
+            to,
+            reservationId
+        );
+
+        delete reservations[reservationId];
+
+        return reservationId;
     }
 
-    function freeze(uint256 tokenId) external {
-        require(_isApprovedOrOwner(_msgSender(), tokenId), "ERC721: caller is not token owner or approved");
-        frozen[tokenId] = true;
-        emit PermanentURI(this.tokenURI(tokenId), tokenId);
+    function reserve() public returns (uint256) {
+        uint256 reservationId = _reservationCounter.current();
+        _reservationCounter.increment();
+        reservations[reservationId] = Reservation({
+            reserver: _msgSender(),
+            tokenURI: ""
+        });
+        emit Reserved(_msgSender(), reservationId);
+        return reservationId;
+    }
+
+    function updateReservationURI(uint256 reservationId, string calldata _tokenURI)
+        external
+    {
+        require(
+            reservations[reservationId].reserver == _msgSender(),
+            "Reservation not valid or not owned by you"
+        );
+
+        reservations[reservationId].tokenURI = _tokenURI;
+        emit ReservationURIUpdated(_tokenURI, _msgSender(), reservationId);
     }
 
     // Withdraw ETH from contract
