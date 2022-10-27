@@ -143,7 +143,7 @@ contract IPNFT_ERC1155Test is Test {
         token.updateReservationURI(reservationId, testURI);
         token.mintReservation(bob, 0, 1);
 
-        vm.expectRevert("Reservation not valid or not owned by you");
+        vm.expectRevert("IP-NFT: Reservation not valid or not owned by you");
         token.updateReservationURI(0, testURI2);
 
         assertEq(token.uri(0), testURI);

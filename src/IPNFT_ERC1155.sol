@@ -60,6 +60,32 @@ contract IPNFT_ERC1155 is
         price = amount;
     }
 
+    // This is how a simple mint could look like for IP-NFTs that don't need encrypted legal contracts.
+    // The Question is how useful this is, after all the legal contract might still require
+    // a hard reference to the IP-NFT tokenId. For this function you wouldn't get that
+    // tokenId until after the mint of course.
+    function simpleMint(
+        address to,
+        uint256 sharesAmount,
+        string memory tokenURI
+    ) public payable returns (uint256 tokenId) {
+        require(msg.value == price, "Ether amount sent is not correct");
+
+        uint256 newTokenId = _reservationCounter.current();
+        _reservationCounter.increment();
+
+        _mint(to, newTokenId, sharesAmount, "");
+        _setURI(newTokenId, tokenURI);
+
+        // Given that we're not super confident about the metadata being "final" yet,
+        // I don't think we should set the permanent URI yet.
+        emit PermanentURI(tokenURI, newTokenId);
+
+        emit TokenMinted(tokenURI, to, newTokenId, sharesAmount);
+
+        return tokenId;
+    }
+
     function mintReservation(
         address to,
         uint256 reservationId,
@@ -118,7 +144,7 @@ contract IPNFT_ERC1155 is
     ) external {
         require(
             reservations[reservationId].reserver == _msgSender(),
-            "Reservation not valid or not owned by you"
+            "IP-NFT: Reservation not valid or not owned by you"
         );
 
         reservations[reservationId].tokenURI = _tokenURI;
