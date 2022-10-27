@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/security/Pausable.sol";
+import {ERC1155} from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {Pausable} from "@openzeppelin/contracts/security/Pausable.sol";
 import {ERC1155URIStorage} from "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155URIStorage.sol";
-import "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Burnable.sol";
-import "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Supply.sol";
-import "@openzeppelin/contracts/utils/Counters.sol";
+import {ERC1155Burnable} from "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Burnable.sol";
+import {ERC1155Supply} from "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Supply.sol";
+import {Counters} from "@openzeppelin/contracts/utils/Counters.sol";
 
 contract IPNFT_ERC1155 is
     ERC1155,
@@ -59,19 +59,6 @@ contract IPNFT_ERC1155 is
         price = amount;
     }
 
-    function setURI(string memory newuri) public onlyOwner {
-        _setURI(newuri);
-    }
-
-    function mint(
-        address account,
-        uint256 id,
-        uint256 amount,
-        bytes memory data
-    ) public onlyOwner {
-        _mint(account, id, amount, data);
-    }
-
     function mintReservation(address to, uint256 reservationId)
         public
         payable
@@ -86,7 +73,10 @@ contract IPNFT_ERC1155 is
         _mint(to, reservationId, 1, "");
         _setURI(reservationId, reservations[reservationId].tokenURI);
 
+        // Given that we're not super confident about the metadata being "final" yet,
+        // I don't think we should set the permanent URI yet.
         emit PermanentURI(reservations[reservationId].tokenURI, reservationId);
+
         emit TokenMinted(
             reservations[reservationId].tokenURI,
             to,
@@ -124,7 +114,10 @@ contract IPNFT_ERC1155 is
 
     // Withdraw ETH from contract
     function withdrawAll() public payable onlyOwner {
-        require(payable(msg.sender).send(address(this).balance));
+        require(
+            payable(msg.sender).send(address(this).balance),
+            "Not authorized"
+        );
     }
 
     // The following functions are overrides required by Solidity.

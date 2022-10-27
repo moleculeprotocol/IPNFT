@@ -19,12 +19,15 @@ contract IPNFT_ERC1155Test is Test {
     IPNFT_ERC1155 public token;
     address bob = address(0x1);
     address alice = address(0x2);
+    address deployer = address(0x3);
     string testURI = "ipfs://QmYwAPJzv5CZsnA9LqYKXfutJzBg68";
     string testURI2 = "ar://tNbdHqh3AVDHVD06P0OPUXSProI5kGcZZw8IvLkekSY";
     uint256 tokenPrice = 1 ether;
 
     function setUp() public {
+        vm.startPrank(deployer);
         token = new IPNFT_ERC1155();
+        vm.stopPrank();
     }
 
     function testInitialDeploymentState() public {
@@ -106,7 +109,9 @@ contract IPNFT_ERC1155Test is Test {
     }
 
     function testUpdatedPrice() public {
+        vm.startPrank(deployer);
         token.updatePrice(1 ether);
+        vm.stopPrank();
 
         vm.startPrank(bob);
         uint256 reservationId = token.reserve();
@@ -116,7 +121,10 @@ contract IPNFT_ERC1155Test is Test {
     }
 
     function testChargeableMint() public {
+        vm.startPrank(deployer);
         token.updatePrice(tokenPrice);
+        vm.stopPrank();
+
         vm.deal(bob, tokenPrice);
         vm.startPrank(bob);
         uint256 reservationId = token.reserve();
@@ -148,5 +156,30 @@ contract IPNFT_ERC1155Test is Test {
         vm.expectRevert("IP NFT: caller is not reserver");
         token.mintReservation(address(0xDEADCAFE), 0);
         vm.stopPrank();
+    }
+
+    function testOwnerWithdrawAll() public {
+        vm.deal(address(token), 10 ether);
+        assertEq(address(token).balance, 10 ether);
+
+        vm.startPrank(deployer);
+        token.withdrawAll();
+        vm.stopPrank();
+
+        assertEq(address(token).balance, 0);
+        assertEq(address(deployer).balance, 10 ether);
+    }
+
+    function testNonOwnerCannotWithdrawAll() public {
+        vm.deal(address(token), 10 ether);
+        assertEq(address(token).balance, 10 ether);
+
+        vm.startPrank(bob);
+        vm.expectRevert("Ownable: caller is not the owner");
+        token.withdrawAll();
+        vm.stopPrank();
+
+        assertEq(address(token).balance, 10 ether);
+        assertEq(address(bob).balance, 0);
     }
 }
