@@ -9,6 +9,19 @@ import {ERC1155Burnable} from "@openzeppelin/contracts/token/ERC1155/extensions/
 import {ERC1155Supply} from "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Supply.sol";
 import {Counters} from "@openzeppelin/contracts/utils/Counters.sol";
 
+/*
+ ______ _______  __    __ ________ ________
+|      \       \|  \  |  \        \        \
+ \▓▓▓▓▓▓ ▓▓▓▓▓▓▓\ ▓▓\ | ▓▓ ▓▓▓▓▓▓▓▓\▓▓▓▓▓▓▓▓
+  | ▓▓ | ▓▓__/ ▓▓ ▓▓▓\| ▓▓ ▓▓__      | ▓▓
+  | ▓▓ | ▓▓    ▓▓ ▓▓▓▓\ ▓▓ ▓▓  \     | ▓▓
+  | ▓▓ | ▓▓▓▓▓▓▓| ▓▓\▓▓ ▓▓ ▓▓▓▓▓     | ▓▓
+ _| ▓▓_| ▓▓     | ▓▓ \▓▓▓▓ ▓▓        | ▓▓
+|   ▓▓ \ ▓▓     | ▓▓  \▓▓▓ ▓▓        | ▓▓
+ \▓▓▓▓▓▓\▓▓      \▓▓   \▓▓\▓▓         \▓▓
+
+*/
+
 contract IPNFT_ERC1155 is
     ERC1155,
     Ownable,
