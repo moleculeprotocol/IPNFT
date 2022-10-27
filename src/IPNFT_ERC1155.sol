@@ -26,7 +26,7 @@ contract IPNFT_ERC1155 is
         string tokenURI;
     }
 
-    uint256 public price = 0 ether;
+    uint256 public mintPrice = 0 ether;
 
     mapping(uint256 => Reservation) public reservations;
 
@@ -56,8 +56,8 @@ contract IPNFT_ERC1155 is
         _unpause();
     }
 
-    function updatePrice(uint256 amount) public onlyOwner {
-        price = amount;
+    function updateMintPrice(uint256 amount) public onlyOwner {
+        mintPrice = amount;
     }
 
     // This is how a simple mint could look like for IP-NFTs that don't need encrypted legal contracts.
@@ -69,7 +69,7 @@ contract IPNFT_ERC1155 is
         uint256 sharesAmount,
         string memory tokenURI
     ) public payable returns (uint256 tokenId) {
-        require(msg.value == price, "Ether amount sent is not correct");
+        require(msg.value == mintPrice, "Ether amount sent is not correct");
 
         uint256 newTokenId = _reservationCounter.current();
         _reservationCounter.increment();
@@ -107,7 +107,7 @@ contract IPNFT_ERC1155 is
         uint256 sharesAmount,
         string memory tokenURI
     ) public payable returns (uint256 tokenId) {
-        require(msg.value == price, "Ether amount sent is not correct");
+        require(msg.value == mintPrice, "Ether amount sent is not correct");
         require(
             reservations[reservationId].reserver == _msgSender(),
             "IP-NFT: caller is not reserver"

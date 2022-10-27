@@ -35,7 +35,7 @@ contract IPNFT_ERC1155Test is Test {
         assertEq(token.paused(), false);
         assertEq(token.uri(0), "");
         assertEq(token.totalSupply(0), 0);
-        assertEq(token.price(), 0 ether);
+        assertEq(token.mintPrice(), 0 ether);
     }
 
     function testTokenReservation() public {
@@ -111,7 +111,7 @@ contract IPNFT_ERC1155Test is Test {
 
     function testUpdatedPrice() public {
         vm.startPrank(deployer);
-        token.updatePrice(1 ether);
+        token.updateMintPrice(1 ether);
         vm.stopPrank();
 
         vm.startPrank(bob);
@@ -123,7 +123,7 @@ contract IPNFT_ERC1155Test is Test {
 
     function testChargeableMint() public {
         vm.startPrank(deployer);
-        token.updatePrice(tokenPrice);
+        token.updateMintPrice(tokenPrice);
         vm.stopPrank();
 
         vm.deal(bob, tokenPrice);
