@@ -77,10 +77,10 @@ contract IPNFT_ERC1155Test is Test {
         emit PermanentURI(testURI, 0);
 
         vm.expectEmit(true, true, false, true);
-        emit TokenMinted(testURI, bob, 0, 10);
+        emit TokenMinted(testURI, bob, 0, 1);
 
-        token.mintReservation(bob, 0, 10);
-        assertEq(token.balanceOf(bob, 0), 10);
+        token.mintReservation(bob, 0);
+        assertEq(token.balanceOf(bob, 0), 1);
         assertEq(token.uri(0), testURI);
 
         (address reserver, ) = token.reservations(0);
@@ -93,7 +93,7 @@ contract IPNFT_ERC1155Test is Test {
         vm.startPrank(bob);
         uint256 reservationId = token.reserve();
         token.updateReservationURI(reservationId, testURI);
-        token.mintReservation(bob, 0, 1);
+        token.mintReservation(bob, 0);
 
         assertEq(token.uri(0), testURI);
     }
@@ -102,7 +102,7 @@ contract IPNFT_ERC1155Test is Test {
         vm.startPrank(bob);
         uint256 reservationId = token.reserve();
         token.updateReservationURI(reservationId, testURI);
-        token.mintReservation(bob, 0, 1);
+        token.mintReservation(bob, 0);
         assertEq(token.balanceOf(bob, 0), 1);
         token.burn(bob, 0, 1);
 
@@ -118,7 +118,7 @@ contract IPNFT_ERC1155Test is Test {
         uint256 reservationId = token.reserve();
         token.updateReservationURI(reservationId, testURI);
         vm.expectRevert(bytes("Ether amount sent is too small"));
-        token.mintReservation(bob, 0, 1);
+        token.mintReservation(bob, 0);
     }
 
     function testChargeableMint() public {
@@ -130,7 +130,7 @@ contract IPNFT_ERC1155Test is Test {
         vm.startPrank(bob);
         uint256 reservationId = token.reserve();
         token.updateReservationURI(reservationId, testURI);
-        token.mintReservation{value: tokenPrice}(bob, 0, 1);
+        token.mintReservation{value: tokenPrice}(bob, 0);
 
         assertEq(address(bob).balance, 0);
         assertEq(address(token).balance, tokenPrice);
@@ -141,7 +141,7 @@ contract IPNFT_ERC1155Test is Test {
         vm.startPrank(bob);
         uint256 reservationId = token.reserve();
         token.updateReservationURI(reservationId, testURI);
-        token.mintReservation(bob, 0, 1);
+        token.mintReservation(bob, 0);
 
         vm.expectRevert("IP-NFT: Reservation not valid or not owned by you");
         token.updateReservationURI(0, testURI2);
@@ -157,7 +157,7 @@ contract IPNFT_ERC1155Test is Test {
 
         vm.startPrank(alice);
         vm.expectRevert("IP-NFT: caller is not reserver");
-        token.mintReservation(address(0xDEADCAFE), 0, 1);
+        token.mintReservation(address(0xDEADCAFE), 0);
         vm.stopPrank();
     }
 
@@ -190,7 +190,7 @@ contract IPNFT_ERC1155Test is Test {
         vm.startPrank(bob);
         uint256 reservationId = token.reserve();
         token.updateReservationURI(reservationId, testURI);
-        token.mintReservation(bob, 0, 1);
+        token.mintReservation(bob, 0);
 
         assertEq(token.balanceOf(bob, 0), 1);
 
@@ -204,7 +204,7 @@ contract IPNFT_ERC1155Test is Test {
         vm.startPrank(bob);
         uint256 reservationId = token.reserve();
         token.updateReservationURI(reservationId, testURI);
-        token.mintReservation(bob, 0, 1);
+        token.mintReservation(bob, 0);
         vm.stopPrank();
 
         assertEq(token.balanceOf(bob, 0), 1);
@@ -221,7 +221,8 @@ contract IPNFT_ERC1155Test is Test {
         vm.startPrank(bob);
         uint256 reservationId = token.reserve();
         token.updateReservationURI(reservationId, testURI);
-        token.mintReservation(bob, 0, 10);
+        token.mintReservation(bob, 0);
+        token.increaseShares(0, 9, bob);
 
         assertEq(token.balanceOf(bob, 0), 10);
 

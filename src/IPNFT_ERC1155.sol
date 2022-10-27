@@ -64,11 +64,11 @@ contract IPNFT_ERC1155 is
     // The Question is how useful this is, after all the legal contract might still require
     // a hard reference to the IP-NFT tokenId. For this function you wouldn't get that
     // tokenId until after the mint of course.
-    function directMint(
-        address to,
-        uint256 shares,
-        string memory tokenURI
-    ) public payable returns (uint256 tokenId) {
+    function directMint(address to, string memory tokenURI)
+        public
+        payable
+        returns (uint256 tokenId)
+    {
         require(msg.value >= mintPrice, "Ether amount sent is too small");
 
         uint256 newTokenId = _reservationCounter.current();
@@ -78,24 +78,23 @@ contract IPNFT_ERC1155 is
         // I don't think we should set the permanent URI yet.
         emit PermanentURI(tokenURI, newTokenId);
 
-        emit TokenMinted(tokenURI, to, newTokenId, shares);
+        emit TokenMinted(tokenURI, to, newTokenId, 1);
 
-        _mint(to, newTokenId, shares, "");
+        _mint(to, newTokenId, 1, "");
         _setURI(newTokenId, tokenURI);
 
         return tokenId;
     }
 
-    function mintReservation(
-        address to,
-        uint256 reservationId,
-        uint256 shares
-    ) public payable returns (uint256 tokenId) {
+    function mintReservation(address to, uint256 reservationId)
+        public
+        payable
+        returns (uint256 tokenId)
+    {
         return
             mintReservation(
                 to,
                 reservationId,
-                shares,
                 reservations[reservationId].tokenURI
             );
     }
@@ -103,7 +102,6 @@ contract IPNFT_ERC1155 is
     function mintReservation(
         address to,
         uint256 reservationId,
-        uint256 shares,
         string memory tokenURI
     ) public payable returns (uint256 tokenId) {
         require(msg.value >= mintPrice, "Ether amount sent is too small");
@@ -116,11 +114,11 @@ contract IPNFT_ERC1155 is
         // I don't think we should set the permanent URI yet.
         emit PermanentURI(tokenURI, reservationId);
 
-        emit TokenMinted(tokenURI, to, reservationId, shares);
+        emit TokenMinted(tokenURI, to, reservationId, 1);
 
         delete reservations[reservationId];
 
-        _mint(to, reservationId, shares, "");
+        _mint(to, reservationId, 1, "");
         _setURI(reservationId, tokenURI);
 
         return reservationId;
