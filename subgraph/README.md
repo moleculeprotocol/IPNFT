@@ -27,7 +27,7 @@ Since your local env is stil configured for your anvil node, it can be reused fo
    `forge script script/SimpleOpenSea.s.sol:SimpleOpenSeaScript --fork-url $ANVIL_RPC_URL --private-key $PRIVATE_KEY --broadcast -vvvv`
 
 3. also deploy a sample ERC20 contract
-   `forge script script/MyToken.s.sol:MyTokenScript --fork-url $ANVIL_RPC_URL --private-key $PRIVATE_KEY --broadcast -vvvv`
+   `forge script script/DeploySampleERC20.s.sol:DeploySampleERC20 --fork-url $ANVIL_RPC_URL --private-key $PRIVATE_KEY --broadcast -vvvv`
 
 4. add the deployed contract addresses to your .env file, `source .env` again
 
