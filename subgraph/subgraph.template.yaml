@@ -1,0 +1,56 @@
+specVersion: 0.0.4
+schema:
+  file: ./schema.graphql
+dataSources:
+  - kind: ethereum
+    name: IPNFT
+    network: {{network}}
+    source:
+      address: "{{ipnft.address}}"
+      abi: IPNFT
+      startBlock: {{ipnft.startBlock}}
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - IPNFT
+      abis:
+        - name: IPNFT
+          file: ./abis/IPNFT.json
+      eventHandlers:
+        - event: Transfer(indexed address,indexed address,indexed uint256)
+          handler: handleTransfer
+        - event: TokenMinted(string,indexed address,indexed uint256)
+          handler: handleMint
+        - event: ReservationURIUpdated(string,indexed address,indexed uint256)
+          handler: handleReservationURIUpdate
+        - event: Reserved(indexed address,indexed uint256)
+          handler: handleReservation
+      file: ./src/mapping.ts
+  - kind: ethereum
+    name: SimpleOpenSea
+    network: {{network}}
+    source:
+      address: "{{simpleOpenSea.address}}"
+      abi: SimpleOpenSea
+      startBlock: {{simpleOpenSea.startBlock}}
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - Listing
+      abis:
+        - name: SimpleOpenSea
+          file: ./abis/SimpleOpenSea.json
+      eventHandlers:
+        - event: Listed(uint256,(address,uint256,uint256,address,address,uint256))
+          handler: handleListed
+        - event: Unlisted(uint256,(address,uint256,uint256,address,address,uint256))
+          handler: handleUnlisted
+        - event: Purchased(uint256,indexed address,(address,uint256,uint256,address,address,uint256))
+          handler: handlePurchased
+        - event: AllowlistUpdated(uint256,indexed address,bool)
+          handler: handleAllowlistUpdated
+      file: ./src/mapping.ts
