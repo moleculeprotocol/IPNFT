@@ -132,6 +132,8 @@ contract IPNFT_ERC1155Test is Test {
         token.updateReservationURI(reservationId, testURI);
         token.mintReservation{value: tokenPrice}(bob, 0, 1);
 
+        assertEq(address(bob).balance, 0);
+        assertEq(address(token).balance, tokenPrice);
         assertEq(token.balanceOf(bob, 0), 1);
     }
 

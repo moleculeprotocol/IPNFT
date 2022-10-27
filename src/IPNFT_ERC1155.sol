@@ -65,6 +65,22 @@ contract IPNFT_ERC1155 is
         uint256 reservationId,
         uint256 sharesAmount
     ) public payable returns (uint256 tokenId) {
+        tokenId = mintReservation(
+            to,
+            reservationId,
+            sharesAmount,
+            reservations[reservationId].tokenURI
+        );
+
+        return tokenId;
+    }
+
+    function mintReservation(
+        address to,
+        uint256 reservationId,
+        uint256 sharesAmount,
+        string memory tokenURI
+    ) public payable returns (uint256 tokenId) {
         require(msg.value == price, "Ether amount sent is not correct");
         require(
             reservations[reservationId].reserver == _msgSender(),
@@ -72,18 +88,13 @@ contract IPNFT_ERC1155 is
         );
 
         _mint(to, reservationId, sharesAmount, "");
-        _setURI(reservationId, reservations[reservationId].tokenURI);
+        _setURI(reservationId, tokenURI);
 
         // Given that we're not super confident about the metadata being "final" yet,
         // I don't think we should set the permanent URI yet.
-        emit PermanentURI(reservations[reservationId].tokenURI, reservationId);
+        emit PermanentURI(tokenURI, reservationId);
 
-        emit TokenMinted(
-            reservations[reservationId].tokenURI,
-            to,
-            reservationId,
-            sharesAmount
-        );
+        emit TokenMinted(tokenURI, to, reservationId, sharesAmount);
 
         delete reservations[reservationId];
 
