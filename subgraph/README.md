@@ -43,10 +43,12 @@ This creates a `subgraph.yaml` file with the correct contract addresses of your 
 
 ```sh
 yarn prepare:local
-yar build
+yarn build
 yarn create-local
 yarn deploy-local
 ```
+
+7. Checkout the local GraphQL API at http://localhost:8000/subgraphs/name/moleculeprotocol/IP-NFT
 
 ### manually interacting with the contracts
 
