@@ -5,10 +5,7 @@ import "forge-std/Test.sol";
 import "../src/IPNFT.sol";
 
 contract IPNFTTest is Test {
-    event Reserved(
-        address indexed reserver,
-        uint256 indexed reservationId
-    );
+    event Reserved(address indexed reserver, uint256 indexed reservationId);
 
     event TokenMinted(
         string tokenURI,
