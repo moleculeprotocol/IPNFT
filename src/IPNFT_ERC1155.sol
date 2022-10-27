@@ -39,7 +39,8 @@ contract IPNFT_ERC1155 is
     event TokenMinted(
         string tokenURI,
         address indexed owner,
-        uint256 indexed tokenId
+        uint256 indexed tokenId,
+        uint256 sharesAmount
     );
 
     /// @dev https://docs.opensea.io/docs/metadata-standards#freezing-metadata
@@ -59,18 +60,18 @@ contract IPNFT_ERC1155 is
         price = amount;
     }
 
-    function mintReservation(address to, uint256 reservationId)
-        public
-        payable
-        returns (uint256 tokenId)
-    {
+    function mintReservation(
+        address to,
+        uint256 reservationId,
+        uint256 sharesAmount
+    ) public payable returns (uint256 tokenId) {
         require(msg.value == price, "Ether amount sent is not correct");
         require(
             reservations[reservationId].reserver == _msgSender(),
             "IP NFT: caller is not reserver"
         );
 
-        _mint(to, reservationId, 1, "");
+        _mint(to, reservationId, sharesAmount, "");
         _setURI(reservationId, reservations[reservationId].tokenURI);
 
         // Given that we're not super confident about the metadata being "final" yet,
@@ -80,7 +81,8 @@ contract IPNFT_ERC1155 is
         emit TokenMinted(
             reservations[reservationId].tokenURI,
             to,
-            reservationId
+            reservationId,
+            sharesAmount
         );
 
         delete reservations[reservationId];
