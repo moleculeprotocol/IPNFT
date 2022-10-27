@@ -1,12 +1,11 @@
 {
-  "name": "IP-NFT",
+  "name": "@molecule/ipfnt-subgraph",
   "license": "UNLICENSED",
   "scripts": {
     "codegen": "graph codegen",
     "build": "graph build",
     "create-ipnft-abi": "cat ../out/IPNFT.sol/IPNFT.json | jq .abi > ./abis/IPNFT.json",
-    "create-simpleOpenSea-abi": "cat ../out/SimpleOpenSea.sol/SimpleOpenSea.json | jq .abi > ./abis/SimpleOpenSea.json",
-    "create-simpleopensea-abi": "cat ../out/simpleopensea.sol/simpleopensea.json | yarn jqn .abi > ./abis/simpleopensea.json",
+    "create-simpleopensea-abi": "cat ../out/SimpleOpenSea.sol/SimpleOpenSea.json | jq .abi > ./abis/SimpleOpenSea.json",
     "prepare:local": "mustache config/local.js subgraph.template.yaml > subgraph.yaml",
     "prepare:goerli": "mustache config/goerli.json subgraph.template.yaml > subgraph.yaml",
     "prepare:mainnet": "mustache config/mainnet.json subgraph.template.yaml > subgraph.yaml",
