@@ -117,7 +117,7 @@ contract IPNFT_ERC1155Test is Test {
         vm.startPrank(bob);
         uint256 reservationId = token.reserve();
         token.updateReservationURI(reservationId, testURI);
-        vm.expectRevert(bytes("Ether amount sent is not correct"));
+        vm.expectRevert(bytes("Ether amount sent is too small"));
         token.mintReservation(bob, 0, 1);
     }
 

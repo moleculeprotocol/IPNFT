@@ -60,28 +60,28 @@ contract IPNFT_ERC1155 is
         mintPrice = amount;
     }
 
-    // This is how a simple mint could look like for IP-NFTs that don't need encrypted legal contracts.
+    // This is how a direct mint could look like for IP-NFTs that don't need encrypted legal contracts.
     // The Question is how useful this is, after all the legal contract might still require
     // a hard reference to the IP-NFT tokenId. For this function you wouldn't get that
     // tokenId until after the mint of course.
-    function simpleMint(
+    function directMint(
         address to,
         uint256 shares,
         string memory tokenURI
     ) public payable returns (uint256 tokenId) {
-        require(msg.value == mintPrice, "Ether amount sent is not correct");
+        require(msg.value >= mintPrice, "Ether amount sent is too small");
 
         uint256 newTokenId = _reservationCounter.current();
         _reservationCounter.increment();
-
-        _mint(to, newTokenId, shares, "");
-        _setURI(newTokenId, tokenURI);
 
         // Given that we're not super confident about the metadata being "final" yet,
         // I don't think we should set the permanent URI yet.
         emit PermanentURI(tokenURI, newTokenId);
 
         emit TokenMinted(tokenURI, to, newTokenId, shares);
+
+        _mint(to, newTokenId, shares, "");
+        _setURI(newTokenId, tokenURI);
 
         return tokenId;
     }
@@ -91,14 +91,13 @@ contract IPNFT_ERC1155 is
         uint256 reservationId,
         uint256 shares
     ) public payable returns (uint256 tokenId) {
-        tokenId = mintReservation(
-            to,
-            reservationId,
-            shares,
-            reservations[reservationId].tokenURI
-        );
-
-        return tokenId;
+        return
+            mintReservation(
+                to,
+                reservationId,
+                shares,
+                reservations[reservationId].tokenURI
+            );
     }
 
     function mintReservation(
@@ -107,14 +106,11 @@ contract IPNFT_ERC1155 is
         uint256 shares,
         string memory tokenURI
     ) public payable returns (uint256 tokenId) {
-        require(msg.value == mintPrice, "Ether amount sent is not correct");
+        require(msg.value >= mintPrice, "Ether amount sent is too small");
         require(
             reservations[reservationId].reserver == _msgSender(),
             "IP-NFT: caller is not reserver"
         );
-
-        _mint(to, reservationId, shares, "");
-        _setURI(reservationId, tokenURI);
 
         // Given that we're not super confident about the metadata being "final" yet,
         // I don't think we should set the permanent URI yet.
@@ -123,6 +119,9 @@ contract IPNFT_ERC1155 is
         emit TokenMinted(tokenURI, to, reservationId, shares);
 
         delete reservations[reservationId];
+
+        _mint(to, reservationId, shares, "");
+        _setURI(reservationId, tokenURI);
 
         return reservationId;
     }
