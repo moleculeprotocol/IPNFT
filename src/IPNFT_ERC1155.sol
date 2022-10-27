@@ -40,7 +40,7 @@ contract IPNFT_ERC1155 is
         string tokenURI,
         address indexed owner,
         uint256 indexed tokenId,
-        uint256 sharesAmount
+        uint256 shares
     );
 
     /// @dev https://docs.opensea.io/docs/metadata-standards#freezing-metadata
@@ -66,7 +66,7 @@ contract IPNFT_ERC1155 is
     // tokenId until after the mint of course.
     function simpleMint(
         address to,
-        uint256 sharesAmount,
+        uint256 shares,
         string memory tokenURI
     ) public payable returns (uint256 tokenId) {
         require(msg.value == mintPrice, "Ether amount sent is not correct");
@@ -74,14 +74,14 @@ contract IPNFT_ERC1155 is
         uint256 newTokenId = _reservationCounter.current();
         _reservationCounter.increment();
 
-        _mint(to, newTokenId, sharesAmount, "");
+        _mint(to, newTokenId, shares, "");
         _setURI(newTokenId, tokenURI);
 
         // Given that we're not super confident about the metadata being "final" yet,
         // I don't think we should set the permanent URI yet.
         emit PermanentURI(tokenURI, newTokenId);
 
-        emit TokenMinted(tokenURI, to, newTokenId, sharesAmount);
+        emit TokenMinted(tokenURI, to, newTokenId, shares);
 
         return tokenId;
     }
@@ -89,12 +89,12 @@ contract IPNFT_ERC1155 is
     function mintReservation(
         address to,
         uint256 reservationId,
-        uint256 sharesAmount
+        uint256 shares
     ) public payable returns (uint256 tokenId) {
         tokenId = mintReservation(
             to,
             reservationId,
-            sharesAmount,
+            shares,
             reservations[reservationId].tokenURI
         );
 
@@ -104,7 +104,7 @@ contract IPNFT_ERC1155 is
     function mintReservation(
         address to,
         uint256 reservationId,
-        uint256 sharesAmount,
+        uint256 shares,
         string memory tokenURI
     ) public payable returns (uint256 tokenId) {
         require(msg.value == mintPrice, "Ether amount sent is not correct");
@@ -113,14 +113,14 @@ contract IPNFT_ERC1155 is
             "IP-NFT: caller is not reserver"
         );
 
-        _mint(to, reservationId, sharesAmount, "");
+        _mint(to, reservationId, shares, "");
         _setURI(reservationId, tokenURI);
 
         // Given that we're not super confident about the metadata being "final" yet,
         // I don't think we should set the permanent URI yet.
         emit PermanentURI(tokenURI, reservationId);
 
-        emit TokenMinted(tokenURI, to, reservationId, sharesAmount);
+        emit TokenMinted(tokenURI, to, reservationId, shares);
 
         delete reservations[reservationId];
 
@@ -153,17 +153,14 @@ contract IPNFT_ERC1155 is
 
     function increaseShares(
         uint256 tokenId,
-        uint256 sharesAmount,
+        uint256 shares,
         address to
     ) public {
-        require(
-            sharesAmount > 0,
-            "IP-NFT: shares amount must be greater than 0"
-        );
+        require(shares > 0, "IP-NFT: shares amount must be greater than 0");
         require(totalSupply(tokenId) == 1, "IP-NFT: shares already minted");
         require(balanceOf(_msgSender(), tokenId) == 1, "IP-NFT: not owner");
 
-        _mint(to, tokenId, sharesAmount, "");
+        _mint(to, tokenId, shares, "");
     }
 
     // Withdraw ETH from contract
