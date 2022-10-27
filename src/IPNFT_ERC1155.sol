@@ -68,7 +68,7 @@ contract IPNFT_ERC1155 is
         require(msg.value == price, "Ether amount sent is not correct");
         require(
             reservations[reservationId].reserver == _msgSender(),
-            "IP NFT: caller is not reserver"
+            "IP-NFT: caller is not reserver"
         );
 
         _mint(to, reservationId, sharesAmount, "");
@@ -112,6 +112,21 @@ contract IPNFT_ERC1155 is
 
         reservations[reservationId].tokenURI = _tokenURI;
         emit ReservationURIUpdated(_tokenURI, _msgSender(), reservationId);
+    }
+
+    function increaseShares(
+        uint256 tokenId,
+        uint256 sharesAmount,
+        address to
+    ) public {
+        require(
+            sharesAmount > 0,
+            "IP-NFT: shares amount must be greater than 0"
+        );
+        require(totalSupply(tokenId) == 1, "IP-NFT: shares already minted");
+        require(balanceOf(_msgSender(), tokenId) == 1, "IP-NFT: not owner");
+
+        _mint(to, tokenId, sharesAmount, "");
     }
 
     // Withdraw ETH from contract

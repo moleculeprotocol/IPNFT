@@ -154,7 +154,7 @@ contract IPNFT_ERC1155Test is Test {
         vm.stopPrank();
 
         vm.startPrank(alice);
-        vm.expectRevert("IP NFT: caller is not reserver");
+        vm.expectRevert("IP-NFT: caller is not reserver");
         token.mintReservation(address(0xDEADCAFE), 0, 1);
         vm.stopPrank();
     }
@@ -182,5 +182,51 @@ contract IPNFT_ERC1155Test is Test {
 
         assertEq(address(token).balance, 10 ether);
         assertEq(address(bob).balance, 0);
+    }
+
+    function testOwnerIncreaseShares() public {
+        vm.startPrank(bob);
+        uint256 reservationId = token.reserve();
+        token.updateReservationURI(reservationId, testURI);
+        token.mintReservation(bob, 0, 1);
+
+        assertEq(token.balanceOf(bob, 0), 1);
+
+        token.increaseShares(0, 9, bob);
+
+        assertEq(token.balanceOf(bob, 0), 10);
+        assertEq(token.totalSupply(0), 10);
+    }
+
+    function testNonOwnerCannotIncreaseShares() public {
+        vm.startPrank(bob);
+        uint256 reservationId = token.reserve();
+        token.updateReservationURI(reservationId, testURI);
+        token.mintReservation(bob, 0, 1);
+        vm.stopPrank();
+
+        assertEq(token.balanceOf(bob, 0), 1);
+
+        vm.startPrank(alice);
+        vm.expectRevert("IP-NFT: not owner");
+        token.increaseShares(0, 9, bob);
+
+        assertEq(token.balanceOf(bob, 0), 1);
+        assertEq(token.totalSupply(0), 1);
+    }
+
+    function testCannotIncreaseSharesIfAlreadyMinted() public {
+        vm.startPrank(bob);
+        uint256 reservationId = token.reserve();
+        token.updateReservationURI(reservationId, testURI);
+        token.mintReservation(bob, 0, 10);
+
+        assertEq(token.balanceOf(bob, 0), 10);
+
+        vm.expectRevert("IP-NFT: shares already minted");
+        token.increaseShares(0, 5, bob);
+
+        assertEq(token.balanceOf(bob, 0), 10);
+        assertEq(token.totalSupply(0), 10);
     }
 }
