@@ -4,7 +4,11 @@ Template for NFT contracts tokenizing IP.
 
 ## Deployments
 
-- Goerli Testnet: https://goerli.etherscan.io/address/0x158cffdb44c6d9e2daa57a9705a13c7af474c4f4#code
+### Goerli
+
+- IP-NFT https://goerli.etherscan.io/address/0x5fbdb2315678afecb367f032d93f642f64180aa3#code
+- SchmackoSwap https://goerli.etherscan.io/address/0xe7f1725e7734ce288f8367e1bb143e90bb3f0512#code
+- The Graph: https://api.thegraph.com/subgraphs/name/elmariachi111/schrotti-galoppi-schmacko-1
 
 ## Installation
 
@@ -57,9 +61,12 @@ Run `forge test --gas-report`
 
 #### Deploy to Goerli Testnet
 
+The easiest way to deploy contracts without exposing a local private key is the thirdweb. Here's how you initialize the process from the root folder of any web3 app: `npx thirdweb@latest deploy`
+
+If you like to do it manually, we got you covered:
+
 1. Make sure you have a private key in your `.env` file that has Goerli Testnet ETH on it. Otherwise you won't be able to deploy a contract because of insufficient funds.
 2. Run `source .env` to get the ENV variables into your current terminal session.
 3. Deploy IPNFT `forge script script/IPNFT.s.sol:IPNFTScript --fork-url $GOERLI_RPC_URL --private-key $PRIVATE_KEY --broadcast -vvvv`
 4. Deploy sales contract `forge script script/SchmackoSwap.s.sol:SchmackoSwapScript --fork-url $GOERLI_RPC_URL --private-key $PRIVATE_KEY --broadcast -vvvv`
-
-5. if you want to also verify the contract on Etherscan `forge script script/IPNFT.s.sol:IPNFTScript --fork-url $GOERLI_RPC_URL --private-key $PRIVATE_KEY --verify --etherscan-api-key $ETHERSCAN_KEY --broadcast -vvvv` .
+5. alternatively get an etherscan key to verify the contract during deployment `forge script script/IPNFT.s.sol:IPNFTScript --fork-url $GOERLI_RPC_URL --private-key $PRIVATE_KEY --verify --etherscan-api-key $ETHERSCAN_KEY --broadcast -vvvv` .

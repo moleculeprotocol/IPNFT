@@ -2,13 +2,13 @@
 
 ## prerequisites
 
-- contracts have to be built
-- install jq (`apt i jq` / `brew install jq`)
+-   contracts have to be built
+-   install jq (`apt i jq` / `brew install jq`)
 
 ## getting the latest contract abis
 
-- `yarn create-ipnft-abi`
-- `yarn create-schmackoSwap-abi` (needs SchmackoSwap outputs here)
+-   `yarn create-ipnft-abi`
+-   `yarn create-schmackoSwap-abi` (needs SchmackoSwap outputs here)
 
 ### Running subgraph and contracts locally
 
@@ -46,6 +46,12 @@ yarn deploy-local
 
 5. Checkout the local GraphQL API at <http://localhost:8000/subgraphs/name/moleculeprotocol/ipnft-subgraph>
 
+### deploying on the hosted service:
+
+1. get an api key for using the hosted service
+2. `yarn graph auth --product hosted-service <your api key>`
+3. `yarn graph deploy --product hosted-service <userprefix>/<graphname>`
+
 ### manually interacting with the contracts
 
 ensure your local environment contains all contract addresses and is sourced to your terminal. We're using your local PRIVATE_KEY here
@@ -65,7 +71,7 @@ ensure your local environment contains all contract addresses and is sourced to 
 4. approve for SchmackoSwap Contract to spend token 0
    `cast send -i $IPNFT_ADDRESS --private-key $PRIVATE_KEY "approve(address, uint256)()" $SOS_ADDRESS 0`
 
-5) Create a Listing for 10 Sample tokens
+5. Create a Listing for 10 Sample tokens
 
 `cast send -i $SOS_ADDRESS --private-key $PRIVATE_KEY "list(address, uint256, address, uint256)(uint256)" $IPNFT_ADDRESS 0 $ERC20_ADDRESS 10`
 
