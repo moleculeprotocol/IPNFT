@@ -20,18 +20,12 @@ Note all the contract addresses that the following commands are creating, and ad
 
 Since your local env is stil configured for your anvil node, it can be reused for the other deployments
 
-1. Deploy local IP-NFT contract
+1. Deploy local IP-NFT contract, SchmackoSwap and MyToken (ERC-20 contract)
    `forge script script/IPNFT.s.sol:IPNFTScript --fork-url $ANVIL_RPC_URL --private-key $PRIVATE_KEY --broadcast -vvvv`
 
-2. go to your local SchmackoSwap clone and deploy
-   `forge script script/SchmackoSwap.s.sol:SchmackoSwapScript --fork-url $ANVIL_RPC_URL --private-key $PRIVATE_KEY --broadcast -vvvv`
+2. add the deployed contract addresses to your .env file, `source .env` again. We've added their deterministic addresses when deployed in that order for convenienc.
 
-3. also deploy a sample ERC20 contract
-   `forge script script/DeploySampleERC20.s.sol:DeploySampleERC20 --fork-url $ANVIL_RPC_URL --private-key $PRIVATE_KEY --broadcast -vvvv`
-
-4. add the deployed contract addresses to your .env file, `source .env` again. We've added their deterministic addresses when deployed in that order for convenienc.
-
-5. Startup docker containers
+3. Startup docker containers
 
 ```sh
 docker compose up
@@ -39,7 +33,7 @@ docker compose up
 
 The containers must be able to access your host box to connect to your local (anvil) chain. On Mac it likely just works since it supports `host.docker.internal`. On Linux run `setup.sh` to find your host's local network address and replace it in the compose file. Also make sure that your local blockchain node responds to the interface's traffic (e.g. by `anvil -h 0.0.0.0`)
 
-6. Prepare subgraph for local build, create and deploy
+4. Prepare subgraph for local build, create and deploy
 
 This creates a `subgraph.yaml` file with the correct contract addresses of your local chain
 
@@ -50,7 +44,7 @@ yarn create-local
 yarn deploy-local
 ```
 
-7. Checkout the local GraphQL API at <http://localhost:8000/subgraphs/name/moleculeprotocol/ipnft-subgraph>
+5. Checkout the local GraphQL API at <http://localhost:8000/subgraphs/name/moleculeprotocol/ipnft-subgraph>
 
 ### manually interacting with the contracts
 
