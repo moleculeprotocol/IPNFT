@@ -39,7 +39,7 @@ Run `forge test --gas-report`
 - Set the `PRIVATE_KEY` variable in the `.env`. This is the private key for the address you're deploying the contract with. For testing you can generate a private key on your command line: `openssl rand -hex 32`.
 - Set the `ETHERSCAN_KEY` if you want to verify deployed contracts on Etherscan.
 
-#### Deploy to a local `anvil` node
+#### Deploy everything at once to a local `anvil` node
 
 1. Anvil is a local testnet node shipped with Foundry. You can use it for testing your contracts from frontends or for interacting over RPC.
 2. Run `anvil -h 0.0.0.0` in a terminal window and keep it running. You will see similar output to this:
@@ -48,15 +48,18 @@ Run `forge test --gas-report`
 
 3. Take one of the private keys you get and insert them into the `.env` file at `PRIVATE_KEY`.
 4. Run `source .env` to get the ENV variables into your current terminal session.
-5. Run `forge script script/IPNFT.s.sol:IPNFTScript --fork-url $ANVIL_RPC_URL --private-key $PRIVATE_KEY --broadcast -vvvv` to deploy the contract to your local `anvil` node.
+5. Run `forge script script/Dev.s.sol:DevScript --fork-url $ANVIL_RPC_URL --private-key $PRIVATE_KEY --broadcast -vvvv` to deploy the contracts to your local `anvil` node.
 6. If the deployment was successful you get output similar to this:
 
 ![CleanShot 2022-08-14 at 15 23 03](https://user-images.githubusercontent.com/86414213/184539154-3ddc46d3-4083-4c58-a401-f7a1dce2be7e.png)
 
-7. Using `cast` (which is part of Foundry) you can now query/manipulate your deployed contract. Find out more here: https://book.getfoundry.sh/cast/
+7. Use `cast` (which is part of Foundry) to query/manipulate your deployed contract. Find out more here: https://book.getfoundry.sh/cast/
 
 #### Deploy to Goerli Testnet
 
 1. Make sure you have a private key in your `.env` file that has Goerli Testnet ETH on it. Otherwise you won't be able to deploy a contract because of insufficient funds.
 2. Run `source .env` to get the ENV variables into your current terminal session.
-3. Run `forge script script/IPNFT.s.sol:IPNFTScript --fork-url $GOERLI_RPC_URL --private-key $PRIVATE_KEY --broadcast -vvvv` or if you want to also verify the contract on Etherscan `forge script script/IPNFT.s.sol:IPNFTScript --fork-url $GOERLI_RPC_URL --private-key $PRIVATE_KEY --verify --etherscan-api-key $ETHERSCAN_KEY --broadcast -vvvv` .
+3. Deploy IPNFT `forge script script/IPNFT.s.sol:IPNFTScript --fork-url $GOERLI_RPC_URL --private-key $PRIVATE_KEY --broadcast -vvvv`
+4. Deploy sales contract `forge script script/SchmackoSwap.s.sol:SchmackoSwapScript --fork-url $GOERLI_RPC_URL --private-key $PRIVATE_KEY --broadcast -vvvv`
+
+5. if you want to also verify the contract on Etherscan `forge script script/IPNFT.s.sol:IPNFTScript --fork-url $GOERLI_RPC_URL --private-key $PRIVATE_KEY --verify --etherscan-api-key $ETHERSCAN_KEY --broadcast -vvvv` .
