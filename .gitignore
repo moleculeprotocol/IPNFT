@@ -9,4 +9,5 @@ out/
 /broadcast/*
 /broadcast/*/31337/
 
-lib
+lib/*
+!.gitkeep
