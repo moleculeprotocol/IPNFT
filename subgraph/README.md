@@ -18,10 +18,10 @@ follow the local anvil deployment instructions [in the main repo](../README.md)
 
 Note all the contract addresses that the following commands are creating, and add them to your .env file. If you're executing them in exactly this order on a fresh anvil node with the default mnemonic, the addresses are "deterministic".
 
-1. Deploy local contracts
-   `forge script script/IPNFT.s.sol:IPNFTScript --fork-url $ANVIL_RPC_URL --private-key $PRIVATE_KEY --broadcast -vvvv`
-
 Since your local env is stil configured for your anvil node, it can be reused for the other deployments
+
+1. Deploy local IP-NFT contract
+   `forge script script/IPNFT.s.sol:IPNFTScript --fork-url $ANVIL_RPC_URL --private-key $PRIVATE_KEY --broadcast -vvvv`
 
 2. go to your local SimpleOpenSea clone and deploy
    `forge script script/SimpleOpenSea.s.sol:SimpleOpenSeaScript --fork-url $ANVIL_RPC_URL --private-key $PRIVATE_KEY --broadcast -vvvv`
@@ -29,13 +29,15 @@ Since your local env is stil configured for your anvil node, it can be reused fo
 3. also deploy a sample ERC20 contract
    `forge script script/DeploySampleERC20.s.sol:DeploySampleERC20 --fork-url $ANVIL_RPC_URL --private-key $PRIVATE_KEY --broadcast -vvvv`
 
-4. add the deployed contract addresses to your .env file, `source .env` again
+4. add the deployed contract addresses to your .env file, `source .env` again. We've added their deterministic addresses when deployed in that order for convenienc.
 
 5. Startup docker containers
 
 ```sh
 docker compose up
 ```
+
+The containers must be able to access your host box to connect to your local (anvil) chain. On Mac it likely just works since it supports `host.docker.internal`. On Linux run `setup.sh` to find your host's local network address and replace it in the compose file. Also make sure that your local blockchain node responds to the interface's traffic (e.g. by `anvil -h 0.0.0.0`)
 
 6. Prepare subgraph for local build, create and deploy
 
