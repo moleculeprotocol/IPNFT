@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.13;
+pragma solidity ^0.8.17;
 
 import "forge-std/Test.sol";
-import "../src/IPNFT.sol";
+import {console} from "forge-std/console.sol";
+import {IPNFT} from "../src/IPNFT.sol";
 
 contract IPNFTTest is Test {
     event Reserved(address indexed reserver, uint256 indexed reservationId);
@@ -10,31 +11,34 @@ contract IPNFTTest is Test {
     event TokenMinted(
         string tokenURI,
         address indexed owner,
-        uint256 indexed tokenId
+        uint256 indexed tokenId,
+        uint256 sharesAmount
     );
 
     event PermanentURI(string _value, uint256 indexed _id);
 
-    string tokenName = "Molecule IP-NFT";
-    string tokenSymbol = "IPNFT";
     IPNFT public token;
     address bob = address(0x1);
     address alice = address(0x2);
-    string testURI = "https://ipfs.io/ipfs/QmYwAPJzv5CZsnA9LqYKXfutJzBg68";
-    string testURI2 = "https://arweave.net/QmYwAPJzv5CZsnA9LqYKXfutJzBg68";
+    address deployer = address(0x3);
+    string testURI = "ipfs://QmYwAPJzv5CZsnA9LqYKXfutJzBg68";
+    string testURI2 = "ar://tNbdHqh3AVDHVD06P0OPUXSProI5kGcZZw8IvLkekSY";
     uint256 tokenPrice = 1 ether;
 
     function setUp() public {
-        token = new IPNFT(tokenName, tokenSymbol);
+        vm.startPrank(deployer);
+        token = new IPNFT();
+        vm.stopPrank();
     }
 
-    function testMetadata() public {
-        assertEq(token.name(), tokenName);
-        assertEq(token.symbol(), tokenSymbol);
+    function testInitialDeploymentState() public {
+        assertEq(token.paused(), false);
+        assertEq(token.uri(0), "");
+        assertEq(token.totalSupply(0), 0);
+        assertEq(token.mintPrice(), 0 ether);
     }
 
-    // Reserve a token as contract owner
-    function testOwnerReservation() public {
+    function testTokenReservation() public {
         vm.startPrank(bob);
         vm.expectEmit(true, true, true, true);
         // We emit the event we expect to see.
@@ -42,16 +46,28 @@ contract IPNFTTest is Test {
         uint256 reservationId = token.reserve();
         token.updateReservationURI(reservationId, testURI);
 
-        (address reserver, ) = token.reservations(0);
+        (address reserver, string memory tokenURI) = token.reservations(0);
         assertEq(reserver, bob);
-        vm.expectRevert(bytes("ERC721: invalid token ID"));
-        assertEq(token.ownerOf(0), address(0x0));
-
-        //token.safeMint(address(0xBEEF), testURI, true);
-        assertEq(token.balanceOf(bob), 0);
+        assertEq(tokenURI, testURI);
     }
 
-    // Mint a token as non-owner
+    function testTokenReservationCounter() public {
+        vm.startPrank(bob);
+        vm.expectEmit(true, true, true, true);
+        // We emit the event we expect to see.
+        emit Reserved(bob, 0);
+        uint256 reservationId = token.reserve();
+        token.updateReservationURI(reservationId, testURI);
+
+        (address reserver, string memory tokenURI) = token.reservations(0);
+        assertEq(reserver, bob);
+        assertEq(tokenURI, testURI);
+
+        token.reserve();
+        (address reserver_2, ) = token.reservations(1);
+        assertEq(reserver_2, bob);
+    }
+
     function testMintFromReservation() public {
         vm.startPrank(bob);
 
@@ -61,24 +77,25 @@ contract IPNFTTest is Test {
         emit PermanentURI(testURI, 0);
 
         vm.expectEmit(true, true, false, true);
-        emit TokenMinted(testURI, address(0xDEADBEEF), 0);
+        emit TokenMinted(testURI, bob, 0, 1);
 
-        token.mintReservation(address(0xDEADBEEF), 0);
-        assertEq(token.ownerOf(0), address(0xDEADBEEF));
-        assertEq(token.balanceOf(address(0xDEADBEEF)), 1);
+        token.mintReservation(bob, 0);
+        assertEq(token.balanceOf(bob, 0), 1);
+        assertEq(token.uri(0), testURI);
 
         (address reserver, ) = token.reservations(0);
-        assertEq(reserver, address(0x0));
+        assertEq(reserver, address(0));
 
         vm.stopPrank();
     }
 
-    function testTokenURI() public {
+    function testTokenURIUpdate() public {
         vm.startPrank(bob);
         uint256 reservationId = token.reserve();
         token.updateReservationURI(reservationId, testURI);
         token.mintReservation(bob, 0);
-        assertEq(token.tokenURI(0), testURI);
+
+        assertEq(token.uri(0), testURI);
     }
 
     function testBurn() public {
@@ -86,36 +103,38 @@ contract IPNFTTest is Test {
         uint256 reservationId = token.reserve();
         token.updateReservationURI(reservationId, testURI);
         token.mintReservation(bob, 0);
-        token.burn(0);
-        vm.stopPrank();
+        assertEq(token.balanceOf(bob, 0), 1);
+        token.burn(bob, 0, 1);
 
-        assertEq(token.balanceOf(bob), 0);
-
-        vm.expectRevert("ERC721: invalid token ID");
-        token.ownerOf(0);
+        assertEq(token.balanceOf(bob, 0), 0);
     }
 
     function testUpdatedPrice() public {
-        token.updatePrice(1 ether);
+        vm.startPrank(deployer);
+        token.updateMintPrice(1 ether);
+        vm.stopPrank();
 
         vm.startPrank(bob);
         uint256 reservationId = token.reserve();
         token.updateReservationURI(reservationId, testURI);
-        vm.expectRevert(bytes("Ether amount sent is not correct"));
+        vm.expectRevert(bytes("Ether amount sent is too small"));
         token.mintReservation(bob, 0);
     }
 
     function testChargeableMint() public {
-        token.updatePrice(tokenPrice);
+        vm.startPrank(deployer);
+        token.updateMintPrice(tokenPrice);
+        vm.stopPrank();
+
         vm.deal(bob, tokenPrice);
         vm.startPrank(bob);
         uint256 reservationId = token.reserve();
         token.updateReservationURI(reservationId, testURI);
         token.mintReservation{value: tokenPrice}(bob, 0);
-        vm.stopPrank();
 
-        assertEq(token.balanceOf(bob), 1);
-        assertEq(token.ownerOf(0), bob);
+        assertEq(address(bob).balance, 0);
+        assertEq(address(token).balance, tokenPrice);
+        assertEq(token.balanceOf(bob, 0), 1);
     }
 
     function testCantUpdateTokenURIOnMintedTokens() public {
@@ -124,25 +143,93 @@ contract IPNFTTest is Test {
         token.updateReservationURI(reservationId, testURI);
         token.mintReservation(bob, 0);
 
-        vm.expectRevert("Reservation not valid or not owned by you");
+        vm.expectRevert("IP-NFT: Reservation not valid or not owned by you");
         token.updateReservationURI(0, testURI2);
-        vm.stopPrank();
 
-        assertEq(token.tokenURI(0), testURI);
+        assertEq(token.uri(0), testURI);
     }
 
-    function testOnlyOwnerCanFreezeMetadata() public {
+    function testOnlyReservationOwnerCanMintFromReservation() public {
+        vm.startPrank(bob);
+        uint256 reservationId = token.reserve();
+        token.updateReservationURI(reservationId, testURI);
+        vm.stopPrank();
+
+        vm.startPrank(alice);
+        vm.expectRevert("IP-NFT: caller is not reserver");
+        token.mintReservation(address(0xDEADCAFE), 0);
+        vm.stopPrank();
+    }
+
+    function testOwnerWithdrawAll() public {
+        vm.deal(address(token), 10 ether);
+        assertEq(address(token).balance, 10 ether);
+
+        vm.startPrank(deployer);
+        token.withdrawAll();
+        vm.stopPrank();
+
+        assertEq(address(token).balance, 0);
+        assertEq(address(deployer).balance, 10 ether);
+    }
+
+    function testNonOwnerCannotWithdrawAll() public {
+        vm.deal(address(token), 10 ether);
+        assertEq(address(token).balance, 10 ether);
+
+        vm.startPrank(bob);
+        vm.expectRevert("Ownable: caller is not the owner");
+        token.withdrawAll();
+        vm.stopPrank();
+
+        assertEq(address(token).balance, 10 ether);
+        assertEq(address(bob).balance, 0);
+    }
+
+    function testOwnerIncreaseShares() public {
+        vm.startPrank(bob);
+        uint256 reservationId = token.reserve();
+        token.updateReservationURI(reservationId, testURI);
+        token.mintReservation(bob, 0);
+
+        assertEq(token.balanceOf(bob, 0), 1);
+
+        token.increaseShares(0, 9, bob);
+
+        assertEq(token.balanceOf(bob, 0), 10);
+        assertEq(token.totalSupply(0), 10);
+    }
+
+    function testNonOwnerCannotIncreaseShares() public {
         vm.startPrank(bob);
         uint256 reservationId = token.reserve();
         token.updateReservationURI(reservationId, testURI);
         token.mintReservation(bob, 0);
         vm.stopPrank();
 
-        vm.startPrank(alice);
-        vm.expectRevert("IP NFT: caller is not reserver");
-        token.mintReservation(address(0xDEADCAFE), 0);
-        vm.stopPrank();
+        assertEq(token.balanceOf(bob, 0), 1);
 
-        assertEq(token.tokenURI(0), testURI);
+        vm.startPrank(alice);
+        vm.expectRevert("IP-NFT: not owner");
+        token.increaseShares(0, 9, bob);
+
+        assertEq(token.balanceOf(bob, 0), 1);
+        assertEq(token.totalSupply(0), 1);
+    }
+
+    function testCannotIncreaseSharesIfAlreadyMinted() public {
+        vm.startPrank(bob);
+        uint256 reservationId = token.reserve();
+        token.updateReservationURI(reservationId, testURI);
+        token.mintReservation(bob, 0);
+        token.increaseShares(0, 9, bob);
+
+        assertEq(token.balanceOf(bob, 0), 10);
+
+        vm.expectRevert("IP-NFT: shares already minted");
+        token.increaseShares(0, 5, bob);
+
+        assertEq(token.balanceOf(bob, 0), 10);
+        assertEq(token.totalSupply(0), 10);
     }
 }

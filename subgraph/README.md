@@ -8,7 +8,7 @@
 ## getting the latest contract abis
 
 - `yarn create-ipnft-abi`
-- `yarn create-simpleopensea-abi` (needs simpleopensea outputs here)
+- `yarn create-schmackoSwap-abi` (needs SchmackoSwap outputs here)
 
 ### Running subgraph and contracts locally
 
@@ -23,8 +23,8 @@ Since your local env is stil configured for your anvil node, it can be reused fo
 1. Deploy local IP-NFT contract
    `forge script script/IPNFT.s.sol:IPNFTScript --fork-url $ANVIL_RPC_URL --private-key $PRIVATE_KEY --broadcast -vvvv`
 
-2. go to your local SimpleOpenSea clone and deploy
-   `forge script script/SimpleOpenSea.s.sol:SimpleOpenSeaScript --fork-url $ANVIL_RPC_URL --private-key $PRIVATE_KEY --broadcast -vvvv`
+2. go to your local SchmackoSwap clone and deploy
+   `forge script script/SchmackoSwap.s.sol:SchmackoSwapScript --fork-url $ANVIL_RPC_URL --private-key $PRIVATE_KEY --broadcast -vvvv`
 
 3. also deploy a sample ERC20 contract
    `forge script script/DeploySampleERC20.s.sol:DeploySampleERC20 --fork-url $ANVIL_RPC_URL --private-key $PRIVATE_KEY --broadcast -vvvv`
@@ -50,7 +50,7 @@ yarn create-local
 yarn deploy-local
 ```
 
-7. Checkout the local GraphQL API at http://localhost:8000/subgraphs/name/moleculeprotocol/IP-NFT
+7. Checkout the local GraphQL API at <http://localhost:8000/subgraphs/name/moleculeprotocol/ipnft-subgraph>
 
 ### manually interacting with the contracts
 
@@ -68,7 +68,7 @@ ensure your local environment contains all contract addresses and is sourced to 
 
 `cast send -i $IPNFT_ADDRESS --private-key $PRIVATE_KEY "mintReservation(address, uint256)(uint256)" 0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266 0`
 
-4. approve for SimpleOpenSea Contract to spend token 0
+4. approve for SchmackoSwap Contract to spend token 0
    `cast send -i $IPNFT_ADDRESS --private-key $PRIVATE_KEY "approve(address, uint256)()" $SOS_ADDRESS 0`
 
 5) Create a Listing for 10 Sample tokens

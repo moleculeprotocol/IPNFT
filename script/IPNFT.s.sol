@@ -10,7 +10,7 @@ contract IPNFTScript is Script {
 
     function run() public {
         vm.startBroadcast();
-        new IPNFT("Molecule IP-NFT", "IPNFT");
+        new IPNFT();
         vm.stopBroadcast();
     }
 }
