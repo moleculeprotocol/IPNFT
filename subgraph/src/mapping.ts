@@ -119,7 +119,7 @@ export function handlePurchased(event: PurchasedEvent): void {
     listing.save();
 }
 
-export function handleTransfer(event: TransferSingleEvent): void {
+export function handleTransferSingle(event: TransferSingleEvent): void {
     // Do not handle Mints as they are handled by the handleMint function
     if (
         event.params.from !==
