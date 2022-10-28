@@ -14,7 +14,7 @@ services:
       - postgres
     extra_hosts:
       - host.docker.internal:host-gateway
-     #- 192.168.178.84:host-gateway
+    #- 192.168.178.84:host-gateway
     environment:
       postgres_host: postgres
       postgres_user: graph-node
@@ -35,7 +35,11 @@ services:
     image: postgres
     ports:
       - '5432:5432'
-    command: ['postgres', '-cshared_preload_libraries=pg_stat_statements']
+    command:
+      [
+        'postgres',
+        '-cshared_preload_libraries=pg_stat_statements'
+      ]
     environment:
       POSTGRES_USER: graph-node
       POSTGRES_PASSWORD: let-me-in
@@ -43,5 +47,3 @@ services:
       PGDATA: '/data/postgres'
     volumes:
       - ./data/postgres:/var/lib/postgresql/data
-networks:
-  subgraph_default:
