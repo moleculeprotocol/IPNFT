@@ -7,12 +7,14 @@ import "../src/MyToken.sol";
 import "../src/IPNFT.sol";
 import "../src/SchmackoSwap.sol";
 
-contract IPNFTScript is Script {
+contract DevScript is Script {
     function setUp() public {}
 
     function run() public {
         vm.startBroadcast();
         new IPNFT();
+        new SchmackoSwap();
+        new MyToken();
         vm.stopBroadcast();
     }
 }
