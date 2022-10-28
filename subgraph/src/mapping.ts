@@ -1,18 +1,17 @@
 import { Address, Bytes, log, store } from '@graphprotocol/graph-ts';
 import {
     IPNFT,
-    Transfer as TransferEvent,
+    TransferSingle as TransferSingleEvent,
     Reserved as ReservedEvent,
     TokenMinted as TokenMintedEvent,
     ReservationURIUpdated as ReservationURIUpdatedEvent,
-    Approval as ApprovalEvent,
 } from '../generated/IPNFT/IPNFT';
 import {
     Listed as ListedEvent,
     Unlisted as UnlistedEvent,
     Purchased as PurchasedEvent,
     AllowlistUpdated as AllowlistUpdatedEvent,
-} from '../generated/SimpleOpenSea/SimpleOpenSea';
+} from '../generated/SchmackoSwap/SchmackoSwap';
 import { Ipnft, Listing, Reservation } from '../generated/schema';
 
 export function handleReservation(event: ReservedEvent): void {
@@ -120,13 +119,13 @@ export function handlePurchased(event: PurchasedEvent): void {
     listing.save();
 }
 
-export function handleTransfer(event: TransferEvent): void {
+export function handleTransfer(event: TransferSingleEvent): void {
     // Do not handle Mints as they are handled by the handleMint function
     if (
         event.params.from !==
         Address.fromString('0x0000000000000000000000000000000000000000')
     ) {
-        let ipnft = Ipnft.load(event.params.tokenId.toString());
+        let ipnft = Ipnft.load(event.params.id.toString());
         if (ipnft) {
             ipnft.owner = event.params.to;
             ipnft.save();
