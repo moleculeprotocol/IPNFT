@@ -93,8 +93,6 @@ contract IPNFT is
 
         emit TokenMinted(tokenURI, to, newTokenId, 1);
 
-
-
         _mint(to, newTokenId, 1, "");
         _setURI(newTokenId, tokenURI);
 
