@@ -24,10 +24,10 @@ dataSources:
         - event: TokenMinted(string,indexed address,indexed uint256,uint256)
           handler: handleMint
         - event: ReservationURIUpdated(string,indexed address,indexed uint256)
-          handler: handleReservationURIUpdate
+          handler: handleReservationURIUpdated
         - event: Reserved(indexed address,indexed uint256)
           handler: handleReservation
-      file: ./src/mapping.ts
+      file: ./src/ipnftMapping.ts
   - kind: ethereum
     name: SchmackoSwap
     network: {{network}}
@@ -53,4 +53,4 @@ dataSources:
           handler: handlePurchased
         - event: AllowlistUpdated(uint256,indexed address,bool)
           handler: handleAllowlistUpdated
-      file: ./src/mapping.ts
+      file: ./src/swapMapping.ts
