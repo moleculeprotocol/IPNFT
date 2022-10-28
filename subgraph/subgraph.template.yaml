@@ -19,9 +19,9 @@ dataSources:
         - name: IPNFT
           file: ./abis/IPNFT.json
       eventHandlers:
-        - event: Transfer(indexed address,indexed address,indexed uint256)
-          handler: handleTransfer
-        - event: TokenMinted(string,indexed address,indexed uint256)
+        - event: TransferSingle(indexed address,indexed address,indexed address,uint256,uint256)
+          handler: handleTransferSingle
+        - event: TokenMinted(string,indexed address,indexed uint256,uint256)
           handler: handleMint
         - event: ReservationURIUpdated(string,indexed address,indexed uint256)
           handler: handleReservationURIUpdate
@@ -29,12 +29,12 @@ dataSources:
           handler: handleReservation
       file: ./src/mapping.ts
   - kind: ethereum
-    name: SimpleOpenSea
+    name: SchmackoSwap
     network: {{network}}
     source:
-      address: "{{simpleOpenSea.address}}"
-      abi: SimpleOpenSea
-      startBlock: {{simpleOpenSea.startBlock}}
+      address: "{{schmackoSwap.address}}"
+      abi: SchmackoSwap
+      startBlock: {{schmackoSwap.startBlock}}
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
@@ -42,8 +42,8 @@ dataSources:
       entities:
         - Listing
       abis:
-        - name: SimpleOpenSea
-          file: ./abis/SimpleOpenSea.json
+        - name: SchmackoSwap
+          file: ./abis/SchmackoSwap.json
       eventHandlers:
         - event: Listed(uint256,(address,uint256,uint256,address,address,uint256))
           handler: handleListed

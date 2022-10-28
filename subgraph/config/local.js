@@ -10,7 +10,7 @@ module.exports = {
         address: process.env.IPNFT_ADDRESS,
         startBlock: 0,
     },
-    simpleOpenSea: {
+    schmackoSwap: {
         address: process.env.SOS_ADDRESS,
         startBlock: 0,
     },
