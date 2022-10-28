@@ -5,7 +5,7 @@
     "codegen": "graph codegen",
     "build": "graph codegen && graph build",
     "create-ipnft-abi": "cat ../out/IPNFT.sol/IPNFT.json | jq .abi > ./abis/IPNFT.json",
-    "create-simpleopensea-abi": "cat ../out/SimpleOpenSea.sol/SimpleOpenSea.json | jq .abi > ./abis/SimpleOpenSea.json",
+    "create-schmackoswap-abi": "cat ../out/SchmackoSwap.sol/SchmackoSwap.json | jq .abi > ./abis/SchmackoSwap.json",
     "prepare:local": "mustache config/local.js subgraph.template.yaml > subgraph.yaml",
     "prepare:goerli": "mustache config/goerli.json subgraph.template.yaml > subgraph.yaml",
     "prepare:mainnet": "mustache config/mainnet.json subgraph.template.yaml > subgraph.yaml",
