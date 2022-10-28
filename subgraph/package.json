@@ -4,7 +4,8 @@
   "scripts": {
     "codegen": "graph codegen",
     "build": "graph codegen && graph build",
-    "create-ipnft-abi": "cat ../out/IPNFT_ERC1155.sol/IPNFT_ERC1155.json | jq .abi > ./abis/IPNFT.json",
+    "create-ipnft-abi": "cat ../out/IPNFT.sol/IPNFT.json | jq .abi > ./abis/IPNFT.json",
+    "create-simpleopensea-abi": "cat ../out/SimpleOpenSea.sol/SimpleOpenSea.json | jq .abi > ./abis/SimpleOpenSea.json",
     "prepare:local": "mustache config/local.js subgraph.template.yaml > subgraph.yaml",
     "prepare:goerli": "mustache config/goerli.json subgraph.template.yaml > subgraph.yaml",
     "prepare:mainnet": "mustache config/mainnet.json subgraph.template.yaml > subgraph.yaml",
