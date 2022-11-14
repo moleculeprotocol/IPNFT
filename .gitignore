@@ -11,3 +11,9 @@ out/
 
 lib/*
 !.gitkeep
+
+# hardhat 
+node_modules
+cache_hardhat/
+artifacts/
+.openzeppelin/unknown-*
