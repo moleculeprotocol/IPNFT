@@ -7,14 +7,15 @@ import "hypercerts/utils/ArraysUpgradeable.sol";
 import "hypercerts/utils/StringsExtensions.sol";
 
 import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 
 error EmptyInput();
 error InvalidInput();
 
 /// @title Hypercertificate minting logic
-/// @notice Contains functions and events to initialize and issue a hypercertificate
+/// @notice Contains functions and events to initialize and issue an ipnft
 /// @author bitbeckers, mr_bluesky
 contract IPNFT3525 is
     Initializable,
@@ -23,6 +24,7 @@ contract IPNFT3525 is
     UUPSUpgradeable
 {
     using ArraysUpgradeable for uint64[];
+    using StringsUpgradeable for uint256;
 
     /// @notice Contract name
     string public constant NAME = "IP-NFT";
@@ -67,7 +69,7 @@ contract IPNFT3525 is
     /// @notice Contract constructor logic
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
-        _disableInitializers();
+        //_disableInitializers();
     }
 
     /// @notice Contract initialization logic
@@ -190,7 +192,7 @@ contract IPNFT3525 is
         override
         returns (string memory)
     {
-        return string(abi.encodePacked("token uri for ", tokenId_));
+        return string(abi.encodePacked("token uri for ", tokenId_.toString()));
         //return _metadata.generateTokenURI(slotOf(tokenId_), tokenId_);
     }
 
