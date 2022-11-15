@@ -69,7 +69,7 @@ contract IPNFT3525 is
     /// @notice Contract constructor logic
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
-        //_disableInitializers();
+        _disableInitializers();
     }
 
     /// @notice Contract initialization logic

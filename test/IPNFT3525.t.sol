@@ -5,9 +5,12 @@ import "forge-std/Test.sol";
 import {console} from "forge-std/console.sol";
 
 import {IPNFT3525} from "../src/IPNFT3525.sol";
+import {UUPSProxy} from "../src/UUPSProxy.sol";
 
 contract IPNFT3525Test is Test {
-    IPNFT3525 public ipnftContract;
+    IPNFT3525 implementationV1;
+    UUPSProxy proxy;
+    IPNFT3525 ipnft;
 
     address deployer = address(0x1);
     address bob = address(0x2);
@@ -18,13 +21,15 @@ contract IPNFT3525Test is Test {
 
     function setUp() public {
         vm.startPrank(deployer);
-        ipnftContract = new IPNFT3525();
-        ipnftContract.initialize();
+        implementationV1 = new IPNFT3525();
+        proxy = new UUPSProxy(address(implementationV1), "");
+        ipnft = IPNFT3525(address(proxy));
+        ipnft.initialize();
         vm.stopPrank();
     }
 
     function testFoo() public {
-        assertEq(ipnftContract.name(), "IP-NFT");
+        assertEq(ipnft.name(), "IP-NFT");
     }
 
     function testMinting() public {
@@ -46,9 +51,9 @@ contract IPNFT3525Test is Test {
         assertEq(name_, "some ip", "thats an err");
         assertEq(fractions_[0], 100);
 
-        ipnftContract.mint(alice, ipnftArgs);
+        ipnft.mint(alice, ipnftArgs);
 
-        string memory tokenUri_ = ipnftContract.tokenURI(0);
+        string memory tokenUri_ = ipnft.tokenURI(0);
         assertEq(tokenUri_, "token uri for 0");
     }
 }
