@@ -179,7 +179,7 @@ contract IPNFT3525 is
     }
 
     function slotURI(uint256 slotId_)
-        external
+        public
         view
         override
         returns (string memory)
@@ -187,17 +187,7 @@ contract IPNFT3525 is
         if (!_ipnfts[slotId_].exists) {
             revert NonExistentSlot(slotId_);
         }
-        return "slotUri";
-    }
-
-    function tokenURI(uint256 tokenId_)
-        public
-        view
-        override
-        returns (string memory)
-    {
-        uint256 slotId = slotOf(tokenId_);
-        IPNFT memory slot = _ipnfts[slotId];
+        IPNFT memory slot = _ipnfts[slotId_];
 
         return
             string(
@@ -216,10 +206,20 @@ contract IPNFT3525 is
                     )
                 )
             );
-        //return _metadata.generateTokenURI(slotOf(tokenId_), tokenId_);
     }
 
-    function contractURI() public view override returns (string memory) {
+    function tokenURI(uint256 tokenId_)
+        public
+        view
+        override
+        returns (string memory)
+    {
+        uint256 slotId = slotOf(tokenId_);
+
+        return slotURI(slotId);
+    }
+
+    function contractURI() public pure override returns (string memory) {
         return "contract uri";
         //return _metadata.generateContractURI();
     }
