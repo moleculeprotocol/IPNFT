@@ -34,6 +34,16 @@ Run `forge test --gas-report`
 
 ![CleanShot 2022-08-14 at 15 08 17](https://user-images.githubusercontent.com/86414213/184538476-20c8ff24-4714-44bf-a618-f6176cabd03c.png)
 
+### Run dedicated tests and watch with meaningful output
+
+`forge test --match-contract IPNFT3525 -vvv -w`
+
+### Run hardhat tests
+
+We added a basic hardhat environment to this project. While foundry stays our primary tool for contract development, hardhat allows us to test e.g. JSON / metadata related features of the contracts. After installing all js dependencies (`yarn`), you can execute the hardhat tests like:
+
+`yarn hardhat test --network hardhat`
+
 ### Deploy contract
 
 #### General config

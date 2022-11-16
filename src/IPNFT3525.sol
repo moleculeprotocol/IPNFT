@@ -10,6 +10,7 @@ import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol"
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/Base64Upgradeable.sol";
 
 error EmptyInput();
 error InvalidInput();
@@ -91,10 +92,12 @@ contract IPNFT3525 is
 
     /// @notice Issues a new IPNFT
     /// @param account Account issuing the new IPNFT
+    /// @param data abi encoded string name_,string description_,string uri_, uint64[] fractions
+
     function mint(address account, bytes calldata data) public virtual {
         (IPNFT memory ipnft, uint64[] memory fractions) = _parseData(data);
-
         _authorizeMint(account, ipnft);
+        ipnft.minter = msg.sender;
 
         uint256 slot = slotCount() + 1;
 
@@ -193,7 +196,26 @@ contract IPNFT3525 is
         override
         returns (string memory)
     {
-        return string(abi.encodePacked("token uri for ", tokenId_.toString()));
+        uint256 slotId = slotOf(tokenId_);
+        IPNFT memory slot = _ipnfts[slotId];
+
+        return
+            string(
+                abi.encodePacked(
+                    "data:application/json;base64,",
+                    Base64Upgradeable.encode(
+                        abi.encodePacked(
+                            '{"name":"',
+                            slot.name,
+                            '","description":"',
+                            slot.description,
+                            '","external_url":"',
+                            slot.uri,
+                            '"}'
+                        )
+                    )
+                )
+            );
         //return _metadata.generateTokenURI(slotOf(tokenId_), tokenId_);
     }
 

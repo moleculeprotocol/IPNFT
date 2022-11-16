@@ -6,7 +6,7 @@ env:
   FOUNDRY_PROFILE: ci
 
 jobs:
-  check:
+  test:
     name: Foundry project
     runs-on: ubuntu-latest
     steps:
@@ -19,6 +19,14 @@ jobs:
         with:
           version: nightly
 
+      - name: Use Node.js 16
+        uses: actions/setup-node@v3
+        with:
+          node-version: "16.x"
+
+      - name: Install node dependencies
+        run: yarn --frozen-lockfile
+
       - name: Run Forge build
         run: |
           forge --version
@@ -29,3 +37,6 @@ jobs:
         run: |
           forge test -vvv
         id: test
+      
+      - name: Run Hardhat tests
+        run: yarn hardhat test --network hardhat

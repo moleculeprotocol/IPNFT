@@ -15,8 +15,8 @@ contract IPNFT3525Test is Test {
     address deployer = address(0x1);
     address bob = address(0x2);
     address alice = address(0x3);
-    string testURI = "ipfs://QmYwAPJzv5CZsnA9LqYKXfutJzBg68";
-    string testURI2 = "ar://tNbdHqh3AVDHVD06P0OPUXSProI5kGcZZw8IvLkekSY";
+    string ipfsUri = "ipfs://QmYwAPJzv5CZsnA9LqYKXfutJzBg68";
+    string arUri = "ar://tNbdHqh3AVDHVD06P0OPUXSProI5kGcZZw8IvLkekSY";
     uint256 tokenPrice = 1 ether;
 
     function setUp() public {
@@ -37,9 +37,9 @@ contract IPNFT3525Test is Test {
         fractions[0] = 100;
 
         bytes memory ipnftArgs = abi.encode(
-            "some ip",
-            "it's just some ip",
-            "some uri",
+            "IP Title",
+            "the description of that ip",
+            arUri,
             fractions
         );
 
@@ -48,12 +48,17 @@ contract IPNFT3525Test is Test {
             (string, string, string, uint64[])
         );
 
-        assertEq(name_, "some ip", "thats an err");
+        assertEq(name_, "IP Title");
         assertEq(fractions_[0], 100);
 
         ipnft.mint(alice, ipnftArgs);
 
-        string memory tokenUri_ = ipnft.tokenURI(0);
-        assertEq(tokenUri_, "token uri for 0");
+        string memory tokenUri_ = ipnft.tokenURI(1);
+
+        //todo you obviously can't simply parse json in solidity. Add logic testing of this one to a hardhat test, maybe.
+        assertEq(
+            tokenUri_,
+            "data:application/json;base64,eyJuYW1lIjoiSVAgVGl0bGUiLCJkZXNjcmlwdGlvbiI6InRoZSBkZXNjcmlwdGlvbiBvZiB0aGF0IGlwIiwiZXh0ZXJuYWxfdXJsIjoiYXI6Ly90TmJkSHFoM0FWREhWRDA2UDBPUFVYU1Byb0k1a0djWlp3OEl2TGtla1NZIn0="
+        );
     }
 }
