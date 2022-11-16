@@ -14,9 +14,9 @@ import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 error EmptyInput();
 error InvalidInput();
 
-/// @title Hypercertificate minting logic
+/// @title minting logic
 /// @notice Contains functions and events to initialize and issue an ipnft
-/// @author bitbeckers, mr_bluesky
+/// @author contains code of bitbeckers, mr_bluesky
 contract IPNFT3525 is
     Initializable,
     ERC3525SlotEnumerableUpgradeable,
@@ -36,8 +36,9 @@ contract IPNFT3525 is
     bytes32 public constant UPGRADER_ROLE = keccak256("UPGRADER_ROLE");
     /// @notice Current version of the contract
     uint16 internal _version;
-    /// @notice Hypercert metadata contract
-    //IHyperCertMetadata internal _metadata;
+
+    /// @notice external metadata contract
+    //IIPNFTMetadata internal _metadata;
 
     mapping(uint256 => IPNFT) internal _ipnfts;
 
