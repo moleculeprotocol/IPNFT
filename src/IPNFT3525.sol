@@ -114,6 +114,9 @@ contract IPNFT3525 is
     function split(uint256 tokenId, uint256[] calldata amounts) public {
         if (!_exists(tokenId)) revert NonExistentToken(tokenId);
 
+        if (ownerOf(tokenId) != _msgSender()) {
+            revert NotApprovedOrOwner();
+        }
         uint256 total;
 
         uint256 amountsLength = amounts.length;

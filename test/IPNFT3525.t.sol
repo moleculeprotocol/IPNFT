@@ -39,10 +39,11 @@ contract IPNFT3525Test is Test {
         address to,
         string memory title,
         string memory description,
-        string memory tokenUri
+        string memory tokenUri,
+        uint64 initialFractions
     ) internal {
         uint64[] memory fractions = new uint64[](1);
-        fractions[0] = 100;
+        fractions[0] = initialFractions;
 
         bytes memory ipnftArgs = abi.encode(
             title,
@@ -52,6 +53,15 @@ contract IPNFT3525Test is Test {
         );
 
         ipnft.mint(to, ipnftArgs);
+    }
+
+    function mintAToken(
+        address to,
+        string memory title,
+        string memory description,
+        string memory tokenUri
+    ) internal {
+        mintAToken(to, title, description, tokenUri, 1);
     }
 
     function testMinting() public {
@@ -110,6 +120,65 @@ contract IPNFT3525Test is Test {
             slotUri,
             "data:application/json;base64,eyJuYW1lIjoiIiwiZGVzY3JpcHRpb24iOiIiLCJleHRlcm5hbF91cmwiOiJhcjovL3ROYmRIcWgzQVZESFZEMDZQME9QVVhTUHJvSTVrR2NaWnc4SXZMa2VrU1kifQ=="
         );
+    }
+
+    function testSplitandMerge() public {
+        mintAToken(alice, "", "", arUri, 10);
+
+        assertEq(ipnft.balanceOf(1), 10);
+        // https://docs.soliditylang.org/en/v0.8.17/types.html#array-literals
+        uint256[] memory fractions = new uint256[](2);
+        fractions[0] = 5;
+        fractions[1] = 5;
+
+        //this creates another NFT on the same slot:
+        vm.startPrank(alice);
+        ipnft.split(1, fractions);
+
+        assertEq(ipnft.balanceOf(1), 5);
+        assertEq(ipnft.balanceOf(2), 5);
+
+        assertEq(ipnft.ownerOf(1), alice);
+        assertEq(ipnft.ownerOf(2), alice);
+
+        //note the merge order matters: we're merging towards the last token id in the list.
+        uint256[] memory tokenIdsToMerge = new uint256[](2);
+        tokenIdsToMerge[0] = 2;
+        tokenIdsToMerge[1] = 1;
+
+        ipnft.merge(tokenIdsToMerge);
+
+        assertEq(ipnft.ownerOf(1), alice);
+        assertEq(ipnft.balanceOf(1), 10);
+
+        vm.stopPrank();
+    }
+
+    function testTransferValueToANewUser() public {
+        mintAToken(alice, "", "", arUri, 10);
+
+        vm.startPrank(alice);
+        //this is the ERC3525 value transfer not available on ERC721
+        //fromTokenId, to, value
+        //Bob will receive a new NFT by doing so.
+        ipnft.transferFrom(1, bob, 5);
+        vm.stopPrank();
+
+        assertEq(ipnft.ownerOf(1), alice);
+        assertEq(ipnft.ownerOf(2), bob);
+        assertEq(ipnft.balanceOf(1), 5);
+        assertEq(ipnft.balanceOf(2), 5);
+
+        //that's because both tokens yield the slot's metadata:
+        assertEq(ipnft.tokenURI(1), ipnft.tokenURI(2));
+
+        //this would fail with NotApprovedOrOwner by ERC3525's _burn function
+        // vm.startPrank(alice);
+        // uint256[] memory tokenIdsToMerge = new uint256[](2);
+        // tokenIdsToMerge[0] = 2;
+        // tokenIdsToMerge[1] = 1;
+        // ipnft.merge(tokenIdsToMerge);
+        // vm.stopPrank();
     }
 
     function testBurn() public {
