@@ -127,6 +127,7 @@ contract IPNFT3525V2 is
     /// @notice Returns a flag indicating if the contract supports the specified interface
     /// @param interfaceId Id of the interface
     /// @return true, if the interface is supported
+    //todo: don't return ERC3525 related interfaces
     function supportsInterface(bytes4 interfaceId)
         public
         view
@@ -208,6 +209,34 @@ contract IPNFT3525V2 is
     }
 
     /*******************
+     * DISABLE value transfers and splits in V2
+     ********************/
+
+    function transferFrom(
+        uint256 fromTokenId_,
+        address to_,
+        uint256 value_
+    ) public payable virtual override returns (uint256) {
+        revert("not available in V2");
+    }
+
+    function transferFrom(
+        uint256 fromTokenId_,
+        uint256 toTokenId_,
+        uint256 value_
+    ) public payable virtual override {
+        revert("not available in V2");
+    }
+
+    function approve(
+        uint256 tokenId_,
+        address to_,
+        uint256 value_
+    ) external payable virtual override {
+        revert("not available in V2");
+    }
+
+    /*******************
      * INTERNAL
      ******************/
 
@@ -274,14 +303,6 @@ contract IPNFT3525V2 is
         returns (address sender)
     {
         return msg.sender;
-    }
-
-    function transferFrom(
-        uint256 fromTokenId_,
-        address to_,
-        uint256 value_
-    ) public payable virtual override returns (uint256) {
-        revert("value transfers are disabled in this version");
     }
 
     // function setMetadataGenerator(address metadataGenerator)
