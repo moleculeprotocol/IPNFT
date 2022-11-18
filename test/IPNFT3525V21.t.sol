@@ -4,13 +4,13 @@ pragma solidity ^0.8.17;
 import "forge-std/Test.sol";
 import {console} from "forge-std/console.sol";
 
-import {IPNFT3525} from "../src/IPNFT3525.sol";
+import {IPNFT3525V21} from "../src/IPNFT3525V21.sol";
 import {UUPSProxy} from "../src/UUPSProxy.sol";
 
-contract IPNFT3525Test is Test {
-    IPNFT3525 implementationV1;
+contract IPNFT3525V21Test is Test {
+    IPNFT3525V21 implementationV1;
     UUPSProxy proxy;
-    IPNFT3525 ipnft;
+    IPNFT3525V21 ipnft;
 
     address deployer = makeAddr("chucknorris");
 
@@ -24,15 +24,15 @@ contract IPNFT3525Test is Test {
 
     function setUp() public {
         vm.startPrank(deployer);
-        implementationV1 = new IPNFT3525();
+        implementationV1 = new IPNFT3525V21();
         proxy = new UUPSProxy(address(implementationV1), "");
-        ipnft = IPNFT3525(address(proxy));
+        ipnft = IPNFT3525V21(address(proxy));
         ipnft.initialize();
         vm.stopPrank();
     }
 
-    function testFoo() public {
-        assertEq(ipnft.name(), "IP-NFT");
+    function testContractName() public {
+        assertEq(ipnft.name(), "IP-NFT V2.1");
     }
 
     function mintAToken(
@@ -79,6 +79,22 @@ contract IPNFT3525Test is Test {
         assertEq(ipnft.balanceOf(alice), 1);
 
         assertEq(ipnft.tokenOfOwnerByIndex(alice, 0), 1);
+    }
+
+    function testCanMintWithMoreThanOneFraction() public {
+        uint64[] memory fractions = new uint64[](2);
+        fractions[0] = 50;
+        fractions[1] = 50;
+
+        bytes memory ipnftArgs = abi.encode("", "", "", fractions);
+
+        ipnft.mint(alice, ipnftArgs);
+
+        assertEq(ipnft.ownerOf(1), alice);
+        assertEq(ipnft.ownerOf(2), alice);
+
+        assertEq(ipnft.balanceOf(1), 50);
+        assertEq(ipnft.balanceOf(2), 50);
     }
 
     function testTransferOneNft() public {
@@ -140,6 +156,9 @@ contract IPNFT3525Test is Test {
 
         assertEq(ipnft.ownerOf(1), alice);
         assertEq(ipnft.ownerOf(2), alice);
+
+        assertEq(ipnft.slotOf(1), 1);
+        assertEq(ipnft.slotOf(2), 1);
 
         //note the merge order matters: we're merging towards the last token id in the list.
         uint256[] memory tokenIdsToMerge = new uint256[](2);

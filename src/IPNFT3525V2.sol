@@ -18,7 +18,7 @@ error InvalidInput();
 /// @title minting logic
 /// @notice Contains functions and events to initialize and issue an ipnft
 /// @author contains code of bitbeckers, mr_bluesky
-contract IPNFT3525 is
+contract IPNFT3525V2 is
     Initializable,
     ERC3525SlotEnumerableUpgradeable,
     AccessControlUpgradeable,
@@ -28,13 +28,16 @@ contract IPNFT3525 is
     using StringsUpgradeable for uint256;
 
     /// @notice Contract name
-    string public constant NAME = "IP-NFT";
+    string public constant NAME = "IP-NFT V2";
     /// @notice Token symbol
     string public constant SYMBOL = "IPNFT";
     /// @notice Token value decimals
     uint8 public constant DECIMALS = 0;
     /// @notice User role required in order to upgrade the contract
     bytes32 public constant UPGRADER_ROLE = keccak256("UPGRADER_ROLE");
+
+    uint64 public constant DEFAULT_VALUE = 1_000_000;
+
     /// @notice Current version of the contract
     uint16 internal _version;
 
@@ -49,7 +52,6 @@ contract IPNFT3525 is
         uint16 version;
         bool exists;
         string name;
-        string description;
         string uri;
         address minter;
     }
@@ -95,7 +97,8 @@ contract IPNFT3525 is
     /// @param data abi encoded string name_,string description_,string uri_, uint64[] fractions
 
     function mint(address account, bytes calldata data) public virtual {
-        (IPNFT memory ipnft, uint64[] memory fractions) = _parseData(data);
+        IPNFT memory ipnft = _parseData(data);
+
         _authorizeMint(account, ipnft);
         ipnft.minter = msg.sender;
 
@@ -103,47 +106,11 @@ contract IPNFT3525 is
 
         _ipnfts[slot] = ipnft;
 
-        uint256 len = fractions.length;
-        for (uint256 i = 0; i < len; i++) {
-            _mintValue(account, slot, fractions[i]);
-        }
+        _mintValue(account, slot, DEFAULT_VALUE);
 
-        emit IPNFTMinted(slot, account, fractions);
-    }
-
-    function split(uint256 tokenId, uint256[] calldata amounts) public {
-        if (!_exists(tokenId)) revert NonExistentToken(tokenId);
-
-        if (ownerOf(tokenId) != _msgSender()) {
-            revert NotApprovedOrOwner();
-        }
-        uint256 total;
-
-        uint256 amountsLength = amounts.length;
-        if (amountsLength == 1) revert AlreadyMinted(tokenId);
-
-        for (uint256 i; i < amountsLength; i++) {
-            total += amounts[i];
-        }
-
-        if (total > balanceOf(tokenId) || total < balanceOf(tokenId))
-            revert InvalidInput();
-
-        for (uint256 i = 1; i < amountsLength; i++) {
-            _splitValue(tokenId, amounts[i]);
-        }
-    }
-
-    function merge(uint256[] memory tokenIds) public {
-        uint256 len = tokenIds.length;
-        uint256 targetTokenId = tokenIds[len - 1];
-        for (uint256 i = 0; i < len; i++) {
-            uint256 tokenId = tokenIds[i];
-            if (tokenId != targetTokenId) {
-                _mergeValue(tokenId, targetTokenId);
-                _burn(tokenId);
-            }
-        }
+        uint64[] memory defaultFractions = new uint64[](1);
+        defaultFractions[0] = DEFAULT_VALUE;
+        emit IPNFTMinted(slot, account, defaultFractions);
     }
 
     /// @notice gets the current version of the contract
@@ -200,8 +167,6 @@ contract IPNFT3525 is
                         abi.encodePacked(
                             '{"name":"',
                             slot.name,
-                            '","description":"',
-                            slot.description,
                             '","external_url":"',
                             slot.uri,
                             '"}'
@@ -282,27 +247,24 @@ contract IPNFT3525 is
         internal
         pure
         virtual
-        returns (IPNFT memory ipnft, uint64[] memory)
+        returns (IPNFT memory ipnft)
     {
         if (data.length == 0) {
             revert EmptyInput();
         }
 
-        (
-            string memory name_,
-            string memory description_,
-            string memory uri_,
-            uint64[] memory fractions
-        ) = abi.decode(data, (string, string, string, uint64[]));
+        (string memory name_, string memory uri_) = abi.decode(
+            data,
+            (string, string)
+        );
 
-        ipnft.totalUnits = fractions.getSum();
+        ipnft.totalUnits = DEFAULT_VALUE;
         ipnft.version = uint16(0);
         ipnft.exists = true;
         ipnft.name = name_;
-        ipnft.description = description_;
         ipnft.uri = uri_;
 
-        return (ipnft, fractions);
+        return ipnft;
     }
 
     function _msgSender()
@@ -312,6 +274,14 @@ contract IPNFT3525 is
         returns (address sender)
     {
         return msg.sender;
+    }
+
+    function transferFrom(
+        uint256 fromTokenId_,
+        address to_,
+        uint256 value_
+    ) public payable virtual override returns (uint256) {
+        revert("value transfers are disabled in this version");
     }
 
     // function setMetadataGenerator(address metadataGenerator)

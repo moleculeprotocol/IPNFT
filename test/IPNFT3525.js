@@ -15,11 +15,11 @@ describe("IPNFT3525", function () {
   });
 
   it('deploys', async function () {
-    const IPNFT = await ethers.getContractFactory('IPNFT3525');
+    const IPNFT = await ethers.getContractFactory('IPNFT3525V2');
     ipnftContract = await upgrades.deployProxy(IPNFT, { kind: 'uups' });
 
     const name = await ipnftContract.name()
-    expect(name).to.equal("IP-NFT");
+    expect(name).to.equal("IP-NFT V2");
 
   });
 
@@ -28,18 +28,17 @@ describe("IPNFT3525", function () {
     const fractions = [100];
 
     const ipnftArgs = hre.ethers.utils.defaultAbiCoder.encode(
-      ["string", "string", "string", "uint64[]"],
-      ["IP Title", "the description of that ip", arUri, fractions]
+      ["string", "string"],
+      ["IP Title", arUri]
     )
 
     //just prove that our abiEncoder works as expected ;)
-    const [name_, , , fractions_] = hre.ethers.utils.defaultAbiCoder.decode(
-      ["string", "string", "string", "uint64[]"],
+    const [name_, uri_] = hre.ethers.utils.defaultAbiCoder.decode(
+      ["string", "string"],
       ipnftArgs
     );
 
     expect(name_).to.equal("IP Title");
-    expect(fractions_[0].toNumber()).to.equal(100);
 
     //bob mints 1 token for alice.
     await ipnftContract.connect(bob).mint(alice.address, ipnftArgs);
