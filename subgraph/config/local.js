@@ -5,13 +5,17 @@ require('dotenv').config({
 })
 
 module.exports = {
-    network: 'mainnet',
+    network: "mainnet",
     ipnft: {
         address: process.env.IPNFT_ADDRESS,
-        startBlock: 0,
+        startBlock: 0
     },
     schmackoSwap: {
         address: process.env.SOS_ADDRESS,
-        startBlock: 0,
+        startBlock: 0
     },
+    mintpass: {
+        address: process.env.MINTPASS_ADDRESS,
+        startBlock: 0
+    }
 };

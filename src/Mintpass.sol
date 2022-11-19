@@ -12,7 +12,6 @@ contract Mintpass is ERC721, Ownable {
     Counters.Counter private _tokenIdCounter;
 
     /// @dev Stores the address of the associated IP-NFT contract.
-    // Stores the contract address of the IP-NFT Contract
     address private _ipnftContract;
 
     // Mapping from tokenId to validity of token
@@ -31,10 +30,21 @@ contract Mintpass is ERC721, Ownable {
      *
      */
 
-    /// @notice Event emitted when token `tokenId` of `owner` is revoked
+    /// Event emitted when token `tokenId` of `owner` is revoked
     /// @param owner Address for whom the ownership has been revoked
     /// @param tokenId Identifier of the token
-    event Revoked(address owner, uint256 tokenId);
+    event Revoked(address indexed owner, uint256 indexed tokenId);
+
+    /// Event emitted when new token is minted
+    /// @param owner Address for whom the ownership has been revoked
+    /// @param tokenId Identifier of the token
+    event TokenMinted(address indexed owner, uint256 indexed tokenId);
+
+    /// Event emitted when token is burned
+    /// @param from Address that burned the token
+    /// @param owner Address of the owner of the token before it got burned
+    /// @param tokenId Identifier of the token    
+    event TokenBurned(address indexed from, address indexed owner, uint256 indexed tokenId);
 
     /**
      *
@@ -42,7 +52,7 @@ contract Mintpass is ERC721, Ownable {
      *
      */
 
-    /// @notice Check if a token hasn't been revoked
+    /// @dev Check if a token hasn't been revoked
     /// @param tokenId Identifier of the token that is checked for validity
     /// @return True if the token is valid, false otherwise
     function isValid(uint256 tokenId) external view returns (bool) {
@@ -50,14 +60,14 @@ contract Mintpass is ERC721, Ownable {
         return _isTokenValid[tokenId];
     }
 
-    /// @notice Check if an address owns a valid token in the contract
+    /// @dev Check if an address owns a valid token in the contract
     /// @param owner Address for whom to check the ownership
     /// @return True if `owner` has a valid token, false otherwise
     function hasValid(address owner) public view virtual returns (bool) {
         return _numberOfValidTokens[owner] > 0;
     }
 
-    /// @notice Mints a token to an address and approves it be handled by the IP-NFT Contract
+    /// @dev Mints a token to an address and approves it be handled by the IP-NFT Contract
     /// @param to The address that the token is minted to
     function safeMint(address to) public onlyOwner {
         uint256 tokenId = _tokenIdCounter.current();
@@ -66,9 +76,10 @@ contract Mintpass is ERC721, Ownable {
         _numberOfValidTokens[to] += 1;
         _safeMint(to, tokenId);
         _approve(_ipnftContract, tokenId);
+        emit TokenMinted(to, tokenId);
     }
 
-    /// @notice Mark the token as revoked
+    /// @dev Mark the token as revoked
     /// @param tokenId Identifier of the token
     function revoke(uint256 tokenId) external onlyOwner {
         address _owner = ownerOf(tokenId);
@@ -80,11 +91,13 @@ contract Mintpass is ERC721, Ownable {
         emit Revoked(_owner, tokenId);
     }
 
-    /// @notice burns a token. This is only possible by either the owner of the token or the IP-NFT Contract
+    /// @dev burns a token. This is only possible by either the owner of the token or the IP-NFT Contract
     /// @param tokenId Identifier of the token to be burned
     function burn(uint256 tokenId) external {
-        if (ownerOf(tokenId) == msg.sender || msg.sender == _ipnftContract) {
+        address _owner = ownerOf(tokenId);
+        if (_owner == msg.sender || msg.sender == _ipnftContract) {
             _burn(tokenId);
+            emit TokenBurned(msg.sender, _owner, tokenId);
         } else {
             revert("Only the owner or ipnft contract can burn this token.");
         }
@@ -94,7 +107,7 @@ contract Mintpass is ERC721, Ownable {
         return _numberOfValidTokens[owner];
     }
 
-    /// @notice Returns the tokenURI attached to a token
+    /// @dev Returns the tokenURI attached to a token
     /// @param tokenId Identifier of the token
     function tokenURI(uint256 tokenId)
         public

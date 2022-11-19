@@ -12,7 +12,9 @@ contract MintpassTest is Test {
     address bob = address(0x3);
     address alice = address(0x4);
 
-    event Revoked(address owner, uint256 tokenId);
+    event Revoked(address indexed owner, uint256 indexed tokenId);
+    event TokenMinted(address indexed owner, uint256 indexed tokenId);
+    event TokenBurned(address indexed from, address indexed owner, uint256 indexed tokenId);
 
     function setUp() public {
         vm.startPrank(deployer);
@@ -22,6 +24,8 @@ contract MintpassTest is Test {
 
     function testSafeMintFromOwner() public {
         vm.startPrank(deployer);
+        vm.expectEmit(true, true, true, true);
+        emit TokenMinted(bob, 0);
         token.safeMint(bob);
 
         assertEq(token.balanceOf(bob), 1);
@@ -46,6 +50,8 @@ contract MintpassTest is Test {
 
     function testTransfer() public {
         vm.startPrank(deployer);
+        vm.expectEmit(true, true, true, true);
+        emit TokenMinted(bob, 0);
         token.safeMint(bob);
         vm.stopPrank();
 
@@ -58,10 +64,14 @@ contract MintpassTest is Test {
 
     function testBurnFromOwner() public {
         vm.startPrank(deployer);
+        vm.expectEmit(true, true, true, true);
+        emit TokenMinted(bob, 0);
         token.safeMint(bob);
         assertEq(token.balanceOf(bob), 1);
         vm.stopPrank();
 
+        vm.expectEmit(true, true, true, true);
+        emit TokenBurned(bob, bob, 0);
         vm.startPrank(bob);
         token.burn(0);
         assertEq(token.balanceOf(bob), 0);
@@ -70,11 +80,16 @@ contract MintpassTest is Test {
 
     function testBurnFromIpnftContract() public {
         vm.startPrank(deployer);
+        vm.expectEmit(true, true, true, true);
+        emit TokenMinted(bob, 0);
         token.safeMint(bob);
         assertEq(token.balanceOf(bob), 1);
         vm.stopPrank();
 
         vm.startPrank(ipnftContract);
+        vm.expectEmit(true, true, true, true);
+        emit TokenBurned(ipnftContract, bob, 0);
+        assertEq(token.ownerOf(0), bob);
         token.burn(0);
         assertEq(token.balanceOf(bob), 0);
         vm.stopPrank();
@@ -82,6 +97,8 @@ contract MintpassTest is Test {
 
     function testBurnFromRandomUser() public {
         vm.startPrank(deployer);
+        vm.expectEmit(true, true, true, true);
+        emit TokenMinted(bob, 0);
         token.safeMint(bob);
         assertEq(token.balanceOf(bob), 1);
         vm.stopPrank();
@@ -95,6 +112,8 @@ contract MintpassTest is Test {
 
     function testRevokeToken() public {
         vm.startPrank(deployer);
+        vm.expectEmit(true, true, true, true);
+        emit TokenMinted(bob, 0);
         token.safeMint(bob);
         assertEq(token.balanceOf(bob), 1);
         assertEq(token.isValid(0), true);
@@ -109,6 +128,8 @@ contract MintpassTest is Test {
 
     function testRevokeFromRandomUser() public {
         vm.startPrank(deployer);
+        vm.expectEmit(true, true, true, true);
+        emit TokenMinted(bob, 0);
         token.safeMint(bob);
         assertEq(token.balanceOf(bob), 1);
         vm.stopPrank();

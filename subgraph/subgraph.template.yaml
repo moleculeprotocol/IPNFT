@@ -54,3 +54,27 @@ dataSources:
         - event: AllowlistUpdated(uint256,indexed address,bool)
           handler: handleAllowlistUpdated
       file: ./src/swapMapping.ts
+  - kind: ethereum
+    name: Mintpass
+    network: {{network}}
+    source:
+      address: "{{mintpass.address}}"
+      abi: Mintpass
+      startBlock: {{mintpass.startBlock}}
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - Mintpass
+      abis:
+        - name: Mintpass
+          file: ./abis/Mintpass.json
+      eventHandlers:
+        - event: TokenMinted(indexed address,indexed uint256)
+          handler: handleTokenMinted
+        - event: Revoked(indexed address,indexed uint256)
+          handler: handleRevoked
+        - event: TokenBurned(indexed address,indexed address,indexed uint256)
+          handler: handleTokenBurned
+      file: ./src/swapMapping.ts
