@@ -18,9 +18,6 @@ contract Mintpass is ERC721, Ownable {
     // Mapping from tokenId to validity of token. If tokenId has been revoked, it will return true
     mapping(uint256 => bool) private _revokations;
 
-    // Mapping from address to amount of valid tokens
-    mapping(address => uint256) private _validTokensAmount;
-
     constructor(address ipnftContract_) ERC721("Mintpass", "MP") {
         _ipnftContract = ipnftContract_;
     }
@@ -65,11 +62,6 @@ contract Mintpass is ERC721, Ownable {
         return !_revokations[tokenId];
     }
 
-    /// @param owner Address for which to return the amount of valid tokens
-    function validTokensAmount(address owner) external view returns (uint256) {
-        return _validTokensAmount[owner];
-    }
-
     /// @dev Mints a token to an address and approves it be handled by the IP-NFT Contract
     /// @param to The address that the token is minted to
     function safeMint(address to) public onlyOwner {
@@ -77,7 +69,6 @@ contract Mintpass is ERC721, Ownable {
         _tokenIdCounter.increment();
         _safeMint(to, tokenId);
         _approve(_ipnftContract, tokenId);
-        _validTokensAmount[to] += 1;
         emit TokenMinted(to, tokenId);
     }
 
@@ -87,8 +78,6 @@ contract Mintpass is ERC721, Ownable {
         address _owner = ownerOf(tokenId);
         require(_revokations[tokenId] != true, "Token is already invalid");
         _revokations[tokenId] = true;
-        assert(_validTokensAmount[_owner] > 0);
-        _validTokensAmount[_owner] -= 1;
         emit Revoked(_owner, tokenId);
     }
 
@@ -101,8 +90,6 @@ contract Mintpass is ERC721, Ownable {
         );
         address _owner = ownerOf(tokenId);
         _burn(tokenId);
-        assert(_validTokensAmount[_owner] > 0);
-        _validTokensAmount[_owner] -= 1;
         emit TokenBurned(msg.sender, _owner, tokenId);
     }
 
