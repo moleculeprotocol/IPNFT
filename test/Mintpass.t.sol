@@ -12,9 +12,9 @@ contract MintpassTest is Test {
     address bob = address(0x3);
     address alice = address(0x4);
 
-    event Revoked(address indexed owner, uint256 indexed tokenId);
+    event Revoked(uint256 indexed tokenId);
     event TokenMinted(address indexed owner, uint256 indexed tokenId);
-    event TokenBurned(address indexed from, address indexed owner, uint256 indexed tokenId);
+    event TokenBurned(address indexed from, uint256 indexed tokenId);
 
     function setUp() public {
         vm.startPrank(deployer);
@@ -29,7 +29,7 @@ contract MintpassTest is Test {
         string memory tokenUri_ = token.tokenURI(0);
         assertEq(
             tokenUri_,
-            "data:application/json;base64,eyJuYW1lIjogIklQLU5GVCBNaW50cGFzcyAjMCIsICJkZXNjcmlwdGlvbiI6ICJUaGlzIE1pbnRwYXNzIGNhbiBiZSB1c2VkIHRvIG1pbnQgb25lIElQLU5GVCIsICJleHRlcm5hbF91cmwiOiAiVE9ETzogRW50ZXIgSVAtTkZULVVJIFVSTCIsICJpbWFnZSI6ICJUT0RPOiBFbnRlciBJUEZTIFVSTCIsICJ2YWxpZCI6ICJWYWxpZCJ9"
+            "data:application/json;base64,eyJuYW1lIjogIklQLU5GVCBNaW50cGFzcyAjMCIsICJkZXNjcmlwdGlvbiI6ICJUaGlzIE1pbnRwYXNzIGNhbiBiZSB1c2VkIHRvIG1pbnQgb25lIElQLU5GVCIsICJleHRlcm5hbF91cmwiOiAiVE9ETzogRW50ZXIgSVAtTkZULVVJIFVSTCIsICJpbWFnZSI6ICJUT0RPOiBFbnRlciBJUEZTIFVSTCIsICJ2YWxpZCI6ICJ0cnVlIn0="
         );
 
         vm.stopPrank();
@@ -57,7 +57,7 @@ contract MintpassTest is Test {
     function testBurnFromOwner() public {
         vm.startPrank(bob);
         vm.expectEmit(true, true, true, true);
-        emit TokenBurned(bob, bob, 0);
+        emit TokenBurned(bob, 0);
         token.burn(0);
 
         assertEq(token.balanceOf(bob), 0);
@@ -69,7 +69,7 @@ contract MintpassTest is Test {
         assertEq(token.ownerOf(0), bob);
 
         vm.expectEmit(true, true, true, true);
-        emit TokenBurned(ipnftContract, bob, 0);
+        emit TokenBurned(ipnftContract, 0);
         token.burn(0);
 
         assertEq(token.balanceOf(bob), 0);
@@ -88,7 +88,7 @@ contract MintpassTest is Test {
     function testRevokeToken() public {
         vm.startPrank(deployer);
         vm.expectEmit(true, true, true, true);
-        emit Revoked(bob, 0);
+        emit Revoked(0);
         token.revoke(0);
 
         assertEq(token.isValid(0), false);
@@ -96,7 +96,7 @@ contract MintpassTest is Test {
         string memory tokenUri_ = token.tokenURI(0);
         assertEq(
             tokenUri_,
-            "data:application/json;base64,eyJuYW1lIjogIklQLU5GVCBNaW50cGFzcyAjMCIsICJkZXNjcmlwdGlvbiI6ICJUaGlzIE1pbnRwYXNzIGNhbiBiZSB1c2VkIHRvIG1pbnQgb25lIElQLU5GVCIsICJleHRlcm5hbF91cmwiOiAiVE9ETzogRW50ZXIgSVAtTkZULVVJIFVSTCIsICJpbWFnZSI6ICJUT0RPOiBFbnRlciBJUEZTIFVSTCIsICJ2YWxpZCI6ICJSZXZva2VkIn0="
+            "data:application/json;base64,eyJuYW1lIjogIklQLU5GVCBNaW50cGFzcyAjMCIsICJkZXNjcmlwdGlvbiI6ICJUaGlzIE1pbnRwYXNzIGNhbiBiZSB1c2VkIHRvIG1pbnQgb25lIElQLU5GVCIsICJleHRlcm5hbF91cmwiOiAiVE9ETzogRW50ZXIgSVAtTkZULVVJIFVSTCIsICJpbWFnZSI6ICJUT0RPOiBFbnRlciBJUEZTIFVSTCIsICJ2YWxpZCI6ICJmYWxzZSJ9"
         );
         vm.stopPrank();
     }

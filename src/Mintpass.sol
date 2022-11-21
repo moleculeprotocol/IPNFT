@@ -6,8 +6,9 @@ import {Counters} from "@openzeppelin/contracts/utils/Counters.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {Base64} from "@openzeppelin/contracts/utils/Base64.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
+import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-contract Mintpass is ERC721, Ownable {
+contract Mintpass is ERC721, Ownable, ReentrancyGuard {
     using Counters for Counters.Counter;
 
     Counters.Counter private _tokenIdCounter;
@@ -16,10 +17,10 @@ contract Mintpass is ERC721, Ownable {
     address public _ipnftContract;
 
     // Mapping from tokenId to validity of token. If tokenId has been revoked, it will return true
-    mapping(uint256 => bool) private _revokations;
+    mapping(uint256 => bool) private _revocations;
 
-    constructor(address ipnftContract_) ERC721("Mintpass", "MP") {
-        _ipnftContract = ipnftContract_;
+    constructor(address ipnftContract) ERC721("IP-NFT Mintpass", "IPNFTMP") {
+        _ipnftContract = ipnftContract;
     }
 
     /**
@@ -29,9 +30,8 @@ contract Mintpass is ERC721, Ownable {
      */
 
     /// Event emitted when token `tokenId` of `owner` is revoked
-    /// @param owner Address for whom the ownership has been revoked
     /// @param tokenId Identifier of the token
-    event Revoked(address indexed owner, uint256 indexed tokenId);
+    event Revoked(uint256 indexed tokenId);
 
     /// Event emitted when new token is minted
     /// @param owner Address for whom the ownership has been revoked
@@ -40,11 +40,9 @@ contract Mintpass is ERC721, Ownable {
 
     /// Event emitted when token is burned
     /// @param from Address that burned the token
-    /// @param owner Address of the owner of the token before it got burned
     /// @param tokenId Identifier of the token
     event TokenBurned(
         address indexed from,
-        address indexed owner,
         uint256 indexed tokenId
     );
 
@@ -57,14 +55,14 @@ contract Mintpass is ERC721, Ownable {
     /// @dev Check if a token hasn't been revoked
     /// @param tokenId Identifier of the token that is checked for validity
     /// @return True if the token is valid, false otherwise
-    function isValid(uint256 tokenId) external view returns (bool) {
+    function isValid(uint256 tokenId) public view returns (bool) {
         require(_exists(tokenId), "Token does not exist");
-        return !_revokations[tokenId];
+        return !_revocations[tokenId];
     }
 
     /// @dev Mints a token to an address and approves it be handled by the IP-NFT Contract
     /// @param to The address that the token is minted to
-    function safeMint(address to) public onlyOwner {
+    function safeMint(address to) public nonReentrant onlyOwner {
         uint256 tokenId = _tokenIdCounter.current();
         _tokenIdCounter.increment();
         _safeMint(to, tokenId);
@@ -75,10 +73,9 @@ contract Mintpass is ERC721, Ownable {
     /// @dev Mark the token as revoked
     /// @param tokenId Identifier of the token
     function revoke(uint256 tokenId) external onlyOwner {
-        address _owner = ownerOf(tokenId);
-        require(_revokations[tokenId] != true, "Token is already invalid");
-        _revokations[tokenId] = true;
-        emit Revoked(_owner, tokenId);
+        require(isValid(tokenId), "Token is already invalid");
+        _revocations[tokenId] = true;
+        emit Revoked(tokenId);
     }
 
     /// @dev burns a token. This is only possible by either the owner of the token or the IP-NFT Contract
@@ -88,9 +85,8 @@ contract Mintpass is ERC721, Ownable {
             _isApprovedOrOwner(msg.sender, tokenId),
             "Not authorized to burn this token"
         );
-        address _owner = ownerOf(tokenId);
         _burn(tokenId);
-        emit TokenBurned(msg.sender, _owner, tokenId);
+        emit TokenBurned(msg.sender, tokenId);
     }
 
     /// @dev Returns the tokenURI attached to a token
@@ -102,9 +98,6 @@ contract Mintpass is ERC721, Ownable {
         returns (string memory)
     {
         require(_exists(tokenId), "Token does not exist");
-        string memory valid = _revokations[tokenId] == true
-            ? "Revoked"
-            : "Valid";
         return
             string(
                 abi.encodePacked(
@@ -114,7 +107,7 @@ contract Mintpass is ERC721, Ownable {
                             '{"name": "IP-NFT Mintpass #',
                             Strings.toString(tokenId),
                             '", "description": "This Mintpass can be used to mint one IP-NFT", "external_url": "TODO: Enter IP-NFT-UI URL", "image": "TODO: Enter IPFS URL", "valid": "',
-                            valid,
+                            _revocations[tokenId] ? "false" : "true",
                             '"}'
                         )
                     )

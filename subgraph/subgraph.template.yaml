@@ -73,8 +73,8 @@ dataSources:
       eventHandlers:
         - event: TokenMinted(indexed address,indexed uint256)
           handler: handleTokenMinted
-        - event: Revoked(indexed address,indexed uint256)
+        - event: Revoked(indexed uint256)
           handler: handleRevoked
-        - event: TokenBurned(indexed address,indexed address,indexed uint256)
+        - event: TokenBurned(indexed address,indexed uint256)
           handler: handleTokenBurned
       file: ./src/swapMapping.ts
