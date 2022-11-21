@@ -22,7 +22,8 @@ contract MintpassTest is Test {
         vm.expectEmit(true, true, true, true);
         emit TokenMinted(bob, 0);
         token.safeMint(bob);
-        
+
+        assertEq(token.validTokensAmount(bob), 1);
         assertEq(token.balanceOf(bob), 1);
         assertEq(token.isValid(0), true);
 
@@ -60,6 +61,7 @@ contract MintpassTest is Test {
         emit TokenBurned(bob, bob, 0);
         token.burn(0);
 
+        assertEq(token.validTokensAmount(bob), 0);
         assertEq(token.balanceOf(bob), 0);
         vm.stopPrank();
     }
@@ -72,6 +74,7 @@ contract MintpassTest is Test {
         emit TokenBurned(ipnftContract, bob, 0);
         token.burn(0);
 
+        assertEq(token.validTokensAmount(bob), 0);
         assertEq(token.balanceOf(bob), 0);
         vm.stopPrank();
     }
@@ -81,6 +84,7 @@ contract MintpassTest is Test {
         vm.expectRevert("Not authorized to burn this token");
         token.burn(0);
 
+        assertEq(token.validTokensAmount(bob), 1);
         assertEq(token.balanceOf(bob), 1);
         vm.stopPrank();
     }
@@ -92,6 +96,7 @@ contract MintpassTest is Test {
         token.revoke(0);
 
         assertEq(token.isValid(0), false);
+        assertEq(token.validTokensAmount(bob), 0);
 
         string memory tokenUri_ = token.tokenURI(0);
         assertEq(
@@ -106,8 +111,8 @@ contract MintpassTest is Test {
         vm.expectRevert("Ownable: caller is not the owner");
         token.revoke(0);
 
-        bool isValid = token.isValid(0);
-        assertEq(isValid, true);
+        assertEq(token.isValid(0), true);
+        assertEq(token.validTokensAmount(bob), 1);
         vm.stopPrank();
     }
 }
