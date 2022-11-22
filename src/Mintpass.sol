@@ -21,6 +21,7 @@ contract Mintpass is ERC721, Ownable, ReentrancyGuard {
 
     constructor(address ipnftContract) ERC721("IP-NFT Mintpass", "IPNFTMP") {
         _ipnftContract = ipnftContract;
+        _tokenIdCounter.increment();
     }
 
     /**
@@ -41,10 +42,7 @@ contract Mintpass is ERC721, Ownable, ReentrancyGuard {
     /// Event emitted when token is burned
     /// @param from Address that burned the token
     /// @param tokenId Identifier of the token
-    event TokenBurned(
-        address indexed from,
-        uint256 indexed tokenId
-    );
+    event TokenBurned(address indexed from, uint256 indexed tokenId);
 
     /**
      *
@@ -106,9 +104,9 @@ contract Mintpass is ERC721, Ownable, ReentrancyGuard {
                         abi.encodePacked(
                             '{"name": "IP-NFT Mintpass #',
                             Strings.toString(tokenId),
-                            '", "description": "This Mintpass can be used to mint one IP-NFT", "external_url": "TODO: Enter IP-NFT-UI URL", "image": "TODO: Enter IPFS URL", "valid": "',
+                            '", "description": "This Mintpass can be used to mint one IP-NFT", "external_url": "TODO: Enter IP-NFT-UI URL", "image": "TODO: Enter IPFS URL", "valid": ',
                             _revocations[tokenId] ? "false" : "true",
-                            '"}'
+                            "}"
                         )
                     )
                 )

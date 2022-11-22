@@ -3,10 +3,10 @@ pragma solidity ^0.8.17;
 
 import "forge-std/Test.sol";
 import "forge-std/console.sol";
-import { Mintpass } from "../src/Mintpass.sol";
+import {Mintpass} from "../src/Mintpass.sol";
 
 contract MintpassTest is Test {
-    Mintpass public token;
+    Mintpass public mintPass;
     address deployer = address(0x1);
     address ipnftContract = address(0x2);
     address bob = address(0x3);
@@ -18,85 +18,84 @@ contract MintpassTest is Test {
 
     function setUp() public {
         vm.startPrank(deployer);
-        token = new Mintpass(ipnftContract);
+        mintPass = new Mintpass(ipnftContract);
         vm.expectEmit(true, true, true, true);
-        emit TokenMinted(bob, 0);
-        token.safeMint(bob);
+        emit TokenMinted(bob, 1);
+        mintPass.safeMint(bob);
 
-        assertEq(token.balanceOf(bob), 1);
-        assertEq(token.isValid(0), true);
+        assertEq(mintPass.balanceOf(bob), 1);
+        assertEq(mintPass.isValid(1), true);
 
-        string memory tokenUri_ = token.tokenURI(0);
+        string memory tokenUri_ = mintPass.tokenURI(1);
         assertEq(
             tokenUri_,
-            "data:application/json;base64,eyJuYW1lIjogIklQLU5GVCBNaW50cGFzcyAjMCIsICJkZXNjcmlwdGlvbiI6ICJUaGlzIE1pbnRwYXNzIGNhbiBiZSB1c2VkIHRvIG1pbnQgb25lIElQLU5GVCIsICJleHRlcm5hbF91cmwiOiAiVE9ETzogRW50ZXIgSVAtTkZULVVJIFVSTCIsICJpbWFnZSI6ICJUT0RPOiBFbnRlciBJUEZTIFVSTCIsICJ2YWxpZCI6ICJ0cnVlIn0="
+            "data:application/json;base64,eyJuYW1lIjogIklQLU5GVCBNaW50cGFzcyAjMSIsICJkZXNjcmlwdGlvbiI6ICJUaGlzIE1pbnRwYXNzIGNhbiBiZSB1c2VkIHRvIG1pbnQgb25lIElQLU5GVCIsICJleHRlcm5hbF91cmwiOiAiVE9ETzogRW50ZXIgSVAtTkZULVVJIFVSTCIsICJpbWFnZSI6ICJUT0RPOiBFbnRlciBJUEZTIFVSTCIsICJ2YWxpZCI6IHRydWV9"
         );
 
         vm.stopPrank();
     }
 
-
     function testSafeMintFromNotOwner() public {
         vm.startPrank(bob);
         vm.expectRevert("Ownable: caller is not the owner");
-        token.safeMint(alice);
+        mintPass.safeMint(alice);
 
-        assertEq(token.balanceOf(alice), 0);
+        assertEq(mintPass.balanceOf(alice), 0);
         vm.stopPrank();
     }
 
     function testTransfer() public {
         vm.startPrank(bob);
         vm.expectRevert("This a Soulbound token. It can only be burned.");
-        token.transferFrom(bob, alice, 0);
+        mintPass.transferFrom(bob, alice, 1);
 
-        assertEq(token.balanceOf(bob), 1);
+        assertEq(mintPass.balanceOf(bob), 1);
         vm.stopPrank();
     }
 
     function testBurnFromOwner() public {
         vm.startPrank(bob);
         vm.expectEmit(true, true, true, true);
-        emit TokenBurned(bob, 0);
-        token.burn(0);
+        emit TokenBurned(bob, 1);
+        mintPass.burn(1);
 
-        assertEq(token.balanceOf(bob), 0);
+        assertEq(mintPass.balanceOf(bob), 0);
         vm.stopPrank();
     }
 
     function testBurnFromIpnftContract() public {
         vm.startPrank(ipnftContract);
-        assertEq(token.ownerOf(0), bob);
+        assertEq(mintPass.ownerOf(1), bob);
 
         vm.expectEmit(true, true, true, true);
-        emit TokenBurned(ipnftContract, 0);
-        token.burn(0);
+        emit TokenBurned(ipnftContract, 1);
+        mintPass.burn(1);
 
-        assertEq(token.balanceOf(bob), 0);
+        assertEq(mintPass.balanceOf(bob), 0);
         vm.stopPrank();
     }
 
     function testBurnFromRandomUser() public {
         vm.startPrank(alice);
         vm.expectRevert("Not authorized to burn this token");
-        token.burn(0);
+        mintPass.burn(1);
 
-        assertEq(token.balanceOf(bob), 1);
+        assertEq(mintPass.balanceOf(bob), 1);
         vm.stopPrank();
     }
 
     function testRevokeToken() public {
         vm.startPrank(deployer);
         vm.expectEmit(true, true, true, true);
-        emit Revoked(0);
-        token.revoke(0);
+        emit Revoked(1);
+        mintPass.revoke(1);
 
-        assertEq(token.isValid(0), false);
+        assertEq(mintPass.isValid(1), false);
 
-        string memory tokenUri_ = token.tokenURI(0);
+        string memory tokenUri_ = mintPass.tokenURI(1);
         assertEq(
             tokenUri_,
-            "data:application/json;base64,eyJuYW1lIjogIklQLU5GVCBNaW50cGFzcyAjMCIsICJkZXNjcmlwdGlvbiI6ICJUaGlzIE1pbnRwYXNzIGNhbiBiZSB1c2VkIHRvIG1pbnQgb25lIElQLU5GVCIsICJleHRlcm5hbF91cmwiOiAiVE9ETzogRW50ZXIgSVAtTkZULVVJIFVSTCIsICJpbWFnZSI6ICJUT0RPOiBFbnRlciBJUEZTIFVSTCIsICJ2YWxpZCI6ICJmYWxzZSJ9"
+            "data:application/json;base64,eyJuYW1lIjogIklQLU5GVCBNaW50cGFzcyAjMSIsICJkZXNjcmlwdGlvbiI6ICJUaGlzIE1pbnRwYXNzIGNhbiBiZSB1c2VkIHRvIG1pbnQgb25lIElQLU5GVCIsICJleHRlcm5hbF91cmwiOiAiVE9ETzogRW50ZXIgSVAtTkZULVVJIFVSTCIsICJpbWFnZSI6ICJUT0RPOiBFbnRlciBJUEZTIFVSTCIsICJ2YWxpZCI6IGZhbHNlfQ=="
         );
         vm.stopPrank();
     }
@@ -104,9 +103,13 @@ contract MintpassTest is Test {
     function testRevokeFromRandomUser() public {
         vm.startPrank(bob);
         vm.expectRevert("Ownable: caller is not the owner");
-        token.revoke(0);
+        mintPass.revoke(1);
 
-        assertEq(token.isValid(0), true);
+        assertEq(mintPass.isValid(1), true);
         vm.stopPrank();
+    }
+
+    function testFailTokenUri0() public view {
+        mintPass.tokenURI(0);
     }
 }
