@@ -144,16 +144,16 @@ contract IPNFT3525V21Test is Test {
         mintAToken(alice, "", "", arUri, 10);
 
         assertEq(ipnft.balanceOf(1), 10);
-        // https://docs.soliditylang.org/en/v0.8.17/types.html#array-literals
+        assertEq(ipnft.balanceOf(alice), 1);
+        assertEq(ipnft.tokenSupplyInSlot(1), 1);
+
+        vm.startPrank(alice);
         uint256[] memory fractions = new uint256[](2);
         fractions[0] = 5;
         fractions[1] = 5;
 
         //this creates another NFT on the same slot:
-        vm.startPrank(alice);
-        assertEq(ipnft.tokenSupplyInSlot(1), 1);
         ipnft.split(1, fractions);
-
         assertEq(ipnft.balanceOf(1), 5);
         assertEq(ipnft.balanceOf(2), 5);
 
@@ -162,7 +162,10 @@ contract IPNFT3525V21Test is Test {
 
         assertEq(ipnft.slotOf(1), 1);
         assertEq(ipnft.slotOf(2), 1);
+
+        //note that this is 2 now!
         assertEq(ipnft.tokenSupplyInSlot(1), 2);
+        assertEq(ipnft.balanceOf(alice), 2);
 
         //note the merge order matters: we're merging towards the last token id in the list.
         uint256[] memory tokenIdsToMerge = new uint256[](2);
@@ -173,6 +176,8 @@ contract IPNFT3525V21Test is Test {
 
         assertEq(ipnft.ownerOf(1), alice);
         assertEq(ipnft.balanceOf(1), 10);
+
+        //note that this is 1 again!
         assertEq(ipnft.tokenSupplyInSlot(1), 1);
         vm.stopPrank();
     }
@@ -181,8 +186,8 @@ contract IPNFT3525V21Test is Test {
         vm.startPrank(alice);
         mintAToken(alice, "", "", arUri, 10);
         //this is the ERC3525 value transfer not available on ERC721
-        //fromTokenId, to, value
         //Bob will receive a new NFT by doing so.
+        //fromTokenId, to, value
         ipnft.transferFrom(1, bob, 5);
         vm.stopPrank();
 
@@ -194,7 +199,42 @@ contract IPNFT3525V21Test is Test {
         //that's because both tokens yield the slot's metadata:
         assertEq(ipnft.tokenURI(1), ipnft.tokenURI(2));
 
+        //todo this fails because tokenSupplyInSlot isn't increased during transfers.
         assertEq(ipnft.tokenSupplyInSlot(1), 2);
+    }
+
+    function testSplittingValuelessTokens() public {
+        uint64[] memory fractions = new uint64[](1);
+        fractions[0] = 0;
+
+        vm.startPrank(alice);
+        ipnft.mint(alice, abi.encode("", "", "", fractions));
+        assertEq(ipnft.balanceOf(alice), 1);
+        assertEq(ipnft.balanceOf(1), 0);
+
+        ipnft.transferFrom(1, bob, 0);
+        assertEq(ipnft.ownerOf(2), bob);
+        assertEq(ipnft.totalSupply(), 2);
+
+        vm.stopPrank();
+        vm.startPrank(bob);
+        ipnft.safeTransferFrom(bob, alice, 2);
+        vm.stopPrank();
+        vm.startPrank(alice);
+        uint256[] memory tokenIdsToMerge = new uint256[](2);
+        tokenIdsToMerge[0] = 2;
+        tokenIdsToMerge[1] = 1;
+        ipnft.merge(tokenIdsToMerge);
+        //todo total supply is still 2!
+        assertEq(ipnft.totalSupply(), 1);
+
+        assertEq(ipnft.balanceOf(alice), 1);
+        assertEq(ipnft.balanceOf(1), 0);
+
+        ipnft.burn(1);
+        //todo total supply is still 2!
+        assertEq(ipnft.totalSupply(), 0);
+        vm.stopPrank();
     }
 
     function testFailCantMergeTokensThatYouDontOwn() public {
