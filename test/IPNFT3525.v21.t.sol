@@ -178,9 +178,8 @@ contract IPNFT3525V21Test is Test {
     }
 
     function testTransferValueToANewUser() public {
-        mintAToken(alice, "", "", arUri, 10);
-
         vm.startPrank(alice);
+        mintAToken(alice, "", "", arUri, 10);
         //this is the ERC3525 value transfer not available on ERC721
         //fromTokenId, to, value
         //Bob will receive a new NFT by doing so.
@@ -195,24 +194,50 @@ contract IPNFT3525V21Test is Test {
         //that's because both tokens yield the slot's metadata:
         assertEq(ipnft.tokenURI(1), ipnft.tokenURI(2));
 
-        //this would fail with NotApprovedOrOwner by ERC3525's _burn function
-        // vm.startPrank(alice);
-        // uint256[] memory tokenIdsToMerge = new uint256[](2);
-        // tokenIdsToMerge[0] = 2;
-        // tokenIdsToMerge[1] = 1;
-        // ipnft.merge(tokenIdsToMerge);
-        // vm.stopPrank();
+        assertEq(ipnft.tokenSupplyInSlot(1), 2);
     }
 
-    function testBurn() public {
+    function testFailCantMergeTokensThatYouDontOwn() public {
+        vm.startPrank(alice);
+        mintAToken(alice, "", "", arUri, 10);
+        ipnft.transferFrom(1, bob, 5);
+        uint256[] memory tokenIdsToMerge = new uint256[](2);
+        tokenIdsToMerge[0] = 2;
+        tokenIdsToMerge[1] = 1;
+        ipnft.merge(tokenIdsToMerge);
+    }
+
+    function testBurnMintedTokens() public {
         vm.startPrank(alice);
         mintAToken(alice, "", "", arUri);
-        //todo actually alice can only burn the token
-        //because she's marked as its minter. Currently only the
-        //minter can burn their tokens.
         ipnft.burn(1);
         vm.stopPrank();
 
         assertEq(ipnft.balanceOf(alice), 0);
+    }
+
+    function testBurnOwnedTokens() public {
+        vm.startPrank(alice);
+        mintAToken(alice, "", "", arUri, 10);
+        ipnft.transferFrom(1, bob, 5);
+        vm.stopPrank();
+
+        vm.startPrank(bob);
+        assertEq(ipnft.ownerOf(2), bob);
+        //todo only the minter (alice) can burn the token
+        //see IPNFT3525V21::burn
+        ipnft.burn(2);
+        assertEq(ipnft.balanceOf(bob), 0);
+        vm.stopPrank();
+    }
+
+    function testFailCantBurnOtherTokens() public {
+        vm.startPrank(alice);
+        mintAToken(bob, "", "", arUri);
+
+        ipnft.burn(1);
+        vm.stopPrank();
+
+        assertEq(ipnft.balanceOf(bob), 0);
     }
 }
