@@ -26,3 +26,10 @@ type Reservation @entity {
     uri: String
     createdAt: BigInt!
 }
+
+type Mintpass @entity {
+    id: ID! #tokenId
+    owner: Bytes! #address
+    createdAt: BigInt!
+    valid: Boolean
+}
