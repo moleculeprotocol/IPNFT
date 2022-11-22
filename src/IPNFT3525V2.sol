@@ -78,8 +78,6 @@ contract IPNFT3525V2 is
 
     /// @notice Contract initialization logic
     function initialize() public initializer {
-        //_metadata = IHyperCertMetadata(metadataAddress);
-
         __AccessControl_init();
         __UUPSUpgradeable_init();
         __ERC3525Upgradeable_init();
@@ -92,7 +90,7 @@ contract IPNFT3525V2 is
      * PUBLIC
      ******************/
 
-    /// @notice Issues a new IPNFT
+    /// @notice Issues a new IPNFT on a new slot, mints DEFAULT_VALUE to the first owner
     /// @param account Account issuing the new IPNFT
     /// @param data abi encoded string name_,string description_,string uri_, uint64[] fractions
 
@@ -102,15 +100,15 @@ contract IPNFT3525V2 is
         _authorizeMint(account, ipnft);
         ipnft.minter = msg.sender;
 
-        uint256 slot = slotCount() + 1;
+        uint256 slotId = slotCount() + 1;
+        //_implicity called during value transfer: createSlot(slotId);
+        _ipnfts[slotId] = ipnft;
 
-        _ipnfts[slot] = ipnft;
-
-        _mintValue(account, slot, DEFAULT_VALUE);
+        _mintValue(account, slotId, DEFAULT_VALUE);
 
         uint64[] memory defaultFractions = new uint64[](1);
         defaultFractions[0] = DEFAULT_VALUE;
-        emit IPNFTMinted(slot, account, defaultFractions);
+        emit IPNFTMinted(slotId, account, defaultFractions);
     }
 
     /// @notice gets the current version of the contract
@@ -143,10 +141,6 @@ contract IPNFT3525V2 is
 
     function symbol() public pure override returns (string memory) {
         return SYMBOL;
-    }
-
-    function valueDecimals() public view virtual override returns (uint8) {
-        return DECIMALS;
     }
 
     function slotURI(uint256 slotId_)

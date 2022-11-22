@@ -109,12 +109,43 @@ contract UpgradeV2toV21Test is Test {
 
         deployUpgrade();
 
+        assertEq(ipnftV21.slotOf(1), 1);
+        assertEq(ipnftV21.tokenSupplyInSlot(1), 1);
+        assertEq(ipnftV21.tokenSupplyInSlot(2), 1);
+
         vm.startPrank(alice);
         ipnftV21.transferFrom(1, charlie, 5);
         vm.stopPrank();
 
+        assertEq(ipnftV21.balanceOf(charlie), 1);
+        assertEq(ipnftV21.balanceOf(alice), 1);
         assertEq(ipnftV21.ownerOf(3), charlie);
         assertEq(ipnftV21.balanceOf(3), 5);
         assertEq(ipnftV21.balanceOf(1), 999_995);
+        assertEq(ipnftV21.slotOf(1), 1);
+        assertEq(ipnftV21.slotOf(2), 2);
+        assertEq(ipnftV21.slotOf(3), 1);
+
+        //todo this *must* be 2, no?
+        assertEq(ipnftV21.tokenSupplyInSlot(1), 1);
+
+        vm.startPrank(alice);
+        ipnftV21.transferFrom(1, charlie, 100);
+        vm.stopPrank();
+
+        assertEq(ipnftV21.balanceOf(1), 999_895);
+        assertEq(ipnftV21.balanceOf(4), 100);
+        assertEq(ipnftV21.ownerOf(4), charlie);
+
+        vm.startPrank(charlie);
+        uint256[] memory tokensToMerge = new uint256[](2);
+        tokensToMerge[0] = 4;
+        tokensToMerge[1] = 3;
+
+        ipnftV21.merge(tokensToMerge);
+        vm.stopPrank();
+
+        assertEq(ipnftV21.balanceOf(3), 105);
+        assertEq(ipnftV21.ownerOf(3), charlie);
     }
 }

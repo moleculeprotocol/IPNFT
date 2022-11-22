@@ -100,16 +100,16 @@ contract IPNFT3525V21 is
         _authorizeMint(account, ipnft);
         ipnft.minter = msg.sender;
 
-        uint256 slot = slotCount() + 1;
-
-        _ipnfts[slot] = ipnft;
+        uint256 slotId = slotCount() + 1;
+        //_implicity called during value transfer: createSlot(slotId);
+        _ipnfts[slotId] = ipnft;
 
         uint256 len = fractions.length;
         for (uint256 i = 0; i < len; i++) {
-            _mintValue(account, slot, fractions[i]);
+            _mintValue(account, slotId, fractions[i]);
         }
 
-        emit IPNFTMinted(slot, account, fractions);
+        emit IPNFTMinted(slotId, account, fractions);
     }
 
     function split(uint256 tokenId, uint256[] calldata amounts) public {
@@ -147,7 +147,7 @@ contract IPNFT3525V21 is
             }
         }
     }
-
+    
     /// @notice gets the current version of the contract
     function version() public view virtual returns (uint256) {
         return _version;

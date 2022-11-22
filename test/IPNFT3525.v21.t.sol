@@ -95,6 +95,8 @@ contract IPNFT3525V21Test is Test {
 
         assertEq(ipnft.balanceOf(1), 50);
         assertEq(ipnft.balanceOf(2), 50);
+
+        assertEq(ipnft.tokenSupplyInSlot(1), 2);
     }
 
     function testTransferOneNft() public {
@@ -149,6 +151,7 @@ contract IPNFT3525V21Test is Test {
 
         //this creates another NFT on the same slot:
         vm.startPrank(alice);
+        assertEq(ipnft.tokenSupplyInSlot(1), 1);
         ipnft.split(1, fractions);
 
         assertEq(ipnft.balanceOf(1), 5);
@@ -159,6 +162,7 @@ contract IPNFT3525V21Test is Test {
 
         assertEq(ipnft.slotOf(1), 1);
         assertEq(ipnft.slotOf(2), 1);
+        assertEq(ipnft.tokenSupplyInSlot(1), 2);
 
         //note the merge order matters: we're merging towards the last token id in the list.
         uint256[] memory tokenIdsToMerge = new uint256[](2);
@@ -169,7 +173,7 @@ contract IPNFT3525V21Test is Test {
 
         assertEq(ipnft.ownerOf(1), alice);
         assertEq(ipnft.balanceOf(1), 10);
-
+        assertEq(ipnft.tokenSupplyInSlot(1), 1);
         vm.stopPrank();
     }
 
