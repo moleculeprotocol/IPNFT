@@ -8,6 +8,23 @@ import {IPNFT3525V2} from "../src/IPNFT3525V2.sol";
 import {UUPSProxy} from "../src/UUPSProxy.sol";
 
 contract IPNFT3525V2Test is Test {
+    event Reserved(address indexed reserver, uint256 indexed reservationId);
+    event ReservationUpdated(
+        string tokenURI,
+        address indexed reserver,
+        uint256 indexed reservationId
+    );
+
+    /// @notice Emitted when an NFT is minted
+    /// @param tokenURI the uri containing the ip metadata
+    /// @param minter the minter's address
+    /// @param tokenId the minted token (slot) id
+    event IPNFTMinted(
+        string tokenURI,
+        address indexed minter,
+        uint256 indexed tokenId
+    );
+
     IPNFT3525V2 implementationV2;
     UUPSProxy proxy;
     IPNFT3525V2 ipnft;
@@ -22,6 +39,27 @@ contract IPNFT3525V2Test is Test {
     string arUri = "ar://tNbdHqh3AVDHVD06P0OPUXSProI5kGcZZw8IvLkekSY";
     uint256 tokenPrice = 1 ether;
 
+    function reserveAToken(
+        address to,
+        string memory name,
+        string memory tokenUri
+    ) internal returns (uint256) {
+        uint256 reservationId = ipnft.reserve();
+        ipnft.updateReservation(reservationId, name, tokenUri);
+        //bytes memory ipnftArgs = abi.encode(title, tokenUri);
+        return reservationId;
+    }
+
+    function mintAToken(
+        address to,
+        string memory name,
+        string memory tokenUri
+    ) internal returns (uint256) {
+        uint256 reservationId = reserveAToken(to, name, tokenUri);
+        ipnft.mintReservation(to, reservationId);
+        return reservationId;
+    }
+
     function setUp() public {
         vm.startPrank(deployer);
         implementationV2 = new IPNFT3525V2();
@@ -35,95 +73,140 @@ contract IPNFT3525V2Test is Test {
         assertEq(ipnft.name(), "IP-NFT V2");
     }
 
-    function mintAToken(
-        address to,
-        string memory title,
-        string memory tokenUri
-    ) internal {
-        bytes memory ipnftArgs = abi.encode(title, tokenUri);
+    function testTokenReservation() public {
+        vm.startPrank(alice);
+        vm.expectEmit(true, true, true, true);
+        emit Reserved(alice, 1);
+        uint256 reservationId = ipnft.reserve();
+        ipnft.updateReservation(reservationId, "IP Title", arUri);
 
-        ipnft.mint(to, ipnftArgs);
+        (address reserver, string memory name, string memory tokenURI) = ipnft
+            ._reservations(1);
+        assertEq(reserver, alice);
+        assertEq(name, "IP Title");
+        assertEq(tokenURI, arUri);
     }
 
-    function testMinting() public {
-        mintAToken(alice, "IP Title", arUri);
+    function testMintFromReservation() public {
+        vm.startPrank(alice);
 
-        assertEq(ipnft.totalSupply(), 1);
-        string memory tokenUri_ = ipnft.tokenURI(1);
+        uint256 reservationId = reserveAToken(alice, "IP Title", arUri);
+        vm.expectEmit(true, true, false, true);
+        emit IPNFTMinted(arUri, alice, 1);
+
+        ipnft.mintReservation(alice, reservationId);
+        assertEq(ipnft.balanceOf(alice), 1);
 
         assertEq(
-            tokenUri_,
+            ipnft.tokenURI(1),
             "data:application/json;base64,eyJuYW1lIjoiSVAgVGl0bGUiLCJleHRlcm5hbF91cmwiOiJhcjovL3ROYmRIcWgzQVZESFZEMDZQME9QVVhTUHJvSTVrR2NaWnc4SXZMa2VrU1kifQ=="
         );
 
         assertEq(ipnft.balanceOf(alice), 1);
-
         assertEq(ipnft.tokenOfOwnerByIndex(alice, 0), 1);
+
+        (address reserver, , ) = ipnft._reservations(1);
+        assertEq(reserver, address(0));
+
+        vm.stopPrank();
+    }
+
+    function testTokenURIUpdate() public {
+        vm.startPrank(alice);
+        uint256 reservationId = reserveAToken(alice, "IP Title", arUri);
+        //this only changes the uri.
+        ipnft.updateReservation(reservationId, "", ipfsUri);
+        ipnft.mintReservation(alice, 1);
+
+        assertEq(
+            ipnft.tokenURI(1),
+            "data:application/json;base64,eyJuYW1lIjoiSVAgVGl0bGUiLCJleHRlcm5hbF91cmwiOiJpcGZzOi8vUW1Zd0FQSnp2NUNac25BOUxxWUtYZnV0SnpCZzY4In0="
+        );
+        vm.stopPrank();
+    }
+
+    //todo actually alice can only burn the token
+    //because she's marked as its minter. Currently only the
+    //minter can burn their tokens.
+    function testBurn() public {
+        vm.startPrank(alice);
+        uint256 reservationId = mintAToken(alice, "IP Title", arUri);
+
+        ipnft.burn(1);
+
+        assertEq(ipnft.balanceOf(alice), 0);
+        vm.stopPrank();
+    }
+
+    function testCantUpdateTokenURIOnMintedTokens() public {
+        vm.startPrank(alice);
+        uint256 reservationId = reserveAToken(alice, "IP Title", arUri);
+        ipnft.mintReservation(bob, reservationId);
+
+        vm.expectRevert("IP-NFT: caller is not reserver");
+        ipnft.updateReservation(reservationId, "Foo", "bar");
+    }
+
+    function testOnlyReservationOwnerCanMintFromReservation() public {
+        vm.startPrank(alice);
+        uint256 reservationId = reserveAToken(alice, "IP Title", arUri);
+        vm.stopPrank();
+
+        vm.startPrank(bob);
+        vm.expectRevert("IP-NFT: caller is not reserver");
+        ipnft.mintReservation(bob, reservationId);
+        vm.stopPrank();
     }
 
     function testTransferOneNft() public {
-        mintAToken(alice, "", arUri);
-
         vm.startPrank(alice);
-        assertEq(ipnft.ownerOf(1), alice);
+        uint256 tokenId = mintAToken(alice, "IP Title", arUri);
+        assertEq(ipnft.ownerOf(tokenId), alice);
         assertEq(ipnft.balanceOf(alice), 1);
 
-        ipnft.safeTransferFrom(alice, bob, 1);
+        ipnft.safeTransferFrom(alice, bob, tokenId);
         assertEq(ipnft.ownerOf(1), bob);
         assertEq(ipnft.balanceOf(bob), 1);
         vm.stopPrank();
 
         //see if approvals also work
         vm.startPrank(bob);
-        ipnft.approve(charlie, 1);
+        ipnft.approve(charlie, tokenId);
 
         //allowance is the fungible allowance on the value of a token.
-        assertEq(ipnft.allowance(1, charlie), 0);
+        assertEq(ipnft.allowance(tokenId, charlie), 0);
         vm.stopPrank();
 
         vm.startPrank(charlie);
-        ipnft.safeTransferFrom(bob, alice, 1);
-        assertEq(ipnft.ownerOf(1), alice);
+        ipnft.safeTransferFrom(bob, alice, tokenId);
+        assertEq(ipnft.ownerOf(tokenId), alice);
         assertEq(ipnft.balanceOf(bob), 0);
         vm.stopPrank();
     }
 
-    //many NFTs can share the same slot
-    //hence the slot "uri" yields the "basic" token Uri
+    // //many NFTs can share the same slot
+    // //hence the slot "uri" yields the "basic" token Uri
     function testSlots() public {
-        mintAToken(alice, "", arUri);
+        vm.startPrank(alice);
+        uint256 tokenId = mintAToken(alice, "IP Title", arUri);
 
-        assertEq(ipnft.slotOf(1), 1);
+        assertEq(ipnft.slotOf(tokenId), 1);
 
         string memory slotUri = ipnft.slotURI(1);
         assertEq(
             slotUri,
-            "data:application/json;base64,eyJuYW1lIjoiIiwiZXh0ZXJuYWxfdXJsIjoiYXI6Ly90TmJkSHFoM0FWREhWRDA2UDBPUFVYU1Byb0k1a0djWlp3OEl2TGtla1NZIn0="
+            "data:application/json;base64,eyJuYW1lIjoiSVAgVGl0bGUiLCJleHRlcm5hbF91cmwiOiJhcjovL3ROYmRIcWgzQVZESFZEMDZQME9QVVhTUHJvSTVrR2NaWnc4SXZMa2VrU1kifQ=="
         );
-    }
-
-    function testFailTransferValueToANewUser() public {
-        mintAToken(alice, "", arUri);
-
-        vm.startPrank(alice);
-        //this is the ERC3525 value transfer not available on ERC721
-        //fromTokenId, to, value
-        //Bob will receive a new NFT by doing so.
-        ipnft.transferFrom(1, bob, 5);
         vm.stopPrank();
     }
 
-    function testBurn() public {
+    function testTransferValueToANewUser() public {
         vm.startPrank(alice);
-        mintAToken(alice, "", arUri);
-        //todo actually alice can only burn the token
-        //because she's marked as its minter. Currently only the
-        //minter can burn their tokens.
-        ipnft.burn(1);
+        uint256 tokenId = mintAToken(alice, "IP Title", arUri);
+
+        //this is the ERC3525 value transfer that's not available on IPNFTV2.0 / ERC721
+        vm.expectRevert("not available in V2");
+        ipnft.transferFrom(tokenId, bob, 5);
         vm.stopPrank();
-
-        assertEq(ipnft.balanceOf(alice), 0);
     }
-
-    function testApprovals() public {}
 }
