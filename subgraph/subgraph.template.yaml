@@ -77,4 +77,4 @@ dataSources:
           handler: handleRevoked
         - event: TokenBurned(indexed address,indexed uint256)
           handler: handleTokenBurned
-      file: ./src/swapMapping.ts
+      file: ./src/mintpassMapping.ts
