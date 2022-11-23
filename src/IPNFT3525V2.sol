@@ -166,7 +166,7 @@ contract IPNFT3525V2 is
     function mintReservation(address to, uint256 reservationId)
         public
         payable
-        returns (uint256 tokenId)
+        returns (uint256 slotId)
     {
         require(
             _reservations[reservationId].reserver == _msgSender(),
@@ -283,12 +283,13 @@ contract IPNFT3525V2 is
         uint256 ipnftId = slotOf(tokenId_);
         IPNFT storage ipnft = _ipnfts[ipnftId];
 
+        //todo this is a leftover of the fractional impl. Leave it for additional security.
         if (balanceOf(tokenId_) != ipnft.totalUnits) {
             revert InsufficientBalance(ipnft.totalUnits, balanceOf(tokenId_));
         }
 
-        _burn(tokenId_);
         ipnft.exists = false;
+        _burn(tokenId_);
     }
 
     /*******************

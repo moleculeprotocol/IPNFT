@@ -25,23 +25,11 @@ describe("IPNFT3525", function () {
 
   //this is the same as IPNFT3525.t.sol:testMinting
   it('can mint and generate metadata on chain', async function () {
-    const fractions = [100];
-
-    const ipnftArgs = hre.ethers.utils.defaultAbiCoder.encode(
-      ["string", "string"],
-      ["IP Title", arUri]
-    )
-
-    //just prove that our abiEncoder works as expected ;)
-    const [name_, uri_] = hre.ethers.utils.defaultAbiCoder.decode(
-      ["string", "string"],
-      ipnftArgs
-    );
-
-    expect(name_).to.equal("IP Title");
 
     //bob mints 1 token for alice.
-    await ipnftContract.connect(bob).mint(alice.address, ipnftArgs);
+    await ipnftContract.connect(bob).reserve();
+    await ipnftContract.connect(bob).updateReservation(1, "IP Title", "ar://tNbdHqh3AVDHVD06P0OPUXSProI5kGcZZw8IvLkekSY");
+    await ipnftContract.connect(bob).mintReservation(alice.address, 1);
 
     const tokenUri = await ipnftContract.tokenURI(1);
 

@@ -12,6 +12,21 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/Base64Upgradeable.sol";
 
+import {CountersUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/CountersUpgradeable.sol";
+
+/*
+ ______ _______         __    __ ________ ________
+|      \       \       |  \  |  \        \        \
+ \▓▓▓▓▓▓ ▓▓▓▓▓▓▓\      | ▓▓\ | ▓▓ ▓▓▓▓▓▓▓▓\▓▓▓▓▓▓▓▓
+  | ▓▓ | ▓▓__/ ▓▓______| ▓▓▓\| ▓▓ ▓▓__      | ▓▓
+  | ▓▓ | ▓▓    ▓▓      \ ▓▓▓▓\ ▓▓ ▓▓  \     | ▓▓
+  | ▓▓ | ▓▓▓▓▓▓▓ \▓▓▓▓▓▓ ▓▓\▓▓ ▓▓ ▓▓▓▓▓     | ▓▓
+ _| ▓▓_| ▓▓            | ▓▓ \▓▓▓▓ ▓▓        | ▓▓
+|   ▓▓ \ ▓▓            | ▓▓  \▓▓▓ ▓▓        | ▓▓
+ \▓▓▓▓▓▓\▓▓             \▓▓   \▓▓\▓▓         \▓▓
+
+*/
+
 error EmptyInput();
 error InvalidInput();
 
@@ -26,6 +41,9 @@ contract IPNFT3525V21 is
 {
     using ArraysUpgradeable for uint64[];
     using StringsUpgradeable for uint256;
+    using CountersUpgradeable for CountersUpgradeable.Counter;
+
+    CountersUpgradeable.Counter private _reservationCounter;
 
     /// @notice Contract name
     string public constant NAME = "IP-NFT V2.1";
@@ -35,34 +53,56 @@ contract IPNFT3525V21 is
     uint8 public constant DECIMALS = 0;
     /// @notice User role required in order to upgrade the contract
     bytes32 public constant UPGRADER_ROLE = keccak256("UPGRADER_ROLE");
+
+    uint64 public constant DEFAULT_VALUE = 1_000_000;
+
     /// @notice Current version of the contract
     uint16 internal _version;
 
     /// @notice external metadata contract
     //IIPNFTMetadata internal _metadata;
 
-    mapping(uint256 => IPNFT) internal _ipnfts;
-
     struct IPNFT {
-        //bytes32 nftHash;
         uint256 totalUnits;
         uint16 version;
         bool exists;
         string name;
-        string description;
-        string uri;
+        string tokenURI;
         address minter;
     }
+
+    struct Reservation {
+        address reserver;
+        string name;
+        string tokenURI;
+    }
+
+    mapping(uint256 => IPNFT) internal _ipnfts;
+    mapping(uint256 => Reservation) public _reservations;
 
     /*******************
      * EVENTS
      ******************/
 
+    event Reserved(address indexed reserver, uint256 indexed reservationId);
+    event ReservationUpdated(
+        string tokenURI,
+        address indexed reserver,
+        uint256 indexed reservationId
+    );
+
     /// @notice Emitted when an NFT is minted
-    /// @param id Id of the ipnft
-    /// @param minter Address of cert minter.
-    /// @param fractions Units of tokens issued under the hypercert.
-    event IPNFTMinted(uint256 id, address minter, uint64[] fractions);
+    /// @param tokenURI the uri containing the ip metadata
+    /// @param minter the minter's address
+    /// @param tokenId the minted token (slot) id
+    event IPNFTMinted(
+        string tokenURI,
+        address indexed minter,
+        uint256 indexed tokenId
+    );
+
+    /// @dev https://docs.opensea.io/docs/metadata-standards#freezing-metadata
+    event PermanentURI(string _value, uint256 indexed _id);
 
     /*******************
      * DEPLOY
@@ -84,32 +124,84 @@ contract IPNFT3525V21 is
 
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _grantRole(UPGRADER_ROLE, msg.sender);
+        _reservationCounter.increment(); //start at 1.
     }
 
     /*******************
      * PUBLIC
      ******************/
 
-    /// @notice Issues a new IPNFT
-    /// @param account Account issuing the new IPNFT
-    /// @param data abi encoded string name_,string description_,string uri_, uint64[] fractions
+    function reserve() public returns (uint256) {
+        uint256 reservationId = _reservationCounter.current();
+        _reservationCounter.increment();
+        _reservations[reservationId] = Reservation({
+            reserver: _msgSender(),
+            name: "",
+            tokenURI: ""
+        });
+        emit Reserved(_msgSender(), reservationId);
+        return reservationId;
+    }
 
-    function mint(address account, bytes calldata data) public virtual {
-        (IPNFT memory ipnft, uint64[] memory fractions) = _parseData(data);
-
-        _authorizeMint(account, ipnft);
-        ipnft.minter = msg.sender;
-
-        uint256 slotId = slotCount() + 1;
-        //_implicity called during value transfer: createSlot(slotId);
-        _ipnfts[slotId] = ipnft;
-
-        uint256 len = fractions.length;
-        for (uint256 i = 0; i < len; i++) {
-            _mintValue(account, slotId, fractions[i]);
+    function updateReservation(
+        uint256 reservationId,
+        //todo: if this gets longer, use abiencoded bytes.
+        string calldata _name,
+        string calldata _tokenURI
+    ) external {
+        require(
+            _reservations[reservationId].reserver == _msgSender(),
+            "IP-NFT: caller is not reserver"
+        );
+        if (bytes(_name).length > 0) {
+            _reservations[reservationId].name = _name;
         }
+        if (bytes(_tokenURI).length > 0) {
+            _reservations[reservationId].tokenURI = _tokenURI;
+        }
+        emit ReservationUpdated(_tokenURI, _msgSender(), reservationId);
+    }
 
-        emit IPNFTMinted(slotId, account, fractions);
+    /// @notice Issues a new IPNFT on a new slot, mints DEFAULT_VALUE to the first owner
+    /// @param to  Account the new IPNFT is issued to
+    /// @param reservationId the reservation id to use
+    function mintReservation(address to, uint256 reservationId)
+        public
+        payable
+        returns (uint256 slotId)
+    {
+        require(
+            _reservations[reservationId].reserver == _msgSender(),
+            "IP-NFT: caller is not reserver"
+        );
+
+        IPNFT memory ipnft = IPNFT({
+            totalUnits: DEFAULT_VALUE,
+            version: uint16(0),
+            exists: true,
+            name: _reservations[reservationId].name,
+            tokenURI: _reservations[reservationId].tokenURI,
+            minter: _msgSender()
+        });
+
+        _authorizeMint(to, ipnft);
+
+        //todo: emit this, once we decided if we're sure that this one is going to be final.
+        //emit PermanentURI(tokenURI, reservationId);
+
+        emit IPNFTMinted(
+            _reservations[reservationId].tokenURI,
+            to,
+            reservationId
+        );
+
+        delete _reservations[reservationId];
+        _ipnfts[reservationId] = ipnft;
+
+        /// @see _beforeValueTransfer: it creates slot with that reservation id
+        _mintValue(to, reservationId, DEFAULT_VALUE);
+
+        return reservationId;
     }
 
     function split(uint256 tokenId, uint256[] calldata amounts) public {
@@ -147,7 +239,7 @@ contract IPNFT3525V21 is
             }
         }
     }
-    
+
     /// @notice gets the current version of the contract
     function version() public view virtual returns (uint256) {
         return _version;
@@ -202,10 +294,8 @@ contract IPNFT3525V21 is
                         abi.encodePacked(
                             '{"name":"',
                             slot.name,
-                            '","description":"',
-                            slot.description,
                             '","external_url":"',
-                            slot.uri,
+                            slot.tokenURI,
                             '"}'
                         )
                     )
@@ -240,8 +330,8 @@ contract IPNFT3525V21 is
             revert InsufficientBalance(ipnft.totalUnits, balanceOf(tokenId_));
         }
 
-        _burn(tokenId_);
         ipnft.exists = false;
+        _burn(tokenId_);
     }
 
     /*******************
@@ -274,37 +364,6 @@ contract IPNFT3525V21 is
         if (account == address(0)) {
             revert ToZeroAddress();
         }
-    }
-
-    /* solhint-enable code-complexity */
-    /// @notice Parse bytes to ipnft and URI
-    /// @param data Byte data representing the ipnft
-    /// @return ipnft The parsed IPNFT struct
-    function _parseData(bytes calldata data)
-        internal
-        pure
-        virtual
-        returns (IPNFT memory ipnft, uint64[] memory)
-    {
-        if (data.length == 0) {
-            revert EmptyInput();
-        }
-
-        (
-            string memory name_,
-            string memory description_,
-            string memory uri_,
-            uint64[] memory fractions
-        ) = abi.decode(data, (string, string, string, uint64[]));
-
-        ipnft.totalUnits = fractions.getSum();
-        ipnft.version = uint16(0);
-        ipnft.exists = true;
-        ipnft.name = name_;
-        ipnft.description = description_;
-        ipnft.uri = uri_;
-
-        return (ipnft, fractions);
     }
 
     function _msgSender()
