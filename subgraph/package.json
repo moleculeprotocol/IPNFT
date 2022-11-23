@@ -5,7 +5,7 @@
         "codegen": "graph codegen",
         "build": "graph codegen && graph build",
         "create-abis": "yarn create-ipnft-abi && yarn create-schmackoswap-abi && yarn create-mintpass-abi",
-        "create-ipnft-abi": "cat ../out/IPNFT.sol/IPNFT.json | jq .abi > ./abis/IPNFT.json",
+        "create-ipnft-abi": "cat ../out/IPNFT3525V2.sol/IPNFT3525V2.json | jq .abi > ./abis/IPNFT3525V2.json",
         "create-mintpass-abi": "cat ../out/Mintpass.sol/Mintpass.json | jq .abi > ./abis/Mintpass.json",
         "create-schmackoswap-abi": "cat ../out/SchmackoSwap.sol/SchmackoSwap.json | jq .abi > ./abis/SchmackoSwap.json",
         "prepare:local": "mustache config/local.js subgraph.template.yaml > subgraph.yaml",

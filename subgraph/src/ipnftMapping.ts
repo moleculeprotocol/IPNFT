@@ -1,15 +1,15 @@
 import { Address, log, store } from "@graphprotocol/graph-ts";
 import {
-    ReservationURIUpdated as ReservationURIUpdatedEvent,
-    Reserved as ReservedEvent,
-    TokenMinted as TokenMintedEvent,
-    TransferSingle
-} from "../generated/IPNFT/IPNFT";
+    ReservationUpdated,
+    Reserved,
+    IPNFTMinted,
+    Transfer
+} from "../generated/IPNFT/IPNFT3525";
 import { Ipnft, Reservation } from "../generated/schema";
 
-export function handleTransferSingle(event: TransferSingle): void {
+export function handleTransfer(event: Transfer): void {
     if (event.params.from !== Address.zero()) {
-        let ipnft = Ipnft.load(event.params.id.toString());
+        let ipnft = Ipnft.load(event.params.tokenId.toString());
         if (ipnft) {
             ipnft.owner = event.params.to;
             ipnft.save();
@@ -17,16 +17,14 @@ export function handleTransferSingle(event: TransferSingle): void {
     }
 }
 
-export function handleReservation(event: ReservedEvent): void {
+export function handleReservation(event: Reserved): void {
     let reservation = new Reservation(event.params.reservationId.toString());
     reservation.owner = event.params.reserver;
     reservation.createdAt = event.block.timestamp;
     reservation.save();
 }
 
-export function handleReservationURIUpdated(
-    event: ReservationURIUpdatedEvent
-): void {
+export function handleReservationUpdated(event: ReservationUpdated): void {
     const reservation = Reservation.load(event.params.reservationId.toString());
     if (!reservation) {
         log.debug(
@@ -39,9 +37,9 @@ export function handleReservationURIUpdated(
     }
 }
 
-export function handleMint(event: TokenMintedEvent): void {
+export function handleMint(event: IPNFTMinted): void {
     let ipnft = new Ipnft(event.params.tokenId.toString());
-    ipnft.owner = event.params.owner;
+    ipnft.owner = event.params.minter;
     ipnft.createdAt = event.block.timestamp;
     ipnft.tokenURI = event.params.tokenURI;
     ipnft.save();

@@ -87,7 +87,6 @@ contract IPNFT3525V2 is
     event Reserved(address indexed reserver, uint256 indexed reservationId);
     event ReservationUpdated(
         string tokenURI,
-        address indexed reserver,
         uint256 indexed reservationId
     );
 
@@ -157,7 +156,7 @@ contract IPNFT3525V2 is
         if (bytes(_tokenURI).length > 0) {
             _reservations[reservationId].tokenURI = _tokenURI;
         }
-        emit ReservationUpdated(_tokenURI, _msgSender(), reservationId);
+        emit ReservationUpdated(_tokenURI, reservationId);
     }
 
     /// @notice Issues a new IPNFT on a new slot, mints DEFAULT_VALUE to the first owner

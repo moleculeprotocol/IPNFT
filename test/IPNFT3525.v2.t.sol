@@ -11,7 +11,6 @@ contract IPNFT3525V2Test is Test {
     event Reserved(address indexed reserver, uint256 indexed reservationId);
     event ReservationUpdated(
         string tokenURI,
-        address indexed reserver,
         uint256 indexed reservationId
     );
 
