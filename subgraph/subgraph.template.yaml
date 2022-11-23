@@ -7,23 +7,23 @@ dataSources:
     network: {{network}}
     source:
       address: "{{ipnft.address}}"
-      abi: IPNFT
+      abi: IPNFT3525
       startBlock: {{ipnft.startBlock}}
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
       language: wasm/assemblyscript
       entities:
-        - IPNFT
+        - IPNFT3525
       abis:
-        - name: IPNFT
-          file: ./abis/IPNFT.json
+        - name: IPNFT3525
+          file: ./abis/IPNFT3525V2.json
       eventHandlers:
-        - event: TransferSingle(indexed address,indexed address,indexed address,uint256,uint256)
-          handler: handleTransferSingle
-        - event: TokenMinted(string,indexed address,indexed uint256,uint256)
+        - event: Transfer(indexed address,indexed address,indexed uint256)
+          handler: handleTransfer
+        - event: IPNFTMinted(string,indexed address,indexed uint256)
           handler: handleMint
-        - event: ReservationURIUpdated(string,indexed address,indexed uint256)
+        - event: ReservationUpdated(string,indexed uint256)
           handler: handleReservationURIUpdated
         - event: Reserved(indexed address,indexed uint256)
           handler: handleReservation
