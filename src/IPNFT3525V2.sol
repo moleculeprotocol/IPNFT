@@ -159,10 +159,23 @@ contract IPNFT3525V2 is
         emit ReservationUpdated(_tokenURI, reservationId);
     }
 
+    function mintReservation(address to, uint256 reservationId)
+        public
+        payable
+        returns (uint256 tokenId)
+    {
+        return
+            mintReservation(
+                to,
+                reservationId,
+                _reservations[reservationId].tokenURI
+            );
+    }
+
     /// @notice Issues a new IPNFT on a new slot, mints DEFAULT_VALUE to the first owner
     /// @param to  Account the new IPNFT is issued to
     /// @param reservationId the reservation id to use
-    function mintReservation(address to, uint256 reservationId)
+    function mintReservation(address to, uint256 reservationId, string memory _tokenURI)
         public
         payable
         returns (uint256 slotId)
@@ -177,7 +190,7 @@ contract IPNFT3525V2 is
             version: uint16(0),
             exists: true,
             name: _reservations[reservationId].name,
-            tokenURI: _reservations[reservationId].tokenURI,
+            tokenURI: _tokenURI,
             minter: _msgSender()
         });
 
@@ -187,7 +200,7 @@ contract IPNFT3525V2 is
         //emit PermanentURI(tokenURI, reservationId);
 
         emit IPNFTMinted(
-            _reservations[reservationId].tokenURI,
+            _tokenURI,
             to,
             reservationId
         );
