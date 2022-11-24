@@ -45,11 +45,11 @@ dataSources:
         - name: SchmackoSwap
           file: ./abis/SchmackoSwap.json
       eventHandlers:
-        - event: Listed(uint256,(address,uint256,uint256,address,address,uint256))
+        - event: Listed(uint256,(address,uint256,address,address,uint256))
           handler: handleListed
-        - event: Unlisted(uint256,(address,uint256,uint256,address,address,uint256))
+        - event: Unlisted(uint256,(address,uint256,address,address,uint256))
           handler: handleUnlisted
-        - event: Purchased(uint256,indexed address,(address,uint256,uint256,address,address,uint256))
+        - event: Purchased(uint256,indexed address,(address,uint256,address,address,uint256))
           handler: handlePurchased
         - event: AllowlistUpdated(uint256,indexed address,bool)
           handler: handleAllowlistUpdated

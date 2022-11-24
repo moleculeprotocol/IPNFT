@@ -10,7 +10,6 @@ type Listing @entity {
     id: ID!
     ipnft: Ipnft!
     creator: Bytes! #address
-    tokenSupply: BigInt! #amount of ERC1155 Tokens
     paymentToken: Bytes! #address ERC20 Token
     askPrice: BigInt!
     createdAt: BigInt!
