@@ -20,8 +20,6 @@ contract SchmackoSwapTest is Test {
     uint256 nftId;
 
     IPNFT internal nft;
-    IPNFT implementationV2;
-    UUPSProxy proxy;
     TestToken internal testToken;
     SchmackoSwap internal schmackoSwap;
     address seller = address(0x1);
@@ -40,8 +38,8 @@ contract SchmackoSwapTest is Test {
 
     function setUp() public {
         vm.startPrank(deployer);
-        implementationV2 = new IPNFT();
-        proxy = new UUPSProxy(address(implementationV2), "");
+        IPNFT implementationV2 = new IPNFT();
+        UUPSProxy proxy = new UUPSProxy(address(implementationV2), "");
         nft = IPNFT(address(proxy));
         nft.initialize();
         vm.stopPrank();
