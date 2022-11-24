@@ -5,6 +5,7 @@ import "forge-std/Test.sol";
 import {SchmackoSwap} from "../src/SchmackoSwap.sol";
 import {IPNFT3525V2 as IPNFT} from "../src/IPNFT3525V2.sol";
 import {ERC20} from "solmate/tokens/ERC20.sol";
+import {UUPSProxy} from "../src/UUPSProxy.sol";
 import {console} from "forge-std/console.sol";
 
 contract TestToken is ERC20("USD Coin", "USDC", 18) {
@@ -15,13 +16,15 @@ contract TestToken is ERC20("USD Coin", "USDC", 18) {
 
 contract SchmackoSwapTest is Test {
     uint256 nftId;
-    uint256 reservationId;
     IPNFT internal nft;
+    IPNFT implementationV2;
+    UUPSProxy proxy;
     TestToken internal testToken;
     SchmackoSwap internal schmackoSwap;
     address seller = address(0x1);
     address buyer = address(0x2);
     address otherUser = address(0x3);
+    address deployer = address(0x4);
 
     event Listed(uint256 listingId, SchmackoSwap.Listing listing);
     event Unlisted(uint256 listingId, SchmackoSwap.Listing listing);
@@ -37,10 +40,14 @@ contract SchmackoSwapTest is Test {
     );
 
     function setUp() public {
+        vm.startPrank(deployer);
+        implementationV2 = new IPNFT();
+        proxy = new UUPSProxy(address(implementationV2), "");
+        nft = IPNFT(address(proxy));
+        nft.initialize();
+        vm.stopPrank();
+
         testToken = new TestToken();
-        nft = new IPNFT();
-        // TODO: Reservation starts at 0 but IP-NFT starts at 1?
-        nftId = 1;
         schmackoSwap = new SchmackoSwap();
 
         // Ensure marketplace can access tokens
@@ -49,8 +56,8 @@ contract SchmackoSwapTest is Test {
         // Ensure marketplace can access sellers's tokens
         vm.startPrank(seller);
         nft.setApprovalForAll(address(schmackoSwap), true);
-        reservationId = nft.reserve();
-        nft.mintReservation(seller, reservationId);
+        nftId = nft.reserve();
+        nft.mintReservation(seller, nftId);
         vm.stopPrank();
 
         testToken.mintTo(buyer, 1 ether);
