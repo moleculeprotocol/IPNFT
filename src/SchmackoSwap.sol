@@ -4,7 +4,7 @@ pragma solidity ^0.8.17;
 import {ERC20} from "solmate/tokens/ERC20.sol";
 import {ReentrancyGuard} from "solmate/utils/ReentrancyGuard.sol";
 import {SafeTransferLib} from "solmate/utils/SafeTransferLib.sol";
-import {ERC1155Supply} from "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Supply.sol";
+import {IPNFT3525V2} from "./IPNFT3525V2.sol";
 
 contract SchmackoSwap is ReentrancyGuard {
     /// ERRORS ///
@@ -62,9 +62,8 @@ contract SchmackoSwap is ReentrancyGuard {
     /// @param creator The address of the seller
     /// @param askPrice The amount the seller is asking for in exchange for the token
     struct Listing {
-        ERC1155Supply tokenContract;
+        IPNFT3525V2 tokenContract;
         uint256 tokenId;
-        uint256 tokenAmount;
         address creator;
         ERC20 paymentToken;
         uint256 askPrice;
@@ -83,19 +82,14 @@ contract SchmackoSwap is ReentrancyGuard {
     /// @return The ID of the created listing
     /// @dev Remember to call setApprovalForAll(<address of this contract>, true) on the ERC1155's contract before calling this function
     function list(
-        ERC1155Supply tokenContract,
+        IPNFT3525V2 tokenContract,
         uint256 tokenId,
         ERC20 paymentToken,
         uint256 askPrice
     ) public nonReentrant returns (uint256) {
-        //TODO: revert if ERC1155 needed interface not implemented
-
-        uint256 tokenSupply = tokenContract.totalSupply(tokenId);
-
         Listing memory listing = Listing({
             tokenContract: tokenContract,
             tokenId: tokenId,
-            tokenAmount: tokenSupply,
             paymentToken: paymentToken,
             askPrice: askPrice,
             creator: msg.sender
@@ -110,12 +104,10 @@ contract SchmackoSwap is ReentrancyGuard {
 
         emit Listed(listingId, listing);
 
-        listing.tokenContract.safeTransferFrom(
+        listing.tokenContract.transferFrom(
             msg.sender,
             address(this),
-            listing.tokenId,
-            tokenSupply,
-            ""
+            listing.tokenId
         );
 
         return listingId;
@@ -132,12 +124,10 @@ contract SchmackoSwap is ReentrancyGuard {
 
         emit Unlisted(listingId, listing);
 
-        listing.tokenContract.safeTransferFrom(
+        listing.tokenContract.transferFrom(
             address(this),
             msg.sender,
-            listing.tokenId,
-            listing.tokenAmount,
-            ""
+            listing.tokenId
         );
     }
 
@@ -158,12 +148,10 @@ contract SchmackoSwap is ReentrancyGuard {
 
         delete listings[listingId];
 
-        listing.tokenContract.safeTransferFrom(
+        listing.tokenContract.transferFrom(
             address(this),
             msg.sender,
-            listing.tokenId,
-            listing.tokenAmount,
-            ""
+            listing.tokenId
         );
 
         SafeTransferLib.safeTransferFrom(
