@@ -4,9 +4,11 @@ pragma solidity ^0.8.17;
 import {ERC20} from "solmate/tokens/ERC20.sol";
 import {ReentrancyGuard} from "solmate/utils/ReentrancyGuard.sol";
 import {SafeTransferLib} from "solmate/utils/SafeTransferLib.sol";
-import {ERC1155Supply} from "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Supply.sol";
+import {IERC721Receiver} from "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
+import {ERC165} from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
+import {IPNFT3525V2} from "./IPNFT3525V2.sol";
 
-contract SchmackoSwap is ReentrancyGuard {
+contract SchmackoSwap is ERC165, ReentrancyGuard, IERC721Receiver {
     /// ERRORS ///
 
     /// @notice Thrown when user tries to initiate an action without being authorized
@@ -62,9 +64,8 @@ contract SchmackoSwap is ReentrancyGuard {
     /// @param creator The address of the seller
     /// @param askPrice The amount the seller is asking for in exchange for the token
     struct Listing {
-        ERC1155Supply tokenContract;
+        IPNFT3525V2 tokenContract;
         uint256 tokenId;
-        uint256 tokenAmount;
         address creator;
         ERC20 paymentToken;
         uint256 askPrice;
@@ -83,19 +84,14 @@ contract SchmackoSwap is ReentrancyGuard {
     /// @return The ID of the created listing
     /// @dev Remember to call setApprovalForAll(<address of this contract>, true) on the ERC1155's contract before calling this function
     function list(
-        ERC1155Supply tokenContract,
+        IPNFT3525V2 tokenContract,
         uint256 tokenId,
         ERC20 paymentToken,
         uint256 askPrice
     ) public nonReentrant returns (uint256) {
-        //TODO: revert if ERC1155 needed interface not implemented
-
-        uint256 tokenSupply = tokenContract.totalSupply(tokenId);
-
         Listing memory listing = Listing({
             tokenContract: tokenContract,
             tokenId: tokenId,
-            tokenAmount: tokenSupply,
             paymentToken: paymentToken,
             askPrice: askPrice,
             creator: msg.sender
@@ -113,9 +109,7 @@ contract SchmackoSwap is ReentrancyGuard {
         listing.tokenContract.safeTransferFrom(
             msg.sender,
             address(this),
-            listing.tokenId,
-            tokenSupply,
-            ""
+            listing.tokenId
         );
 
         return listingId;
@@ -135,9 +129,7 @@ contract SchmackoSwap is ReentrancyGuard {
         listing.tokenContract.safeTransferFrom(
             address(this),
             msg.sender,
-            listing.tokenId,
-            listing.tokenAmount,
-            ""
+            listing.tokenId
         );
     }
 
@@ -161,9 +153,7 @@ contract SchmackoSwap is ReentrancyGuard {
         listing.tokenContract.safeTransferFrom(
             address(this),
             msg.sender,
-            listing.tokenId,
-            listing.tokenAmount,
-            ""
+            listing.tokenId
         );
 
         SafeTransferLib.safeTransferFrom(
@@ -203,26 +193,14 @@ contract SchmackoSwap is ReentrancyGuard {
         return allowlist[listingId][buyerAddress];
     }
 
-    // Implemented these functions so we don't get "execution reverted: ERC1155: transfer to non ERC1155Receiver implementer"
-    // when transferring ERC1155 tokens to this contract
-
-    function onERC1155Received(
-        address,
-        address,
-        uint256,
-        uint256,
-        bytes memory
-    ) public virtual returns (bytes4) {
-        return this.onERC1155Received.selector;
+    function supportsInterface(bytes4 interfaceId) override public view virtual returns (bool) {
+        return interfaceId == this.onERC721Received.selector
+                 || super.supportsInterface(interfaceId);
     }
 
-    function onERC1155BatchReceived(
-        address,
-        address,
-        uint256[] memory,
-        uint256[] memory,
-        bytes memory
-    ) public virtual returns (bytes4) {
-        return this.onERC1155BatchReceived.selector;
+    function onERC721Received(address operator, address from, uint256 tokenId, bytes calldata data ) public override pure returns (bytes4) {
+        return this.onERC721Received.selector;
     }
+
+
 }
