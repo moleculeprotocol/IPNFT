@@ -29,7 +29,7 @@ describe("IPNFT3525", function () {
     //bob mints 1 token for alice.
     await ipnftContract.connect(bob).reserve();
     await ipnftContract.connect(bob).updateReservation(1, "IP Title", "ar://tNbdHqh3AVDHVD06P0OPUXSProI5kGcZZw8IvLkekSY");
-    await ipnftContract.connect(bob).mintReservation(alice.address, 1);
+    await ipnftContract.connect(bob)["mintReservation(address,uint256)"](alice.address, 1);
 
     const tokenUri = await ipnftContract.tokenURI(1);
 
