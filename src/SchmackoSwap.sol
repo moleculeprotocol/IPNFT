@@ -104,7 +104,7 @@ contract SchmackoSwap is ReentrancyGuard {
 
         emit Listed(listingId, listing);
 
-        listing.tokenContract.transferFrom(
+        listing.tokenContract.safeTransferFrom(
             msg.sender,
             address(this),
             listing.tokenId
@@ -124,7 +124,7 @@ contract SchmackoSwap is ReentrancyGuard {
 
         emit Unlisted(listingId, listing);
 
-        listing.tokenContract.transferFrom(
+        listing.tokenContract.safeTransferFrom(
             address(this),
             msg.sender,
             listing.tokenId
@@ -148,7 +148,7 @@ contract SchmackoSwap is ReentrancyGuard {
 
         delete listings[listingId];
 
-        listing.tokenContract.transferFrom(
+        listing.tokenContract.safeTransferFrom(
             address(this),
             msg.sender,
             listing.tokenId
