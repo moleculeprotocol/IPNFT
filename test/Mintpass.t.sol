@@ -35,6 +35,16 @@ contract MintpassTest is Test {
         vm.stopPrank();
     }
 
+    function testBatchMint() public {
+        vm.startPrank(deployer);
+        mintPass.batchMint(alice, 10);
+        vm.stopPrank();
+
+        assertEq(mintPass.balanceOf(alice), 10);
+        assertEq(mintPass.ownerOf(2), alice);
+        assertEq(mintPass.ownerOf(6), alice);
+    }
+
     function testSafeMintFromNotOwner() public {
         vm.startPrank(bob);
         vm.expectRevert("Ownable: caller is not the owner");
