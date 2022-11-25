@@ -127,7 +127,7 @@ contract IPNFT3525V2Test is Test {
         (address reserver, , ) = ipnft._reservations(1);
         assertEq(reserver, address(0));
 
-        // Was Mintpass burned?
+        // Was the Mintpass burned?
         assertEq(mintpass.balanceOf(alice), 0);
         vm.expectRevert("Token does not exist");
         mintpass.tokenURI(1);
