@@ -14,7 +14,6 @@ services:
       - postgres
     extra_hosts:
       - host.docker.internal:host-gateway
-    #- 192.168.178.84:host-gateway
     environment:
       postgres_host: postgres
       postgres_user: graph-node
@@ -22,7 +21,6 @@ services:
       postgres_db: graph-node
       ipfs: 'ipfs:5001'
       ethereum: 'mainnet:http://host.docker.internal:8545'
-      #ethereum: 'mainnet:http://192.168.178.84:8545'
       GRAPH_LOG: info
       GRAPH_ALLOW_NON_DETERMINISTIC_IPFS: 1
   ipfs:

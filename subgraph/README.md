@@ -31,7 +31,11 @@ Since your local env is stil configured for your anvil node, it can be reused fo
 docker compose up
 ```
 
-The containers must be able to access your host box to connect to your local (anvil) chain. On Mac it likely just works since it supports `host.docker.internal`. On Linux run `setup.sh` to find your host's local network address and replace it in the compose file. Also make sure that your local blockchain node responds to the interface's traffic (e.g. by `anvil -h 0.0.0.0`)
+The containers must be able to access your host box to connect to your local (anvil) chain. On Mac it likely just works since it supports `host.docker.internal`. On Linux run `setup.sh` can find your host's local network address and replace it in the compose file. Also make sure that your local blockchain node responds to the interface's traffic (e.g. by `anvil -h 0.0.0.0`). If this still doesn't work, you can start a ganache node inside your local docker env as well by adding the `docker-compose.ganache.yml` docker override:
+
+```sh
+docker-compose --file docker-compose.yml --file docker-compose.ganache.yml up
+```
 
 4. Prepare subgraph for local build, create and deploy
 
