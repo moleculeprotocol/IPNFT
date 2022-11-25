@@ -868,6 +868,11 @@
         "internalType": "uint256",
         "name": "reservationId",
         "type": "uint256"
+      },
+      {
+        "internalType": "string",
+        "name": "_tokenURI",
+        "type": "string"
       }
     ],
     "name": "mintReservation",
@@ -875,6 +880,30 @@
       {
         "internalType": "uint256",
         "name": "slotId",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "to",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "reservationId",
+        "type": "uint256"
+      }
+    ],
+    "name": "mintReservation",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "tokenId",
         "type": "uint256"
       }
     ],

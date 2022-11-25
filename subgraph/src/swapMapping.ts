@@ -17,7 +17,6 @@ export function handleListed(event: ListedEvent): void {
     }
 
     listing.creator = event.params.listing.creator;
-    listing.tokenSupply = event.params.listing.tokenAmount;
     listing.paymentToken = event.params.listing.paymentToken;
     listing.askPrice = event.params.listing.askPrice;
     listing.createdAt = event.block.timestamp;
