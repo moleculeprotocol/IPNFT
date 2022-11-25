@@ -138,7 +138,7 @@ contract IPNFT3525V2 is
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _grantRole(UPGRADER_ROLE, msg.sender);
         _reservationCounter.increment(); //start at 1.
-        mintpassContradt = address(0);
+        mintPassContract = address(0);
     }
 
     /*******************
