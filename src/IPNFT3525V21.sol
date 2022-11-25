@@ -85,10 +85,7 @@ contract IPNFT3525V21 is
      ******************/
 
     event Reserved(address indexed reserver, uint256 indexed reservationId);
-    event ReservationUpdated(
-        string tokenURI,
-        uint256 indexed reservationId
-    );
+    event ReservationUpdated(string tokenURI, uint256 indexed reservationId);
 
     /// @notice Emitted when an NFT is minted
     /// @param tokenURI the uri containing the ip metadata
@@ -164,11 +161,11 @@ contract IPNFT3525V21 is
     /// @notice Issues a new IPNFT on a new slot, mints DEFAULT_VALUE to the first owner
     /// @param to  Account the new IPNFT is issued to
     /// @param reservationId the reservation id to use
-    function mintReservation(address to, uint256 reservationId)
-        public
-        payable
-        returns (uint256 slotId)
-    {
+    function mintReservation(
+        address to,
+        uint256 reservationId,
+        uint256 mintPassId
+    ) public payable returns (uint256 slotId) {
         require(
             _reservations[reservationId].reserver == _msgSender(),
             "IP-NFT: caller is not reserver"

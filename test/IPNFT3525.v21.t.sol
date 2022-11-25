@@ -39,7 +39,7 @@ contract IPNFT3525V21Test is Test {
         string memory tokenUri
     ) internal returns (uint256) {
         uint256 reservationId = reserveAToken(to, name, tokenUri);
-        ipnft.mintReservation(to, reservationId);
+        ipnft.mintReservation(to, reservationId, 1);
         return reservationId;
     }
 

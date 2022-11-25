@@ -12,7 +12,10 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/Base64Upgradeable.sol";
 
-import {CountersUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/CountersUpgradeable.sol";
+import { CountersUpgradeable } from
+    "@openzeppelin/contracts-upgradeable/utils/CountersUpgradeable.sol";
+
+import { Mintpass } from "./Mintpass.sol";
 
 /*
  ______ _______         __    __ ________ ________
@@ -24,7 +27,6 @@ import {CountersUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/Cou
  _| ▓▓_| ▓▓            | ▓▓ \▓▓▓▓ ▓▓        | ▓▓
 |   ▓▓ \ ▓▓            | ▓▓  \▓▓▓ ▓▓        | ▓▓
  \▓▓▓▓▓▓\▓▓             \▓▓   \▓▓\▓▓         \▓▓
-
 */
 
 error EmptyInput();
@@ -80,32 +82,33 @@ contract IPNFT3525V2 is
     mapping(uint256 => IPNFT) internal _ipnfts;
     mapping(uint256 => Reservation) public _reservations;
 
-    /*******************
+    address mintPassContract;
+
+    /**
+     *
      * EVENTS
-     ******************/
+     *
+     */
 
     event Reserved(address indexed reserver, uint256 indexed reservationId);
-    event ReservationUpdated(
-        string tokenURI,
-        uint256 indexed reservationId
-    );
+    event ReservationUpdated(string tokenURI, uint256 indexed reservationId);
 
     /// @notice Emitted when an NFT is minted
     /// @param tokenURI the uri containing the ip metadata
     /// @param minter the minter's address
     /// @param tokenId the minted token (slot) id
     event IPNFTMinted(
-        string tokenURI,
-        address indexed minter,
-        uint256 indexed tokenId
+        string tokenURI, address indexed minter, uint256 indexed tokenId
     );
 
     /// @dev https://docs.opensea.io/docs/metadata-standards#freezing-metadata
     event PermanentURI(string _value, uint256 indexed _id);
 
-    /*******************
+    /**
+     *
      * DEPLOY
-     ******************/
+     *
+     */
 
     /// @notice Contract constructor logic
     /// @custom:oz-upgrades-unsafe-allow constructor
@@ -124,18 +127,23 @@ contract IPNFT3525V2 is
         _reservationCounter.increment(); //start at 1.
     }
 
-    /*******************
+    /**
+     *
      * PUBLIC
-     ******************/
+     *
+     */
 
     function reserve() public returns (uint256) {
+        Mintpass mintpass = Mintpass(mintPassContract);
+        require(
+            mintpass.balanceOf(_msgSender()) > 0,
+            "IPNFT: You need to own a mintpass to mint an IPNFT"
+        );
+
         uint256 reservationId = _reservationCounter.current();
         _reservationCounter.increment();
-        _reservations[reservationId] = Reservation({
-            reserver: _msgSender(),
-            name: "",
-            tokenURI: ""
-        });
+        _reservations[reservationId] =
+            Reservation({reserver: _msgSender(), name: "", tokenURI: ""});
         emit Reserved(_msgSender(), reservationId);
         return reservationId;
     }
@@ -159,31 +167,38 @@ contract IPNFT3525V2 is
         emit ReservationUpdated(_tokenURI, reservationId);
     }
 
-    function mintReservation(address to, uint256 reservationId)
-        public
-        payable
-        returns (uint256 tokenId)
-    {
-        return
-            mintReservation(
-                to,
-                reservationId,
-                _reservations[reservationId].tokenURI
-            );
+    function mintReservation(
+        address to,
+        uint256 reservationId,
+        uint256 mintPassId
+    ) public payable returns (uint256 tokenId) {
+        return mintReservation(
+            to, reservationId, _reservations[reservationId].tokenURI, mintPassId
+        );
     }
 
     /// @notice Issues a new IPNFT on a new slot, mints DEFAULT_VALUE to the first owner
     /// @param to  Account the new IPNFT is issued to
     /// @param reservationId the reservation id to use
-    function mintReservation(address to, uint256 reservationId, string memory _tokenURI)
-        public
-        payable
-        returns (uint256 slotId)
-    {
+    function mintReservation(
+        address to,
+        uint256 reservationId,
+        string memory _tokenURI,
+        uint256 mintPassId
+    ) public payable returns (uint256 slotId) {
+        Mintpass mintpass = Mintpass(mintPassContract);
+
         require(
             _reservations[reservationId].reserver == _msgSender(),
             "IP-NFT: caller is not reserver"
         );
+
+        require(
+            mintpass.ownerOf(mintPassId) == _msgSender(),
+            "IPNFT: You don't own that mintpass"
+        );
+
+        require(mintpass.isValid(mintPassId), "IPNFT: Mintpass was revoked");
 
         IPNFT memory ipnft = IPNFT({
             totalUnits: DEFAULT_VALUE,
@@ -199,11 +214,7 @@ contract IPNFT3525V2 is
         //todo: emit this, once we decided if we're sure that this one is going to be final.
         //emit PermanentURI(tokenURI, reservationId);
 
-        emit IPNFTMinted(
-            _tokenURI,
-            to,
-            reservationId
-        );
+        emit IPNFTMinted(_tokenURI, to, reservationId);
 
         delete _reservations[reservationId];
         _ipnfts[reservationId] = ipnft;
@@ -211,7 +222,18 @@ contract IPNFT3525V2 is
         /// @see _beforeValueTransfer: it creates slot with that reservation id
         _mintValue(to, reservationId, DEFAULT_VALUE);
 
+        mintpass.burn(mintPassId);
+
         return reservationId;
+    }
+
+    /// @notice sets the address of the Mintpass contract
+    function setMintpassContract(address newContract) public {
+        require(
+            hasRole(DEFAULT_ADMIN_ROLE, _msgSender()),
+            "IP-NFT: caller is not admin"
+        );
+        mintPassContract = newContract;
     }
 
     /// @notice gets the current version of the contract
@@ -232,7 +254,7 @@ contract IPNFT3525V2 is
     function supportsInterface(bytes4 interfaceId)
         public
         view
-        override(ERC3525SlotEnumerableUpgradeable, AccessControlUpgradeable)
+        override (ERC3525SlotEnumerableUpgradeable, AccessControlUpgradeable)
         returns (bool)
     {
         return super.supportsInterface(interfaceId);
@@ -257,21 +279,20 @@ contract IPNFT3525V2 is
         }
         IPNFT memory slot = _ipnfts[slotId_];
 
-        return
-            string(
-                abi.encodePacked(
-                    "data:application/json;base64,",
-                    Base64Upgradeable.encode(
-                        abi.encodePacked(
-                            '{"name":"',
-                            slot.name,
-                            '","external_url":"',
-                            slot.tokenURI,
-                            '"}'
-                        )
+        return string(
+            abi.encodePacked(
+                "data:application/json;base64,",
+                Base64Upgradeable.encode(
+                    abi.encodePacked(
+                        '{"name":"',
+                        slot.name,
+                        '","external_url":"',
+                        slot.tokenURI,
+                        '"}'
                     )
                 )
-            );
+            )
+        );
     }
 
     function tokenURI(uint256 tokenId_)
@@ -304,15 +325,19 @@ contract IPNFT3525V2 is
         _burn(tokenId_);
     }
 
-    /*******************
+    /**
+     *
      * DISABLE value transfers and splits in V2
-     ********************/
+     *
+     */
 
-    function transferFrom(
-        uint256 fromTokenId_,
-        address to_,
-        uint256 value_
-    ) public payable virtual override returns (uint256) {
+    function transferFrom(uint256 fromTokenId_, address to_, uint256 value_)
+        public
+        payable
+        virtual
+        override
+        returns (uint256)
+    {
         revert("not available in V2");
     }
 
@@ -324,23 +349,24 @@ contract IPNFT3525V2 is
         revert("not available in V2");
     }
 
-    function approve(
-        uint256 tokenId_,
-        address to_,
-        uint256 value_
-    ) external payable virtual override {
+    function approve(uint256 tokenId_, address to_, uint256 value_)
+        external
+        payable
+        virtual
+        override
+    {
         revert("not available in V2");
     }
 
-    /*******************
+    /**
+     *
      * INTERNAL
-     ******************/
+     *
+     */
 
     /// @notice upgrade authorization logic
     /// @dev adds onlyRole(UPGRADER_ROLE) requirement
-    function _authorizeUpgrade(
-        address /*newImplementation*/
-    )
+    function _authorizeUpgrade(address /*newImplementation*/ )
         internal
         view
         override
@@ -367,7 +393,7 @@ contract IPNFT3525V2 is
     function _msgSender()
         internal
         view
-        override(ContextUpgradeable, ERC3525Upgradeable)
+        override (ContextUpgradeable, ERC3525Upgradeable)
         returns (address sender)
     {
         return msg.sender;
