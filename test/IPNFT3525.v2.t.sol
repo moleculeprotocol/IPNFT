@@ -178,7 +178,7 @@ contract IPNFT3525V2Test is Test {
 
         vm.startPrank(bob);
         vm.expectRevert("IP-NFT: caller is not reserver");
-        ipnft.mintReservation(bob, reservationId, 0);
+        ipnft.mintReservation(bob, reservationId, 1);
         vm.stopPrank();
     }
 

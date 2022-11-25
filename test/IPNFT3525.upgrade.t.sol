@@ -113,7 +113,7 @@ contract UpgradeV2toV21Test is Test {
         vm.startPrank(alice);
         uint256 reservationId = ipnftV2.reserve();
         ipnftV2.updateReservation(reservationId, "IP Title", arUri);
-        ipnftV2.mintReservation(alice, reservationId, 0);
+        ipnftV2.mintReservation(alice, reservationId, 1);
         ipnftV2.transferFrom(1, bob, 5);
         vm.stopPrank();
     }
@@ -179,7 +179,7 @@ contract UpgradeV2toV21Test is Test {
         vm.startPrank(alice);
         reservationId = ipnftV21.reserve();
         ipnftV2.updateReservation(reservationId, "Alices 2nd IP", ipfsUri);
-        uint256 newSlotOnV3 = ipnftV2.mintReservation(alice, reservationId, 0);
+        uint256 newSlotOnV3 = ipnftV2.mintReservation(alice, reservationId, 1);
         vm.stopPrank();
 
         assertEq(newSlotOnV3, 3);
