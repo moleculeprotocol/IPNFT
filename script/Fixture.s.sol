@@ -16,45 +16,49 @@ contract FixtureScript is Script {
     Mintpass mintpass;
     MyToken myToken;
 
-    uint256 deployerPrivateKey = vm.envUint("DEPLOYER_PRIVATE_KEY");
-    uint256 bob = vm.envUint("BOB_PRIVATE_KEY");
-    uint256 alice = vm.envUint("ALICE_PRIVATE_KEY");
+    address deployer = vm.addr(vm.envUint("DEPLOYER_PRIVATE_KEY"));
+    address bob = vm.addr(vm.envUint("BOB_PRIVATE_KEY"));
+    address alice = vm.addr(vm.envUint("ALICE_PRIVATE_KEY"));
 
     function supplyERC20Tokens(address to, uint256 amount) internal {
-        vm.startBroadcast(deployerPrivateKey);
+        vm.startBroadcast(deployer);
         myToken.mint(to, amount);
         vm.stopBroadcast();
     }
 
     function mintMintPass(address to) internal {
-        vm.startBroadcast(deployerPrivateKey);
+        vm.startBroadcast(deployer);
         mintpass.safeMint(to);
         vm.stopBroadcast();
     }
 
-    function mintIpnft(address from, address to) internal {
+    function mintIpnft(address from, address to) internal returns(uint256) {
         vm.startBroadcast(from);
         uint256 reservationId = ipnft.reserve();
         ipnft.updateReservation(reservationId, "test", "testTokenURI");
 
         ipnft.mintReservation(to, reservationId);
         vm.stopBroadcast();
+        return reservationId; 
     }
 
     function createListingAndSell(address from, address to, uint256 tokenId, uint256 price) internal {
         vm.startBroadcast(from);
-        schmackoSwap.list(ipnft, tokenId, myToken, price);
+        ipnft.approve(schmackoSwap, tokenId);
+        uint256 listingId = schmackoSwap.list(ipnft, tokenId, myToken, price);
+        schmackoSwap.changeBuyerAllowance(listingId, to, true);
         vm.stopBroadcast();
 
-        // Add to allowlist
+        supplyERC20Tokens(to, price);
 
-
-        // Buy Listing
-
+        vm.startBroadcast(to);
+        myToken.approve(address(schmackoSwap), price);
+        schmackoSwap.fulfill(listingId);
+        vm.stopBroadcast();
     }
 
     function run() public { 
-         vm.startBroadcast(deployerPrivateKey);
+         vm.startBroadcast(deployer);
 
         IPNFT3525V2 implementationV2 = new IPNFT3525V2();
         proxy = new UUPSProxy(address(implementationV2), "");
@@ -64,7 +68,11 @@ contract FixtureScript is Script {
         schmackoSwap = new SchmackoSwap();
         mintpass = new Mintpass(address(ipnft));
         myToken = new MyToken();
-
         vm.stopBroadcast();
+
+        mintMintPass(bob);
+
+        uint256 tokenId = mintIpnft(bob, bob);
+        createListingAndSell(bob, alice, tokenId, 10);
     }
 }
