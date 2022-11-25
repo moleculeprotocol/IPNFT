@@ -85,20 +85,6 @@ contract IPNFT3525V2 is
     address mintPassContract;
 
     /*******************
-     * MODIFIER
-     ******************/
-
-    /// @notice Checks if msg.sender owns 1 or more Mintpass tokens
-    modifier onlyWithMintpass() {
-        Mintpass mintpass = Mintpass(mintPassContract);
-        require(
-            mintpass.balanceOf(_msgSender()) > 0,
-            "IPNFT: You need to own a mintpass to mint an IPNFT"
-        );
-        _;
-    }
-
-    /*******************
      * EVENTS
      ******************/
 
@@ -137,14 +123,19 @@ contract IPNFT3525V2 is
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _grantRole(UPGRADER_ROLE, msg.sender);
         _reservationCounter.increment(); //start at 1.
-        mintPassContract = address(0);
     }
 
     /*******************
      * PUBLIC
      ******************/
 
-    function reserve() public onlyWithMintpass returns (uint256) {
+    function reserve() public returns (uint256) {
+        Mintpass mintpass = Mintpass(mintPassContract);
+        require(
+            mintpass.balanceOf(_msgSender()) > 0,
+            "IPNFT: You need to own a mintpass to mint an IPNFT"
+        );
+
         uint256 reservationId = _reservationCounter.current();
         _reservationCounter.increment();
         _reservations[reservationId] = Reservation({
