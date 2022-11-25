@@ -106,10 +106,10 @@ contract SchmackoSwap is ERC165, ReentrancyGuard, IERC721Receiver {
 
         emit Listed(listingId, listing);
 
-        listing.tokenContract.safeTransferFrom(
+        tokenContract.safeTransferFrom(
             msg.sender,
             address(this),
-            listing.tokenId
+            tokenId
         );
 
         return listingId;
