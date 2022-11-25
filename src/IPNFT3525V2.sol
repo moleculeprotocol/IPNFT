@@ -82,7 +82,7 @@ contract IPNFT3525V2 is
     mapping(uint256 => IPNFT) internal _ipnfts;
     mapping(uint256 => Reservation) public _reservations;
 
-    address mintPassContract
+    address mintPassContract;
 
     /*******************
      * MODIFIER
