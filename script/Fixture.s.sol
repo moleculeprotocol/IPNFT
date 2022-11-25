@@ -10,7 +10,6 @@ import { SchmackoSwap } from "../src/SchmackoSwap.sol";
 import { Mintpass } from "../src/Mintpass.sol";
 
 contract FixtureScript is Script {
-    IPNFT3525V2 implementationV2;
     UUPSProxy proxy;
     IPNFT3525V2 ipnft;
     SchmackoSwap schmackoSwap;
@@ -19,7 +18,7 @@ contract FixtureScript is Script {
 
     uint256 deployerPrivateKey = vm.envUint("DEPLOYER_PRIVATE_KEY");
     uint256 bob = vm.envUint("BOB_PRIVATE_KEY");
-    uint256 alice = vm.envUint("ALIVE_PRIVATE_KEY");
+    uint256 alice = vm.envUint("ALICE_PRIVATE_KEY");
 
     function supplyERC20Tokens(address to, uint256 amount) internal {
         vm.startBroadcast(deployerPrivateKey);
@@ -54,10 +53,10 @@ contract FixtureScript is Script {
 
     }
 
-    function setUp() public {
-        vm.startBroadcast(deployerPrivateKey);
+    function run() public { 
+         vm.startBroadcast(deployerPrivateKey);
 
-        implementationV2 = new IPNFT3525V2();
+        IPNFT3525V2 implementationV2 = new IPNFT3525V2();
         proxy = new UUPSProxy(address(implementationV2), "");
         ipnft = IPNFT3525V2(address(proxy));
         ipnft.initialize();
@@ -65,11 +64,7 @@ contract FixtureScript is Script {
         schmackoSwap = new SchmackoSwap();
         mintpass = new Mintpass(address(ipnft));
         myToken = new MyToken();
+
         vm.stopBroadcast();
-    }
-
-
-    function run() public { 
-        setUp();
     }
 }
