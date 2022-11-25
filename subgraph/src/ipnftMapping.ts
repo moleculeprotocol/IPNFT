@@ -4,7 +4,7 @@ import {
     Reserved,
     IPNFTMinted,
     Transfer
-} from "../generated/IPNFT/IPNFT3525";
+} from "../generated/IPNFT3525V2/IPNFT3525V2";
 import { Ipnft, Reservation } from "../generated/schema";
 
 export function handleTransfer(event: Transfer): void {
