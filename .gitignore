@@ -12,8 +12,10 @@ out/
 lib/*
 !.gitkeep
 
-# hardhat 
+# hardhat
 node_modules
 cache_hardhat/
 artifacts/
 .openzeppelin/unknown-*
+
+.vscode
