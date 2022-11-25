@@ -175,16 +175,17 @@ contract IPNFT3525V2 is
         emit ReservationUpdated(_tokenURI, reservationId);
     }
 
-    function mintReservation(address to, uint256 reservationId)
-        public
-        payable
-        returns (uint256 tokenId)
-    {
+    function mintReservation(
+        address to,
+        uint256 reservationId,
+        uint256 mintPassId
+    ) public payable returns (uint256 tokenId) {
         return
             mintReservation(
                 to,
                 reservationId,
-                _reservations[reservationId].tokenURI
+                _reservations[reservationId].tokenURI,
+                mintPassId
             );
     }
 
@@ -194,11 +195,20 @@ contract IPNFT3525V2 is
     function mintReservation(
         address to,
         uint256 reservationId,
-        string memory _tokenURI
+        string memory _tokenURI,
+        uint256 mintPassId
     ) public payable returns (uint256 slotId) {
+        Mintpass mintpass = Mintpass(mintPassContract);
+
         require(
             _reservations[reservationId].reserver == _msgSender(),
             "IP-NFT: caller is not reserver"
+        );
+
+        require(mintPassContract != address(0), "Mintpass contract not set");
+        require(
+            mintpass.ownerOf(mintPassId) == _msgSender(),
+            "IPNFT: You don't own that mintpass"
         );
 
         IPNFT memory ipnft = IPNFT({
@@ -222,6 +232,8 @@ contract IPNFT3525V2 is
 
         /// @see _beforeValueTransfer: it creates slot with that reservation id
         _mintValue(to, reservationId, DEFAULT_VALUE);
+
+        mintpass.burn(mintPassId);
 
         return reservationId;
     }

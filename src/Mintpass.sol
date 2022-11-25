@@ -60,12 +60,19 @@ contract Mintpass is ERC721, Ownable, ReentrancyGuard {
 
     /// @dev Mints a token to an address and approves it be handled by the IP-NFT Contract
     /// @param to The address that the token is minted to
-    function safeMint(address to) public nonReentrant onlyOwner {
+    function safeMint(address to)
+        public
+        nonReentrant
+        onlyOwner
+        returns (uint256)
+    {
         uint256 tokenId = _tokenIdCounter.current();
         _tokenIdCounter.increment();
         _safeMint(to, tokenId);
         _approve(_ipnftContract, tokenId);
         emit TokenMinted(to, tokenId);
+
+        return tokenId;
     }
 
     /// @dev Mark the token as revoked

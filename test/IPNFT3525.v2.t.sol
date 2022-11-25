@@ -59,15 +59,17 @@ contract IPNFT3525V2Test is Test {
     ) internal returns (uint256) {
         uint256 reservationId = reserveAToken(to, name, tokenUri);
         vm.startPrank(to);
-        ipnft.mintReservation(to, reservationId);
+        ipnft.mintReservation(to, reservationId, 1);
         vm.stopPrank();
         return reservationId;
     }
 
-    function dealMintpass(address to) internal {
+    function dealMintpass(address to) internal returns (uint256) {
         vm.startPrank(deployer);
-        mintpass.safeMint(to);
+        uint256 tokenId = mintpass.safeMint(to);
         vm.stopPrank();
+
+        return tokenId;
     }
 
     function setUp() public {
@@ -106,8 +108,12 @@ contract IPNFT3525V2Test is Test {
         vm.expectEmit(true, true, false, true);
         emit IPNFTMinted(arUri, alice, 1);
 
+        // Does Alice have the Mintpass?
+        assertEq(mintpass.balanceOf(alice), 1);
+        assertEq(mintpass.ownerOf(1), alice);
+
         vm.startPrank(alice);
-        ipnft.mintReservation(alice, reservationId);
+        ipnft.mintReservation(alice, reservationId, 1);
         assertEq(ipnft.balanceOf(alice), 1);
 
         assertEq(
@@ -121,6 +127,11 @@ contract IPNFT3525V2Test is Test {
         (address reserver, , ) = ipnft._reservations(1);
         assertEq(reserver, address(0));
 
+        // Was Mintpass burned?
+        assertEq(mintpass.balanceOf(alice), 0);
+        vm.expectRevert("Token does not exist");
+        mintpass.tokenURI(1);
+
         vm.stopPrank();
     }
 
@@ -129,7 +140,7 @@ contract IPNFT3525V2Test is Test {
         //this only changes the uri.
         vm.startPrank(alice);
         ipnft.updateReservation(reservationId, "", ipfsUri);
-        ipnft.mintReservation(alice, 1);
+        ipnft.mintReservation(alice, 1, 1);
 
         assertEq(
             ipnft.tokenURI(1),
@@ -156,7 +167,7 @@ contract IPNFT3525V2Test is Test {
         uint256 reservationId = reserveAToken(alice, "IP Title", arUri);
 
         vm.startPrank(alice);
-        ipnft.mintReservation(bob, reservationId);
+        ipnft.mintReservation(bob, reservationId, 1);
 
         vm.expectRevert("IP-NFT: caller is not reserver");
         ipnft.updateReservation(reservationId, "Foo", "bar");
@@ -167,7 +178,7 @@ contract IPNFT3525V2Test is Test {
 
         vm.startPrank(bob);
         vm.expectRevert("IP-NFT: caller is not reserver");
-        ipnft.mintReservation(bob, reservationId);
+        ipnft.mintReservation(bob, reservationId, 0);
         vm.stopPrank();
     }
 
@@ -225,6 +236,31 @@ contract IPNFT3525V2Test is Test {
         vm.startPrank(alice);
         vm.expectRevert("IPNFT: You need to own a mintpass to mint an IPNFT");
         ipnft.reserve();
+        vm.stopPrank();
+    }
+
+    function testOnlyAdminCanSetMintpassContract() public {
+        vm.startPrank(alice);
+        vm.expectRevert("IP-NFT: caller is not admin");
+        ipnft.setMintpassContract(address(0x5));
+    }
+
+    function testCannotMintWithoutMintpassApproval() public {
+        uint256 reservationId = reserveAToken(alice, "IP Title", arUri);
+
+        // Does Alice have the Mintpass?
+        assertEq(mintpass.balanceOf(alice), 1);
+        assertEq(mintpass.ownerOf(1), alice);
+
+        vm.startPrank(alice);
+
+        // Revoke mintpass token approval
+        mintpass.approve(address(0), 1);
+
+        vm.expectRevert("Not authorized to burn this token");
+        ipnft.mintReservation(alice, reservationId, 1);
+        assertEq(ipnft.balanceOf(alice), 0);
+
         vm.stopPrank();
     }
 }

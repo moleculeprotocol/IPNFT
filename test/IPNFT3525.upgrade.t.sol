@@ -62,7 +62,7 @@ contract UpgradeV2toV21Test is Test {
         vm.startPrank(alice);
         uint256 reservationId = ipnftV2.reserve();
         ipnftV2.updateReservation(reservationId, "IP Title", arUri);
-        ipnftV2.mintReservation(alice, reservationId);
+        ipnftV2.mintReservation(alice, reservationId, 1);
         vm.stopPrank();
 
         assertEq(ipnftV2.totalSupply(), 1);
@@ -85,7 +85,7 @@ contract UpgradeV2toV21Test is Test {
         vm.startPrank(alice);
         uint256 reservationId = ipnftV2.reserve();
         ipnftV2.updateReservation(reservationId, "IP Title", arUri);
-        ipnftV2.mintReservation(alice, reservationId);
+        ipnftV2.mintReservation(alice, reservationId, 1);
         vm.stopPrank();
 
         //don't tell your parents that this is visible on V2:
@@ -113,7 +113,7 @@ contract UpgradeV2toV21Test is Test {
         vm.startPrank(alice);
         uint256 reservationId = ipnftV2.reserve();
         ipnftV2.updateReservation(reservationId, "IP Title", arUri);
-        ipnftV2.mintReservation(alice, reservationId);
+        ipnftV2.mintReservation(alice, reservationId, 0);
         ipnftV2.transferFrom(1, bob, 5);
         vm.stopPrank();
     }
@@ -125,13 +125,13 @@ contract UpgradeV2toV21Test is Test {
         vm.startPrank(alice);
         uint256 reservationId = ipnftV2.reserve();
         ipnftV2.updateReservation(reservationId, "Alices IP", arUri);
-        ipnftV2.mintReservation(alice, reservationId);
+        ipnftV2.mintReservation(alice, reservationId, 1);
         vm.stopPrank();
 
         vm.startPrank(bob);
         reservationId = ipnftV2.reserve();
         ipnftV2.updateReservation(reservationId, "Bobs IP", ipfsUri);
-        ipnftV2.mintReservation(bob, reservationId);
+        ipnftV2.mintReservation(bob, reservationId, 2);
         vm.stopPrank();
 
         deployUpgrade();
@@ -179,7 +179,7 @@ contract UpgradeV2toV21Test is Test {
         vm.startPrank(alice);
         reservationId = ipnftV21.reserve();
         ipnftV2.updateReservation(reservationId, "Alices 2nd IP", ipfsUri);
-        uint256 newSlotOnV3 = ipnftV2.mintReservation(alice, reservationId);
+        uint256 newSlotOnV3 = ipnftV2.mintReservation(alice, reservationId, 0);
         vm.stopPrank();
 
         assertEq(newSlotOnV3, 3);
