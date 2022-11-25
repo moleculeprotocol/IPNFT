@@ -14,6 +14,8 @@ import "@openzeppelin/contracts-upgradeable/utils/Base64Upgradeable.sol";
 
 import {CountersUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/CountersUpgradeable.sol";
 
+import {Mintpass} from "./Mintpass.sol";
+
 /*
  ______ _______         __    __ ________ ________
 |      \       \       |  \  |  \        \        \
@@ -80,15 +82,29 @@ contract IPNFT3525V2 is
     mapping(uint256 => IPNFT) internal _ipnfts;
     mapping(uint256 => Reservation) public _reservations;
 
+    address mintPassContract = address(0);
+
+    /*******************
+     * MODIFIER
+     ******************/
+
+    /// @notice Checks if msg.sender owns 1 or more Mintpass tokens
+    modifier onlyWithMintpass() {
+        Mintpass mintpass = Mintpass(mintPassContract);
+        require(mintPassContract != address(0), "Mintpass contract not set");
+        require(
+            mintpass.balanceOf(_msgSender()) > 0,
+            "IPNFT: You need to own a mintpass to mint an IPNFT"
+        );
+        _;
+    }
+
     /*******************
      * EVENTS
      ******************/
 
     event Reserved(address indexed reserver, uint256 indexed reservationId);
-    event ReservationUpdated(
-        string tokenURI,
-        uint256 indexed reservationId
-    );
+    event ReservationUpdated(string tokenURI, uint256 indexed reservationId);
 
     /// @notice Emitted when an NFT is minted
     /// @param tokenURI the uri containing the ip metadata
@@ -128,7 +144,7 @@ contract IPNFT3525V2 is
      * PUBLIC
      ******************/
 
-    function reserve() public returns (uint256) {
+    function reserve() public onlyWithMintpass returns (uint256) {
         uint256 reservationId = _reservationCounter.current();
         _reservationCounter.increment();
         _reservations[reservationId] = Reservation({
@@ -175,11 +191,11 @@ contract IPNFT3525V2 is
     /// @notice Issues a new IPNFT on a new slot, mints DEFAULT_VALUE to the first owner
     /// @param to  Account the new IPNFT is issued to
     /// @param reservationId the reservation id to use
-    function mintReservation(address to, uint256 reservationId, string memory _tokenURI)
-        public
-        payable
-        returns (uint256 slotId)
-    {
+    function mintReservation(
+        address to,
+        uint256 reservationId,
+        string memory _tokenURI
+    ) public payable returns (uint256 slotId) {
         require(
             _reservations[reservationId].reserver == _msgSender(),
             "IP-NFT: caller is not reserver"
@@ -199,11 +215,7 @@ contract IPNFT3525V2 is
         //todo: emit this, once we decided if we're sure that this one is going to be final.
         //emit PermanentURI(tokenURI, reservationId);
 
-        emit IPNFTMinted(
-            _tokenURI,
-            to,
-            reservationId
-        );
+        emit IPNFTMinted(_tokenURI, to, reservationId);
 
         delete _reservations[reservationId];
         _ipnfts[reservationId] = ipnft;
@@ -212,6 +224,15 @@ contract IPNFT3525V2 is
         _mintValue(to, reservationId, DEFAULT_VALUE);
 
         return reservationId;
+    }
+
+    /// @notice sets the address of the Mintpass contract
+    function setMintpassContract(address newContract) public {
+        require(
+            hasRole(DEFAULT_ADMIN_ROLE, _msgSender()),
+            "IP-NFT: caller is not admin"
+        );
+        mintPassContract = newContract;
     }
 
     /// @notice gets the current version of the contract
