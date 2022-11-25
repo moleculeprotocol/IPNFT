@@ -6,11 +6,11 @@
     "@nomiclabs/hardhat-ethers": "^2.2.1",
     "@nomiclabs/hardhat-etherscan": "^3.1.2",
     "@openzeppelin/hardhat-upgrades": "^1.21.0",
+    "@openzeppelin/contracts-upgradeable": "^4.8.0",
     "chai": "^4.3.7",
     "ethers": "^5.7.2",
     "hardhat": "^2.12.2",
-    "hardhat-preprocessor": "^0.1.5",
-    "@openzeppelin/contracts-upgradeable": "^4.8.0"
+    "hardhat-preprocessor": "^0.1.5"
   },
   "dependencies": {}
 }
