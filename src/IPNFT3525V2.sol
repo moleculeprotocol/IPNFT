@@ -201,6 +201,8 @@ contract IPNFT3525V2 is
             "IPNFT: You don't own that mintpass"
         );
 
+        require(mintpass.isValid(mintPassId), "IPNFT: Mintpass was revoked");
+
         IPNFT memory ipnft = IPNFT({
             totalUnits: DEFAULT_VALUE,
             version: uint16(0),
