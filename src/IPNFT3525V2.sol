@@ -91,7 +91,6 @@ contract IPNFT3525V2 is
     /// @notice Checks if msg.sender owns 1 or more Mintpass tokens
     modifier onlyWithMintpass() {
         Mintpass mintpass = Mintpass(mintPassContract);
-        require(mintPassContract != address(0), "Mintpass contract not set");
         require(
             mintpass.balanceOf(_msgSender()) > 0,
             "IPNFT: You need to own a mintpass to mint an IPNFT"
@@ -206,7 +205,6 @@ contract IPNFT3525V2 is
             "IP-NFT: caller is not reserver"
         );
 
-        require(mintPassContract != address(0), "Mintpass contract not set");
         require(
             mintpass.ownerOf(mintPassId) == _msgSender(),
             "IPNFT: You don't own that mintpass"
