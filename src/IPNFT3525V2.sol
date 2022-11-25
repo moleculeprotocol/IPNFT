@@ -82,7 +82,7 @@ contract IPNFT3525V2 is
     mapping(uint256 => IPNFT) internal _ipnfts;
     mapping(uint256 => Reservation) public _reservations;
 
-    address mintPassContract = address(0);
+    address mintPassContract
 
     /*******************
      * MODIFIER
@@ -138,6 +138,7 @@ contract IPNFT3525V2 is
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _grantRole(UPGRADER_ROLE, msg.sender);
         _reservationCounter.increment(); //start at 1.
+        mintpassContradt = address(0);
     }
 
     /*******************
