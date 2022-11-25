@@ -2,11 +2,12 @@
 pragma solidity ^0.8.17;
 
 import "forge-std/Test.sol";
-import {SchmackoSwap} from "../src/SchmackoSwap.sol";
-import {IPNFT3525V2 as IPNFT} from "../src/IPNFT3525V2.sol";
-import {ERC20} from "solmate/tokens/ERC20.sol";
-import {UUPSProxy} from "../src/UUPSProxy.sol";
-import {console} from "forge-std/console.sol";
+import { SchmackoSwap } from "../src/SchmackoSwap.sol";
+import { Mintpass } from "../src/Mintpass.sol";
+import { IPNFT3525V2 as IPNFT } from "../src/IPNFT3525V2.sol";
+import { ERC20 } from "solmate/tokens/ERC20.sol";
+import { UUPSProxy } from "../src/UUPSProxy.sol";
+import { console } from "forge-std/console.sol";
 
 contract TestToken is ERC20("USD Coin", "USDC", 18) {
     function mintTo(address recipient, uint256 amount) public payable {
@@ -16,6 +17,7 @@ contract TestToken is ERC20("USD Coin", "USDC", 18) {
 
 contract SchmackoSwapTest is Test {
     uint256 nftId;
+    Mintpass mintpass;
     IPNFT internal nft;
     TestToken internal testToken;
     SchmackoSwap internal schmackoSwap;
@@ -27,14 +29,10 @@ contract SchmackoSwapTest is Test {
     event Listed(uint256 listingId, SchmackoSwap.Listing listing);
     event Unlisted(uint256 listingId, SchmackoSwap.Listing listing);
     event Purchased(
-        uint256 listingId,
-        address indexed buyer,
-        SchmackoSwap.Listing listing
+        uint256 listingId, address indexed buyer, SchmackoSwap.Listing listing
     );
     event AllowlistUpdated(
-        uint256 listingId,
-        address indexed buyer,
-        bool _isAllowed
+        uint256 listingId, address indexed buyer, bool _isAllowed
     );
 
     function setUp() public {
@@ -43,6 +41,9 @@ contract SchmackoSwapTest is Test {
         UUPSProxy proxy = new UUPSProxy(address(implementationV2), "");
         nft = IPNFT(address(proxy));
         nft.initialize();
+        mintpass = new Mintpass(address(nft));
+        nft.setMintpassContract(address(mintpass));
+        mintpass.safeMint(seller);
         vm.stopPrank();
 
         testToken = new TestToken();
@@ -55,7 +56,7 @@ contract SchmackoSwapTest is Test {
         vm.startPrank(seller);
         nft.setApprovalForAll(address(schmackoSwap), true);
         nftId = nft.reserve();
-        nft.mintReservation(seller, nftId);
+        nft.mintReservation(seller, nftId, 1);
         vm.stopPrank();
 
         testToken.mintTo(buyer, 1 ether);
@@ -97,7 +98,7 @@ contract SchmackoSwapTest is Test {
                 askPrice: 1 ether,
                 creator: address(seller)
             })
-        );
+            );
 
         schmackoSwap.list(nft, nftId, testToken, 1 ether);
         vm.stopPrank();
@@ -146,7 +147,7 @@ contract SchmackoSwapTest is Test {
     function testCanCancelSale() public {
         vm.startPrank(seller);
         uint256 listingId = schmackoSwap.list(nft, nftId, testToken, 1 ether);
-        (, , address creator, , ) = schmackoSwap.listings(listingId);
+        (,, address creator,,) = schmackoSwap.listings(listingId);
         assertEq(creator, address(seller));
         assertEq(nft.ownerOf(nftId), address(schmackoSwap));
 
@@ -160,19 +161,19 @@ contract SchmackoSwapTest is Test {
                 askPrice: 1 ether,
                 creator: address(seller)
             })
-        );
+            );
         schmackoSwap.cancel(listingId);
 
         assertEq(nft.ownerOf(nftId), address(seller));
 
-        (, , address newCreator, , ) = schmackoSwap.listings(listingId);
+        (,, address newCreator,,) = schmackoSwap.listings(listingId);
         assertEq(newCreator, address(0));
     }
 
     function testNonOwnerCannotCancelSale() public {
         vm.startPrank(seller);
         uint256 listingId = schmackoSwap.list(nft, nftId, testToken, 1 ether);
-        (, , address creator, , ) = schmackoSwap.listings(listingId);
+        (,, address creator,,) = schmackoSwap.listings(listingId);
         assertEq(creator, address(seller));
         assertEq(nft.ownerOf(nftId), address(schmackoSwap));
         vm.stopPrank();
@@ -183,7 +184,7 @@ contract SchmackoSwapTest is Test {
 
         assertEq(nft.ownerOf(nftId), address(schmackoSwap));
 
-        (, , address newCreator, , ) = schmackoSwap.listings(listingId);
+        (,, address newCreator,,) = schmackoSwap.listings(listingId);
         assertEq(newCreator, address(seller));
     }
 
@@ -279,7 +280,7 @@ contract SchmackoSwapTest is Test {
                 askPrice: 1 ether,
                 creator: address(seller)
             })
-        );
+            );
 
         testToken.approve(address(schmackoSwap), 1 ether);
 
@@ -291,7 +292,7 @@ contract SchmackoSwapTest is Test {
         assertEq(testToken.balanceOf(seller), 1 ether);
 
         // Expect listing to be removed after buy
-        (, , address creator, , ) = schmackoSwap.listings(listingId);
+        (,, address creator,,) = schmackoSwap.listings(listingId);
         assertEq(creator, address(0));
     }
 
