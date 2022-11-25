@@ -6,13 +6,13 @@ Template for NFT contracts tokenizing IP.
 
 ### Goerli
 
-- IP-NFT https://goerli.etherscan.io/address/0x5fbdb2315678afecb367f032d93f642f64180aa3#code
-- SchmackoSwap https://goerli.etherscan.io/address/0xe7f1725e7734ce288f8367e1bb143e90bb3f0512#code
-- The Graph: https://api.thegraph.com/subgraphs/name/elmariachi111/schrotti-galoppi-schmacko-1
+- IP-NFT <https://goerli.etherscan.io/address/0x5fbdb2315678afecb367f032d93f642f64180aa3#code>
+- SchmackoSwap <https://goerli.etherscan.io/address/0xe7f1725e7734ce288f8367e1bb143e90bb3f0512#code>
+- The Graph: <https://api.thegraph.com/subgraphs/name/elmariachi111/schrotti-galoppi-schmacko-1>
 
 ## Installation
 
-To work with this repository you have to install Foundry (https://getfoundry.sh).
+To work with this repository you have to install Foundry (<https://getfoundry.sh>).
 
 Run the following command in your terminal, then follow the onscreen instructions (macOS and Linux):
 
@@ -20,7 +20,7 @@ Run the following command in your terminal, then follow the onscreen instruction
 
 The above command will install `foundryup`. Then install Foundry by running `foundryup` in your terminal.
 
-(Check out the Foundry book for a Windows installation guide: https://book.getfoundry.sh)
+(Check out the Foundry book for a Windows installation guide: <https://book.getfoundry.sh>)
 
 ## Usage
 
@@ -67,7 +67,18 @@ We added a basic hardhat environment to this project. While foundry stays our pr
 
 ![CleanShot 2022-08-14 at 15 23 03](https://user-images.githubusercontent.com/86414213/184539154-3ddc46d3-4083-4c58-a401-f7a1dce2be7e.png)
 
-7. Use `cast` (which is part of Foundry) to query/manipulate your deployed contract. Find out more here: https://book.getfoundry.sh/cast/
+7. Use `cast` (which is part of Foundry) to query/manipulate your deployed contract. Find out more here: <https://book.getfoundry.sh/cast/>
+
+#### Deploy local fixture setup
+
+Fixture.s.sol is script that deploys all contracts to a local node (similiar like Dev.s.sol) but it also includes commands to create a "base state", i.e.:
+
+- One Mintpass has been minted to Bob
+- Bob has minted an IP-NFT
+- Bob has sold that IP-NFT to Alice
+This Fixture script is especially useful to test the subgraph.
+
+Run `forge script script/Fixture.s.sol:FixtureScript --fork-url $ANVIL_RPC_URL --mnemonic-passphrases $MNEMONIC --broadcast -vvvv --unlocked --sender $DEPLOYER_ADDRESS`
 
 #### Deploy to Goerli Testnet
 

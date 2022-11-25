@@ -44,7 +44,7 @@ contract FixtureScript is Script {
 
     function createListingAndSell(address from, address to, uint256 tokenId, uint256 price) internal {
         vm.startBroadcast(from);
-        ipnft.approve(schmackoSwap, tokenId);
+        ipnft.approve(address(schmackoSwap), tokenId);
         uint256 listingId = schmackoSwap.list(ipnft, tokenId, myToken, price);
         schmackoSwap.changeBuyerAllowance(listingId, to, true);
         vm.stopBroadcast();
