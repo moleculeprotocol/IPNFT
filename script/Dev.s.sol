@@ -22,7 +22,8 @@ contract DevScript is Script {
 
         new SchmackoSwap();
         new MyToken();
-        new Mintpass(address(ipnft));
+        new Mintpass(address(ipnftV2));
+        
         vm.stopBroadcast();
     }
 }
