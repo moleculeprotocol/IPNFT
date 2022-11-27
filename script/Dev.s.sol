@@ -16,6 +16,7 @@ contract DevScript is Script {
     function run() public {
         (address deployer, ) = deriveRememberKey(mnemonic, 0);
         vm.startBroadcast(deployer);
+
         IPNFT3525V2 implementationV2 = new IPNFT3525V2();
         UUPSProxy proxy = new UUPSProxy(address(implementationV2), "");
         IPNFT3525V2 ipnftV2 = IPNFT3525V2(address(proxy));
@@ -24,6 +25,7 @@ contract DevScript is Script {
         new SchmackoSwap();
         new MyToken();
         new Mintpass(address(ipnftV2));
+        
         vm.stopBroadcast();
     }
 }

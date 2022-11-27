@@ -40,8 +40,8 @@ export function handleReservationUpdated(event: ReservationUpdated): void {
 export function handleMint(event: IPNFTMinted): void {
     let ipnft = new Ipnft(event.params.tokenId.toString());
     ipnft.owner = event.params.minter;
-    ipnft.createdAt = event.block.timestamp;
     ipnft.tokenURI = event.params.tokenURI;
+    ipnft.createdAt = event.block.timestamp;
     ipnft.save();
 
     store.remove("Reservation", event.params.tokenId.toString());
