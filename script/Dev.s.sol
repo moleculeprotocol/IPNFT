@@ -9,11 +9,17 @@ import { SchmackoSwap} from "../src/SchmackoSwap.sol";
 import { Mintpass } from "../src/Mintpass.sol";
 
 contract DevScript is Script {
-    function setUp() public {}
+    string mnemonic = "test test test test test test test test test test test junk";
 
     function run() public {
         vm.startBroadcast();
+        (address deployer, ) = deriveRememberKey(mnemonic, 0);
+        vm.startBroadcast(deployer);
         IPNFT ipnft = new IPNFT();
+        UUPSProxy proxy = new UUPSProxy(address(ipnft), "");
+        IPNFT ipnftV2 = IPNFT(address(proxy));
+        ipnftV2.initialize();
+
         new SchmackoSwap();
         new MyToken();
         new Mintpass(address(ipnft));
