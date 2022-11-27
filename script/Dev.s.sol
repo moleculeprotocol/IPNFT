@@ -11,10 +11,11 @@ import {IPNFT3525V2} from "../src/IPNFT3525V2.sol";
 import {UUPSProxy} from "../src/UUPSProxy.sol";
 
 contract DevScript is Script {
-    function setUp() public {}
+    string mnemonic = "test test test test test test test test test test test junk";
 
     function run() public {
-        vm.startBroadcast();
+        (address deployer, ) = deriveRememberKey(mnemonic, 0);
+        vm.startBroadcast(deployer);
         IPNFT3525V2 implementationV2 = new IPNFT3525V2();
         UUPSProxy proxy = new UUPSProxy(address(implementationV2), "");
         IPNFT3525V2 ipnftV2 = IPNFT3525V2(address(proxy));
