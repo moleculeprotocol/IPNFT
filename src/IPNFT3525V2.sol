@@ -138,17 +138,17 @@ contract IPNFT3525V2 is Initializable, ERC3525SlotEnumerableUpgradeable, AccessC
     function updateReservation(
         uint256 reservationId,
         //todo: if this gets longer, use abiencoded bytes.
-        string calldata _name,
-        string calldata _tokenURI
+        string calldata name_,
+        string calldata tokenURI_
     ) external {
         require(_reservations[reservationId].reserver == _msgSender(), "IP-NFT: caller is not reserver");
-        if (bytes(_name).length > 0) {
-            _reservations[reservationId].name = _name;
+        if (bytes(name_).length > 0) {
+            _reservations[reservationId].name = name_;
         }
-        if (bytes(_tokenURI).length > 0) {
-            _reservations[reservationId].tokenURI = _tokenURI;
+        if (bytes(tokenURI_).length > 0) {
+            _reservations[reservationId].tokenURI = tokenURI_;
         }
-        emit ReservationUpdated(_tokenURI, reservationId);
+        emit ReservationUpdated(tokenURI_, reservationId);
     }
 
     function mintReservation(address to, uint256 reservationId, uint256 mintPassId)
@@ -162,7 +162,7 @@ contract IPNFT3525V2 is Initializable, ERC3525SlotEnumerableUpgradeable, AccessC
     /// @notice Issues a new IPNFT on a new slot, mints DEFAULT_VALUE to the first owner
     /// @param to  Account the new IPNFT is issued to
     /// @param reservationId the reservation id to use
-    function mintReservation(address to, uint256 reservationId, string memory _tokenURI, uint256 mintPassId)
+    function mintReservation(address to, uint256 reservationId, string memory tokenURI_, uint256 mintPassId)
         public
         payable
         returns (uint256 slotId)
@@ -180,7 +180,7 @@ contract IPNFT3525V2 is Initializable, ERC3525SlotEnumerableUpgradeable, AccessC
             version: uint16(0),
             exists: true,
             name: _reservations[reservationId].name,
-            tokenURI: _tokenURI,
+            tokenURI: tokenURI_,
             minter: _msgSender()
         });
 
@@ -189,7 +189,7 @@ contract IPNFT3525V2 is Initializable, ERC3525SlotEnumerableUpgradeable, AccessC
         //todo: emit this, once we decided if we're sure that this one is going to be final.
         //emit PermanentURI(tokenURI, reservationId);
 
-        emit IPNFTMinted(_tokenURI, to, reservationId);
+        emit IPNFTMinted(tokenURI_, to, reservationId);
 
         delete _reservations[reservationId];
         _ipnfts[reservationId] = ipnft;
@@ -205,6 +205,7 @@ contract IPNFT3525V2 is Initializable, ERC3525SlotEnumerableUpgradeable, AccessC
     /// @notice sets the address of the Mintpass contract
     function setMintpassContract(address newContract) public {
         require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "IP-NFT: caller is not admin");
+        require(newContract != address(0), "IP-NFT: new contract is the zero address");
         mintPassContract = newContract;
     }
 

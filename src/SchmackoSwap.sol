@@ -50,10 +50,6 @@ contract SchmackoSwap is ERC165, ReentrancyGuard, IERC721Receiver {
     /// @param _isAllowed If address is added or removed from allowlist
     event AllowlistUpdated(uint256 listingId, address indexed buyer, bool _isAllowed);
 
-    /// @notice Used as a counter for the next sale index.
-    /// @dev Initialised at 1 because it makes the first transaction slightly cheaper.
-    uint256 internal saleCounter = 1;
-
     /// @dev Parameters for listings
     /// @param tokenContract The ERC1155 contract for the listed token
     /// @param tokenId The ID of the listed token
@@ -125,7 +121,7 @@ contract SchmackoSwap is ERC165, ReentrancyGuard, IERC721Receiver {
     function fulfill(uint256 listingId) public nonReentrant {
         Listing memory listing = listings[listingId];
         if (listing.creator == address(0)) revert ListingNotFound();
-        if (allowlist[listingId][msg.sender] != true) revert NotOnAllowlist();
+        if (!allowlist[listingId][msg.sender]) revert NotOnAllowlist();
 
         ERC20 paymentToken = listing.paymentToken;
 
@@ -144,16 +140,16 @@ contract SchmackoSwap is ERC165, ReentrancyGuard, IERC721Receiver {
         emit Purchased(listingId, msg.sender, listing);
     }
 
-    function changeBuyerAllowance(uint256 listingId, address buyerAddress, bool _isAllowed) public {
+    function changeBuyerAllowance(uint256 listingId, address buyerAddress, bool isAllowed_) public {
         Listing memory listing = listings[listingId];
 
         if (listing.creator == address(0)) revert ListingNotFound();
         if (listing.creator != msg.sender) revert Unauthorized();
         require(buyerAddress != address(0), "Can't add ZERO address to allowlist");
 
-        allowlist[listingId][buyerAddress] = _isAllowed;
+        allowlist[listingId][buyerAddress] = isAllowed_;
 
-        emit AllowlistUpdated(listingId, buyerAddress, _isAllowed);
+        emit AllowlistUpdated(listingId, buyerAddress, isAllowed_);
     }
 
     function isAllowed(uint256 listingId, address buyerAddress) public view returns (bool) {
