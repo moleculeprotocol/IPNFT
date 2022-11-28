@@ -3,6 +3,7 @@ src = 'src'
 out = 'out'
 libs = ['lib']
 solc_version = "0.8.17"
+gas_reports = ["IPNFT3525V2", "IPNFT3525V21", "Mintpass", "SchmackoSwap"]
 
 [fmt]
 bracket_spacing = true
@@ -10,5 +11,7 @@ line_length = 120
 tab_width = 4
 quote_style = 'double'
 func_attrs_with_params_multiline = true
+
+
 
 # See more config options https://github.com/foundry-rs/foundry/tree/master/config
