@@ -10,7 +10,8 @@ import { SchmackoSwap } from "../src/SchmackoSwap.sol";
 import { Mintpass } from "../src/Mintpass.sol";
 
 contract FixtureScript is Script {
-    string mnemonic = "test test test test test test test test test test test junk";
+    string mnemonic =
+        "test test test test test test test test test test test junk";
 
     UUPSProxy proxy;
     IPNFT3525V2 ipnft;
@@ -19,13 +20,13 @@ contract FixtureScript is Script {
     MyToken myToken;
 
     address deployer;
-    address bob; 
+    address bob;
     address alice;
-    
+
     function prepareAddresses() internal {
-        (deployer, ) = deriveRememberKey(mnemonic, 0);
-        (bob, ) = deriveRememberKey(mnemonic, 1);
-        (alice, ) = deriveRememberKey(mnemonic, 2);
+        (deployer,) = deriveRememberKey(mnemonic, 0);
+        (bob,) = deriveRememberKey(mnemonic, 1);
+        (alice,) = deriveRememberKey(mnemonic, 2);
     }
 
     function supplyERC20Tokens(address to, uint256 amount) internal {
@@ -40,16 +41,25 @@ contract FixtureScript is Script {
         vm.stopBroadcast();
     }
 
-    function mintIpnft(address from, address to) internal returns(uint256) {
+    function mintIpnft(address from, address to) internal returns (uint256) {
         vm.startBroadcast(from);
         uint256 reservationId = ipnft.reserve();
-        ipnft.updateReservation(reservationId, "IP-NFT Test", "ipfs://bafybeidlr6ltzbipd6ix5ckyyzwgm2pbigx7ar2ht64v4czk65pkjouire/metadata.json");
-        ipnft.mintReservation(to, reservationId);
+        ipnft.updateReservation(
+            reservationId,
+            "IP-NFT Test",
+            "ipfs://bafybeidlr6ltzbipd6ix5ckyyzwgm2pbigx7ar2ht64v4czk65pkjouire/metadata.json"
+        );
+        ipnft.mintReservation(to, reservationId, 1);
         vm.stopBroadcast();
-        return reservationId; 
+        return reservationId;
     }
 
-    function createListingAndSell(address from, address to, uint256 tokenId, uint256 price) internal {
+    function createListingAndSell(
+        address from,
+        address to,
+        uint256 tokenId,
+        uint256 price
+    ) internal {
         vm.startBroadcast(from);
         ipnft.approve(address(schmackoSwap), tokenId);
         uint256 listingId = schmackoSwap.list(ipnft, tokenId, myToken, price);
@@ -64,7 +74,7 @@ contract FixtureScript is Script {
         vm.stopBroadcast();
     }
 
-    function run() public { 
+    function run() public {
         prepareAddresses();
         vm.startBroadcast(deployer);
 
