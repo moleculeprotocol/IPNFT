@@ -10,15 +10,23 @@ import { SchmackoSwap } from "../src/SchmackoSwap.sol";
 import { Mintpass } from "../src/Mintpass.sol";
 
 contract FixtureScript is Script {
+    string mnemonic = "test test test test test test test test test test test junk";
+
     UUPSProxy proxy;
     IPNFT3525V2 ipnft;
     SchmackoSwap schmackoSwap;
     Mintpass mintpass;
     MyToken myToken;
 
-    address deployer = vm.addr(vm.envUint("DEPLOYER_PRIVATE_KEY"));
-    address bob = vm.addr(vm.envUint("BOB_PRIVATE_KEY"));
-    address alice = vm.addr(vm.envUint("ALICE_PRIVATE_KEY"));
+    address deployer;
+    address bob; 
+    address alice;
+    
+    function prepareAddresses() internal {
+        (deployer, ) = deriveRememberKey(mnemonic, 0);
+        (bob, ) = deriveRememberKey(mnemonic, 1);
+        (alice, ) = deriveRememberKey(mnemonic, 2);
+    }
 
     function supplyERC20Tokens(address to, uint256 amount) internal {
         vm.startBroadcast(deployer);
@@ -35,8 +43,7 @@ contract FixtureScript is Script {
     function mintIpnft(address from, address to) internal returns(uint256) {
         vm.startBroadcast(from);
         uint256 reservationId = ipnft.reserve();
-        ipnft.updateReservation(reservationId, "test", "testTokenURI");
-
+        ipnft.updateReservation(reservationId, "IP-NFT Test", "ipfs://bafybeidlr6ltzbipd6ix5ckyyzwgm2pbigx7ar2ht64v4czk65pkjouire/metadata.json");
         ipnft.mintReservation(to, reservationId);
         vm.stopBroadcast();
         return reservationId; 
@@ -58,7 +65,8 @@ contract FixtureScript is Script {
     }
 
     function run() public { 
-         vm.startBroadcast(deployer);
+        prepareAddresses();
+        vm.startBroadcast(deployer);
 
         IPNFT3525V2 implementationV2 = new IPNFT3525V2();
         proxy = new UUPSProxy(address(implementationV2), "");
@@ -66,8 +74,8 @@ contract FixtureScript is Script {
         ipnft.initialize();
 
         schmackoSwap = new SchmackoSwap();
-        mintpass = new Mintpass(address(ipnft));
         myToken = new MyToken();
+        mintpass = new Mintpass(address(ipnft));
         vm.stopBroadcast();
 
         mintMintPass(bob);

@@ -44,43 +44,33 @@ We added a basic hardhat environment to this project. While foundry stays our pr
 
 `yarn hardhat test --network hardhat`
 
-### Deploy contract
+## Deployment
 
-#### General config
+### General config
 
 - The deploy script we're using is located in `script/IPNFT.sol`
 - Copy `.env.example` to `.env`
-- Set the `PRIVATE_KEY` variable in the `.env`. This is the private key for the address you're deploying the contract with. For testing you can generate a private key on your command line: `openssl rand -hex 32`.
+- To deploy on a testnet, set the deployer's `PRIVATE_KEY` variable in the `.env` file. This can be exported from Metamask.
 - Set the `ETHERSCAN_KEY` if you want to verify deployed contracts on Etherscan.
 
-#### Deploy everything at once to a local `anvil` node
+### Deploy local development or fixture setup
 
-1. Anvil is a local testnet node shipped with Foundry. You can use it for testing your contracts from frontends or for interacting over RPC.
-2. Run `anvil -h 0.0.0.0` in a terminal window and keep it running. You will see similar output to this:
+- Anvil is a local testnet node shipped with Foundry. You can use it for testing your contracts from frontends or for interacting over RPC. You can also use the ganache node from docker, see above.
+- Run `anvil -h 0.0.0.0` in a terminal window and keep it running 
+- Use `cast` (which is part of Foundry) to query/manipulate your deployed contract. Find out more here: <https://book.getfoundry.sh/cast/>
 
-![CleanShot 2022-08-14 at 15 15 12](https://user-images.githubusercontent.com/86414213/184538794-d682d4a0-1ffc-4113-a7c5-e9dc6adb8268.png)
+We've got 2 scripts that deploy all contracts at once (`Dev.s.sol`) and create a base state(`Fixture.s.sol`)
 
-3. Take one of the private keys you get and insert them into the `.env` file at `PRIVATE_KEY`.
-4. Run `source .env` to get the ENV variables into your current terminal session.
-5. Run `forge script script/Dev.s.sol:DevScript --fork-url $ANVIL_RPC_URL --private-key $PRIVATE_KEY --broadcast -vvvv` to deploy the contracts to your local `anvil` node.
-6. If the deployment was successful you get output similar to this:
+To just deploy all contracts (using the default mnemonic's first account is used ), run `forge script script/Dev.s.sol:DevScript --fork-url $ANVIL_RPC_URL --broadcast -vvvv`
 
-![CleanShot 2022-08-14 at 15 23 03](https://user-images.githubusercontent.com/86414213/184539154-3ddc46d3-4083-4c58-a401-f7a1dce2be7e.png)
+Alternatively, `Fixture.s.sol` deploys all contracts to a local node and also creates a base state for devs. It uses the 3 first accounts from the default mnemonic. Run `forge script script/Fixture.s.sol:FixtureScript --fork-url $ANVIL_RPC_URL --broadcast -vvvv` to
 
-7. Use `cast` (which is part of Foundry) to query/manipulate your deployed contract. Find out more here: <https://book.getfoundry.sh/cast/>
+- Deploy all contracts as #0
+- Issue one Mintpass by #0 to #1
+- Mint an IP-NFT to #1
+- Let #1 sell that IP-NFT to #2
 
-#### Deploy local fixture setup
-
-Fixture.s.sol is script that deploys all contracts to a local node (similiar like Dev.s.sol) but it also includes commands to create a "base state", i.e.:
-
-- One Mintpass has been minted to Bob
-- Bob has minted an IP-NFT
-- Bob has sold that IP-NFT to Alice
-This Fixture script is especially useful to test the subgraph.
-
-Run `forge script script/Fixture.s.sol:FixtureScript --fork-url $ANVIL_RPC_URL --mnemonic-passphrases $MNEMONIC --broadcast -vvvv --unlocked --sender $DEPLOYER_ADDRESS`
-
-#### Deploy to Goerli Testnet
+### Deploy to Goerli Testnet
 
 The easiest way to deploy contracts without exposing a local private key is the thirdweb. Here's how you initialize the process from the root folder of any web3 app: `npx thirdweb@latest deploy`
 

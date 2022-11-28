@@ -1,54 +1,49 @@
 # IPNFT subgraph
 
-## prerequisites
+## Prerequisites
 
--   contracts have to be built
--   install jq (`apt i jq` / `brew install jq`)
-
-## getting the latest contract abis
-
--   `yarn create-ipnft-abi`
--   `yarn create-schmackoSwap-abi` (needs SchmackoSwap outputs here)
+- you can deploy contracts locally (see the main folder)
+- you'll need docker (and docker-compose) on your box
+- install jq (`apt i jq` / `brew install jq`)
 
 ### Running subgraph and contracts locally
 
-you'll need docker / docker-compose on your box
-
-follow the local anvil deployment instructions [in the main repo](../README.md)
-
-Note all the contract addresses that the following commands are creating, and add them to your .env file. If you're executing them in exactly this order on a fresh anvil node with the default mnemonic, the addresses are "deterministic".
-
-Since your local env is stil configured for your anvil node, it can be reused for the other deployments
-
-1. Deploy local IP-NFT contract, SchmackoSwap and MyToken (ERC-20 contract)
-   `forge script script/IPNFT.s.sol:IPNFTScript --fork-url $ANVIL_RPC_URL --private-key $PRIVATE_KEY --broadcast -vvvv`
-
-2. add the deployed contract addresses to your .env file, `source .env` again. We've added their deterministic addresses when deployed in that order for convenienc.
-
+1. follow the local anvil deployment instructions [in the main repo](../README.md) to create a local deployment by running the fixture or dev scripts. 
+2. Ensure the resulting contract addresses match the ones in your .env file and are available in your local environment (`source .env`). When  executied on a fresh node with the default mnemonic, the addresses in `.env.example` are the deterministic contract addresses.
 3. Startup docker containers
 
 ```sh
 docker compose up
 ```
 
-The containers must be able to access your host box to connect to your local (anvil) chain. On Mac it likely just works since it supports `host.docker.internal`. On Linux run `setup.sh` can find your host's local network address and replace it in the compose file. Also make sure that your local blockchain node responds to the interface's traffic (e.g. by `anvil -h 0.0.0.0`). If this still doesn't work, you can start a ganache node inside your local docker env as well by adding the `docker-compose.ganache.yml` docker override:
+The containers must be able to access your host box to connect to your local (anvil) chain. On Mac it likely just works since it supports `host.docker.internal`. On Linux run `setup.sh` can find your host's local network address and replace it in the compose file. Also make sure that your local blockchain node responds to the interface's traffic (e.g. by `anvil -h 0.0.0.0`). If you can't get this to work, you can instead start a ganache node as a docker service by using the `docker-compose.ganache.yml` override file:
 
 ```sh
 docker-compose --file docker-compose.yml --file docker-compose.ganache.yml up
 ```
 
-4. Prepare subgraph for local build, create and deploy
-
-This creates a `subgraph.yaml` file with the correct contract addresses of your local chain
+4. Prepare subgraph deployment
 
 ```sh
+yarn create-abis
 yarn prepare:local
+``` 
+This copies over your contracts' ABIs and creates a `subgraph.yaml` file with the contract addresses on your local chain, according to your environment.
+
+5. Build and deploy the subgraph 
+
+```sh
 yarn build
 yarn create-local
 yarn deploy-local
 ```
 
 5. Checkout the local GraphQL API at <http://localhost:8000/subgraphs/name/moleculeprotocol/ipnft-subgraph>
+
+If your local dev node needs a little "push", this is how you manually can mine a block: 
+```sh 
+curl -H "Content-Type: application/json" -X POST --data '{"jsonrpc":"2.0","method":"evm_mine","params":[],"id":1}' 127.0.0.1:8545
+```
 
 ### deploying on the hosted service:
 
