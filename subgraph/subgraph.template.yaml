@@ -3,20 +3,20 @@ schema:
   file: ./schema.graphql
 dataSources:
   - kind: ethereum
-    name: IPNFT
+    name: IPNFT3525V2
     network: {{network}}
     source:
       address: "{{ipnft.address}}"
-      abi: IPNFT3525
+      abi: IPNFT3525V2
       startBlock: {{ipnft.startBlock}}
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
       language: wasm/assemblyscript
       entities:
-        - IPNFT3525
+        - Ipnft
       abis:
-        - name: IPNFT3525
+        - name: IPNFT3525V2
           file: ./abis/IPNFT3525V2.json
       eventHandlers:
         - event: Transfer(indexed address,indexed address,indexed uint256)
@@ -24,7 +24,7 @@ dataSources:
         - event: IPNFTMinted(string,indexed address,indexed uint256)
           handler: handleMint
         - event: ReservationUpdated(string,indexed uint256)
-          handler: handleReservationURIUpdated
+          handler: handleReservationUpdated
         - event: Reserved(indexed address,indexed uint256)
           handler: handleReservation
       file: ./src/ipnftMapping.ts
