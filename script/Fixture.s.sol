@@ -10,8 +10,7 @@ import { SchmackoSwap } from "../src/SchmackoSwap.sol";
 import { Mintpass } from "../src/Mintpass.sol";
 
 contract FixtureScript is Script {
-    string mnemonic =
-        "test test test test test test test test test test test junk";
+    string mnemonic = "test test test test test test test test test test test junk";
 
     UUPSProxy proxy;
     IPNFT3525V2 ipnft;
@@ -54,12 +53,7 @@ contract FixtureScript is Script {
         return reservationId;
     }
 
-    function createListingAndSell(
-        address from,
-        address to,
-        uint256 tokenId,
-        uint256 price
-    ) internal {
+    function createListingAndSell(address from, address to, uint256 tokenId, uint256 price) internal {
         vm.startBroadcast(from);
         ipnft.approve(address(schmackoSwap), tokenId);
         uint256 listingId = schmackoSwap.list(ipnft, tokenId, myToken, price);

@@ -17,11 +17,7 @@ contract Upgreat is Initializable, UUPSUpgradeable, AccessControlUpgradeable {
         return "great";
     }
 
-    function _authorizeUpgrade(address /*newImplementation*/ )
-        internal
-        view
-        override
-    {
+    function _authorizeUpgrade(address /*newImplementation*/ ) internal view override {
         //empty block
     }
 }

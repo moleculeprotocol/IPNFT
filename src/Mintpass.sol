@@ -6,8 +6,7 @@ import { Counters } from "@openzeppelin/contracts/utils/Counters.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { Base64 } from "@openzeppelin/contracts/utils/Base64.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
-import { ReentrancyGuard } from
-    "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import { ReentrancyGuard } from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 contract Mintpass is ERC721, Ownable, ReentrancyGuard {
     using Counters for Counters.Counter;
@@ -61,12 +60,7 @@ contract Mintpass is ERC721, Ownable, ReentrancyGuard {
 
     /// @dev Mints a token to an address and approves it be handled by the IP-NFT Contract
     /// @param to The address that the token is minted to
-    function safeMint(address to)
-        public
-        nonReentrant
-        onlyOwner
-        returns (uint256)
-    {
+    function safeMint(address to) public nonReentrant onlyOwner returns (uint256) {
         uint256 tokenId = _tokenIdCounter.current();
         _tokenIdCounter.increment();
         _safeMint(to, tokenId);
@@ -79,11 +73,7 @@ contract Mintpass is ERC721, Ownable, ReentrancyGuard {
     /// @dev Mints a number of tokens to an address and approves it be handled by the IP-NFT Contract
     /// @param to The address that the token is minted to
     /// @param amount the amount of tokens to mint
-    function batchMint(address to, uint256 amount)
-        public
-        nonReentrant
-        onlyOwner
-    {
+    function batchMint(address to, uint256 amount) public nonReentrant onlyOwner {
         require(amount < 100, "Don't go crazy with the mints");
 
         for (uint256 i = 0; i < amount; i++) {
@@ -106,22 +96,14 @@ contract Mintpass is ERC721, Ownable, ReentrancyGuard {
     /// @dev burns a token. This is only possible by either the owner of the token or the IP-NFT Contract
     /// @param tokenId Identifier of the token to be burned
     function burn(uint256 tokenId) external {
-        require(
-            _isApprovedOrOwner(msg.sender, tokenId),
-            "Not authorized to burn this token"
-        );
+        require(_isApprovedOrOwner(msg.sender, tokenId), "Not authorized to burn this token");
         _burn(tokenId);
         emit TokenBurned(msg.sender, tokenId);
     }
 
     /// @dev Returns the tokenURI attached to a token
     /// @param tokenId Identifier of the token
-    function tokenURI(uint256 tokenId)
-        public
-        view
-        override
-        returns (string memory)
-    {
+    function tokenURI(uint256 tokenId) public view override returns (string memory) {
         require(_exists(tokenId), "Token does not exist");
         return string(
             abi.encodePacked(
@@ -147,16 +129,12 @@ contract Mintpass is ERC721, Ownable, ReentrancyGuard {
 
     /// @dev Hook that is called before every token transfer. This includes minting and burning.
     /// It checks if the token is minted or burned. If not the function is reverted.
-    function _beforeTokenTransfer(
-        address from,
-        address to,
-        uint256 tokenId,
-        uint256 batchSize
-    ) internal virtual override {
-        require(
-            from == address(0) || to == address(0),
-            "This a Soulbound token. It can only be burned."
-        );
+    function _beforeTokenTransfer(address from, address to, uint256 tokenId, uint256 batchSize)
+        internal
+        virtual
+        override
+    {
+        require(from == address(0) || to == address(0), "This a Soulbound token. It can only be burned.");
         super._beforeTokenTransfer(from, to, tokenId, batchSize);
     }
 }

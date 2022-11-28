@@ -16,9 +16,7 @@ contract IPNFT3525V2Test is Test {
     /// @param tokenURI the uri containing the ip metadata
     /// @param minter the minter's address
     /// @param tokenId the minted token (slot) id
-    event IPNFTMinted(
-        string tokenURI, address indexed minter, uint256 indexed tokenId
-    );
+    event IPNFTMinted(string tokenURI, address indexed minter, uint256 indexed tokenId);
 
     IPNFT3525V2 implementationV2;
     UUPSProxy proxy;
@@ -36,11 +34,7 @@ contract IPNFT3525V2Test is Test {
     string arUri = "ar://tNbdHqh3AVDHVD06P0OPUXSProI5kGcZZw8IvLkekSY";
     uint256 tokenPrice = 1 ether;
 
-    function reserveAToken(
-        address to,
-        string memory name,
-        string memory tokenUri
-    ) internal returns (uint256) {
+    function reserveAToken(address to, string memory name, string memory tokenUri) internal returns (uint256) {
         dealMintpass(to);
         vm.startPrank(to);
         uint256 reservationId = ipnft.reserve();
@@ -50,10 +44,7 @@ contract IPNFT3525V2Test is Test {
         return reservationId;
     }
 
-    function mintAToken(address to, string memory name, string memory tokenUri)
-        internal
-        returns (uint256)
-    {
+    function mintAToken(address to, string memory name, string memory tokenUri) internal returns (uint256) {
         uint256 reservationId = reserveAToken(to, name, tokenUri);
         vm.startPrank(to);
         ipnft.mintReservation(to, reservationId, 1);
@@ -93,8 +84,7 @@ contract IPNFT3525V2Test is Test {
         uint256 reservationId = ipnft.reserve();
         ipnft.updateReservation(reservationId, "IP Title", arUri);
 
-        (address reserver, string memory name, string memory tokenURI) =
-            ipnft._reservations(1);
+        (address reserver, string memory name, string memory tokenURI) = ipnft._reservations(1);
         assertEq(reserver, alice);
         assertEq(name, "IP Title");
         assertEq(tokenURI, arUri);

@@ -28,12 +28,8 @@ contract SchmackoSwapTest is Test {
 
     event Listed(uint256 listingId, SchmackoSwap.Listing listing);
     event Unlisted(uint256 listingId, SchmackoSwap.Listing listing);
-    event Purchased(
-        uint256 listingId, address indexed buyer, SchmackoSwap.Listing listing
-    );
-    event AllowlistUpdated(
-        uint256 listingId, address indexed buyer, bool _isAllowed
-    );
+    event Purchased(uint256 listingId, address indexed buyer, SchmackoSwap.Listing listing);
+    event AllowlistUpdated(uint256 listingId, address indexed buyer, bool _isAllowed);
 
     function setUp() public {
         vm.startPrank(deployer);
@@ -105,13 +101,8 @@ contract SchmackoSwapTest is Test {
 
         assertEq(nft.ownerOf(nftId), address(schmackoSwap));
 
-        (
-            IPNFT tokenContract,
-            uint256 tokenId,
-            address creator,
-            ERC20 paymentToken,
-            uint256 askPrice
-        ) = schmackoSwap.listings(listingId);
+        (IPNFT tokenContract, uint256 tokenId, address creator, ERC20 paymentToken, uint256 askPrice) =
+            schmackoSwap.listings(listingId);
 
         assertEq(address(tokenContract), address(nft));
         assertEq(tokenId, nftId);

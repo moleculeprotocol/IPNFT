@@ -8,12 +8,7 @@ import { IPNFT } from "../src/IPNFT.sol";
 contract IPNFTTest is Test {
     event Reserved(address indexed reserver, uint256 indexed reservationId);
 
-    event TokenMinted(
-        string tokenURI,
-        address indexed owner,
-        uint256 indexed tokenId,
-        uint256 sharesAmount
-    );
+    event TokenMinted(string tokenURI, address indexed owner, uint256 indexed tokenId, uint256 sharesAmount);
 
     event PermanentURI(string _value, uint256 indexed _id);
 

@@ -11,8 +11,7 @@ import { IPNFT3525V2 } from "../src/IPNFT3525V2.sol";
 import { UUPSProxy } from "../src/UUPSProxy.sol";
 
 contract DevScript is Script {
-    string mnemonic =
-        "test test test test test test test test test test test junk";
+    string mnemonic = "test test test test test test test test test test test junk";
 
     function run() public {
         (address deployer,) = deriveRememberKey(mnemonic, 0);

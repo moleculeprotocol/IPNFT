@@ -22,21 +22,14 @@ contract IPNFT3525V21Test is Test {
     string arUri = "ar://tNbdHqh3AVDHVD06P0OPUXSProI5kGcZZw8IvLkekSY";
     uint256 tokenPrice = 1 ether;
 
-    function reserveAToken(
-        address to,
-        string memory name,
-        string memory tokenUri
-    ) internal returns (uint256) {
+    function reserveAToken(address to, string memory name, string memory tokenUri) internal returns (uint256) {
         uint256 reservationId = ipnft.reserve();
         ipnft.updateReservation(reservationId, name, tokenUri);
         //bytes memory ipnftArgs = abi.encode(title, tokenUri);
         return reservationId;
     }
 
-    function mintAToken(address to, string memory name, string memory tokenUri)
-        internal
-        returns (uint256)
-    {
+    function mintAToken(address to, string memory name, string memory tokenUri) internal returns (uint256) {
         uint256 reservationId = reserveAToken(to, name, tokenUri);
         ipnft.mintReservation(to, reservationId, 1);
         return reservationId;
