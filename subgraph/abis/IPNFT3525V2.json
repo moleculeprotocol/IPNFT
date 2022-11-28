@@ -873,6 +873,11 @@
         "internalType": "string",
         "name": "_tokenURI",
         "type": "string"
+      },
+      {
+        "internalType": "uint256",
+        "name": "mintPassId",
+        "type": "uint256"
       }
     ],
     "name": "mintReservation",
@@ -896,6 +901,11 @@
       {
         "internalType": "uint256",
         "name": "reservationId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "mintPassId",
         "type": "uint256"
       }
     ],
@@ -1069,6 +1079,19 @@
       }
     ],
     "name": "setApprovalForAll",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "newContract",
+        "type": "address"
+      }
+    ],
+    "name": "setMintpassContract",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

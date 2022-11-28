@@ -75,7 +75,7 @@ contract IPNFT3525V2 is Initializable, ERC3525SlotEnumerableUpgradeable, AccessC
     mapping(uint256 => IPNFT) internal _ipnfts;
     mapping(uint256 => Reservation) public _reservations;
 
-    address mintPassContract;
+    Mintpass mintpass;
 
     /**
      *
@@ -125,7 +125,6 @@ contract IPNFT3525V2 is Initializable, ERC3525SlotEnumerableUpgradeable, AccessC
      */
 
     function reserve() public returns (uint256) {
-        Mintpass mintpass = Mintpass(mintPassContract);
         require(mintpass.balanceOf(_msgSender()) > 0, "IPNFT: You need to own a mintpass to mint an IPNFT");
 
         uint256 reservationId = _reservationCounter.current();
@@ -167,12 +166,8 @@ contract IPNFT3525V2 is Initializable, ERC3525SlotEnumerableUpgradeable, AccessC
         payable
         returns (uint256 slotId)
     {
-        Mintpass mintpass = Mintpass(mintPassContract);
-
         require(_reservations[reservationId].reserver == _msgSender(), "IP-NFT: caller is not reserver");
-
         require(mintpass.ownerOf(mintPassId) == _msgSender(), "IPNFT: You don't own that mintpass");
-
         require(mintpass.isValid(mintPassId), "IPNFT: Mintpass was revoked");
 
         IPNFT memory ipnft = IPNFT({
@@ -203,10 +198,9 @@ contract IPNFT3525V2 is Initializable, ERC3525SlotEnumerableUpgradeable, AccessC
     }
 
     /// @notice sets the address of the Mintpass contract
-    function setMintpassContract(address newContract) public {
+    function setMintpassContract(address mintpass_) public {
         require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "IP-NFT: caller is not admin");
-        require(newContract != address(0), "IP-NFT: new contract is the zero address");
-        mintPassContract = newContract;
+        mintpass = Mintpass(mintpass_);
     }
 
     /// @notice gets the current version of the contract
