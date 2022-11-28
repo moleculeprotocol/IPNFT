@@ -14,13 +14,13 @@ contract Mintpass is ERC721, Ownable, ReentrancyGuard {
     Counters.Counter private _tokenIdCounter;
 
     /// @dev Stores the address of the associated IP-NFT contract.
-    address public _ipnftContract;
+    address public ipnftContract;
 
     // Mapping from tokenId to validity of token. If tokenId has been revoked, it will return true
     mapping(uint256 => bool) private _revocations;
 
-    constructor(address ipnftContract) ERC721("IP-NFT Mintpass", "IPNFTMP") {
-        _ipnftContract = ipnftContract;
+    constructor(address ipnftContract_) ERC721("IP-NFT Mintpass", "IPNFTMP") {
+        ipnftContract = ipnftContract_;
         _tokenIdCounter.increment();
     }
 
@@ -64,7 +64,7 @@ contract Mintpass is ERC721, Ownable, ReentrancyGuard {
         uint256 tokenId = _tokenIdCounter.current();
         _tokenIdCounter.increment();
         _safeMint(to, tokenId);
-        _approve(_ipnftContract, tokenId);
+        _approve(ipnftContract, tokenId);
         emit TokenMinted(to, tokenId);
 
         return tokenId;
@@ -80,7 +80,7 @@ contract Mintpass is ERC721, Ownable, ReentrancyGuard {
             uint256 tokenId = _tokenIdCounter.current();
             _tokenIdCounter.increment();
             _safeMint(to, tokenId);
-            _approve(_ipnftContract, tokenId);
+            _approve(ipnftContract, tokenId);
             emit TokenMinted(to, tokenId);
         }
     }
