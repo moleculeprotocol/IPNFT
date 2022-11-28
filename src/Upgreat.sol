@@ -6,7 +6,7 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 
 contract Upgreat is Initializable, UUPSUpgradeable, AccessControlUpgradeable {
-    constructor() {}
+    constructor() { }
 
     function initialize() public initializer {
         __AccessControl_init();
@@ -17,9 +17,11 @@ contract Upgreat is Initializable, UUPSUpgradeable, AccessControlUpgradeable {
         return "great";
     }
 
-    function _authorizeUpgrade(
-        address /*newImplementation*/
-    ) internal view override {
+    function _authorizeUpgrade(address /*newImplementation*/ )
+        internal
+        view
+        override
+    {
         //empty block
     }
 }

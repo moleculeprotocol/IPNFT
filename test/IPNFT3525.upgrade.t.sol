@@ -2,12 +2,12 @@
 pragma solidity ^0.8.17;
 
 import "forge-std/Test.sol";
-import {console} from "forge-std/console.sol";
+import { console } from "forge-std/console.sol";
 
-import {IPNFT3525V2} from "../src/IPNFT3525V2.sol";
-import {IPNFT3525V21} from "../src/IPNFT3525V21.sol";
-import {UUPSProxy} from "../src/UUPSProxy.sol";
-import {Mintpass} from "../src/Mintpass.sol";
+import { IPNFT3525V2 } from "../src/IPNFT3525V2.sol";
+import { IPNFT3525V21 } from "../src/IPNFT3525V21.sol";
+import { UUPSProxy } from "../src/UUPSProxy.sol";
+import { Mintpass } from "../src/Mintpass.sol";
 
 contract UpgradeV2toV21Test is Test {
     IPNFT3525V2 implementationV2;

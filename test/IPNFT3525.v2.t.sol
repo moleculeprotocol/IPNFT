@@ -2,11 +2,11 @@
 pragma solidity ^0.8.17;
 
 import "forge-std/Test.sol";
-import {console} from "forge-std/console.sol";
+import { console } from "forge-std/console.sol";
 
-import {IPNFT3525V2} from "../src/IPNFT3525V2.sol";
-import {Mintpass} from "../src/Mintpass.sol";
-import {UUPSProxy} from "../src/UUPSProxy.sol";
+import { IPNFT3525V2 } from "../src/IPNFT3525V2.sol";
+import { Mintpass } from "../src/Mintpass.sol";
+import { UUPSProxy } from "../src/UUPSProxy.sol";
 
 contract IPNFT3525V2Test is Test {
     event Reserved(address indexed reserver, uint256 indexed reservationId);
@@ -17,9 +17,7 @@ contract IPNFT3525V2Test is Test {
     /// @param minter the minter's address
     /// @param tokenId the minted token (slot) id
     event IPNFTMinted(
-        string tokenURI,
-        address indexed minter,
-        uint256 indexed tokenId
+        string tokenURI, address indexed minter, uint256 indexed tokenId
     );
 
     IPNFT3525V2 implementationV2;
@@ -52,11 +50,10 @@ contract IPNFT3525V2Test is Test {
         return reservationId;
     }
 
-    function mintAToken(
-        address to,
-        string memory name,
-        string memory tokenUri
-    ) internal returns (uint256) {
+    function mintAToken(address to, string memory name, string memory tokenUri)
+        internal
+        returns (uint256)
+    {
         uint256 reservationId = reserveAToken(to, name, tokenUri);
         vm.startPrank(to);
         ipnft.mintReservation(to, reservationId, 1);
@@ -96,8 +93,8 @@ contract IPNFT3525V2Test is Test {
         uint256 reservationId = ipnft.reserve();
         ipnft.updateReservation(reservationId, "IP Title", arUri);
 
-        (address reserver, string memory name, string memory tokenURI) = ipnft
-            ._reservations(1);
+        (address reserver, string memory name, string memory tokenURI) =
+            ipnft._reservations(1);
         assertEq(reserver, alice);
         assertEq(name, "IP Title");
         assertEq(tokenURI, arUri);
@@ -124,7 +121,7 @@ contract IPNFT3525V2Test is Test {
         assertEq(ipnft.balanceOf(alice), 1);
         assertEq(ipnft.tokenOfOwnerByIndex(alice, 0), 1);
 
-        (address reserver, , ) = ipnft._reservations(1);
+        (address reserver,,) = ipnft._reservations(1);
         assertEq(reserver, address(0));
 
         // Was the Mintpass burned?

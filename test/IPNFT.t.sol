@@ -2,8 +2,8 @@
 pragma solidity ^0.8.17;
 
 import "forge-std/Test.sol";
-import {console} from "forge-std/console.sol";
-import {IPNFT} from "../src/IPNFT.sol";
+import { console } from "forge-std/console.sol";
+import { IPNFT } from "../src/IPNFT.sol";
 
 contract IPNFTTest is Test {
     event Reserved(address indexed reserver, uint256 indexed reservationId);
@@ -64,7 +64,7 @@ contract IPNFTTest is Test {
         assertEq(tokenURI, testURI);
 
         token.reserve();
-        (address reserver_2, ) = token.reservations(1);
+        (address reserver_2,) = token.reservations(1);
         assertEq(reserver_2, bob);
     }
 
@@ -83,7 +83,7 @@ contract IPNFTTest is Test {
         assertEq(token.balanceOf(bob, 0), 1);
         assertEq(token.uri(0), testURI);
 
-        (address reserver, ) = token.reservations(0);
+        (address reserver,) = token.reservations(0);
         assertEq(reserver, address(0));
 
         vm.stopPrank();

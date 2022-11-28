@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.17;
 
-import {ERC20} from "solmate/tokens/ERC20.sol";
-import {ReentrancyGuard} from "solmate/utils/ReentrancyGuard.sol";
-import {SafeTransferLib} from "solmate/utils/SafeTransferLib.sol";
-import {IERC721Receiver} from "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
-import {ERC165} from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
-import {IPNFT3525V2} from "./IPNFT3525V2.sol";
+import { ERC20 } from "solmate/tokens/ERC20.sol";
+import { ReentrancyGuard } from "solmate/utils/ReentrancyGuard.sol";
+import { SafeTransferLib } from "solmate/utils/SafeTransferLib.sol";
+import { IERC721Receiver } from
+    "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
+import { ERC165 } from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
+import { IPNFT3525V2 } from "./IPNFT3525V2.sol";
 
 contract SchmackoSwap is ERC165, ReentrancyGuard, IERC721Receiver {
     /// ERRORS ///
@@ -49,9 +50,7 @@ contract SchmackoSwap is ERC165, ReentrancyGuard, IERC721Receiver {
     /// @param buyer The address of the buyer that is added
     /// @param _isAllowed If address is added or removed from allowlist
     event AllowlistUpdated(
-        uint256 listingId,
-        address indexed buyer,
-        bool _isAllowed
+        uint256 listingId, address indexed buyer, bool _isAllowed
     );
 
     /// @notice Used as a counter for the next sale index.
@@ -106,11 +105,7 @@ contract SchmackoSwap is ERC165, ReentrancyGuard, IERC721Receiver {
 
         emit Listed(listingId, listing);
 
-        tokenContract.safeTransferFrom(
-            msg.sender,
-            address(this),
-            tokenId
-        );
+        tokenContract.safeTransferFrom(msg.sender, address(this), tokenId);
 
         return listingId;
     }
@@ -127,9 +122,7 @@ contract SchmackoSwap is ERC165, ReentrancyGuard, IERC721Receiver {
         emit Unlisted(listingId, listing);
 
         listing.tokenContract.safeTransferFrom(
-            address(this),
-            msg.sender,
-            listing.tokenId
+            address(this), msg.sender, listing.tokenId
         );
     }
 
@@ -151,16 +144,11 @@ contract SchmackoSwap is ERC165, ReentrancyGuard, IERC721Receiver {
         delete listings[listingId];
 
         listing.tokenContract.safeTransferFrom(
-            address(this),
-            msg.sender,
-            listing.tokenId
+            address(this), msg.sender, listing.tokenId
         );
 
         SafeTransferLib.safeTransferFrom(
-            paymentToken,
-            msg.sender,
-            listing.creator,
-            listing.askPrice
+            paymentToken, msg.sender, listing.creator, listing.askPrice
         );
 
         emit Purchased(listingId, msg.sender, listing);
@@ -176,8 +164,7 @@ contract SchmackoSwap is ERC165, ReentrancyGuard, IERC721Receiver {
         if (listing.creator == address(0)) revert ListingNotFound();
         if (listing.creator != msg.sender) revert Unauthorized();
         require(
-            buyerAddress != address(0),
-            "Can't add ZERO address to allowlist"
+            buyerAddress != address(0), "Can't add ZERO address to allowlist"
         );
 
         allowlist[listingId][buyerAddress] = _isAllowed;
@@ -193,14 +180,23 @@ contract SchmackoSwap is ERC165, ReentrancyGuard, IERC721Receiver {
         return allowlist[listingId][buyerAddress];
     }
 
-    function supportsInterface(bytes4 interfaceId) override public view virtual returns (bool) {
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override
+        returns (bool)
+    {
         return interfaceId == this.onERC721Received.selector
-                 || super.supportsInterface(interfaceId);
+            || super.supportsInterface(interfaceId);
     }
 
-    function onERC721Received(address operator, address from, uint256 tokenId, bytes calldata data ) public override pure returns (bytes4) {
+    function onERC721Received(
+        address operator,
+        address from,
+        uint256 tokenId,
+        bytes calldata data
+    ) public pure override returns (bytes4) {
         return this.onERC721Received.selector;
     }
-
-
 }

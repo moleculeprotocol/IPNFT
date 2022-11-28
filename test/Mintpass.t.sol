@@ -3,7 +3,7 @@ pragma solidity ^0.8.17;
 
 import "forge-std/Test.sol";
 import "forge-std/console.sol";
-import {Mintpass} from "../src/Mintpass.sol";
+import { Mintpass } from "../src/Mintpass.sol";
 
 contract MintpassTest is Test {
     Mintpass public mintPass;

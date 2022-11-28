@@ -2,8 +2,8 @@
 pragma solidity ^0.8.17;
 
 import "forge-std/Test.sol";
-import {console} from "forge-std/console.sol";
-import {Upgreat} from "../src/Upgreat.sol";
+import { console } from "forge-std/console.sol";
+import { Upgreat } from "../src/Upgreat.sol";
 
 contract UpgreatTest is Test {
     Upgreat public upgreat;

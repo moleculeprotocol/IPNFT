@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.17;
 
-import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import {Counters} from "@openzeppelin/contracts/utils/Counters.sol";
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
-import {Base64} from "@openzeppelin/contracts/utils/Base64.sol";
-import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
-import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import { ERC721 } from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import { Counters } from "@openzeppelin/contracts/utils/Counters.sol";
+import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
+import { Base64 } from "@openzeppelin/contracts/utils/Base64.sol";
+import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
+import { ReentrancyGuard } from
+    "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 contract Mintpass is ERC721, Ownable, ReentrancyGuard {
     using Counters for Counters.Counter;
@@ -122,21 +123,20 @@ contract Mintpass is ERC721, Ownable, ReentrancyGuard {
         returns (string memory)
     {
         require(_exists(tokenId), "Token does not exist");
-        return
-            string(
-                abi.encodePacked(
-                    "data:application/json;base64,",
-                    Base64.encode(
-                        abi.encodePacked(
-                            '{"name": "IP-NFT Mintpass #',
-                            Strings.toString(tokenId),
-                            '", "description": "This Mintpass can be used to mint one IP-NFT", "external_url": "TODO: Enter IP-NFT-UI URL", "image": "TODO: Enter IPFS URL", "valid": ',
-                            _revocations[tokenId] ? "false" : "true",
-                            "}"
-                        )
+        return string(
+            abi.encodePacked(
+                "data:application/json;base64,",
+                Base64.encode(
+                    abi.encodePacked(
+                        '{"name": "IP-NFT Mintpass #',
+                        Strings.toString(tokenId),
+                        '", "description": "This Mintpass can be used to mint one IP-NFT", "external_url": "TODO: Enter IP-NFT-UI URL", "image": "TODO: Enter IPFS URL", "valid": ',
+                        _revocations[tokenId] ? "false" : "true",
+                        "}"
                     )
                 )
-            );
+            )
+        );
     }
 
     /**

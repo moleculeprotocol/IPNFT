@@ -3,11 +3,11 @@ pragma solidity ^0.8.13;
 
 import "forge-std/Script.sol";
 import "forge-std/console.sol";
-import {IPNFT3525V2} from "../src/IPNFT3525V2.sol";
-import {UUPSProxy} from "../src/UUPSProxy.sol";
+import { IPNFT3525V2 } from "../src/IPNFT3525V2.sol";
+import { UUPSProxy } from "../src/UUPSProxy.sol";
 
 contract IPNFTScript is Script {
-    function setUp() public {}
+    function setUp() public { }
 
     function run() public {
         vm.startBroadcast();

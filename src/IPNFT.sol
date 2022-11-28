@@ -1,13 +1,16 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import {ERC1155} from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
-import {Pausable} from "@openzeppelin/contracts/security/Pausable.sol";
-import {ERC1155URIStorage} from "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155URIStorage.sol";
-import {ERC1155Burnable} from "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Burnable.sol";
-import {ERC1155Supply} from "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Supply.sol";
-import {Counters} from "@openzeppelin/contracts/utils/Counters.sol";
+import { ERC1155 } from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
+import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
+import { Pausable } from "@openzeppelin/contracts/security/Pausable.sol";
+import { ERC1155URIStorage } from
+    "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155URIStorage.sol";
+import { ERC1155Burnable } from
+    "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Burnable.sol";
+import { ERC1155Supply } from
+    "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Supply.sol";
+import { Counters } from "@openzeppelin/contracts/utils/Counters.sol";
 
 /*
  ______ _______         __    __ ________ ________
@@ -18,9 +21,7 @@ import {Counters} from "@openzeppelin/contracts/utils/Counters.sol";
   | ▓▓ | ▓▓▓▓▓▓▓ \▓▓▓▓▓▓ ▓▓\▓▓ ▓▓ ▓▓▓▓▓     | ▓▓
  _| ▓▓_| ▓▓            | ▓▓ \▓▓▓▓ ▓▓        | ▓▓
 |   ▓▓ \ ▓▓            | ▓▓  \▓▓▓ ▓▓        | ▓▓
- \▓▓▓▓▓▓\▓▓             \▓▓   \▓▓\▓▓         \▓▓
-
-*/
+ \▓▓▓▓▓▓\▓▓             \▓▓   \▓▓\▓▓         \▓▓*/
 
 contract IPNFT is
     ERC1155,
@@ -45,9 +46,7 @@ contract IPNFT is
 
     event Reserved(address indexed reserver, uint256 indexed reservationId);
     event ReservationURIUpdated(
-        string tokenURI,
-        address indexed reserver,
-        uint256 indexed reservationId
+        string tokenURI, address indexed reserver, uint256 indexed reservationId
     );
     event TokenMinted(
         string tokenURI,
@@ -59,7 +58,7 @@ contract IPNFT is
     /// @dev https://docs.opensea.io/docs/metadata-standards#freezing-metadata
     event PermanentURI(string _value, uint256 indexed _id);
 
-    constructor() ERC1155("") {}
+    constructor() ERC1155("") { }
 
     function pause() public onlyOwner {
         _pause();
@@ -104,12 +103,9 @@ contract IPNFT is
         payable
         returns (uint256 tokenId)
     {
-        return
-            mintReservation(
-                to,
-                reservationId,
-                reservations[reservationId].tokenURI
-            );
+        return mintReservation(
+            to, reservationId, reservations[reservationId].tokenURI
+        );
     }
 
     function mintReservation(
@@ -140,10 +136,8 @@ contract IPNFT is
     function reserve() public returns (uint256) {
         uint256 reservationId = _reservationCounter.current();
         _reservationCounter.increment();
-        reservations[reservationId] = Reservation({
-            reserver: _msgSender(),
-            tokenURI: ""
-        });
+        reservations[reservationId] =
+            Reservation({reserver: _msgSender(), tokenURI: ""});
         emit Reserved(_msgSender(), reservationId);
         return reservationId;
     }
@@ -161,11 +155,9 @@ contract IPNFT is
         emit ReservationURIUpdated(_tokenURI, _msgSender(), reservationId);
     }
 
-    function increaseShares(
-        uint256 tokenId,
-        uint256 shares,
-        address to
-    ) public {
+    function increaseShares(uint256 tokenId, uint256 shares, address to)
+        public
+    {
         require(shares > 0, "IP-NFT: shares amount must be greater than 0");
         require(totalSupply(tokenId) == 1, "IP-NFT: shares already minted");
         require(balanceOf(_msgSender(), tokenId) == 1, "IP-NFT: not owner");
@@ -176,8 +168,7 @@ contract IPNFT is
     // Withdraw ETH from contract
     function withdrawAll() public payable onlyOwner {
         require(
-            payable(msg.sender).send(address(this).balance),
-            "Not authorized"
+            payable(msg.sender).send(address(this).balance), "Not authorized"
         );
     }
 
@@ -190,7 +181,7 @@ contract IPNFT is
         uint256[] memory ids,
         uint256[] memory amounts,
         bytes memory data
-    ) internal override(ERC1155, ERC1155Supply) {
+    ) internal override (ERC1155, ERC1155Supply) {
         super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
     }
 
@@ -198,7 +189,7 @@ contract IPNFT is
         public
         view
         virtual
-        override(ERC1155, ERC1155URIStorage)
+        override (ERC1155, ERC1155URIStorage)
         returns (string memory)
     {
         return super.uri(tokenId);

@@ -2,10 +2,10 @@
 pragma solidity ^0.8.17;
 
 import "forge-std/Test.sol";
-import {console} from "forge-std/console.sol";
+import { console } from "forge-std/console.sol";
 
-import {IPNFT3525V21} from "../src/IPNFT3525V21.sol";
-import {UUPSProxy} from "../src/UUPSProxy.sol";
+import { IPNFT3525V21 } from "../src/IPNFT3525V21.sol";
+import { UUPSProxy } from "../src/UUPSProxy.sol";
 
 contract IPNFT3525V21Test is Test {
     IPNFT3525V21 implementationV21;
@@ -33,11 +33,10 @@ contract IPNFT3525V21Test is Test {
         return reservationId;
     }
 
-    function mintAToken(
-        address to,
-        string memory name,
-        string memory tokenUri
-    ) internal returns (uint256) {
+    function mintAToken(address to, string memory name, string memory tokenUri)
+        internal
+        returns (uint256)
+    {
         uint256 reservationId = reserveAToken(to, name, tokenUri);
         ipnft.mintReservation(to, reservationId, 1);
         return reservationId;
