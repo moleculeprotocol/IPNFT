@@ -62,14 +62,16 @@ contract IPNFT3525V2 is Initializable, ERC3525SlotEnumerableUpgradeable, AccessC
         uint16 version;
         bool exists;
         string name;
-        string tokenURI;
+        string description;
+        string imageUrl;
+        string agreementUrl;
+        string projectDetailsUrl;
         address minter;
     }
 
     struct Reservation {
         address reserver;
-        string name;
-        string tokenURI;
+        IPNFT ipnft;
     }
 
     mapping(uint256 => IPNFT) internal _ipnfts;
@@ -84,13 +86,12 @@ contract IPNFT3525V2 is Initializable, ERC3525SlotEnumerableUpgradeable, AccessC
      */
 
     event Reserved(address indexed reserver, uint256 indexed reservationId);
-    event ReservationUpdated(string tokenURI, uint256 indexed reservationId);
+    event ReservationUpdated(string name, uint256 indexed reservationId);
 
     /// @notice Emitted when an NFT is minted
-    /// @param tokenURI the uri containing the ip metadata
     /// @param minter the minter's address
     /// @param tokenId the minted token (slot) id
-    event IPNFTMinted(string tokenURI, address indexed minter, uint256 indexed tokenId);
+    event IPNFTMinted(address indexed minter, uint256 indexed tokenId);
 
     /// @dev https://docs.opensea.io/docs/metadata-standards#freezing-metadata
     event PermanentURI(string _value, uint256 indexed _id);
@@ -124,67 +125,60 @@ contract IPNFT3525V2 is Initializable, ERC3525SlotEnumerableUpgradeable, AccessC
      *
      */
 
+    ///todo: the default admin is actually 0x0. We should introduce a real admin role.
+    /// @notice sets the address of the Mintpass contract
+    function setMintpassContract(address mintpass_) public onlyRole(DEFAULT_ADMIN_ROLE) {
+        mintpass = Mintpass(mintpass_);
+    }
+
     function reserve() public returns (uint256) {
         require(mintpass.balanceOf(_msgSender()) > 0, "IPNFT: You need to own a mintpass to mint an IPNFT");
 
+        IPNFT memory reservation;
+
         uint256 reservationId = _reservationCounter.current();
         _reservationCounter.increment();
-        _reservations[reservationId] = Reservation({reserver: _msgSender(), name: "", tokenURI: ""});
+        _reservations[reservationId] = Reservation({reserver: _msgSender(), ipnft: reservation});
+
         emit Reserved(_msgSender(), reservationId);
         return reservationId;
     }
 
-    function updateReservation(
-        uint256 reservationId,
-        //todo: if this gets longer, use abiencoded bytes.
-        string calldata name_,
-        string calldata tokenURI_
-    ) external {
+    function updateReservation(uint256 reservationId, bytes calldata newMetadata) external {
         require(_reservations[reservationId].reserver == _msgSender(), "IP-NFT: caller is not reserver");
-        if (bytes(name_).length > 0) {
-            _reservations[reservationId].name = name_;
-        }
-        if (bytes(tokenURI_).length > 0) {
-            _reservations[reservationId].tokenURI = tokenURI_;
-        }
-        emit ReservationUpdated(tokenURI_, reservationId);
+        _reservations[reservationId].ipnft = _parseData(newMetadata);
+
+        emit ReservationUpdated(_reservations[reservationId].ipnft.name, reservationId);
     }
 
-    function mintReservation(address to, uint256 reservationId, uint256 mintPassId)
-        public
-        payable
-        returns (uint256 tokenId)
-    {
-        return mintReservation(to, reservationId, _reservations[reservationId].tokenURI, mintPassId);
+    function mintReservation(address to, uint256 reservationId, uint256 mintPassId) public returns (uint256 tokenId) {
+        return mintReservation(to, reservationId, mintPassId, "");
     }
 
     /// @notice Issues a new IPNFT on a new slot, mints DEFAULT_VALUE to the first owner
     /// @param to  Account the new IPNFT is issued to
     /// @param reservationId the reservation id to use
-    function mintReservation(address to, uint256 reservationId, string memory tokenURI_, uint256 mintPassId)
+    /// @param mintPassId the id of a mint pass that's burnt during the mint.
+    function mintReservation(address to, uint256 reservationId, uint256 mintPassId, bytes memory finalMetadata)
         public
-        payable
         returns (uint256 slotId)
     {
         require(_reservations[reservationId].reserver == _msgSender(), "IP-NFT: caller is not reserver");
         require(mintpass.ownerOf(mintPassId) == _msgSender(), "IPNFT: You don't own that mintpass");
         require(mintpass.isRedeemable(mintPassId), "IPNFT: mintpass not redeemable");
 
-        IPNFT memory ipnft = IPNFT({
-            totalUnits: DEFAULT_VALUE,
-            version: uint16(0),
-            exists: true,
-            name: _reservations[reservationId].name,
-            tokenURI: tokenURI_,
-            minter: _msgSender()
-        });
+        IPNFT memory ipnft = finalMetadata.length > 0 ? _parseData(finalMetadata) : _reservations[reservationId].ipnft;
+        ipnft.totalUnits = DEFAULT_VALUE;
+        ipnft.version = uint16(0);
+        ipnft.exists = true;
+        ipnft.minter = _msgSender();
 
         _authorizeMint(to, ipnft);
 
         //todo: emit this, once we decided if we're sure that this one is going to be final.
         //emit PermanentURI(tokenURI, reservationId);
 
-        emit IPNFTMinted(tokenURI_, to, reservationId);
+        emit IPNFTMinted(to, reservationId);
 
         delete _reservations[reservationId];
         _ipnfts[reservationId] = ipnft;
@@ -195,12 +189,6 @@ contract IPNFT3525V2 is Initializable, ERC3525SlotEnumerableUpgradeable, AccessC
         mintpass.redeem(mintPassId);
 
         return reservationId;
-    }
-
-    /// @notice sets the address of the Mintpass contract
-    function setMintpassContract(address mintpass_) public {
-        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "IP-NFT: caller is not admin");
-        mintpass = Mintpass(mintpass_);
     }
 
     /// @notice gets the current version of the contract
@@ -245,7 +233,13 @@ contract IPNFT3525V2 is Initializable, ERC3525SlotEnumerableUpgradeable, AccessC
             abi.encodePacked(
                 "data:application/json;base64,",
                 Base64Upgradeable.encode(
-                    abi.encodePacked('{"name":"', slot.name, '","external_url":"', slot.tokenURI, '"}')
+                    abi.encodePacked(
+                        '{"name":"',
+                        slot.name,
+                        '","external_url":"https://discover.molecule.to/ipnft/',
+                        slotId_.toString(),
+                        '"}'
+                    )
                 )
             )
         );
@@ -305,6 +299,34 @@ contract IPNFT3525V2 is Initializable, ERC3525SlotEnumerableUpgradeable, AccessC
      * INTERNAL
      *
      */
+
+    /* solhint-enable code-complexity */
+
+    /// @notice Parse bytes for basic metadata
+    /// @param newMetadata bytes name, description and reference urls
+    /// @dev This function is overridable in order to support future schema changes
+    /// @return ipnft IPNFT
+    function _parseData(bytes memory newMetadata) internal pure virtual returns (IPNFT memory ipnft) {
+        if (newMetadata.length == 0) {
+            revert EmptyInput();
+        }
+
+        (
+            string memory name_,
+            string memory description_,
+            string memory imageUrl_,
+            string memory agreementUrl_,
+            string memory projectDetailsUrl_
+        ) = abi.decode(newMetadata, (string, string, string, string, string));
+
+        ipnft.name = name_;
+        ipnft.description = description_;
+        ipnft.imageUrl = imageUrl_;
+        ipnft.agreementUrl = agreementUrl_;
+        ipnft.projectDetailsUrl = projectDetailsUrl_;
+
+        return ipnft;
+    }
 
     /// @notice upgrade authorization logic
     /// @dev adds onlyRole(UPGRADER_ROLE) requirement
