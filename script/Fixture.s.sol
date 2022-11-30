@@ -8,6 +8,7 @@ import { IPNFT3525V2 } from "../src/IPNFT3525V2.sol";
 import { UUPSProxy } from "../src/UUPSProxy.sol";
 import { SchmackoSwap } from "../src/SchmackoSwap.sol";
 import { Mintpass } from "../src/Mintpass.sol";
+import { IPNFTMetadata } from "../src/IPNFTMetadata.sol";
 
 contract FixtureScript is Script {
     string mnemonic = "test test test test test test test test test test test junk";
@@ -49,12 +50,11 @@ contract FixtureScript is Script {
                 "IP-NFT Test",
                 "Some Description",
                 "ar://7De6dRLDaMhMeC6Utm9bB9PRbcvKdi-rw_sDM8pJSMU",
-                "ipfs://bafybeiewsf5ildpjbcok25trk6zbgafeu4fuxoh5iwjmvcmfi62dmohcwm",
-                "ipfs://bafybeifhwj7gx7fjb2dr3qo4am6kog2pseegrnfrg53po55zrxzsc6j45e",
-                "ipfs://bafybeidlr6ltzbipd6ix5ckyyzwgm2pbigx7ar2ht64v4czk65pkjouire/metadata.json"
+                "ipfs://bafybeiewsf5ildpjbcok25trk6zbgafeu4fuxoh5iwjmvcmfi62dmohcwm/agreement.json",
+                "ipfs://bafybeifhwj7gx7fjb2dr3qo4am6kog2pseegrnfrg53po55zrxzsc6j45e/projectDetails.json"
             )
         );
-        ipnft.mintReservation(to, reservationId, 1);
+        ipnft.mintReservation(to, reservationId, 1, "");
         vm.stopBroadcast();
         return reservationId;
     }
@@ -83,8 +83,11 @@ contract FixtureScript is Script {
         ipnft = IPNFT3525V2(address(proxy));
         ipnft.initialize();
 
+        ipnft.setMetadataGenerator(new IPNFTMetadata());
+
         schmackoSwap = new SchmackoSwap();
         myToken = new MyToken();
+
         mintpass = new Mintpass(address(ipnft));
         ipnft.setMintpassContract(address(mintpass));
         vm.stopBroadcast();

@@ -6,33 +6,23 @@ import { console } from "forge-std/console.sol";
 
 import { IPNFT3525V2 } from "../src/IPNFT3525V2.sol";
 import { IPNFT3525V21 } from "../src/IPNFT3525V21.sol";
-import { UUPSProxy } from "../src/UUPSProxy.sol";
-import { Mintpass } from "../src/Mintpass.sol";
 
-contract UpgradeV2toV21Test is Test {
+import { Mintpass } from "../src/Mintpass.sol";
+import { UUPSProxy } from "../src/UUPSProxy.sol";
+import { IPNFTMintHelper } from "./IPNFTMintHelper.sol";
+import { IPNFTMetadata } from "../src/IPNFTMetadata.sol";
+
+contract UpgradeV2toV21Test is IPNFTMintHelper {
     IPNFT3525V2 implementationV2;
 
     UUPSProxy proxy;
-
-    address deployer = makeAddr("chucknorris");
 
     address alice = makeAddr("alice");
     address bob = makeAddr("bob");
     address charlie = makeAddr("charlie");
 
-    string ipfsUri = "ipfs://QmYwAPJzv5CZsnA9LqYKXfutJzBg68";
-    string arUri = "ar://tNbdHqh3AVDHVD06P0OPUXSProI5kGcZZw8IvLkekSY";
-    uint256 tokenPrice = 1 ether;
-
     IPNFT3525V2 ipnftV2;
     IPNFT3525V21 ipnftV21;
-    Mintpass mintpass;
-
-    function dealMintpass(address to) internal {
-        vm.startPrank(deployer);
-        mintpass.batchMint(to, 1);
-        vm.stopPrank();
-    }
 
     //we're always starting on a V2 contract.
     function setUp() public {
@@ -41,6 +31,9 @@ contract UpgradeV2toV21Test is Test {
         proxy = new UUPSProxy(address(implementationV2), "");
         ipnftV2 = IPNFT3525V2(address(proxy));
         ipnftV2.initialize();
+
+        ipnftV2.setMetadataGenerator(new IPNFTMetadata());
+
         mintpass = new Mintpass(address(ipnftV2));
         ipnftV2.setMintpassContract(address(mintpass));
         vm.stopPrank();
@@ -61,8 +54,8 @@ contract UpgradeV2toV21Test is Test {
 
         vm.startPrank(alice);
         uint256 reservationId = ipnftV2.reserve();
-        ipnftV2.updateReservation(reservationId, "IP Title", arUri);
-        ipnftV2.mintReservation(alice, reservationId, 1);
+        ipnftV2.updateReservation(reservationId, encodedMetadata);
+        ipnftV2.mintReservation(alice, reservationId, 1, "");
         vm.stopPrank();
 
         assertEq(ipnftV2.totalSupply(), 1);
@@ -84,8 +77,8 @@ contract UpgradeV2toV21Test is Test {
 
         vm.startPrank(alice);
         uint256 reservationId = ipnftV2.reserve();
-        ipnftV2.updateReservation(reservationId, "IP Title", arUri);
-        ipnftV2.mintReservation(alice, reservationId, 1);
+        ipnftV2.updateReservation(reservationId, encodedMetadata);
+        ipnftV2.mintReservation(alice, reservationId, 1, "");
         vm.stopPrank();
 
         //don't tell your parents that this is visible on V2:
@@ -112,8 +105,8 @@ contract UpgradeV2toV21Test is Test {
     function testFailCantTransferValueOnV2() public {
         vm.startPrank(alice);
         uint256 reservationId = ipnftV2.reserve();
-        ipnftV2.updateReservation(reservationId, "IP Title", arUri);
-        ipnftV2.mintReservation(alice, reservationId, 1);
+        ipnftV2.updateReservation(reservationId, encodedMetadata);
+        ipnftV2.mintReservation(alice, reservationId, 1, "");
         ipnftV2.transferFrom(1, bob, 5);
         vm.stopPrank();
     }
@@ -124,14 +117,14 @@ contract UpgradeV2toV21Test is Test {
 
         vm.startPrank(alice);
         uint256 reservationId = ipnftV2.reserve();
-        ipnftV2.updateReservation(reservationId, "Alices IP", arUri);
-        ipnftV2.mintReservation(alice, reservationId, 1);
+        ipnftV2.updateReservation(reservationId, encodedMetadata);
+        ipnftV2.mintReservation(alice, reservationId, 1, "");
         vm.stopPrank();
 
         vm.startPrank(bob);
         reservationId = ipnftV2.reserve();
-        ipnftV2.updateReservation(reservationId, "Bobs IP", ipfsUri);
-        ipnftV2.mintReservation(bob, reservationId, 2);
+        ipnftV2.updateReservation(reservationId, encodedMetadata);
+        ipnftV2.mintReservation(bob, reservationId, 2, "");
         vm.stopPrank();
 
         deployUpgrade();
@@ -153,8 +146,8 @@ contract UpgradeV2toV21Test is Test {
         assertEq(ipnftV21.slotOf(2), 2);
         assertEq(ipnftV21.slotOf(3), 1);
 
-        //todo this *must* be 2, no?
-        //assertEq(ipnftV21.tokenSupplyInSlot(1), 1);
+        // //todo this *must* be 2, no?
+        // //assertEq(ipnftV21.tokenSupplyInSlot(1), 1);
 
         vm.startPrank(alice);
         ipnftV21.transferFrom(1, charlie, 100);
@@ -176,10 +169,11 @@ contract UpgradeV2toV21Test is Test {
         assertEq(ipnftV21.ownerOf(3), charlie);
 
         //and now, lets reserve sth on V2.1
+        dealMintpass(alice);
         vm.startPrank(alice);
         reservationId = ipnftV21.reserve();
-        ipnftV2.updateReservation(reservationId, "Alices 2nd IP", ipfsUri);
-        uint256 newSlotOnV3 = ipnftV2.mintReservation(alice, reservationId, 1);
+        ipnftV21.updateReservation(reservationId, encodedMetadata);
+        uint256 newSlotOnV3 = ipnftV2.mintReservation(alice, reservationId, 3, "");
         vm.stopPrank();
 
         assertEq(newSlotOnV3, 3);

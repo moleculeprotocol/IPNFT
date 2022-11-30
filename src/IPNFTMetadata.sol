@@ -3,13 +3,14 @@ pragma solidity ^0.8.17;
 
 import "@openzeppelin/contracts/utils/Strings.sol";
 import { IPNFT3525V2 } from "./IPNFT3525V2.sol";
+import { IPNFT } from "./Structs.sol";
 
 interface IIPNFTMetadata {
     // function generateContractURI() external view returns (string memory);
 
-    function generateSlotURI(IPNFT3525V2.IPNFT memory slot, uint256 slotId) external pure returns (string memory);
+    function generateSlotURI(IPNFT memory slot) external pure returns (string memory);
 
-    function generateTokenURI(IPNFT3525V2.IPNFT memory ipnft, uint256 tokenId, uint256 slotId, uint256 tokenBalance)
+    function generateTokenURI(IPNFT memory ipnft, uint256 tokenId, uint256 slotId, uint256 tokenBalance)
         external
         pure
         returns (string memory);
@@ -18,7 +19,7 @@ interface IIPNFTMetadata {
 contract IPNFTMetadata is IIPNFTMetadata {
     using Strings for uint256;
 
-    function generateSlotURI(IPNFT3525V2.IPNFT memory slot, uint256 slotId) external pure returns (string memory) {
+    function generateSlotURI(IPNFT memory slot) external pure returns (string memory) {
         string memory properties = string(
             abi.encodePacked(
                 '"properties": [',
@@ -52,7 +53,7 @@ contract IPNFTMetadata is IIPNFTMetadata {
         );
     }
 
-    function generateTokenURI(IPNFT3525V2.IPNFT memory ipnft, uint256 tokenId, uint256 slotId, uint256 tokenBalance)
+    function generateTokenURI(IPNFT memory ipnft, uint256 tokenId, uint256 slotId, uint256 tokenBalance)
         external
         pure
         returns (string memory)

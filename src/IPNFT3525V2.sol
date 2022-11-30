@@ -10,10 +10,11 @@ import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol"
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/Base64Upgradeable.sol";
 
 import { CountersUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/CountersUpgradeable.sol";
 
+import { IPNFT, Reservation } from "./Structs.sol";
+import { IReservable } from "./IReservable.sol";
 import { Mintpass } from "./Mintpass.sol";
 import { IIPNFTMetadata, IPNFTMetadata } from "./IPNFTMetadata.sol";
 
@@ -34,7 +35,13 @@ error InvalidInput();
 /// @title minting logic
 /// @notice Contains functions and events to initialize and issue an ipnft
 /// @author contains code of bitbeckers, mr_bluesky
-contract IPNFT3525V2 is Initializable, ERC3525SlotEnumerableUpgradeable, AccessControlUpgradeable, UUPSUpgradeable {
+contract IPNFT3525V2 is
+    Initializable,
+    ERC3525SlotEnumerableUpgradeable,
+    AccessControlUpgradeable,
+    UUPSUpgradeable,
+    IReservable
+{
     using ArraysUpgradeable for uint64[];
     using CountersUpgradeable for CountersUpgradeable.Counter;
 
@@ -55,29 +62,13 @@ contract IPNFT3525V2 is Initializable, ERC3525SlotEnumerableUpgradeable, AccessC
     uint16 internal _version;
 
     /// @notice external metadata contract
-    IIPNFTMetadata internal _metadataGenerator;
+    IIPNFTMetadata _metadataGenerator;
 
-    struct IPNFT {
-        uint256 totalUnits;
-        uint16 version;
-        bool exists;
-        string name;
-        string description;
-        string imageUrl;
-        string agreementUrl;
-        string projectDetailsUrl;
-        address minter;
-    }
-
-    struct Reservation {
-        address reserver;
-        IPNFT ipnft;
-    }
+    /// @notice external mintpass contract
+    Mintpass mintpass;
 
     mapping(uint256 => IPNFT) internal _ipnfts;
     mapping(uint256 => Reservation) public _reservations;
-
-    Mintpass mintpass;
 
     /**
      *
@@ -117,8 +108,6 @@ contract IPNFT3525V2 is Initializable, ERC3525SlotEnumerableUpgradeable, AccessC
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _grantRole(UPGRADER_ROLE, msg.sender);
         _reservationCounter.increment(); //start at 1.
-
-        _metadataGenerator = new IPNFTMetadata();
     }
 
     /**
@@ -127,10 +116,19 @@ contract IPNFT3525V2 is Initializable, ERC3525SlotEnumerableUpgradeable, AccessC
      *
      */
 
-    ///todo: the default admin is actually 0x0. We should introduce a real admin role.
     /// @notice sets the address of the Mintpass contract
-    function setMintpassContract(address mintpass_) public onlyRole(DEFAULT_ADMIN_ROLE) {
+    function setMintpassContract(address mintpass_) public onlyRole(UPGRADER_ROLE) {
+        if (mintpass_ == address(0)) {
+            revert ToZeroAddress();
+        }
         mintpass = Mintpass(mintpass_);
+    }
+
+    function setMetadataGenerator(IIPNFTMetadata metadataGenerator_) external onlyRole(UPGRADER_ROLE) {
+        if (address(metadataGenerator_) == address(0)) {
+            revert ToZeroAddress();
+        }
+        _metadataGenerator = metadataGenerator_;
     }
 
     function reserve() public returns (uint256) {
@@ -153,16 +151,13 @@ contract IPNFT3525V2 is Initializable, ERC3525SlotEnumerableUpgradeable, AccessC
         emit ReservationUpdated(_reservations[reservationId].ipnft.name, reservationId);
     }
 
-    function mintReservation(address to, uint256 reservationId, uint256 mintPassId) public returns (uint256 tokenId) {
-        return mintReservation(to, reservationId, mintPassId, "");
-    }
-
     /// @notice Issues a new IPNFT on a new slot, mints DEFAULT_VALUE to the first owner
     /// @param to  Account the new IPNFT is issued to
     /// @param reservationId the reservation id to use
     /// @param mintPassId the id of a mint pass that's burnt during the mint.
+    /// @param finalMetadata optional an encoded payload
     function mintReservation(address to, uint256 reservationId, uint256 mintPassId, bytes memory finalMetadata)
-        public
+        external
         returns (uint256 slotId)
     {
         require(_reservations[reservationId].reserver == _msgSender(), "IP-NFT: caller is not reserver");
@@ -234,7 +229,7 @@ contract IPNFT3525V2 is Initializable, ERC3525SlotEnumerableUpgradeable, AccessC
             revert NonExistentSlot(slotId);
         }
         IPNFT memory slot = _ipnfts[slotId];
-        return _metadataGenerator.generateSlotURI(slot, slotId);
+        return _metadataGenerator.generateSlotURI(slot);
     }
 
     function tokenURI(uint256 tokenId) public view override returns (string memory) {
@@ -247,10 +242,9 @@ contract IPNFT3525V2 is Initializable, ERC3525SlotEnumerableUpgradeable, AccessC
         return _metadataGenerator.generateTokenURI(token, tokenId, slotId, balance);
     }
 
-    //todo: contract metadata
     function contractURI() public pure override returns (string memory) {
         return "contract uri";
-        //return _metadata.generateContractURI();
+        //todo return _metadata.generateContractURI();
     }
 
     function burn(uint256 tokenId_) public {
@@ -349,14 +343,4 @@ contract IPNFT3525V2 is Initializable, ERC3525SlotEnumerableUpgradeable, AccessC
     function _msgSender() internal view override (ContextUpgradeable, ERC3525Upgradeable) returns (address sender) {
         return msg.sender;
     }
-
-    // function setMetadataGenerator(address metadataGenerator)
-    //     external
-    //     onlyRole(UPGRADER_ROLE)
-    // {
-    //     if (metadataGenerator == address(0)) {
-    //         revert ToZeroAddress();
-    //     }
-    //     _metadata = IHyperCertMetadata(metadataGenerator);
-    // }
 }

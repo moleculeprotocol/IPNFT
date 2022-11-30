@@ -5,10 +5,14 @@ import "forge-std/Test.sol";
 import { console } from "forge-std/console.sol";
 
 import { IPNFT3525V2 } from "../src/IPNFT3525V2.sol";
+import { IPNFT, Reservation } from "../src/Structs.sol";
+
 import { Mintpass } from "../src/Mintpass.sol";
 import { UUPSProxy } from "../src/UUPSProxy.sol";
+import { IPNFTMintHelper } from "./IPNFTMintHelper.sol";
+import { IPNFTMetadata } from "../src/IPNFTMetadata.sol";
 
-contract IPNFT3525V2Test is Test {
+contract IPNFT3525V2Test is IPNFTMintHelper {
     event Reserved(address indexed reserver, uint256 indexed reservationId);
     event ReservationUpdated(string name, uint256 indexed reservationId);
 
@@ -19,53 +23,13 @@ contract IPNFT3525V2Test is Test {
 
     IPNFT3525V2 implementationV2;
     UUPSProxy proxy;
-    IPNFT3525V2 ipnft;
-
-    Mintpass mintpass;
-
-    address deployer = makeAddr("chucknorris");
+    IPNFT3525V2 internal ipnft;
 
     address alice = makeAddr("alice");
     address bob = makeAddr("bob");
     address charlie = makeAddr("charlie");
 
-    string ipfsUri = "ipfs://QmYwAPJzv5CZsnA9LqYKXfutJzBg68";
-    string arUri = "ar://tNbdHqh3AVDHVD06P0OPUXSProI5kGcZZw8IvLkekSY";
-    string imageUrl = "ar://7De6dRLDaMhMeC6Utm9bB9PRbcvKdi-rw_sDM8pJSMU";
-    string agreementUrl = "ipfs://bafybeiewsf5ildpjbcok25trk6zbgafeu4fuxoh5iwjmvcmfi62dmohcwm";
-    string projectDetailsUrl = "ipfs://bafybeifhwj7gx7fjb2dr3qo4am6kog2pseegrnfrg53po55zrxzsc6j45e";
-
-    bytes encodedMetadata = abi.encode("IP-NFT Test", "Some Description", imageUrl, agreementUrl, projectDetailsUrl);
-    bytes updatedMetadata = abi.encode(
-        "changed title", "Changed Description", "ar://abcde", "ar://defgh123/agree.json", "ipfs://mumumu/details.json"
-    );
     uint256 tokenPrice = 1 ether;
-
-    function reserveAToken(address to, bytes memory metadata) internal returns (uint256) {
-        dealMintpass(to);
-        vm.startPrank(to);
-        uint256 reservationId = ipnft.reserve();
-        ipnft.updateReservation(reservationId, metadata);
-        vm.stopPrank();
-        //bytes memory ipnftArgs = abi.encode(title, tokenUri);
-        return reservationId;
-    }
-
-    function mintAToken(address to) internal returns (uint256) {
-        uint256 reservationId = reserveAToken(to, encodedMetadata);
-        vm.startPrank(to);
-        ipnft.mintReservation(to, reservationId, 1);
-        vm.stopPrank();
-        return reservationId;
-    }
-
-    function dealMintpass(address to) internal returns (uint256) {
-        vm.startPrank(deployer);
-        mintpass.batchMint(to, 1);
-        vm.stopPrank();
-
-        return 1;
-    }
 
     function setUp() public {
         vm.startPrank(deployer);
@@ -73,6 +37,9 @@ contract IPNFT3525V2Test is Test {
         proxy = new UUPSProxy(address(implementationV2), "");
         ipnft = IPNFT3525V2(address(proxy));
         ipnft.initialize();
+
+        ipnft.setMetadataGenerator(new IPNFTMetadata());
+
         mintpass = new Mintpass(address(ipnft));
         ipnft.setMintpassContract(address(mintpass));
         vm.stopPrank();
@@ -90,7 +57,7 @@ contract IPNFT3525V2Test is Test {
         emit Reserved(alice, 1);
         uint256 reservationId = ipnft.reserve();
         ipnft.updateReservation(reservationId, encodedMetadata);
-        (address reserver, IPNFT3525V2.IPNFT memory _ipnft) = ipnft._reservations(1);
+        (address reserver, IPNFT memory _ipnft) = ipnft._reservations(1);
 
         assertEq(reserver, alice);
         assertEq(_ipnft.name, "IP-NFT Test");
@@ -98,19 +65,19 @@ contract IPNFT3525V2Test is Test {
     }
 
     function testMintFromReservation() public {
-        uint256 reservationId = reserveAToken(alice, encodedMetadata);
+        uint256 reservationId = reserveAToken(ipnft, alice, encodedMetadata);
 
         vm.startPrank(alice);
         vm.expectEmit(true, true, false, true);
         emit IPNFTMinted(alice, 1);
-        ipnft.mintReservation(alice, reservationId, 1);
+        ipnft.mintReservation(alice, reservationId, 1, "");
         vm.stopPrank();
 
         assertEq(ipnft.balanceOf(alice), 1);
 
         assertEq(
             ipnft.tokenURI(1),
-            'data:application/json,{"name":"IP-NFT Test","description":"Some Description","image":"ar://7De6dRLDaMhMeC6Utm9bB9PRbcvKdi-rw_sDM8pJSMU","balance":"1000000","slot":1,"properties": {"type":"IP-NFT","external_url":"https://discover.molecule.to/ipnft/1","agreement_url":"ipfs://bafybeiewsf5ildpjbcok25trk6zbgafeu4fuxoh5iwjmvcmfi62dmohcwm","project_details_url":"ipfs://bafybeifhwj7gx7fjb2dr3qo4am6kog2pseegrnfrg53po55zrxzsc6j45e"}}'
+            'data:application/json,{"name":"IP-NFT Test","description":"Some Description","image":"ar://7De6dRLDaMhMeC6Utm9bB9PRbcvKdi-rw_sDM8pJSMU","balance":"1000000","slot":1,"properties": {"type":"IP-NFT","external_url":"https://discover.molecule.to/ipnft/1","agreement_url":"ipfs://bafybeiewsf5ildpjbcok25trk6zbgafeu4fuxoh5iwjmvcmfi62dmohcwm/agreement.json","project_details_url":"ipfs://bafybeifhwj7gx7fjb2dr3qo4am6kog2pseegrnfrg53po55zrxzsc6j45e/projectDetails.json"}}'
         );
 
         assertEq(ipnft.balanceOf(alice), 1);
@@ -133,10 +100,10 @@ contract IPNFT3525V2Test is Test {
     }
 
     function testTokenURIUpdate() public {
-        uint256 reservationId = reserveAToken(alice, encodedMetadata);
+        uint256 reservationId = reserveAToken(ipnft, alice, encodedMetadata);
         vm.startPrank(alice);
         ipnft.updateReservation(reservationId, updatedMetadata);
-        ipnft.mintReservation(alice, 1, 1);
+        ipnft.mintReservation(alice, 1, 1, "");
 
         assertEq(
             ipnft.tokenURI(1),
@@ -149,7 +116,7 @@ contract IPNFT3525V2Test is Test {
     // //because she's marked as its minter. Currently only the
     // //minter can burn their tokens.
     function testBurn() public {
-        mintAToken(alice);
+        mintAToken(ipnft, alice);
 
         vm.startPrank(alice);
 
@@ -160,26 +127,26 @@ contract IPNFT3525V2Test is Test {
     }
 
     function testCannotUpdateTokenURIOnMintedTokens() public {
-        uint256 reservationId = reserveAToken(alice, encodedMetadata);
+        uint256 reservationId = reserveAToken(ipnft, alice, encodedMetadata);
 
         vm.startPrank(alice);
-        ipnft.mintReservation(bob, reservationId, 1);
+        ipnft.mintReservation(bob, reservationId, 1, "");
 
         vm.expectRevert("IP-NFT: caller is not reserver");
         ipnft.updateReservation(reservationId, updatedMetadata);
     }
 
     function testOnlyReservationOwnerCanMintFromReservation() public {
-        uint256 reservationId = reserveAToken(alice, encodedMetadata);
+        uint256 reservationId = reserveAToken(ipnft, alice, encodedMetadata);
 
         vm.startPrank(bob);
         vm.expectRevert("IP-NFT: caller is not reserver");
-        ipnft.mintReservation(bob, reservationId, 1);
+        ipnft.mintReservation(bob, reservationId, 1, "");
         vm.stopPrank();
     }
 
     function testTransferOneNft() public {
-        uint256 tokenId = mintAToken(alice);
+        uint256 tokenId = mintAToken(ipnft, alice);
         assertEq(ipnft.ownerOf(tokenId), alice);
         assertEq(ipnft.balanceOf(alice), 1);
 
@@ -207,19 +174,19 @@ contract IPNFT3525V2Test is Test {
     // // //many NFTs can share the same slot
     // // //hence the slot "uri" yields the "basic" token Uri
     function testSlots() public {
-        uint256 tokenId = mintAToken(alice);
+        uint256 tokenId = mintAToken(ipnft, alice);
 
         assertEq(ipnft.slotOf(tokenId), 1);
 
         string memory slotUri = ipnft.slotURI(1);
         assertEq(
             slotUri,
-            'data:application/json,{"name":"IP-NFT Test","description":"Some Description","image":"ar://7De6dRLDaMhMeC6Utm9bB9PRbcvKdi-rw_sDM8pJSMU","properties": [{"name":"agreement_url","description":"agreement","display_type":"url","value":"ipfs://bafybeiewsf5ildpjbcok25trk6zbgafeu4fuxoh5iwjmvcmfi62dmohcwm"},{"name":"project_details_url","description":"project","display_type":"url","value":"ipfs://bafybeifhwj7gx7fjb2dr3qo4am6kog2pseegrnfrg53po55zrxzsc6j45e"}]}'
+            'data:application/json,{"name":"IP-NFT Test","description":"Some Description","image":"ar://7De6dRLDaMhMeC6Utm9bB9PRbcvKdi-rw_sDM8pJSMU","properties": [{"name":"agreement_url","description":"agreement","display_type":"url","value":"ipfs://bafybeiewsf5ildpjbcok25trk6zbgafeu4fuxoh5iwjmvcmfi62dmohcwm/agreement.json"},{"name":"project_details_url","description":"project","display_type":"url","value":"ipfs://bafybeifhwj7gx7fjb2dr3qo4am6kog2pseegrnfrg53po55zrxzsc6j45e/projectDetails.json"}]}'
         );
     }
 
     function testTransferValueToANewUser() public {
-        uint256 tokenId = mintAToken(alice);
+        uint256 tokenId = mintAToken(ipnft, alice);
 
         //this is the ERC3525 value transfer that's not available on IPNFTV2.0 / ERC721
         vm.expectRevert("not available in V2");
@@ -238,13 +205,13 @@ contract IPNFT3525V2Test is Test {
     function testOnlyAdminCanSetMintpassContract() public {
         vm.startPrank(alice);
         vm.expectRevert(
-            "AccessControl: account 0x328809bc894f92807417d2dad6b7c998c1afdac6 is missing role 0x0000000000000000000000000000000000000000000000000000000000000000"
+            "AccessControl: account 0x328809bc894f92807417d2dad6b7c998c1afdac6 is missing role 0x189ab7a9244df0848122154315af71fe140f3db0fe014031783b0946b8c9d2e3"
         );
         ipnft.setMintpassContract(address(0x5));
     }
 
     function testCannotMintWithoutMintpassApproval() public {
-        uint256 reservationId = reserveAToken(alice, encodedMetadata);
+        uint256 reservationId = reserveAToken(ipnft, alice, encodedMetadata);
 
         // Does Alice have the Mintpass?
         assertEq(mintpass.balanceOf(alice), 1);
@@ -256,7 +223,7 @@ contract IPNFT3525V2Test is Test {
         mintpass.approve(address(0), 1);
 
         vm.expectRevert("Not authorized to burn this token");
-        ipnft.mintReservation(alice, reservationId, 1);
+        ipnft.mintReservation(alice, reservationId, 1, "");
         assertEq(ipnft.balanceOf(alice), 0);
 
         vm.stopPrank();
