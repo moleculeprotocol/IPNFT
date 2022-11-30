@@ -225,18 +225,26 @@ contract IPNFT3525V2 is Initializable, ERC3525SlotEnumerableUpgradeable, AccessC
         return SYMBOL;
     }
 
+    function getSlot(uint256 slotId) public view returns (IPNFT memory) {
+        return _ipnfts[slotId];
+    }
+
     function slotURI(uint256 slotId) public view override returns (string memory) {
         if (!_ipnfts[slotId].exists) {
             revert NonExistentSlot(slotId);
         }
         IPNFT memory slot = _ipnfts[slotId];
-        return _metadataGenerator.generateTokenURI(slotId, slot);
+        return _metadataGenerator.generateSlotURI(slot, slotId);
     }
 
-    function tokenURI(uint256 tokenId_) public view override returns (string memory) {
-        uint256 slotId = slotOf(tokenId_);
-
-        return slotURI(slotId);
+    function tokenURI(uint256 tokenId) public view override returns (string memory) {
+        uint256 slotId = slotOf(tokenId);
+        if (!_ipnfts[slotId].exists) {
+            revert NonExistentSlot(slotId);
+        }
+        IPNFT memory token = _ipnfts[slotId];
+        uint256 balance = balanceOf(tokenId);
+        return _metadataGenerator.generateTokenURI(token, tokenId, slotId, balance);
     }
 
     //todo: contract metadata
