@@ -4,3 +4,4 @@ forge-std/=lib/forge-std/src/
 @openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/
 solmate/=lib/solmate/src/
 hypercerts/=lib/hypercerts-protocol/contracts/
+erc721b/=lib/ERC721B/contracts/
