@@ -31,12 +31,12 @@ contract MintpassTestV2 is Test {
 
         assertEq(mintPass.balanceOf(alice), 1);
         assertEq(mintPass.ownerOf(1), alice);
-        assertEq(mintPass.isValid(1), true);
+        assertEq(mintPass.isRedeemable(1), true);
 
         string memory tokenUri_ = mintPass.tokenURI(1);
         assertEq(
             tokenUri_,
-            "data:application/json;base64,eyJuYW1lIjogIklQLU5GVCBNaW50cGFzcyAjMSIsICJkZXNjcmlwdGlvbiI6ICJUaGlzIE1pbnRwYXNzIGNhbiBiZSB1c2VkIHRvIG1pbnQgb25lIElQLU5GVCIsICJleHRlcm5hbF91cmwiOiAiVE9ETzogRW50ZXIgSVAtTkZULVVJIFVSTCIsICJpbWFnZSI6ICJUT0RPOiBFbnRlciBJUEZTIFVSTCIsICJ2YWxpZCI6IHRydWV9"
+            "data:application/json;base64,eyJuYW1lIjogIklQLU5GVCBNaW50cGFzcyAjMSIsICJkZXNjcmlwdGlvbiI6ICJUaGlzIE1pbnRwYXNzIGNhbiBiZSB1c2VkIHRvIG1pbnQgb25lIElQLU5GVCIsICJleHRlcm5hbF91cmwiOiAiVE9ETzogRW50ZXIgSVAtTkZULVVJIFVSTCIsICJpbWFnZSI6ICJUT0RPOiBpbWFnZVVSSSIsICJ2YWxpZCI6IHRydWUiLCAicmVkZWVtZWQiOiB0cnVlfQ=="
         );
 
         vm.startPrank(deployer);
@@ -143,12 +143,12 @@ contract MintpassTestV2 is Test {
         emit Revoked(1);
         mintPass.revoke(1);
 
-        assertEq(mintPass.isValid(1), false);
+        assertEq(mintPass.isRedeemable(1), false);
 
         string memory tokenUri_ = mintPass.tokenURI(1);
         assertEq(
             tokenUri_,
-            "data:application/json;base64,eyJuYW1lIjogIklQLU5GVCBNaW50cGFzcyAjMSIsICJkZXNjcmlwdGlvbiI6ICJUaGlzIE1pbnRwYXNzIGNhbiBiZSB1c2VkIHRvIG1pbnQgb25lIElQLU5GVCIsICJleHRlcm5hbF91cmwiOiAiVE9ETzogRW50ZXIgSVAtTkZULVVJIFVSTCIsICJpbWFnZSI6ICJUT0RPOiBFbnRlciBJUEZTIFVSTCIsICJ2YWxpZCI6IGZhbHNlfQ=="
+            "data:application/json;base64,eyJuYW1lIjogIklQLU5GVCBNaW50cGFzcyAjMSIsICJkZXNjcmlwdGlvbiI6ICJUaGlzIE1pbnRwYXNzIGNhbiBiZSB1c2VkIHRvIG1pbnQgb25lIElQLU5GVCIsICJleHRlcm5hbF91cmwiOiAiVE9ETzogRW50ZXIgSVAtTkZULVVJIFVSTCIsICJpbWFnZSI6ICJUT0RPOiBpbWFnZVVSSSIsICJ2YWxpZCI6IGZhbHNlIiwgInJlZGVlbWVkIjogdHJ1ZX0="
         );
         vm.stopPrank();
     }
@@ -162,7 +162,7 @@ contract MintpassTestV2 is Test {
         vm.expectRevert("Ownable: caller is not the owner");
         mintPass.revoke(1);
 
-        assertEq(mintPass.isValid(1), true);
+        assertEq(mintPass.isRedeemable(1), true);
         vm.stopPrank();
     }
 
