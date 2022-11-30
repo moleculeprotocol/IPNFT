@@ -45,8 +45,14 @@ contract FixtureScript is Script {
         uint256 reservationId = ipnft.reserve();
         ipnft.updateReservation(
             reservationId,
-            "IP-NFT Test",
-            "ipfs://bafybeidlr6ltzbipd6ix5ckyyzwgm2pbigx7ar2ht64v4czk65pkjouire/metadata.json"
+            abi.encode(
+                "IP-NFT Test",
+                "Some Description",
+                "ar://7De6dRLDaMhMeC6Utm9bB9PRbcvKdi-rw_sDM8pJSMU",
+                "ipfs://bafybeiewsf5ildpjbcok25trk6zbgafeu4fuxoh5iwjmvcmfi62dmohcwm",
+                "ipfs://bafybeifhwj7gx7fjb2dr3qo4am6kog2pseegrnfrg53po55zrxzsc6j45e",
+                "ipfs://bafybeidlr6ltzbipd6ix5ckyyzwgm2pbigx7ar2ht64v4czk65pkjouire/metadata.json"
+            )
         );
         ipnft.mintReservation(to, reservationId, 1);
         vm.stopBroadcast();

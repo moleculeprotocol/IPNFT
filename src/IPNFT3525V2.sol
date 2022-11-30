@@ -15,6 +15,7 @@ import "@openzeppelin/contracts-upgradeable/utils/Base64Upgradeable.sol";
 import { CountersUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/CountersUpgradeable.sol";
 
 import { Mintpass } from "./Mintpass.sol";
+import { IIPNFTMetadata, IPNFTMetadata } from "./IPNFTMetadata.sol";
 
 /*
  ______ _______         __    __ ________ ________
@@ -35,7 +36,6 @@ error InvalidInput();
 /// @author contains code of bitbeckers, mr_bluesky
 contract IPNFT3525V2 is Initializable, ERC3525SlotEnumerableUpgradeable, AccessControlUpgradeable, UUPSUpgradeable {
     using ArraysUpgradeable for uint64[];
-    using StringsUpgradeable for uint256;
     using CountersUpgradeable for CountersUpgradeable.Counter;
 
     CountersUpgradeable.Counter private _reservationCounter;
@@ -55,7 +55,7 @@ contract IPNFT3525V2 is Initializable, ERC3525SlotEnumerableUpgradeable, AccessC
     uint16 internal _version;
 
     /// @notice external metadata contract
-    //IIPNFTMetadata internal _metadata;
+    IIPNFTMetadata internal _metadataGenerator;
 
     struct IPNFT {
         uint256 totalUnits;
@@ -117,6 +117,8 @@ contract IPNFT3525V2 is Initializable, ERC3525SlotEnumerableUpgradeable, AccessC
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _grantRole(UPGRADER_ROLE, msg.sender);
         _reservationCounter.increment(); //start at 1.
+
+        _metadataGenerator = new IPNFTMetadata();
     }
 
     /**
@@ -223,26 +225,12 @@ contract IPNFT3525V2 is Initializable, ERC3525SlotEnumerableUpgradeable, AccessC
         return SYMBOL;
     }
 
-    function slotURI(uint256 slotId_) public view override returns (string memory) {
-        if (!_ipnfts[slotId_].exists) {
-            revert NonExistentSlot(slotId_);
+    function slotURI(uint256 slotId) public view override returns (string memory) {
+        if (!_ipnfts[slotId].exists) {
+            revert NonExistentSlot(slotId);
         }
-        IPNFT memory slot = _ipnfts[slotId_];
-
-        return string(
-            abi.encodePacked(
-                "data:application/json;base64,",
-                Base64Upgradeable.encode(
-                    abi.encodePacked(
-                        '{"name":"',
-                        slot.name,
-                        '","external_url":"https://discover.molecule.to/ipnft/',
-                        slotId_.toString(),
-                        '"}'
-                    )
-                )
-            )
-        );
+        IPNFT memory slot = _ipnfts[slotId];
+        return _metadataGenerator.generateTokenURI(slotId, slot);
     }
 
     function tokenURI(uint256 tokenId_) public view override returns (string memory) {
