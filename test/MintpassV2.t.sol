@@ -14,7 +14,7 @@ contract MintpassTestV2 is Test {
 
     event Revoked(uint256 indexed tokenId);
     event TokenMinted(address indexed owner, uint256 indexed tokenId);
-    event TokenBurned(address indexed from, uint256 indexed tokenId);
+    event TokenBurned(uint256 indexed tokenId);
 
     function setUp() public {
         vm.startPrank(deployer);
@@ -100,23 +100,7 @@ contract MintpassTestV2 is Test {
 
         vm.startPrank(bob);
         vm.expectEmit(true, true, true, true);
-        emit TokenBurned(bob, 1);
-        mintPass.burn(1);
-
-        assertEq(mintPass.balanceOf(bob), 0);
-        vm.stopPrank();
-    }
-
-    function testBurnFromIpnftContract() public {
-        vm.startPrank(deployer);
-        mintPass.batchMint(bob, 1);
-        vm.stopPrank();
-
-        vm.startPrank(ipnftContract);
-        assertEq(mintPass.ownerOf(1), bob);
-
-        vm.expectEmit(true, true, true, true);
-        emit TokenBurned(ipnftContract, 1);
+        emit TokenBurned(1);
         mintPass.burn(1);
 
         assertEq(mintPass.balanceOf(bob), 0);

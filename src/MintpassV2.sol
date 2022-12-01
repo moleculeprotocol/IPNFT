@@ -9,6 +9,9 @@ import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 import { ReentrancyGuard } from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 contract MintpassV2 is Ownable, ERC721BBaseTokenURI, ERC721BBurnable, ReentrancyGuard {
+    /// @notice Thrown when the mintpass was already redeemed
+    error AlreadyRedeemed();
+
     /// @dev Stores the address of the associated IP-NFT contract.
     address public ipnftContract;
 
@@ -17,7 +20,7 @@ contract MintpassV2 is Ownable, ERC721BBaseTokenURI, ERC721BBurnable, Reentrancy
 
     mapping(uint256 => bool) private _redemptions;
 
-    constructor(address ipnftContract_) ERC721BBaseTokenURI() {
+    constructor(address ipnftContract_) Ownable() {
         ipnftContract = ipnftContract_;
     }
 
@@ -56,14 +59,14 @@ contract MintpassV2 is Ownable, ERC721BBaseTokenURI, ERC721BBurnable, Reentrancy
         return !_revocations[tokenId] && !_redemptions[tokenId];
     }
 
-    function batchMint(address to, uint256 quantity) external nonReentrant onlyOwner {
+    function batchMint(address to, uint256 amount) external nonReentrant onlyOwner {
         uint256 tokenId = totalSupply() + 1;
 
-        _safeMint(to, quantity);
+        _safeMint(to, amount);
 
         _setApprovalForAll(to, ipnftContract, true);
 
-        for (uint256 i = 0; i < quantity; i++) {
+        for (uint256 i = 0; i < amount; i++) {
             emit TokenMinted(to, tokenId);
             tokenId++;
         }
@@ -73,13 +76,14 @@ contract MintpassV2 is Ownable, ERC721BBaseTokenURI, ERC721BBurnable, Reentrancy
     /// @param tokenId Identifier of the token
     function revoke(uint256 tokenId) external onlyOwner {
         require(isRedeemable(tokenId), "Token is already redeemed or revoked");
+        if (!isRedeemable(tokenId)) revert AlreadyRedeemed();
         _revocations[tokenId] = true;
         emit Revoked(tokenId);
     }
 
     function redeem(uint256 tokenId) public {
         require(msg.sender == address(ipnftContract), "Only IPNFT contract can set to redeemed");
-        require(isRedeemable(tokenId), "Token is already redeemed or revoked");
+        if (!isRedeemable(tokenId)) revert AlreadyRedeemed();
         _redemptions[tokenId] = true;
         emit TokenRedeemed(tokenId);
     }
@@ -119,7 +123,7 @@ contract MintpassV2 is Ownable, ERC721BBaseTokenURI, ERC721BBurnable, Reentrancy
     }
 
     function symbol() external pure returns (string memory) {
-        return "MNTPSS";
+        return "IPNFTMNTPSS";
     }
 
     function supportsInterface(bytes4 interfaceId) public view virtual override (ERC721B, IERC165) returns (bool) {
