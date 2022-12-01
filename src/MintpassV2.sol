@@ -64,8 +64,6 @@ contract MintpassV2 is Ownable, ERC721BBaseTokenURI, ERC721BBurnable, Reentrancy
 
         _safeMint(to, amount);
 
-        _setApprovalForAll(to, ipnftContract, true);
-
         for (uint256 i = 0; i < amount; i++) {
             emit TokenMinted(to, tokenId);
             tokenId++;
