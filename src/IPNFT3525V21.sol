@@ -281,9 +281,8 @@ contract IPNFT3525V21 is
         return _metadataGenerator.generateTokenURI(token, tokenId, slotId, balance);
     }
 
-    function contractURI() public pure override returns (string memory) {
-        return "contract uri";
-        //todo return _metadata.generateContractURI();
+    function contractURI() public view override returns (string memory) {
+        return _metadataGenerator.generateContractURI();
     }
 
     function burn(uint256 tokenId_) public {

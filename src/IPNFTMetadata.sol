@@ -2,11 +2,12 @@
 pragma solidity ^0.8.17;
 
 import "@openzeppelin/contracts/utils/Strings.sol";
+import "@openzeppelin/contracts/utils/Base64.sol";
 import { IPNFT3525V2 } from "./IPNFT3525V2.sol";
 import { IPNFT } from "./Structs.sol";
 
 interface IIPNFTMetadata {
-    // function generateContractURI() external view returns (string memory);
+    function generateContractURI() external view returns (string memory);
 
     function generateSlotURI(IPNFT memory slot) external pure returns (string memory);
 
@@ -88,6 +89,22 @@ contract IPNFTMetadata is IIPNFTMetadata {
                     ",",
                     properties,
                     "}"
+                )
+            )
+        );
+    }
+
+    //todo: use better metadata / image
+    function generateContractURI() external pure returns (string memory) {
+        return string(
+            abi.encodePacked(
+                "data:application/json;base64,",
+                Base64.encode(
+                    abi.encodePacked(
+                        '{"name":"IP-NFT"'
+                        '","description":"IP-NFTs are a decentralized representation of intellectual property. They contain legal information and allow fractionalized licensing on chain.","image":"'
+                        "ar://7De6dRLDaMhMeC6Utm9bB9PRbcvKdi-rw_sDM8pJSMU" '","external_url":"https://molecule.to"}'
+                    )
                 )
             )
         );
