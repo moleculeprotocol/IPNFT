@@ -46,8 +46,9 @@ contract IPNFT3525V21Test is IPNFTMintHelper {
 
         assertEq(
             tokenUri_,
-            'data:application/json,{"name":"IP-NFT Test","description":"Some Description","image":"ar://7De6dRLDaMhMeC6Utm9bB9PRbcvKdi-rw_sDM8pJSMU","balance":"1000000","slot":1,"properties": {"type":"IP-NFT","external_url":"https://discover.molecule.to/ipnft/1","agreement_url":"ipfs://bafybeiewsf5ildpjbcok25trk6zbgafeu4fuxoh5iwjmvcmfi62dmohcwm/agreement.json","project_details_url":"ipfs://bafybeifhwj7gx7fjb2dr3qo4am6kog2pseegrnfrg53po55zrxzsc6j45e/projectDetails.json"}}'
+            "data:application/json;base64,eyJuYW1lIjoiSVAtTkZUIFRlc3QiLCJkZXNjcmlwdGlvbiI6IlNvbWUgRGVzY3JpcHRpb24iLCJpbWFnZSI6ImFyOi8vN0RlNmRSTERhTWhNZUM2VXRtOWJCOVBSYmN2S2RpLXJ3X3NETThwSlNNVSIsImJhbGFuY2UiOiIxMDAwMDAwIiwic2xvdCI6MSwicHJvcGVydGllcyI6IHsidHlwZSI6IklQLU5GVCIsImV4dGVybmFsX3VybCI6Imh0dHBzOi8vZGlzY292ZXIubW9sZWN1bGUudG8vaXBuZnQvMSIsImFncmVlbWVudF91cmwiOiJpcGZzOi8vYmFmeWJlaWV3c2Y1aWxkcGpiY29rMjV0cms2emJnYWZldTRmdXhvaDVpd2ptdmNtZmk2MmRtb2hjd20vYWdyZWVtZW50Lmpzb24iLCJwcm9qZWN0X2RldGFpbHNfdXJsIjoiaXBmczovL2JhZnliZWlmaHdqN2d4N2ZqYjJkcjNxbzRhbTZrb2cycHNlZWdybmZyZzUzcG81NXpyeHpzYzZqNDVlL3Byb2plY3REZXRhaWxzLmpzb24ifX0="
         );
+        //'data:application/json,{"name":"IP-NFT Test","description":"Some Description","image":"ar://7De6dRLDaMhMeC6Utm9bB9PRbcvKdi-rw_sDM8pJSMU","balance":"1000000","slot":1,"properties": {"type":"IP-NFT","external_url":"https://discover.molecule.to/ipnft/1","agreement_url":"ipfs://bafybeiewsf5ildpjbcok25trk6zbgafeu4fuxoh5iwjmvcmfi62dmohcwm/agreement.json","project_details_url":"ipfs://bafybeifhwj7gx7fjb2dr3qo4am6kog2pseegrnfrg53po55zrxzsc6j45e/projectDetails.json"}}'
 
         assertEq(ipnft.balanceOf(alice), 1);
         assertEq(ipnft.tokenOfOwnerByIndex(alice, 0), 1);
@@ -127,12 +128,16 @@ contract IPNFT3525V21Test is IPNFTMintHelper {
 
         assertEq(
             ipnft.tokenURI(1),
-            'data:application/json,{"name":"IP-NFT Test","description":"Some Description","image":"ar://7De6dRLDaMhMeC6Utm9bB9PRbcvKdi-rw_sDM8pJSMU","balance":"500000","slot":1,"properties": {"type":"IP-NFT","external_url":"https://discover.molecule.to/ipnft/1","agreement_url":"ipfs://bafybeiewsf5ildpjbcok25trk6zbgafeu4fuxoh5iwjmvcmfi62dmohcwm/agreement.json","project_details_url":"ipfs://bafybeifhwj7gx7fjb2dr3qo4am6kog2pseegrnfrg53po55zrxzsc6j45e/projectDetails.json"}}'
+            "data:application/json;base64,eyJuYW1lIjoiSVAtTkZUIFRlc3QiLCJkZXNjcmlwdGlvbiI6IlNvbWUgRGVzY3JpcHRpb24iLCJpbWFnZSI6ImFyOi8vN0RlNmRSTERhTWhNZUM2VXRtOWJCOVBSYmN2S2RpLXJ3X3NETThwSlNNVSIsImJhbGFuY2UiOiI1MDAwMDAiLCJzbG90IjoxLCJwcm9wZXJ0aWVzIjogeyJ0eXBlIjoiSVAtTkZUIiwiZXh0ZXJuYWxfdXJsIjoiaHR0cHM6Ly9kaXNjb3Zlci5tb2xlY3VsZS50by9pcG5mdC8xIiwiYWdyZWVtZW50X3VybCI6ImlwZnM6Ly9iYWZ5YmVpZXdzZjVpbGRwamJjb2syNXRyazZ6YmdhZmV1NGZ1eG9oNWl3am12Y21maTYyZG1vaGN3bS9hZ3JlZW1lbnQuanNvbiIsInByb2plY3RfZGV0YWlsc191cmwiOiJpcGZzOi8vYmFmeWJlaWZod2o3Z3g3ZmpiMmRyM3FvNGFtNmtvZzJwc2VlZ3JuZnJnNTNwbzU1enJ4enNjNmo0NWUvcHJvamVjdERldGFpbHMuanNvbiJ9fQ=="
         );
+        // 'data:application/json,{"name":"IP-NFT Test","description":"Some Description","image":"ar://7De6dRLDaMhMeC6Utm9bB9PRbcvKdi-rw_sDM8pJSMU","balance":"500000","slot":1,"properties": {"type":"IP-NFT","external_url":"https://discover.molecule.to/ipnft/1","agreement_url":"ipfs://bafybeiewsf5ildpjbcok25trk6zbgafeu4fuxoh5iwjmvcmfi62dmohcwm/agreement.json","project_details_url":"ipfs://bafybeifhwj7gx7fjb2dr3qo4am6kog2pseegrnfrg53po55zrxzsc6j45e/projectDetails.json"}}'
+
         assertEq(
             ipnft.tokenURI(2),
-            'data:application/json,{"name":"IP-NFT Test","description":"Some Description","image":"ar://7De6dRLDaMhMeC6Utm9bB9PRbcvKdi-rw_sDM8pJSMU","balance":"500000","slot":1,"properties": {"type":"IP-NFT","external_url":"https://discover.molecule.to/ipnft/2","agreement_url":"ipfs://bafybeiewsf5ildpjbcok25trk6zbgafeu4fuxoh5iwjmvcmfi62dmohcwm/agreement.json","project_details_url":"ipfs://bafybeifhwj7gx7fjb2dr3qo4am6kog2pseegrnfrg53po55zrxzsc6j45e/projectDetails.json"}}'
+            "data:application/json;base64,eyJuYW1lIjoiSVAtTkZUIFRlc3QiLCJkZXNjcmlwdGlvbiI6IlNvbWUgRGVzY3JpcHRpb24iLCJpbWFnZSI6ImFyOi8vN0RlNmRSTERhTWhNZUM2VXRtOWJCOVBSYmN2S2RpLXJ3X3NETThwSlNNVSIsImJhbGFuY2UiOiI1MDAwMDAiLCJzbG90IjoxLCJwcm9wZXJ0aWVzIjogeyJ0eXBlIjoiSVAtTkZUIiwiZXh0ZXJuYWxfdXJsIjoiaHR0cHM6Ly9kaXNjb3Zlci5tb2xlY3VsZS50by9pcG5mdC8yIiwiYWdyZWVtZW50X3VybCI6ImlwZnM6Ly9iYWZ5YmVpZXdzZjVpbGRwamJjb2syNXRyazZ6YmdhZmV1NGZ1eG9oNWl3am12Y21maTYyZG1vaGN3bS9hZ3JlZW1lbnQuanNvbiIsInByb2plY3RfZGV0YWlsc191cmwiOiJpcGZzOi8vYmFmeWJlaWZod2o3Z3g3ZmpiMmRyM3FvNGFtNmtvZzJwc2VlZ3JuZnJnNTNwbzU1enJ4enNjNmo0NWUvcHJvamVjdERldGFpbHMuanNvbiJ9fQ=="
         );
+        // 'data:application/json,{"name":"IP-NFT Test","description":"Some Description","image":"ar://7De6dRLDaMhMeC6Utm9bB9PRbcvKdi-rw_sDM8pJSMU","balance":"500000","slot":1,"properties": {"type":"IP-NFT","external_url":"https://discover.molecule.to/ipnft/2","agreement_url":"ipfs://bafybeiewsf5ildpjbcok25trk6zbgafeu4fuxoh5iwjmvcmfi62dmohcwm/agreement.json","project_details_url":"ipfs://bafybeifhwj7gx7fjb2dr3qo4am6kog2pseegrnfrg53po55zrxzsc6j45e/projectDetails.json"}}'
+
         //todo this fails because tokenSupplyInSlot isn't increased during transfers.
         //https://github.com/Network-Goods/hypercerts-protocol/issues/54
         //assertEq(ipnft.tokenSupplyInSlot(1), 2);

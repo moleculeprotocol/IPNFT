@@ -77,8 +77,9 @@ contract IPNFT3525V2Test is IPNFTMintHelper {
 
         assertEq(
             ipnft.tokenURI(1),
-            'data:application/json,{"name":"IP-NFT Test","description":"Some Description","image":"ar://7De6dRLDaMhMeC6Utm9bB9PRbcvKdi-rw_sDM8pJSMU","balance":"1000000","slot":1,"properties": {"type":"IP-NFT","external_url":"https://discover.molecule.to/ipnft/1","agreement_url":"ipfs://bafybeiewsf5ildpjbcok25trk6zbgafeu4fuxoh5iwjmvcmfi62dmohcwm/agreement.json","project_details_url":"ipfs://bafybeifhwj7gx7fjb2dr3qo4am6kog2pseegrnfrg53po55zrxzsc6j45e/projectDetails.json"}}'
+            "data:application/json;base64,eyJuYW1lIjoiSVAtTkZUIFRlc3QiLCJkZXNjcmlwdGlvbiI6IlNvbWUgRGVzY3JpcHRpb24iLCJpbWFnZSI6ImFyOi8vN0RlNmRSTERhTWhNZUM2VXRtOWJCOVBSYmN2S2RpLXJ3X3NETThwSlNNVSIsImJhbGFuY2UiOiIxMDAwMDAwIiwic2xvdCI6MSwicHJvcGVydGllcyI6IHsidHlwZSI6IklQLU5GVCIsImV4dGVybmFsX3VybCI6Imh0dHBzOi8vZGlzY292ZXIubW9sZWN1bGUudG8vaXBuZnQvMSIsImFncmVlbWVudF91cmwiOiJpcGZzOi8vYmFmeWJlaWV3c2Y1aWxkcGpiY29rMjV0cms2emJnYWZldTRmdXhvaDVpd2ptdmNtZmk2MmRtb2hjd20vYWdyZWVtZW50Lmpzb24iLCJwcm9qZWN0X2RldGFpbHNfdXJsIjoiaXBmczovL2JhZnliZWlmaHdqN2d4N2ZqYjJkcjNxbzRhbTZrb2cycHNlZWdybmZyZzUzcG81NXpyeHpzYzZqNDVlL3Byb2plY3REZXRhaWxzLmpzb24ifX0="
         );
+        //            'data:application/json,{"name":"IP-NFT Test","description":"Some Description","image":"ar://7De6dRLDaMhMeC6Utm9bB9PRbcvKdi-rw_sDM8pJSMU","balance":"1000000","slot":1,"properties": {"type":"IP-NFT","external_url":"https://discover.molecule.to/ipnft/1","agreement_url":"ipfs://bafybeiewsf5ildpjbcok25trk6zbgafeu4fuxoh5iwjmvcmfi62dmohcwm/agreement.json","project_details_url":"ipfs://bafybeifhwj7gx7fjb2dr3qo4am6kog2pseegrnfrg53po55zrxzsc6j45e/projectDetails.json"}}'
 
         assertEq(ipnft.balanceOf(alice), 1);
         assertEq(ipnft.tokenOfOwnerByIndex(alice, 0), 1);
@@ -107,8 +108,10 @@ contract IPNFT3525V2Test is IPNFTMintHelper {
 
         assertEq(
             ipnft.tokenURI(1),
-            'data:application/json,{"name":"changed title","description":"Changed Description","image":"ar://abcde","balance":"1000000","slot":1,"properties": {"type":"IP-NFT","external_url":"https://discover.molecule.to/ipnft/1","agreement_url":"ar://defgh123/agree.json","project_details_url":"ipfs://mumumu/details.json"}}'
+            "data:application/json;base64,eyJuYW1lIjoiY2hhbmdlZCB0aXRsZSIsImRlc2NyaXB0aW9uIjoiQ2hhbmdlZCBEZXNjcmlwdGlvbiIsImltYWdlIjoiYXI6Ly9hYmNkZSIsImJhbGFuY2UiOiIxMDAwMDAwIiwic2xvdCI6MSwicHJvcGVydGllcyI6IHsidHlwZSI6IklQLU5GVCIsImV4dGVybmFsX3VybCI6Imh0dHBzOi8vZGlzY292ZXIubW9sZWN1bGUudG8vaXBuZnQvMSIsImFncmVlbWVudF91cmwiOiJhcjovL2RlZmdoMTIzL2FncmVlLmpzb24iLCJwcm9qZWN0X2RldGFpbHNfdXJsIjoiaXBmczovL211bXVtdS9kZXRhaWxzLmpzb24ifX0="
         );
+        //            'data:application/json,{"name":"changed title","description":"Changed Description","image":"ar://abcde","balance":"1000000","slot":1,"properties": {"type":"IP-NFT","external_url":"https://discover.molecule.to/ipnft/1","agreement_url":"ar://defgh123/agree.json","project_details_url":"ipfs://mumumu/details.json"}}'
+
         vm.stopPrank();
     }
 
@@ -181,8 +184,9 @@ contract IPNFT3525V2Test is IPNFTMintHelper {
         string memory slotUri = ipnft.slotURI(1);
         assertEq(
             slotUri,
-            'data:application/json,{"name":"IP-NFT Test","description":"Some Description","image":"ar://7De6dRLDaMhMeC6Utm9bB9PRbcvKdi-rw_sDM8pJSMU","properties": [{"name":"agreement_url","description":"agreement","display_type":"url","value":"ipfs://bafybeiewsf5ildpjbcok25trk6zbgafeu4fuxoh5iwjmvcmfi62dmohcwm/agreement.json"},{"name":"project_details_url","description":"project","display_type":"url","value":"ipfs://bafybeifhwj7gx7fjb2dr3qo4am6kog2pseegrnfrg53po55zrxzsc6j45e/projectDetails.json"}]}'
+            "data:application/json;base64,eyJuYW1lIjoiSVAtTkZUIFRlc3QiLCJkZXNjcmlwdGlvbiI6IlNvbWUgRGVzY3JpcHRpb24iLCJpbWFnZSI6ImFyOi8vN0RlNmRSTERhTWhNZUM2VXRtOWJCOVBSYmN2S2RpLXJ3X3NETThwSlNNVSIsInByb3BlcnRpZXMiOiBbeyJuYW1lIjoiYWdyZWVtZW50X3VybCIsImRlc2NyaXB0aW9uIjoiYWdyZWVtZW50IiwiZGlzcGxheV90eXBlIjoidXJsIiwidmFsdWUiOiJpcGZzOi8vYmFmeWJlaWV3c2Y1aWxkcGpiY29rMjV0cms2emJnYWZldTRmdXhvaDVpd2ptdmNtZmk2MmRtb2hjd20vYWdyZWVtZW50Lmpzb24ifSx7Im5hbWUiOiJwcm9qZWN0X2RldGFpbHNfdXJsIiwiZGVzY3JpcHRpb24iOiJwcm9qZWN0IiwiZGlzcGxheV90eXBlIjoidXJsIiwidmFsdWUiOiJpcGZzOi8vYmFmeWJlaWZod2o3Z3g3ZmpiMmRyM3FvNGFtNmtvZzJwc2VlZ3JuZnJnNTNwbzU1enJ4enNjNmo0NWUvcHJvamVjdERldGFpbHMuanNvbiJ9XX0="
         );
+        //'data:application/json,{"name":"IP-NFT Test","description":"Some Description","image":"ar://7De6dRLDaMhMeC6Utm9bB9PRbcvKdi-rw_sDM8pJSMU","properties": [{"name":"agreement_url","description":"agreement","display_type":"url","value":"ipfs://bafybeiewsf5ildpjbcok25trk6zbgafeu4fuxoh5iwjmvcmfi62dmohcwm/agreement.json"},{"name":"project_details_url","description":"project","display_type":"url","value":"ipfs://bafybeifhwj7gx7fjb2dr3qo4am6kog2pseegrnfrg53po55zrxzsc6j45e/projectDetails.json"}]}'
     }
 
     function testTransferValueToANewUser() public {

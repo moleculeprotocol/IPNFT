@@ -38,17 +38,19 @@ contract IPNFTMetadata is IIPNFTMetadata {
 
         return string(
             abi.encodePacked(
-                "data:application/json,",
-                abi.encodePacked(
-                    '{"name":"',
-                    slot.name,
-                    '","description":"',
-                    slot.description,
-                    '","image":"',
-                    slot.imageUrl,
-                    '",',
-                    properties,
-                    "}"
+                "data:application/json;base64,",
+                Base64.encode(
+                    abi.encodePacked(
+                        '{"name":"',
+                        slot.name,
+                        '","description":"',
+                        slot.description,
+                        '","image":"',
+                        slot.imageUrl,
+                        '",',
+                        properties,
+                        "}"
+                    )
                 )
             )
         );
@@ -74,21 +76,23 @@ contract IPNFTMetadata is IIPNFTMetadata {
         );
         return string(
             abi.encodePacked(
-                "data:application/json,",
-                abi.encodePacked(
-                    '{"name":"',
-                    ipnft.name,
-                    '","description":"',
-                    ipnft.description,
-                    '","image":"',
-                    ipnft.imageUrl,
-                    '","balance":"',
-                    tokenBalance.toString(),
-                    '","slot":',
-                    slotId.toString(),
-                    ",",
-                    properties,
-                    "}"
+                "data:application/json;base64,",
+                Base64.encode(
+                    abi.encodePacked(
+                        '{"name":"',
+                        ipnft.name,
+                        '","description":"',
+                        ipnft.description,
+                        '","image":"',
+                        ipnft.imageUrl,
+                        '","balance":"',
+                        tokenBalance.toString(),
+                        '","slot":',
+                        slotId.toString(),
+                        ",",
+                        properties,
+                        "}"
+                    )
                 )
             )
         );

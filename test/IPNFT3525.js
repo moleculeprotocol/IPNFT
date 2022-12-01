@@ -66,9 +66,9 @@ describe("IPNFT3525", function () {
 
     const tokenUri = await ipnftContract.tokenURI(1);
 
-    expect(tokenUri.startsWith("data:application/json")).to.be.true;
-    const metadata = JSON.parse(tokenUri.replace("data:application/json,", ""));
-
+    expect(tokenUri.startsWith("data:application/json;base64")).to.be.true;
+    const jsonContent = Buffer.from(tokenUri.replace("data:application/json;base64,", ""), "base64").toString();
+    const metadata = JSON.parse(jsonContent);
     expect(metadata["name"]).to.eq("IP-NFT Test");
     expect(metadata["slot"]).to.eq(1);
     expect(metadata["properties"]).to.contain.key("external_url")
