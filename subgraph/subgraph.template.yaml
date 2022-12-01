@@ -21,7 +21,7 @@ dataSources:
       eventHandlers:
         - event: Transfer(indexed address,indexed address,indexed uint256)
           handler: handleTransfer
-        - event: IPNFTMinted(string,indexed address,indexed uint256)
+        - event: IPNFTMinted(indexed address,indexed uint256)
           handler: handleMint
         - event: ReservationUpdated(string,indexed uint256)
           handler: handleReservationUpdated

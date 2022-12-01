@@ -14,7 +14,7 @@ contract FixtureScript is Script {
     string mnemonic = "test test test test test test test test test test test junk";
 
     UUPSProxy proxy;
-    IPNFT3525V2 ipnft;
+    IPNFT3525V2 ipnftV2;
     SchmackoSwap schmackoSwap;
     Mintpass mintpass;
     MyToken myToken;
@@ -43,8 +43,8 @@ contract FixtureScript is Script {
 
     function mintIpnft(address from, address to) internal returns (uint256) {
         vm.startBroadcast(from);
-        uint256 reservationId = ipnft.reserve();
-        ipnft.updateReservation(
+        uint256 reservationId = ipnftV2.reserve();
+        ipnftV2.updateReservation(
             reservationId,
             abi.encode(
                 "IP-NFT Test",
@@ -54,15 +54,15 @@ contract FixtureScript is Script {
                 "ipfs://bafybeifhwj7gx7fjb2dr3qo4am6kog2pseegrnfrg53po55zrxzsc6j45e/projectDetails.json"
             )
         );
-        ipnft.mintReservation(to, reservationId, 1, "");
+        ipnftV2.mintReservation(to, reservationId, 1, "");
         vm.stopBroadcast();
         return reservationId;
     }
 
     function createListingAndSell(address from, address to, uint256 tokenId, uint256 price) internal {
         vm.startBroadcast(from);
-        ipnft.approve(address(schmackoSwap), tokenId);
-        uint256 listingId = schmackoSwap.list(ipnft, tokenId, myToken, price);
+        ipnftV2.approve(address(schmackoSwap), tokenId);
+        uint256 listingId = schmackoSwap.list(ipnftV2, tokenId, myToken, price);
         schmackoSwap.changeBuyerAllowance(listingId, to, true);
         vm.stopBroadcast();
 
@@ -80,16 +80,21 @@ contract FixtureScript is Script {
 
         IPNFT3525V2 implementationV2 = new IPNFT3525V2();
         proxy = new UUPSProxy(address(implementationV2), "");
-        ipnft = IPNFT3525V2(address(proxy));
-        ipnft.initialize();
-
-        ipnft.setMetadataGenerator(new IPNFTMetadata());
+        ipnftV2 = IPNFT3525V2(address(proxy));
+        ipnftV2.initialize();
 
         schmackoSwap = new SchmackoSwap();
         myToken = new MyToken();
+        mintpass = new Mintpass(address(ipnftV2));
 
-        mintpass = new Mintpass(address(ipnft));
-        ipnft.setMintpassContract(address(mintpass));
+        ipnftV2.setMetadataGenerator(new IPNFTMetadata());
+        ipnftV2.setMintpassContract(address(mintpass));
+
+        console.log("ipnftv2 %s", address(ipnftV2));
+        console.log("swap %s", address(schmackoSwap));
+        console.log("token %s", address(myToken));
+        console.log("pass %s", address(mintpass));
+
         vm.stopBroadcast();
 
         mintMintPass(bob);

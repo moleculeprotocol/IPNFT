@@ -2,14 +2,14 @@
 
 ## Prerequisites
 
-- you can deploy contracts locally (see the main folder)
-- you'll need docker (and docker-compose) on your box
-- install jq (`apt i jq` / `brew install jq`)
+-   you can deploy contracts locally (see the main folder)
+-   you'll need docker (and docker-compose) on your box
+-   install jq (`apt i jq` / `brew install jq`)
 
 ### Running subgraph and contracts locally
 
-1. follow the local anvil deployment instructions [in the main repo](../README.md) to create a local deployment by running the fixture or dev scripts. 
-2. Ensure the resulting contract addresses match the ones in your .env file and are available in your local environment (`source .env`). When  executied on a fresh node with the default mnemonic, the addresses in `.env.example` are the deterministic contract addresses.
+1. follow the local anvil deployment instructions [in the main repo](../README.md) to create a local deployment by running the fixture or dev scripts.
+2. Ensure the resulting contract addresses match the ones in your .env file and are available in your local environment (`source .env`). When executied on a fresh node with the default mnemonic, the addresses in `.env.example` are the deterministic contract addresses.
 3. Startup docker containers
 
 ```sh
@@ -27,10 +27,11 @@ docker-compose --file docker-compose.yml --file docker-compose.ganache.yml up
 ```sh
 yarn create-abis
 yarn prepare:local
-``` 
+```
+
 This copies over your contracts' ABIs and creates a `subgraph.yaml` file with the contract addresses on your local chain, according to your environment.
 
-5. Build and deploy the subgraph 
+5. Build and deploy the subgraph
 
 ```sh
 yarn build
@@ -40,8 +41,9 @@ yarn deploy-local
 
 5. Checkout the local GraphQL API at <http://localhost:8000/subgraphs/name/moleculeprotocol/ipnft-subgraph>
 
-If your local dev node needs a little "push", this is how you manually can mine a block: 
-```sh 
+If your local dev node needs a little "push", this is how you manually can mine a block:
+
+```sh
 curl -H "Content-Type: application/json" -X POST --data '{"jsonrpc":"2.0","method":"evm_mine","params":[],"id":1}' 127.0.0.1:8545
 ```
 
@@ -55,9 +57,13 @@ curl -H "Content-Type: application/json" -X POST --data '{"jsonrpc":"2.0","metho
 
 ensure your local environment contains all contract addresses and is sourced to your terminal. We're using your local PRIVATE_KEY here
 
+0. Mint a mintpass to deployer
+
+`cast send -i $MINTPASS_ADDRESS --private-key $PRIVATE_KEY --rpc-url $ANVIL_RPC_URL "safeMint(address)" "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"`
+
 1. Create a reservation
 
-`cast send -i $IPNFT_ADDRESS --private-key $PRIVATE_KEY "reserve()(uint256)"`
+`cast send -i $IPNFT_ADDRESS --private-key $PRIVATE_KEY --rpc-url $ANVIL_RPC_URL "reserve()"`
 
 2. update its reservationURI
 
@@ -101,3 +107,7 @@ take note of the resulting listing id
 11. let account(1) fulfill the listing
 
 `cast send -i \$SOS_ADDRESS --private-key <account1 private key> "fulfill(uint256)()" <listingid>`
+
+### Calling view functions on the contract
+
+`cast call $IPNFT_ADDRESS "tokenURI(uint256)" 1 | cast --to-ascii`

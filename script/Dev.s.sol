@@ -22,10 +22,14 @@ contract DevScript is Script {
         IPNFT3525V2 ipnftV2 = IPNFT3525V2(address(proxy));
         ipnftV2.initialize();
 
-        new SchmackoSwap();
-        new MyToken();
-        new Mintpass(address(ipnftV2));
+        SchmackoSwap swap = new SchmackoSwap();
+        MyToken token = new MyToken();
+        Mintpass pass = new Mintpass(address(ipnftV2));
 
+        console.log("ipnftv2 %s", address(ipnftV2));
+        console.log("swap %s", address(swap));
+        console.log("token %s", address(token));
+        console.log("pass %s", address(pass));
         vm.stopBroadcast();
     }
 }

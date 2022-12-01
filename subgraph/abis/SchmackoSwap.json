@@ -220,7 +220,7 @@
       },
       {
         "internalType": "bool",
-        "name": "_isAllowed",
+        "name": "isAllowed_",
         "type": "bool"
       }
     ],

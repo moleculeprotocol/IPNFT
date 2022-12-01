@@ -179,8 +179,6 @@ contract IPNFT3525V2 is
         //todo: emit this, once we decided if we're sure that this one is going to be final.
         //emit PermanentURI(tokenURI, reservationId);
 
-        emit IPNFTMinted(to, reservationId);
-
         delete _reservations[reservationId];
         _ipnfts[reservationId] = ipnft;
 
@@ -188,6 +186,7 @@ contract IPNFT3525V2 is
         _mintValue(to, reservationId, DEFAULT_VALUE);
 
         mintpass.redeem(mintPassId);
+        emit IPNFTMinted(to, reservationId);
 
         return reservationId;
     }

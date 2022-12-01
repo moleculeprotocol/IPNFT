@@ -2,8 +2,25 @@ type Ipnft @entity {
     id: ID! #tokenId
     owner: Bytes! # address
     createdAt: BigInt!
-    tokenURI: String!
+
+    balance: BigInt!
+    slotId: ID!
+
+    name: String
+    description: String
+    image: String
+
+    external_url: String
+    agreement_url: String
+    project_details_url: String
+
     listings: [Listing!] @derivedFrom(field: "ipnft")
+}
+
+type Slot @entity {
+    id: ID! #slotId
+    metadatab64: String
+    #ipnfts: [Ipnft!] @derivedFrom(field: "slot")
 }
 
 type Listing @entity {
@@ -22,7 +39,7 @@ type Listing @entity {
 type Reservation @entity {
     id: ID! #reservationId will be future tokenId
     owner: Bytes! #address
-    uri: String
+    name: String
     createdAt: BigInt!
 }
 
