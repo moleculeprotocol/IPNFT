@@ -2,11 +2,8 @@
 pragma solidity ^0.8.17;
 
 import "hypercerts/ERC3525SlotEnumerableUpgradeable.sol";
-import "hypercerts/interfaces/IHyperCertMetadata.sol";
-import "hypercerts/utils/ArraysUpgradeable.sol";
-import "hypercerts/utils/StringsExtensions.sol";
 
-import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
@@ -16,7 +13,8 @@ import { CountersUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/C
 import { IPNFT, Reservation } from "./Structs.sol";
 import { IReservable } from "./IReservable.sol";
 import { Mintpass } from "./Mintpass.sol";
-import { IIPNFTMetadata, IPNFTMetadata } from "./IPNFTMetadata.sol";
+import { IIPNFTMetadata } from "./IPNFTMetadata.sol";
+
 /*
  ______ _______         __    __ ________ ________
 |      \       \       |  \  |  \        \        \
@@ -28,20 +26,16 @@ import { IIPNFTMetadata, IPNFTMetadata } from "./IPNFTMetadata.sol";
 |   ▓▓ \ ▓▓            | ▓▓  \▓▓▓ ▓▓        | ▓▓
  \▓▓▓▓▓▓\▓▓             \▓▓   \▓▓\▓▓         \▓▓*/
 
-error EmptyInput();
-error InvalidInput();
-
 /// @title minting logic
 /// @notice Contains functions and events to initialize and issue an ipnft
 /// @author contains code of bitbeckers, mr_bluesky
 contract IPNFT3525V21 is
     Initializable,
     ERC3525SlotEnumerableUpgradeable,
-    AccessControlUpgradeable,
+    OwnableUpgradeable,
     UUPSUpgradeable,
     IReservable
 {
-    using ArraysUpgradeable for uint64[];
     using CountersUpgradeable for CountersUpgradeable.Counter;
 
     CountersUpgradeable.Counter private _reservationCounter;
@@ -52,8 +46,6 @@ contract IPNFT3525V21 is
     string public constant SYMBOL = "IPNFT";
     /// @notice Token value decimals
     uint8 public constant DECIMALS = 0;
-    /// @notice User role required in order to upgrade the contract
-    bytes32 public constant UPGRADER_ROLE = keccak256("UPGRADER_ROLE");
 
     uint64 public constant DEFAULT_VALUE = 1_000_000;
 
@@ -88,6 +80,17 @@ contract IPNFT3525V21 is
 
     /**
      *
+     * ERRORS
+     *
+     */
+
+    error EmptyInput();
+    error InvalidInput();
+    error NeedsMintpass();
+    error NotOwningReservation(uint256 id);
+
+    /**
+     *
      * DEPLOY
      *
      */
@@ -100,12 +103,10 @@ contract IPNFT3525V21 is
 
     /// @notice Contract initialization logic
     function initialize() public initializer {
-        __AccessControl_init();
+        __Ownable_init();
         __UUPSUpgradeable_init();
         __ERC3525Upgradeable_init();
 
-        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
-        _grantRole(UPGRADER_ROLE, msg.sender);
         _reservationCounter.increment(); //start at 1.
     }
 
@@ -116,14 +117,14 @@ contract IPNFT3525V21 is
      */
 
     /// @notice sets the address of the Mintpass contract
-    function setMintpassContract(address mintpass_) public onlyRole(UPGRADER_ROLE) {
+    function setMintpassContract(address mintpass_) public onlyOwner {
         if (mintpass_ == address(0)) {
             revert ToZeroAddress();
         }
         mintpass = Mintpass(mintpass_);
     }
 
-    function setMetadataGenerator(IIPNFTMetadata metadataGenerator_) external onlyRole(UPGRADER_ROLE) {
+    function setMetadataGenerator(IIPNFTMetadata metadataGenerator_) external onlyOwner {
         if (address(metadataGenerator_) == address(0)) {
             revert ToZeroAddress();
         }
@@ -131,7 +132,9 @@ contract IPNFT3525V21 is
     }
 
     function reserve() public returns (uint256) {
-        require(mintpass.balanceOf(_msgSender()) > 0, "IPNFT: You need to own a mintpass to mint an IPNFT");
+        if (!(mintpass.balanceOf(_msgSender()) > 0)) {
+            revert NeedsMintpass();
+        }
 
         IPNFT memory reservation;
 
@@ -144,7 +147,9 @@ contract IPNFT3525V21 is
     }
 
     function updateReservation(uint256 reservationId, bytes calldata newMetadata) external {
-        require(_reservations[reservationId].reserver == _msgSender(), "IP-NFT: caller is not reserver");
+        if (_reservations[reservationId].reserver != _msgSender()) {
+            revert NotOwningReservation(reservationId);
+        }
         _reservations[reservationId].ipnft = _parseData(newMetadata);
 
         emit ReservationUpdated(_reservations[reservationId].ipnft.name, reservationId);
@@ -159,17 +164,17 @@ contract IPNFT3525V21 is
         external
         returns (uint256 slotId)
     {
-        require(_reservations[reservationId].reserver == _msgSender(), "IP-NFT: caller is not reserver");
-        require(mintpass.ownerOf(mintPassId) == _msgSender(), "IP-NFT: You don't own that mintpass");
-        require(mintpass.isValid(mintPassId), "IP-NFT: Mintpass was revoked");
+        if (_reservations[reservationId].reserver != _msgSender()) {
+            revert NotOwningReservation(reservationId);
+        }
+
+        mintpass.authorizeMint(_msgSender(), mintPassId);
 
         IPNFT memory ipnft = finalMetadata.length > 0 ? _parseData(finalMetadata) : _reservations[reservationId].ipnft;
         ipnft.totalUnits = DEFAULT_VALUE;
         ipnft.version = uint16(0);
         ipnft.exists = true;
         ipnft.minter = _msgSender();
-
-        _authorizeMint(to, ipnft);
 
         //todo: emit this, once we decided if we're sure that this one is going to be final.
         //emit PermanentURI(tokenURI, reservationId);
@@ -183,6 +188,7 @@ contract IPNFT3525V21 is
         _mintValue(to, reservationId, DEFAULT_VALUE);
 
         mintpass.burn(mintPassId);
+
         return reservationId;
     }
 
@@ -229,8 +235,7 @@ contract IPNFT3525V21 is
     }
 
     /// @notice Update the contract version number
-    /// @notice Only allowed for member of UPGRADER_ROLE
-    function updateVersion() external onlyRole(UPGRADER_ROLE) {
+    function updateVersion() external onlyOwner {
         _version += 1;
     }
 
@@ -240,7 +245,7 @@ contract IPNFT3525V21 is
     function supportsInterface(bytes4 interfaceId)
         public
         view
-        override (ERC3525SlotEnumerableUpgradeable, AccessControlUpgradeable)
+        override (ERC3525SlotEnumerableUpgradeable)
         returns (bool)
     {
         return super.supportsInterface(interfaceId);
@@ -256,10 +261,6 @@ contract IPNFT3525V21 is
 
     function valueDecimals() public view virtual override returns (uint8) {
         return DECIMALS;
-    }
-
-    function getSlot(uint256 slotId) public view returns (IPNFT memory) {
-        return _ipnfts[slotId];
     }
 
     function slotURI(uint256 slotId) public view override returns (string memory) {
@@ -336,24 +337,8 @@ contract IPNFT3525V21 is
 
     /// @notice upgrade authorization logic
     /// @dev adds onlyRole(UPGRADER_ROLE) requirement
-    function _authorizeUpgrade(address /*newImplementation*/ )
-        internal
-        view
-        override
-        onlyRole(UPGRADER_ROLE) // solhint-disable-next-line no-empty-blocks
-    {
+    function _authorizeUpgrade(address /*newImplementation*/ ) internal view override onlyOwner {
         //empty block
-    }
-
-    /// @notice Pre-mint validation checks
-    /// @param account Destination address for the mint
-    /// @param ipnft IPNFT data
-    /* solhint-disable code-complexity */
-
-    function _authorizeMint(address account, IPNFT memory ipnft) internal view virtual {
-        if (account == address(0)) {
-            revert ToZeroAddress();
-        }
     }
 
     function _msgSender() internal view override (ContextUpgradeable, ERC3525Upgradeable) returns (address sender) {

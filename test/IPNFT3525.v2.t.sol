@@ -132,7 +132,7 @@ contract IPNFT3525V2Test is IPNFTMintHelper {
         vm.startPrank(alice);
         ipnft.mintReservation(bob, reservationId, 1, "");
 
-        vm.expectRevert("IP-NFT: caller is not reserver");
+        vm.expectRevert(abi.encodeWithSelector(IPNFT3525V2.NotOwningReservation.selector, 1));
         ipnft.updateReservation(reservationId, updatedMetadata);
     }
 
@@ -140,7 +140,7 @@ contract IPNFT3525V2Test is IPNFTMintHelper {
         uint256 reservationId = reserveAToken(ipnft, alice, encodedMetadata);
 
         vm.startPrank(bob);
-        vm.expectRevert("IP-NFT: caller is not reserver");
+        vm.expectRevert(abi.encodeWithSelector(IPNFT3525V2.NotOwningReservation.selector, 1));
         ipnft.mintReservation(bob, reservationId, 1, "");
         vm.stopPrank();
     }
@@ -197,16 +197,14 @@ contract IPNFT3525V2Test is IPNFTMintHelper {
 
     function testCantReserveWithoutMintpass() public {
         vm.startPrank(alice);
-        vm.expectRevert("IPNFT: You need to own a mintpass to mint an IPNFT");
+        vm.expectRevert(IPNFT3525V2.NeedsMintpass.selector);
         ipnft.reserve();
         vm.stopPrank();
     }
 
     function testOnlyAdminCanSetMintpassContract() public {
         vm.startPrank(alice);
-        vm.expectRevert(
-            "AccessControl: account 0x328809bc894f92807417d2dad6b7c998c1afdac6 is missing role 0x189ab7a9244df0848122154315af71fe140f3db0fe014031783b0946b8c9d2e3"
-        );
+        vm.expectRevert("Ownable: caller is not the owner");
         ipnft.setMintpassContract(address(0x5));
     }
 

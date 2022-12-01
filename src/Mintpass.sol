@@ -10,6 +10,10 @@ import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 contract Mintpass is Ownable, ERC721BBaseTokenURI, ERC721BBurnable {
     error AlreadyRedeemed();
     error NotRedeemable();
+    error NotOwningMintpass(uint256 id);
+    error MintPassRevoked(uint256 id);
+
+    using Counters for Counters.Counter;
 
     enum Status {
         DEFAULT, //0
@@ -59,6 +63,16 @@ contract Mintpass is Ownable, ERC721BBaseTokenURI, ERC721BBurnable {
 
     function batchMint(address to, uint256 amount) external onlyOwner {
         _safeMint(to, amount);
+    }
+
+    function authorizeMint(address to, uint256 mintPassId) public view returns (bool) {
+        if (ownerOf(mintPassId) != to) {
+            revert NotOwningMintpass(mintPassId);
+        }
+        if (!isRedeemable(mintPassId)) {
+            revert MintPassRevoked(mintPassId);
+        }
+        return true;
     }
 
     /// @dev Mark the token as revoked
@@ -153,6 +167,16 @@ contract Mintpass is Ownable, ERC721BBaseTokenURI, ERC721BBurnable {
      * INTERNAL
      *
      */
+
+    function _mintAndApprove(address to) internal returns (uint256) {
+        uint256 tokenId = _tokenIdCounter.current();
+        _tokenIdCounter.increment();
+        _safeMint(to, tokenId);
+        _approve(ipnftContract, tokenId);
+        emit TokenMinted(to, tokenId);
+
+        return tokenId;
+    }
 
     /// @dev Hook that is called before every token transfer. This includes minting and burning.
     /// It checks if the token is minted or burned. If not the function is reverted.
