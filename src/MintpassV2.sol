@@ -88,14 +88,6 @@ contract MintpassV2 is Ownable, ERC721BBaseTokenURI, ERC721BBurnable, Reentrancy
     /// @dev Returns the tokenURI attached to a token
     /// @param tokenId Identifier of the token
     function tokenURI(uint256 tokenId) public view override returns (string memory) {
-        string memory imageURI;
-
-        if (_redemptions[tokenId]) {
-            imageURI = "ipfs://imageToShowWhenRedeemed";
-        } else {
-            imageURI = "ipfs://imageToShowWhenNotRedeemed";
-        }
-
         require(_exists(tokenId), "Token does not exist");
         return string(
             abi.encodePacked(
@@ -104,7 +96,9 @@ contract MintpassV2 is Ownable, ERC721BBaseTokenURI, ERC721BBurnable, Reentrancy
                     abi.encodePacked(
                         '{"name": "IP-NFT Mintpass #',
                         Strings.toString(tokenId),
-                        '", "description": "This Mintpass can be used to mint one IP-NFT", "external_url": "TODO: Enter IP-NFT-UI URL", "image": "TODO: imageURI", "valid": ',
+                        '", "description": "This Mintpass can be used to mint one IP-NFT", "external_url": "TODO: Enter IP-NFT-UI URL", "image": "',
+                        _redemptions[tokenId] ? "ipfs://imageToShowWhenRedeemed" : "ipfs://imageToShowWhenNotRedeemed",
+                        '",',
                         _revocations[tokenId] ? "false" : "true",
                         '", "redeemed": ',
                         _redemptions[tokenId] ? "false" : "true" "}"

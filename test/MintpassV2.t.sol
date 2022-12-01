@@ -36,7 +36,7 @@ contract MintpassTestV2 is Test {
         string memory tokenUri_ = mintPass.tokenURI(1);
         assertEq(
             tokenUri_,
-            "data:application/json;base64,eyJuYW1lIjogIklQLU5GVCBNaW50cGFzcyAjMSIsICJkZXNjcmlwdGlvbiI6ICJUaGlzIE1pbnRwYXNzIGNhbiBiZSB1c2VkIHRvIG1pbnQgb25lIElQLU5GVCIsICJleHRlcm5hbF91cmwiOiAiVE9ETzogRW50ZXIgSVAtTkZULVVJIFVSTCIsICJpbWFnZSI6ICJUT0RPOiBpbWFnZVVSSSIsICJ2YWxpZCI6IHRydWUiLCAicmVkZWVtZWQiOiB0cnVlfQ=="
+            "data:application/json;base64,eyJuYW1lIjogIklQLU5GVCBNaW50cGFzcyAjMSIsICJkZXNjcmlwdGlvbiI6ICJUaGlzIE1pbnRwYXNzIGNhbiBiZSB1c2VkIHRvIG1pbnQgb25lIElQLU5GVCIsICJleHRlcm5hbF91cmwiOiAiVE9ETzogRW50ZXIgSVAtTkZULVVJIFVSTCIsICJpbWFnZSI6ICJpcGZzOi8vaW1hZ2VUb1Nob3dXaGVuTm90UmVkZWVtZWQiLHRydWUiLCAicmVkZWVtZWQiOiB0cnVlfQ=="
         );
 
         vm.startPrank(deployer);
@@ -148,7 +148,7 @@ contract MintpassTestV2 is Test {
         string memory tokenUri_ = mintPass.tokenURI(1);
         assertEq(
             tokenUri_,
-            "data:application/json;base64,eyJuYW1lIjogIklQLU5GVCBNaW50cGFzcyAjMSIsICJkZXNjcmlwdGlvbiI6ICJUaGlzIE1pbnRwYXNzIGNhbiBiZSB1c2VkIHRvIG1pbnQgb25lIElQLU5GVCIsICJleHRlcm5hbF91cmwiOiAiVE9ETzogRW50ZXIgSVAtTkZULVVJIFVSTCIsICJpbWFnZSI6ICJUT0RPOiBpbWFnZVVSSSIsICJ2YWxpZCI6IGZhbHNlIiwgInJlZGVlbWVkIjogdHJ1ZX0="
+            "data:application/json;base64,eyJuYW1lIjogIklQLU5GVCBNaW50cGFzcyAjMSIsICJkZXNjcmlwdGlvbiI6ICJUaGlzIE1pbnRwYXNzIGNhbiBiZSB1c2VkIHRvIG1pbnQgb25lIElQLU5GVCIsICJleHRlcm5hbF91cmwiOiAiVE9ETzogRW50ZXIgSVAtTkZULVVJIFVSTCIsICJpbWFnZSI6ICJpcGZzOi8vaW1hZ2VUb1Nob3dXaGVuTm90UmVkZWVtZWQiLGZhbHNlIiwgInJlZGVlbWVkIjogdHJ1ZX0="
         );
         vm.stopPrank();
     }
