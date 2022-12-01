@@ -37,9 +37,8 @@ contract MintpassV2 is Ownable, ERC721BBaseTokenURI, ERC721BBurnable, Reentrancy
     event TokenMinted(address indexed owner, uint256 indexed tokenId);
 
     /// Event emitted when token is burned
-    /// @param from Address that burned the token
     /// @param tokenId Identifier of the token
-    event TokenBurned(address indexed from, uint256 indexed tokenId);
+    event TokenBurned(uint256 indexed tokenId);
 
     event TokenRedeemed(uint256 indexed tokenId);
 
@@ -108,11 +107,11 @@ contract MintpassV2 is Ownable, ERC721BBaseTokenURI, ERC721BBurnable, Reentrancy
         );
     }
 
-    /// @dev burns a token. This is only possible by either the owner of the token or the IP-NFT Contract
+    /// @dev burns a token. This is only possible by the owner of the token
     /// @param tokenId Identifier of the token to be burned
     function burn(uint256 tokenId) public virtual override {
         super.burn(tokenId);
-        emit TokenBurned(msg.sender, tokenId);
+        emit TokenBurned(tokenId);
     }
 
     function name() external pure returns (string memory) {
