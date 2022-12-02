@@ -179,15 +179,14 @@ contract IPNFT3525V21 is
         //todo: emit this, once we decided if we're sure that this one is going to be final.
         //emit PermanentURI(tokenURI, reservationId);
 
-        emit IPNFTMinted(to, reservationId);
-
         delete _reservations[reservationId];
         _ipnfts[reservationId] = ipnft;
 
         /// @see _beforeValueTransfer: it creates slot with that reservation id
         _mintValue(to, reservationId, DEFAULT_VALUE);
 
-        mintpass.burn(mintPassId);
+        mintpass.redeem(mintPassId);
+        emit IPNFTMinted(to, reservationId);
 
         return reservationId;
     }

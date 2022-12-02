@@ -13,8 +13,6 @@ contract Mintpass is Ownable, ERC721BBaseTokenURI, ERC721BBurnable {
     error NotOwningMintpass(uint256 id);
     error MintPassRevoked(uint256 id);
 
-    using Counters for Counters.Counter;
-
     enum Status {
         DEFAULT, //0
         REDEEMED,
@@ -167,16 +165,6 @@ contract Mintpass is Ownable, ERC721BBaseTokenURI, ERC721BBurnable {
      * INTERNAL
      *
      */
-
-    function _mintAndApprove(address to) internal returns (uint256) {
-        uint256 tokenId = _tokenIdCounter.current();
-        _tokenIdCounter.increment();
-        _safeMint(to, tokenId);
-        _approve(ipnftContract, tokenId);
-        emit TokenMinted(to, tokenId);
-
-        return tokenId;
-    }
 
     /// @dev Hook that is called before every token transfer. This includes minting and burning.
     /// It checks if the token is minted or burned. If not the function is reverted.

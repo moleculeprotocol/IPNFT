@@ -219,12 +219,12 @@ contract IPNFT3525V2Test is IPNFTMintHelper {
         assertEq(mintpass.balanceOf(alice), 1);
         assertEq(mintpass.ownerOf(1), alice);
 
+        vm.startPrank(deployer);
+        mintpass.revoke(1);
+        vm.stopPrank();
+
         vm.startPrank(alice);
-
-        // Revoke mintpass token approval
-        mintpass.approve(address(0), 1);
-
-        vm.expectRevert("Not authorized to burn this token");
+        vm.expectRevert(abi.encodeWithSelector(Mintpass.MintPassRevoked.selector, 1));
         ipnft.mintReservation(alice, reservationId, 1, "");
         assertEq(ipnft.balanceOf(alice), 0);
 

@@ -41,11 +41,9 @@ abstract contract IPNFTMintHelper is Test {
         return reservationId;
     }
 
-    function dealMintpass(address to) internal returns (uint256) {
+    function dealMintpass(address to) internal {
         vm.startPrank(deployer);
-        uint256 tokenId = mintpass.safeMint(to);
+        mintpass.batchMint(to, 1);
         vm.stopPrank();
-
-        return tokenId;
     }
 }

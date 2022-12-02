@@ -197,7 +197,6 @@ contract IPNFT3525V2 is
     }
 
     /// @notice Update the contract version number
-    /// @notice Only allowed for member of UPGRADER_ROLE
     function updateVersion() external onlyOwner {
         _version += 1;
     }
