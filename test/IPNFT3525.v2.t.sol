@@ -3,6 +3,7 @@ pragma solidity ^0.8.17;
 
 import "forge-std/Test.sol";
 import { console } from "forge-std/console.sol";
+import "hypercerts/ERC3525Upgradeable.sol";
 
 import { IPNFT3525V2 } from "../src/IPNFT3525V2.sol";
 import { IPNFT, Reservation } from "../src/Structs.sol";
@@ -74,15 +75,13 @@ contract IPNFT3525V2Test is IPNFTMintHelper {
         vm.stopPrank();
 
         assertEq(ipnft.balanceOf(alice), 1);
+        assertEq(ipnft.tokenOfOwnerByIndex(alice, 0), 1);
 
         assertEq(
             ipnft.tokenURI(1),
             "data:application/json;base64,eyJuYW1lIjoiSVAtTkZUIFRlc3QiLCJkZXNjcmlwdGlvbiI6IlNvbWUgRGVzY3JpcHRpb24iLCJpbWFnZSI6ImFyOi8vN0RlNmRSTERhTWhNZUM2VXRtOWJCOVBSYmN2S2RpLXJ3X3NETThwSlNNVSIsImJhbGFuY2UiOiIxMDAwMDAwIiwic2xvdCI6MSwicHJvcGVydGllcyI6IHsidHlwZSI6IklQLU5GVCIsImV4dGVybmFsX3VybCI6Imh0dHBzOi8vZGlzY292ZXIubW9sZWN1bGUudG8vaXBuZnQvMSIsImFncmVlbWVudF91cmwiOiJpcGZzOi8vYmFmeWJlaWV3c2Y1aWxkcGpiY29rMjV0cms2emJnYWZldTRmdXhvaDVpd2ptdmNtZmk2MmRtb2hjd20vYWdyZWVtZW50Lmpzb24iLCJwcm9qZWN0X2RldGFpbHNfdXJsIjoiaXBmczovL2JhZnliZWlmaHdqN2d4N2ZqYjJkcjNxbzRhbTZrb2cycHNlZWdybmZyZzUzcG81NXpyeHpzYzZqNDVlL3Byb2plY3REZXRhaWxzLmpzb24ifX0="
         );
         //            'data:application/json,{"name":"IP-NFT Test","description":"Some Description","image":"ar://7De6dRLDaMhMeC6Utm9bB9PRbcvKdi-rw_sDM8pJSMU","balance":"1000000","slot":1,"properties": {"type":"IP-NFT","external_url":"https://discover.molecule.to/ipnft/1","agreement_url":"ipfs://bafybeiewsf5ildpjbcok25trk6zbgafeu4fuxoh5iwjmvcmfi62dmohcwm/agreement.json","project_details_url":"ipfs://bafybeifhwj7gx7fjb2dr3qo4am6kog2pseegrnfrg53po55zrxzsc6j45e/projectDetails.json"}}'
-
-        assertEq(ipnft.balanceOf(alice), 1);
-        assertEq(ipnft.tokenOfOwnerByIndex(alice, 0), 1);
 
         (address reserver,) = ipnft._reservations(1);
         assertEq(reserver, address(0));
@@ -126,6 +125,18 @@ contract IPNFT3525V2Test is IPNFTMintHelper {
         ipnft.burn(1);
 
         assertEq(ipnft.balanceOf(alice), 0);
+        vm.stopPrank();
+    }
+
+    function testCannotBurnOtherPeoplesTokens() public {
+        mintAToken(ipnft, alice);
+
+        vm.startPrank(bob);
+
+        vm.expectRevert(NotApprovedOrOwner.selector);
+        ipnft.burn(1);
+
+        assertEq(ipnft.balanceOf(alice), 1);
         vm.stopPrank();
     }
 
@@ -174,8 +185,8 @@ contract IPNFT3525V2Test is IPNFTMintHelper {
         vm.stopPrank();
     }
 
-    // // //many NFTs can share the same slot
-    // // //hence the slot "uri" yields the "basic" token Uri
+    //many NFTs can share the same slot
+    //hence the slot "uri" yields the "basic" token Uri
     function testSlots() public {
         uint256 tokenId = mintAToken(ipnft, alice);
 
@@ -189,17 +200,17 @@ contract IPNFT3525V2Test is IPNFTMintHelper {
         //'data:application/json,{"name":"IP-NFT Test","description":"Some Description","image":"ar://7De6dRLDaMhMeC6Utm9bB9PRbcvKdi-rw_sDM8pJSMU","properties": [{"name":"agreement_url","description":"agreement","display_type":"url","value":"ipfs://bafybeiewsf5ildpjbcok25trk6zbgafeu4fuxoh5iwjmvcmfi62dmohcwm/agreement.json"},{"name":"project_details_url","description":"project","display_type":"url","value":"ipfs://bafybeifhwj7gx7fjb2dr3qo4am6kog2pseegrnfrg53po55zrxzsc6j45e/projectDetails.json"}]}'
     }
 
-    function testTransferValueToANewUser() public {
+    function testCannotTransferValueToANewUser() public {
         uint256 tokenId = mintAToken(ipnft, alice);
 
+        vm.startPrank(alice);
         //this is the ERC3525 value transfer that's not available on IPNFTV2.0 / ERC721
         vm.expectRevert("not available in V2");
-        vm.startPrank(alice);
         ipnft.transferFrom(tokenId, bob, 5);
         vm.stopPrank();
     }
 
-    function testCantReserveWithoutMintpass() public {
+    function testCannotReserveWithoutMintpass() public {
         vm.startPrank(alice);
         vm.expectRevert(IPNFT3525V2.NeedsMintpass.selector);
         ipnft.reserve();
@@ -210,14 +221,11 @@ contract IPNFT3525V2Test is IPNFTMintHelper {
         vm.startPrank(alice);
         vm.expectRevert("Ownable: caller is not the owner");
         ipnft.setMintpassContract(address(0x5));
+        vm.stopPrank();
     }
 
-    function testCannotMintWithoutMintpassApproval() public {
+    function testCannotMintWithRevokedOrRedeemedMintpass() public {
         uint256 reservationId = reserveAToken(ipnft, alice, encodedMetadata);
-
-        // Does Alice have the Mintpass?
-        assertEq(mintpass.balanceOf(alice), 1);
-        assertEq(mintpass.ownerOf(1), alice);
 
         vm.startPrank(deployer);
         mintpass.revoke(1);
@@ -227,7 +235,17 @@ contract IPNFT3525V2Test is IPNFTMintHelper {
         vm.expectRevert(abi.encodeWithSelector(Mintpass.MintPassRevoked.selector, 1));
         ipnft.mintReservation(alice, reservationId, 1, "");
         assertEq(ipnft.balanceOf(alice), 0);
+        vm.stopPrank();
 
+        reservationId = reserveAToken(ipnft, alice, encodedMetadata);
+        vm.startPrank(alice);
+        ipnft.mintReservation(alice, reservationId, 2, "");
+        vm.stopPrank();
+
+        reservationId = reserveAToken(ipnft, alice, encodedMetadata);
+        vm.startPrank(alice);
+        vm.expectRevert(abi.encodeWithSelector(Mintpass.MintPassRevoked.selector, 2));
+        ipnft.mintReservation(alice, reservationId, 2, "");
         vm.stopPrank();
     }
 }
