@@ -6,19 +6,22 @@ import "erc721b/extensions/ERC721BBurnable.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { Base64 } from "@openzeppelin/contracts/utils/Base64.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
-import { ReentrancyGuard } from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-contract MintpassV2 is Ownable, ERC721BBaseTokenURI, ERC721BBurnable, ReentrancyGuard {
-    /// @notice Thrown when the mintpass was already redeemed
+contract MintpassV2 is Ownable, ERC721BBaseTokenURI, ERC721BBurnable {
     error AlreadyRedeemed();
+    error NotRedeemable();
+
+    enum Status {
+        DEFAULT, //0
+        REDEEMED,
+        REVOKED
+    }
 
     /// @dev Stores the address of the associated IP-NFT contract.
     address public ipnftContract;
 
-    // Mapping from tokenId to validity of token. If tokenId has been revoked, it will return true
-    mapping(uint256 => bool) private _revocations;
-
-    mapping(uint256 => bool) private _redemptions;
+    // Mapping from tokenId to validity of token.
+    mapping(uint256 => Status) private _status;
 
     constructor(address ipnftContract_) Ownable() {
         ipnftContract = ipnftContract_;
@@ -33,11 +36,6 @@ contract MintpassV2 is Ownable, ERC721BBaseTokenURI, ERC721BBurnable, Reentrancy
     /// Event emitted when token `tokenId` of `owner` is revoked
     /// @param tokenId Identifier of the token
     event Revoked(uint256 indexed tokenId);
-
-    /// Event emitted when new token is minted
-    /// @param owner Address for whom the ownership has been revoked
-    /// @param tokenId Identifier of the token
-    event TokenMinted(address indexed owner, uint256 indexed tokenId);
 
     /// Event emitted when token is burned
     /// @param tokenId Identifier of the token
@@ -56,40 +54,39 @@ contract MintpassV2 is Ownable, ERC721BBaseTokenURI, ERC721BBurnable, Reentrancy
     /// @return True if the token is valid, false otherwise
     function isRedeemable(uint256 tokenId) public view returns (bool) {
         require(_exists(tokenId), "Token does not exist");
-        return !_revocations[tokenId] && !_redemptions[tokenId];
-    }
-
-    function batchMint(address to, uint256 amount) external nonReentrant onlyOwner {
-        uint256 tokenId = totalSupply() + 1;
-
-        _safeMint(to, amount);
-
-        for (uint256 i = 0; i < amount; i++) {
-            emit TokenMinted(to, tokenId);
-            tokenId++;
-        }
+        return _status[tokenId] == Status.DEFAULT;
     }
 
     /// @dev Mark the token as revoked
     /// @param tokenId Identifier of the token
     function revoke(uint256 tokenId) external onlyOwner {
-        require(isRedeemable(tokenId), "Token is already redeemed or revoked");
-        if (!isRedeemable(tokenId)) revert AlreadyRedeemed();
-        _revocations[tokenId] = true;
+        if (!isRedeemable(tokenId)) {
+            revert NotRedeemable();
+        }
+        _status[tokenId] = Status.REVOKED;
         emit Revoked(tokenId);
     }
 
     function redeem(uint256 tokenId) public {
         require(msg.sender == address(ipnftContract), "Only IPNFT contract can set to redeemed");
-        if (!isRedeemable(tokenId)) revert AlreadyRedeemed();
-        _redemptions[tokenId] = true;
+        if (!isRedeemable(tokenId)) {
+            revert NotRedeemable();
+        }
+        _status[tokenId] = Status.REDEEMED;
         emit TokenRedeemed(tokenId);
     }
 
     /// @dev Returns the tokenURI attached to a token
     /// @param tokenId Identifier of the token
     function tokenURI(uint256 tokenId) public view override returns (string memory) {
-        require(_exists(tokenId), "Token does not exist");
+        string memory statusString = "redeemable";
+        if (_status[tokenId] == Status.REVOKED) {
+            statusString = "revoked";
+        }
+        if (_status[tokenId] == Status.REDEEMED) {
+            statusString = "redeemed";
+        }
+
         return string(
             abi.encodePacked(
                 "data:application/json;base64,",
@@ -98,29 +95,23 @@ contract MintpassV2 is Ownable, ERC721BBaseTokenURI, ERC721BBurnable, Reentrancy
                         '{"name": "IP-NFT Mintpass #',
                         Strings.toString(tokenId),
                         '", "description": "This Mintpass can be used to mint one IP-NFT", "external_url": "TODO: Enter IP-NFT-UI URL", "image": "',
-                        _redemptions[tokenId] ? "ipfs://imageToShowWhenRedeemed" : "ipfs://imageToShowWhenNotRedeemed",
-                        '",',
-                        _revocations[tokenId] ? "false" : "true",
-                        '", "redeemed": ',
-                        _redemptions[tokenId] ? "false" : "true" "}"
+                        isRedeemable(tokenId)
+                            ? "ipfs://imageToShowWhenRedeemable"
+                            : "ipfs://imageToShowWhenNotRedeemable",
+                        '", "status": "',
+                        statusString,
+                        '"}'
                     )
                 )
             )
         );
     }
 
-    /// @dev burns a token. This is only possible by the owner of the token
-    /// @param tokenId Identifier of the token to be burned
-    function burn(uint256 tokenId) public virtual override {
-        super.burn(tokenId);
-        emit TokenBurned(tokenId);
-    }
-
-    function name() external pure returns (string memory) {
+    function name() public pure returns (string memory) {
         return "IP-NFT Mintpass";
     }
 
-    function symbol() external pure returns (string memory) {
+    function symbol() public pure returns (string memory) {
         return "IPNFTMNTPSS";
     }
 
