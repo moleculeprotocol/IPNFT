@@ -28,7 +28,7 @@ describe("IPNFT3525", function () {
   //this is the same as IPNFT3525.t.sol:testMinting
   it("can mint and generate metadata on chain", async function () {
     // Give bob a mintpass
-    await mintpass.connect(deployer).safeMint(bob.address);
+    await mintpass.connect(deployer).batchMint(bob.address, 1);
     expect(await mintpass.ownerOf(1)).to.equal(bob.address);
 
     //bob mints 1 token for alice.
@@ -43,7 +43,7 @@ describe("IPNFT3525", function () {
 
     await ipnftContract
       .connect(bob)
-      ["mintReservation(address,uint256,uint256)"](alice.address, 1, 1);
+    ["mintReservation(address,uint256,uint256)"](alice.address, 1, 1);
 
     const tokenUri = await ipnftContract.tokenURI(1);
 

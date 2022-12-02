@@ -30,7 +30,7 @@ contract UpgradeV2toV21Test is Test {
 
     function dealMintpass(address to) internal {
         vm.startPrank(deployer);
-        mintpass.safeMint(to);
+        mintpass.batchMint(to, 1);
         vm.stopPrank();
     }
 
