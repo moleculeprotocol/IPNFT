@@ -57,6 +57,10 @@ contract MintpassV2 is Ownable, ERC721BBaseTokenURI, ERC721BBurnable {
         return _status[tokenId] == Status.DEFAULT;
     }
 
+    function batchMint(address to, uint256 amount) external onlyOwner {
+        _safeMint(to, amount);
+    }
+
     /// @dev Mark the token as revoked
     /// @param tokenId Identifier of the token
     function revoke(uint256 tokenId) external onlyOwner {
@@ -105,6 +109,13 @@ contract MintpassV2 is Ownable, ERC721BBaseTokenURI, ERC721BBurnable {
                 )
             )
         );
+    }
+
+    /// @dev burns a token. This is only possible by the owner of the token
+    /// @param tokenId Identifier of the token to be burned
+    function burn(uint256 tokenId) public virtual override {
+        super.burn(tokenId);
+        emit TokenBurned(tokenId);
     }
 
     function name() public pure returns (string memory) {

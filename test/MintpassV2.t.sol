@@ -24,8 +24,6 @@ contract MintpassTestV2 is Test {
 
     function testSingleMints() public {
         vm.startPrank(deployer);
-        vm.expectEmit(true, true, true, true);
-        emit TokenMinted(alice, 1);
         mintPass.batchMint(alice, 1);
         vm.stopPrank();
 
@@ -36,12 +34,10 @@ contract MintpassTestV2 is Test {
         string memory tokenUri_ = mintPass.tokenURI(1);
         assertEq(
             tokenUri_,
-            "data:application/json;base64,eyJuYW1lIjogIklQLU5GVCBNaW50cGFzcyAjMSIsICJkZXNjcmlwdGlvbiI6ICJUaGlzIE1pbnRwYXNzIGNhbiBiZSB1c2VkIHRvIG1pbnQgb25lIElQLU5GVCIsICJleHRlcm5hbF91cmwiOiAiVE9ETzogRW50ZXIgSVAtTkZULVVJIFVSTCIsICJpbWFnZSI6ICJpcGZzOi8vaW1hZ2VUb1Nob3dXaGVuTm90UmVkZWVtZWQiLHRydWUiLCAicmVkZWVtZWQiOiB0cnVlfQ=="
+            "data:application/json;base64,eyJuYW1lIjogIklQLU5GVCBNaW50cGFzcyAjMSIsICJkZXNjcmlwdGlvbiI6ICJUaGlzIE1pbnRwYXNzIGNhbiBiZSB1c2VkIHRvIG1pbnQgb25lIElQLU5GVCIsICJleHRlcm5hbF91cmwiOiAiVE9ETzogRW50ZXIgSVAtTkZULVVJIFVSTCIsICJpbWFnZSI6ICJpcGZzOi8vaW1hZ2VUb1Nob3dXaGVuUmVkZWVtYWJsZSIsICJzdGF0dXMiOiAicmVkZWVtYWJsZSJ9"
         );
 
         vm.startPrank(deployer);
-        vm.expectEmit(true, true, true, true);
-        emit TokenMinted(bob, 2);
         mintPass.batchMint(bob, 1);
         vm.stopPrank();
 
@@ -132,7 +128,7 @@ contract MintpassTestV2 is Test {
         string memory tokenUri_ = mintPass.tokenURI(1);
         assertEq(
             tokenUri_,
-            "data:application/json;base64,eyJuYW1lIjogIklQLU5GVCBNaW50cGFzcyAjMSIsICJkZXNjcmlwdGlvbiI6ICJUaGlzIE1pbnRwYXNzIGNhbiBiZSB1c2VkIHRvIG1pbnQgb25lIElQLU5GVCIsICJleHRlcm5hbF91cmwiOiAiVE9ETzogRW50ZXIgSVAtTkZULVVJIFVSTCIsICJpbWFnZSI6ICJpcGZzOi8vaW1hZ2VUb1Nob3dXaGVuTm90UmVkZWVtZWQiLGZhbHNlIiwgInJlZGVlbWVkIjogdHJ1ZX0="
+            "data:application/json;base64,eyJuYW1lIjogIklQLU5GVCBNaW50cGFzcyAjMSIsICJkZXNjcmlwdGlvbiI6ICJUaGlzIE1pbnRwYXNzIGNhbiBiZSB1c2VkIHRvIG1pbnQgb25lIElQLU5GVCIsICJleHRlcm5hbF91cmwiOiAiVE9ETzogRW50ZXIgSVAtTkZULVVJIFVSTCIsICJpbWFnZSI6ICJpcGZzOi8vaW1hZ2VUb1Nob3dXaGVuTm90UmVkZWVtYWJsZSIsICJzdGF0dXMiOiAicmV2b2tlZCJ9"
         );
         vm.stopPrank();
     }
