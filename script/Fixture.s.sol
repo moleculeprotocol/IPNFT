@@ -36,7 +36,7 @@ contract FixtureScript is Script {
 
     function mintMintPass(address to) internal {
         vm.startBroadcast(deployer);
-        mintpass.safeMint(to);
+        mintpass.batchMint(to, 2);
         vm.stopBroadcast();
     }
 

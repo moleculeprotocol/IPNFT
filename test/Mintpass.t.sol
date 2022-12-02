@@ -14,47 +14,73 @@ contract MintpassTest is Test {
 
     event Revoked(uint256 indexed tokenId);
     event TokenMinted(address indexed owner, uint256 indexed tokenId);
-    event TokenBurned(address indexed from, uint256 indexed tokenId);
+    event TokenBurned(uint256 indexed tokenId);
 
     function setUp() public {
         vm.startPrank(deployer);
         mintPass = new Mintpass(ipnftContract);
-        vm.expectEmit(true, true, true, true);
-        emit TokenMinted(bob, 1);
-        mintPass.safeMint(bob);
+        vm.stopPrank();
+    }
 
-        assertEq(mintPass.balanceOf(bob), 1);
-        assertEq(mintPass.isValid(1), true);
+    function testSingleMints() public {
+        vm.startPrank(deployer);
+        mintPass.batchMint(alice, 1);
+        vm.stopPrank();
+
+        assertEq(mintPass.balanceOf(alice), 1);
+        assertEq(mintPass.ownerOf(1), alice);
+        assertEq(mintPass.isRedeemable(1), true);
 
         string memory tokenUri_ = mintPass.tokenURI(1);
         assertEq(
             tokenUri_,
-            "data:application/json;base64,eyJuYW1lIjogIklQLU5GVCBNaW50cGFzcyAjMSIsICJkZXNjcmlwdGlvbiI6ICJUaGlzIE1pbnRwYXNzIGNhbiBiZSB1c2VkIHRvIG1pbnQgb25lIElQLU5GVCIsICJleHRlcm5hbF91cmwiOiAiVE9ETzogRW50ZXIgSVAtTkZULVVJIFVSTCIsICJpbWFnZSI6ICJUT0RPOiBFbnRlciBJUEZTIFVSTCIsICJ2YWxpZCI6IHRydWV9"
+            "data:application/json;base64,eyJuYW1lIjogIklQLU5GVCBNaW50cGFzcyAjMSIsICJkZXNjcmlwdGlvbiI6ICJUaGlzIE1pbnRwYXNzIGNhbiBiZSB1c2VkIHRvIG1pbnQgb25lIElQLU5GVCIsICJleHRlcm5hbF91cmwiOiAiVE9ETzogRW50ZXIgSVAtTkZULVVJIFVSTCIsICJpbWFnZSI6ICJpcGZzOi8vaW1hZ2VUb1Nob3dXaGVuUmVkZWVtYWJsZSIsICJzdGF0dXMiOiAicmVkZWVtYWJsZSJ9"
         );
 
+        vm.startPrank(deployer);
+        mintPass.batchMint(bob, 1);
         vm.stopPrank();
+
+        assertEq(mintPass.balanceOf(bob), 1);
+        assertEq(mintPass.ownerOf(2), bob);
+
+        assertEq(mintPass.totalSupply(), 2);
     }
 
-    function testBatchMint() public {
+    function testBatchMintTen() public {
         vm.startPrank(deployer);
         mintPass.batchMint(alice, 10);
         vm.stopPrank();
 
         assertEq(mintPass.balanceOf(alice), 10);
-        assertEq(mintPass.ownerOf(2), alice);
-        assertEq(mintPass.ownerOf(6), alice);
+        assertEq(mintPass.ownerOf(1), alice);
+        assertEq(mintPass.ownerOf(10), alice);
+    }
+
+    function testBatchMintFifty() public {
+        vm.startPrank(deployer);
+        mintPass.batchMint(alice, 50);
+        vm.stopPrank();
+
+        assertEq(mintPass.balanceOf(alice), 50);
+        assertEq(mintPass.ownerOf(1), alice);
+        assertEq(mintPass.ownerOf(50), alice);
     }
 
     function testSafeMintFromNotOwner() public {
         vm.startPrank(bob);
         vm.expectRevert("Ownable: caller is not the owner");
-        mintPass.safeMint(alice);
+        mintPass.batchMint(alice, 1);
 
         assertEq(mintPass.balanceOf(alice), 0);
         vm.stopPrank();
     }
 
     function testTransfer() public {
+        vm.startPrank(deployer);
+        mintPass.batchMint(bob, 1);
+        vm.stopPrank();
+
         vm.startPrank(bob);
         vm.expectRevert("This a Soulbound token. It can only be burned.");
         mintPass.transferFrom(bob, alice, 1);
@@ -64,21 +90,13 @@ contract MintpassTest is Test {
     }
 
     function testBurnFromOwner() public {
+        vm.startPrank(deployer);
+        mintPass.batchMint(bob, 1);
+        vm.stopPrank();
+
         vm.startPrank(bob);
         vm.expectEmit(true, true, true, true);
-        emit TokenBurned(bob, 1);
-        mintPass.burn(1);
-
-        assertEq(mintPass.balanceOf(bob), 0);
-        vm.stopPrank();
-    }
-
-    function testBurnFromIpnftContract() public {
-        vm.startPrank(ipnftContract);
-        assertEq(mintPass.ownerOf(1), bob);
-
-        vm.expectEmit(true, true, true, true);
-        emit TokenBurned(ipnftContract, 1);
+        emit TokenBurned(1);
         mintPass.burn(1);
 
         assertEq(mintPass.balanceOf(bob), 0);
@@ -86,8 +104,12 @@ contract MintpassTest is Test {
     }
 
     function testBurnFromRandomUser() public {
+        vm.startPrank(deployer);
+        mintPass.batchMint(bob, 1);
+        vm.stopPrank();
+
         vm.startPrank(alice);
-        vm.expectRevert("Not authorized to burn this token");
+        vm.expectRevert();
         mintPass.burn(1);
 
         assertEq(mintPass.balanceOf(bob), 1);
@@ -96,26 +118,31 @@ contract MintpassTest is Test {
 
     function testRevokeToken() public {
         vm.startPrank(deployer);
+        mintPass.batchMint(alice, 1);
         vm.expectEmit(true, true, true, true);
         emit Revoked(1);
         mintPass.revoke(1);
 
-        assertEq(mintPass.isValid(1), false);
+        assertEq(mintPass.isRedeemable(1), false);
 
         string memory tokenUri_ = mintPass.tokenURI(1);
         assertEq(
             tokenUri_,
-            "data:application/json;base64,eyJuYW1lIjogIklQLU5GVCBNaW50cGFzcyAjMSIsICJkZXNjcmlwdGlvbiI6ICJUaGlzIE1pbnRwYXNzIGNhbiBiZSB1c2VkIHRvIG1pbnQgb25lIElQLU5GVCIsICJleHRlcm5hbF91cmwiOiAiVE9ETzogRW50ZXIgSVAtTkZULVVJIFVSTCIsICJpbWFnZSI6ICJUT0RPOiBFbnRlciBJUEZTIFVSTCIsICJ2YWxpZCI6IGZhbHNlfQ=="
+            "data:application/json;base64,eyJuYW1lIjogIklQLU5GVCBNaW50cGFzcyAjMSIsICJkZXNjcmlwdGlvbiI6ICJUaGlzIE1pbnRwYXNzIGNhbiBiZSB1c2VkIHRvIG1pbnQgb25lIElQLU5GVCIsICJleHRlcm5hbF91cmwiOiAiVE9ETzogRW50ZXIgSVAtTkZULVVJIFVSTCIsICJpbWFnZSI6ICJpcGZzOi8vaW1hZ2VUb1Nob3dXaGVuTm90UmVkZWVtYWJsZSIsICJzdGF0dXMiOiAicmV2b2tlZCJ9"
         );
         vm.stopPrank();
     }
 
     function testRevokeFromRandomUser() public {
+        vm.startPrank(deployer);
+        mintPass.batchMint(bob, 1);
+        vm.stopPrank();
+
         vm.startPrank(bob);
         vm.expectRevert("Ownable: caller is not the owner");
         mintPass.revoke(1);
 
-        assertEq(mintPass.isValid(1), true);
+        assertEq(mintPass.isRedeemable(1), true);
         vm.stopPrank();
     }
 

@@ -54,10 +54,10 @@ contract IPNFT3525V2Test is Test {
 
     function dealMintpass(address to) internal returns (uint256) {
         vm.startPrank(deployer);
-        uint256 tokenId = mintpass.safeMint(to);
+        mintpass.batchMint(to, 1);
         vm.stopPrank();
 
-        return tokenId;
+        return 1;
     }
 
     function setUp() public {
@@ -95,10 +95,6 @@ contract IPNFT3525V2Test is Test {
         vm.expectEmit(true, true, false, true);
         emit IPNFTMinted(arUri, alice, 1);
 
-        // Does Alice have the Mintpass?
-        assertEq(mintpass.balanceOf(alice), 1);
-        assertEq(mintpass.ownerOf(1), alice);
-
         vm.startPrank(alice);
         ipnft.mintReservation(alice, reservationId, 1);
         assertEq(ipnft.balanceOf(alice), 1);
@@ -114,10 +110,15 @@ contract IPNFT3525V2Test is Test {
         (address reserver,,) = ipnft._reservations(1);
         assertEq(reserver, address(0));
 
-        // Was the Mintpass burned?
-        assertEq(mintpass.balanceOf(alice), 0);
-        vm.expectRevert("Token does not exist");
-        mintpass.tokenURI(1);
+        // Was the Mintpass redeemed?
+        assertEq(mintpass.balanceOf(alice), 1);
+        assertEq(mintpass.isRedeemable(1), false);
+
+        //status: redeemed
+        assertEq(
+            mintpass.tokenURI(1),
+            "data:application/json;base64,eyJuYW1lIjogIklQLU5GVCBNaW50cGFzcyAjMSIsICJkZXNjcmlwdGlvbiI6ICJUaGlzIE1pbnRwYXNzIGNhbiBiZSB1c2VkIHRvIG1pbnQgb25lIElQLU5GVCIsICJleHRlcm5hbF91cmwiOiAiVE9ETzogRW50ZXIgSVAtTkZULVVJIFVSTCIsICJpbWFnZSI6ICJpcGZzOi8vaW1hZ2VUb1Nob3dXaGVuTm90UmVkZWVtYWJsZSIsICJzdGF0dXMiOiAicmVkZWVtZWQifQ=="
+        );
 
         vm.stopPrank();
     }
@@ -239,15 +240,14 @@ contract IPNFT3525V2Test is Test {
         assertEq(mintpass.balanceOf(alice), 1);
         assertEq(mintpass.ownerOf(1), alice);
 
+        vm.startPrank(deployer);
+        mintpass.revoke(1);
+        vm.stopPrank();
+
         vm.startPrank(alice);
-
-        // Revoke mintpass token approval
-        mintpass.approve(address(0), 1);
-
-        vm.expectRevert("Not authorized to burn this token");
+        vm.expectRevert("IPNFT: mintpass not redeemable");
         ipnft.mintReservation(alice, reservationId, 1);
         assertEq(ipnft.balanceOf(alice), 0);
-
         vm.stopPrank();
     }
 }

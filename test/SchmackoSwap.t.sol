@@ -39,7 +39,7 @@ contract SchmackoSwapTest is Test {
         nft.initialize();
         mintpass = new Mintpass(address(nft));
         nft.setMintpassContract(address(mintpass));
-        mintpass.safeMint(seller);
+        mintpass.batchMint(seller, 1);
         vm.stopPrank();
 
         testToken = new TestToken();

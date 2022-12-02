@@ -168,7 +168,7 @@ contract IPNFT3525V2 is Initializable, ERC3525SlotEnumerableUpgradeable, AccessC
     {
         require(_reservations[reservationId].reserver == _msgSender(), "IP-NFT: caller is not reserver");
         require(mintpass.ownerOf(mintPassId) == _msgSender(), "IPNFT: You don't own that mintpass");
-        require(mintpass.isValid(mintPassId), "IPNFT: Mintpass was revoked");
+        require(mintpass.isRedeemable(mintPassId), "IPNFT: mintpass not redeemable");
 
         IPNFT memory ipnft = IPNFT({
             totalUnits: DEFAULT_VALUE,
@@ -192,7 +192,7 @@ contract IPNFT3525V2 is Initializable, ERC3525SlotEnumerableUpgradeable, AccessC
         /// @see _beforeValueTransfer: it creates slot with that reservation id
         _mintValue(to, reservationId, DEFAULT_VALUE);
 
-        mintpass.burn(mintPassId);
+        mintpass.redeem(mintPassId);
 
         return reservationId;
     }
