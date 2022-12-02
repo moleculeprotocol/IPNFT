@@ -29,20 +29,9 @@ contract Mintpass is ERC721, Ownable, ReentrancyGuard {
      * EVENTS
      *
      */
-
-    /// Event emitted when token `tokenId` of `owner` is revoked
-    /// @param tokenId Identifier of the token
     event Revoked(uint256 indexed tokenId);
-
-    /// Event emitted when new token is minted
-    /// @param owner Address for whom the ownership has been revoked
-    /// @param tokenId Identifier of the token
-    event TokenMinted(address indexed owner, uint256 indexed tokenId);
-
-    /// Event emitted when token is burned
-    /// @param from Address that burned the token
-    /// @param tokenId Identifier of the token
-    event TokenBurned(address indexed from, uint256 indexed tokenId);
+    event Redeemed(uint256 indexed tokenId);
+    event Burned(uint256 indexed tokenId);
 
     /**
      *
@@ -95,20 +84,67 @@ contract Mintpass is ERC721, Ownable, ReentrancyGuard {
         emit Revoked(tokenId);
     }
 
-    /// @dev burns a token. This is only possible by either the owner of the token or the IP-NFT Contract
-    /// @param tokenId Identifier of the token to be burned
-    function burn(uint256 tokenId) external {
-        require(
-            _isApprovedOrOwner(msg.sender, tokenId),
-            "Not authorized to burn this token"
-        );
-        _burn(tokenId);
-        emit TokenBurned(msg.sender, tokenId);
+    function redeem(uint256 tokenId) public {
+        require(msg.sender == address(ipnftContract), "Only IPNFT contract can set to redeemed");
+        if (!isRedeemable(tokenId)) {
+            revert NotRedeemable();
+        }
+        _status[tokenId] = Status.REDEEMED;
+        emit Redeemed(tokenId);
     }
 
     /// @dev Returns the tokenURI attached to a token
     /// @param tokenId Identifier of the token
-    function tokenURI(uint256 tokenId)
+    function tokenURI(uint256 tokenId) public view override returns (string memory) {
+        string memory statusString = "redeemable";
+        if (_status[tokenId] == Status.REVOKED) {
+            statusString = "revoked";
+        }
+        if (_status[tokenId] == Status.REDEEMED) {
+            statusString = "redeemed";
+        }
+
+        return string(
+            abi.encodePacked(
+                "data:application/json;base64,",
+                Base64.encode(
+                    abi.encodePacked(
+                        '{"name": "IP-NFT Mintpass #',
+                        Strings.toString(tokenId),
+                        '", "description": "This Mintpass can be used to mint one IP-NFT", "external_url": "TODO: Enter IP-NFT-UI URL", "image": "',
+                        isRedeemable(tokenId)
+                            ? "ipfs://imageToShowWhenRedeemable"
+                            : "ipfs://imageToShowWhenNotRedeemable",
+                        '", "status": "',
+                        statusString,
+                        '"}'
+                    )
+                )
+            )
+        );
+    }
+
+    function name() public pure returns (string memory) {
+        return "IP-NFT Mintpass";
+    }
+
+    function symbol() public pure returns (string memory) {
+        return "IPNFTMNTPSS";
+    }
+
+    function supportsInterface(bytes4 interfaceId) public view virtual override (ERC721B, IERC165) returns (bool) {
+        return interfaceId == type(IERC721Metadata).interfaceId || super.supportsInterface(interfaceId);
+    }
+
+    function totalSupply() public view virtual override (ERC721B, ERC721BBurnable) returns (uint256) {
+        return super.totalSupply();
+    }
+
+    function _exists(uint256 tokenId) internal view virtual override (ERC721B, ERC721BBurnable) returns (bool) {
+        return super._exists(tokenId);
+    }
+
+    function ownerOf(uint256 tokenId)
         public
         view
         override
