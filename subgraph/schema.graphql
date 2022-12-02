@@ -43,9 +43,15 @@ type Reservation @entity {
     createdAt: BigInt!
 }
 
+enum MintpassStatus {
+    DEFAULT
+    REDEEMED
+    REVOKED
+}
+
 type Mintpass @entity {
     id: ID! #tokenId
     owner: Bytes! #address
     createdAt: BigInt!
-    valid: Boolean
+    status: MintpassStatus
 }
