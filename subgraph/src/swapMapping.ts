@@ -48,11 +48,13 @@ export function handleAllowlistUpdated(event: AllowlistUpdatedEvent): void {
         );
         return;
     }
+
     let newAllowlist: Bytes[] = listing.allowlist;
 
     if (event.params._isAllowed == true) {
         newAllowlist.push(event.params.buyer);
     } else {
+        newAllowlist = [];
         for (let i = 0; i < listing.allowlist.length; i++) {
             if (listing.allowlist[i] != event.params.buyer) {
                 newAllowlist.push(listing.allowlist[i]);
