@@ -20,7 +20,6 @@ export function handleListed(event: ListedEvent): void {
     listing.paymentToken = event.params.listing.paymentToken;
     listing.askPrice = event.params.listing.askPrice;
     listing.createdAt = event.block.timestamp;
-    listing.allowed = [];
 
     listing.save();
 }
@@ -54,7 +53,7 @@ export function handleAllowlistUpdated(event: AllowlistUpdatedEvent): void {
     let allowed = Allowed.load(allowlistId);
     if (allowed) {
         if (event.params._isAllowed === false) {
-            store.remove("Allow", allowlistId);
+            store.remove("Allowed", allowlistId);
             return;
         }
     } else {
