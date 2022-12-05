@@ -51,8 +51,23 @@ export function handleAllowlistUpdated(event: AllowlistUpdatedEvent): void {
 
     let newAllowlist: Bytes[] = listing.allowlist;
 
+    // Add to allowlist
     if (event.params._isAllowed == true) {
-        newAllowlist.push(event.params.buyer);
+        // Check if address is already on allowlist
+        let isAlreadyOnList = false;
+        for (let i = 0; i < listing.allowlist.length; i++) {
+            if (listing.allowlist[i] == event.params.buyer) {
+                isAlreadyOnList = true;
+                break;
+            }
+        }
+        // Only add user if not on allowlist yet
+        if (!isAlreadyOnList) {
+            newAllowlist.push(event.params.buyer);
+        } else {
+            log.debug("Buyer is already on the allowlist", []);
+        }
+        // Remove from allowlist
     } else {
         newAllowlist = [];
         for (let i = 0; i < listing.allowlist.length; i++) {
