@@ -5,35 +5,20 @@ import "forge-std/Test.sol";
 import { console } from "forge-std/console.sol";
 
 import { IPNFT3525V21 } from "../src/IPNFT3525V21.sol";
-import { UUPSProxy } from "../src/UUPSProxy.sol";
 
-contract IPNFT3525V21Test is Test {
+import { Mintpass } from "../src/Mintpass.sol";
+import { UUPSProxy } from "../src/UUPSProxy.sol";
+import { IPNFTMintHelper } from "./IPNFTMintHelper.sol";
+import { IPNFTMetadata } from "../src/IPNFTMetadata.sol";
+
+contract IPNFT3525V21Test is IPNFTMintHelper {
     IPNFT3525V21 implementationV21;
     UUPSProxy proxy;
     IPNFT3525V21 ipnft;
 
-    address deployer = makeAddr("chucknorris");
-
     address alice = makeAddr("alice");
     address bob = makeAddr("bob");
     address charlie = makeAddr("charlie");
-
-    string ipfsUri = "ipfs://QmYwAPJzv5CZsnA9LqYKXfutJzBg68";
-    string arUri = "ar://tNbdHqh3AVDHVD06P0OPUXSProI5kGcZZw8IvLkekSY";
-    uint256 tokenPrice = 1 ether;
-
-    function reserveAToken(address to, string memory name, string memory tokenUri) internal returns (uint256) {
-        uint256 reservationId = ipnft.reserve();
-        ipnft.updateReservation(reservationId, name, tokenUri);
-        //bytes memory ipnftArgs = abi.encode(title, tokenUri);
-        return reservationId;
-    }
-
-    function mintAToken(address to, string memory name, string memory tokenUri) internal returns (uint256) {
-        uint256 reservationId = reserveAToken(to, name, tokenUri);
-        ipnft.mintReservation(to, reservationId, 1);
-        return reservationId;
-    }
 
     function setUp() public {
         vm.startPrank(deployer);
@@ -41,6 +26,11 @@ contract IPNFT3525V21Test is Test {
         proxy = new UUPSProxy(address(implementationV21), "");
         ipnft = IPNFT3525V21(address(proxy));
         ipnft.initialize();
+
+        ipnft.setMetadataGenerator(new IPNFTMetadata());
+
+        mintpass = new Mintpass(address(ipnft));
+        ipnft.setMintpassContract(address(mintpass));
         vm.stopPrank();
     }
 
@@ -49,42 +39,42 @@ contract IPNFT3525V21Test is Test {
     }
 
     function testMinting() public {
-        mintAToken(alice, "IP Title", arUri);
+        mintAToken(ipnft, alice);
 
         assertEq(ipnft.totalSupply(), 1);
         string memory tokenUri_ = ipnft.tokenURI(1);
 
-        //todo you obviously can't simply parse json in solidity. Add logic testing of this one to a hardhat test, maybe.
         assertEq(
             tokenUri_,
-            "data:application/json;base64,eyJuYW1lIjoiSVAgVGl0bGUiLCJleHRlcm5hbF91cmwiOiJhcjovL3ROYmRIcWgzQVZESFZEMDZQME9QVVhTUHJvSTVrR2NaWnc4SXZMa2VrU1kifQ=="
+            "data:application/json;base64,eyJuYW1lIjoiSVAtTkZUIFRlc3QiLCJkZXNjcmlwdGlvbiI6IlNvbWUgRGVzY3JpcHRpb24iLCJpbWFnZSI6ImFyOi8vN0RlNmRSTERhTWhNZUM2VXRtOWJCOVBSYmN2S2RpLXJ3X3NETThwSlNNVSIsImJhbGFuY2UiOiIxMDAwMDAwIiwic2xvdCI6MSwicHJvcGVydGllcyI6IHsidHlwZSI6IklQLU5GVCIsImV4dGVybmFsX3VybCI6Imh0dHBzOi8vZGlzY292ZXIubW9sZWN1bGUudG8vaXBuZnQvMSIsImFncmVlbWVudF91cmwiOiJpcGZzOi8vYmFmeWJlaWV3c2Y1aWxkcGpiY29rMjV0cms2emJnYWZldTRmdXhvaDVpd2ptdmNtZmk2MmRtb2hjd20vYWdyZWVtZW50Lmpzb24iLCJwcm9qZWN0X2RldGFpbHNfdXJsIjoiaXBmczovL2JhZnliZWlmaHdqN2d4N2ZqYjJkcjNxbzRhbTZrb2cycHNlZWdybmZyZzUzcG81NXpyeHpzYzZqNDVlL3Byb2plY3REZXRhaWxzLmpzb24ifX0="
         );
+        //'data:application/json,{"name":"IP-NFT Test","description":"Some Description","image":"ar://7De6dRLDaMhMeC6Utm9bB9PRbcvKdi-rw_sDM8pJSMU","balance":"1000000","slot":1,"properties": {"type":"IP-NFT","external_url":"https://discover.molecule.to/ipnft/1","agreement_url":"ipfs://bafybeiewsf5ildpjbcok25trk6zbgafeu4fuxoh5iwjmvcmfi62dmohcwm/agreement.json","project_details_url":"ipfs://bafybeifhwj7gx7fjb2dr3qo4am6kog2pseegrnfrg53po55zrxzsc6j45e/projectDetails.json"}}'
 
         assertEq(ipnft.balanceOf(alice), 1);
         assertEq(ipnft.tokenOfOwnerByIndex(alice, 0), 1);
     }
 
-    // todo: this is currently unsupported since I removed the initial fraction arg
-    // function testCanMintWithMoreThanOneFraction() public {
-    //     uint64[] memory fractions = new uint64[](2);
-    //     fractions[0] = 50;
-    //     fractions[1] = 50;
+    // // todo: this is currently unsupported since I removed the initial fraction arg
+    // // function testCanMintWithMoreThanOneFraction() public {
+    // //     uint64[] memory fractions = new uint64[](2);
+    // //     fractions[0] = 50;
+    // //     fractions[1] = 50;
 
-    //     bytes memory ipnftArgs = abi.encode("", "", "", fractions);
+    // //     bytes memory ipnftArgs = abi.encode("", "", "", fractions);
 
-    //     ipnft.mint(alice, ipnftArgs);
+    // //     ipnft.mint(alice, ipnftArgs);
 
-    //     assertEq(ipnft.ownerOf(1), alice);
-    //     assertEq(ipnft.ownerOf(2), alice);
+    // //     assertEq(ipnft.ownerOf(1), alice);
+    // //     assertEq(ipnft.ownerOf(2), alice);
 
-    //     assertEq(ipnft.balanceOf(1), 50);
-    //     assertEq(ipnft.balanceOf(2), 50);
+    // //     assertEq(ipnft.balanceOf(1), 50);
+    // //     assertEq(ipnft.balanceOf(2), 50);
 
-    //     assertEq(ipnft.tokenSupplyInSlot(1), 2);
-    // }
+    // //     assertEq(ipnft.tokenSupplyInSlot(1), 2);
+    // // }
 
     function testSplitandMerge() public {
-        mintAToken(alice, "IP Title", arUri);
+        mintAToken(ipnft, alice);
 
         assertEq(ipnft.balanceOf(1), 1_000_000);
         assertEq(ipnft.balanceOf(alice), 1);
@@ -126,8 +116,8 @@ contract IPNFT3525V21Test is Test {
     }
 
     function testTransferValueToANewUser() public {
+        mintAToken(ipnft, alice);
         vm.startPrank(alice);
-        mintAToken(alice, "IP Title", arUri);
         ipnft.transferFrom(1, bob, 500_000);
         vm.stopPrank();
 
@@ -136,8 +126,17 @@ contract IPNFT3525V21Test is Test {
         assertEq(ipnft.balanceOf(1), 500_000);
         assertEq(ipnft.balanceOf(2), 500_000);
 
-        //that's because both tokens yield the slot's metadata:
-        assertEq(ipnft.tokenURI(1), ipnft.tokenURI(2));
+        assertEq(
+            ipnft.tokenURI(1),
+            "data:application/json;base64,eyJuYW1lIjoiSVAtTkZUIFRlc3QiLCJkZXNjcmlwdGlvbiI6IlNvbWUgRGVzY3JpcHRpb24iLCJpbWFnZSI6ImFyOi8vN0RlNmRSTERhTWhNZUM2VXRtOWJCOVBSYmN2S2RpLXJ3X3NETThwSlNNVSIsImJhbGFuY2UiOiI1MDAwMDAiLCJzbG90IjoxLCJwcm9wZXJ0aWVzIjogeyJ0eXBlIjoiSVAtTkZUIiwiZXh0ZXJuYWxfdXJsIjoiaHR0cHM6Ly9kaXNjb3Zlci5tb2xlY3VsZS50by9pcG5mdC8xIiwiYWdyZWVtZW50X3VybCI6ImlwZnM6Ly9iYWZ5YmVpZXdzZjVpbGRwamJjb2syNXRyazZ6YmdhZmV1NGZ1eG9oNWl3am12Y21maTYyZG1vaGN3bS9hZ3JlZW1lbnQuanNvbiIsInByb2plY3RfZGV0YWlsc191cmwiOiJpcGZzOi8vYmFmeWJlaWZod2o3Z3g3ZmpiMmRyM3FvNGFtNmtvZzJwc2VlZ3JuZnJnNTNwbzU1enJ4enNjNmo0NWUvcHJvamVjdERldGFpbHMuanNvbiJ9fQ=="
+        );
+        // 'data:application/json,{"name":"IP-NFT Test","description":"Some Description","image":"ar://7De6dRLDaMhMeC6Utm9bB9PRbcvKdi-rw_sDM8pJSMU","balance":"500000","slot":1,"properties": {"type":"IP-NFT","external_url":"https://discover.molecule.to/ipnft/1","agreement_url":"ipfs://bafybeiewsf5ildpjbcok25trk6zbgafeu4fuxoh5iwjmvcmfi62dmohcwm/agreement.json","project_details_url":"ipfs://bafybeifhwj7gx7fjb2dr3qo4am6kog2pseegrnfrg53po55zrxzsc6j45e/projectDetails.json"}}'
+
+        assertEq(
+            ipnft.tokenURI(2),
+            "data:application/json;base64,eyJuYW1lIjoiSVAtTkZUIFRlc3QiLCJkZXNjcmlwdGlvbiI6IlNvbWUgRGVzY3JpcHRpb24iLCJpbWFnZSI6ImFyOi8vN0RlNmRSTERhTWhNZUM2VXRtOWJCOVBSYmN2S2RpLXJ3X3NETThwSlNNVSIsImJhbGFuY2UiOiI1MDAwMDAiLCJzbG90IjoxLCJwcm9wZXJ0aWVzIjogeyJ0eXBlIjoiSVAtTkZUIiwiZXh0ZXJuYWxfdXJsIjoiaHR0cHM6Ly9kaXNjb3Zlci5tb2xlY3VsZS50by9pcG5mdC8yIiwiYWdyZWVtZW50X3VybCI6ImlwZnM6Ly9iYWZ5YmVpZXdzZjVpbGRwamJjb2syNXRyazZ6YmdhZmV1NGZ1eG9oNWl3am12Y21maTYyZG1vaGN3bS9hZ3JlZW1lbnQuanNvbiIsInByb2plY3RfZGV0YWlsc191cmwiOiJpcGZzOi8vYmFmeWJlaWZod2o3Z3g3ZmpiMmRyM3FvNGFtNmtvZzJwc2VlZ3JuZnJnNTNwbzU1enJ4enNjNmo0NWUvcHJvamVjdERldGFpbHMuanNvbiJ9fQ=="
+        );
+        // 'data:application/json,{"name":"IP-NFT Test","description":"Some Description","image":"ar://7De6dRLDaMhMeC6Utm9bB9PRbcvKdi-rw_sDM8pJSMU","balance":"500000","slot":1,"properties": {"type":"IP-NFT","external_url":"https://discover.molecule.to/ipnft/2","agreement_url":"ipfs://bafybeiewsf5ildpjbcok25trk6zbgafeu4fuxoh5iwjmvcmfi62dmohcwm/agreement.json","project_details_url":"ipfs://bafybeifhwj7gx7fjb2dr3qo4am6kog2pseegrnfrg53po55zrxzsc6j45e/projectDetails.json"}}'
 
         //todo this fails because tokenSupplyInSlot isn't increased during transfers.
         //https://github.com/Network-Goods/hypercerts-protocol/issues/54
@@ -180,8 +179,8 @@ contract IPNFT3525V21Test is Test {
     // }
 
     function testFailCantMergeTokensThatYouDontOwn() public {
+        mintAToken(ipnft, alice);
         vm.startPrank(alice);
-        mintAToken(alice, "IP Title", arUri);
         ipnft.transferFrom(1, bob, 5);
         uint256[] memory tokenIdsToMerge = new uint256[](2);
         tokenIdsToMerge[0] = 2;
@@ -190,8 +189,8 @@ contract IPNFT3525V21Test is Test {
     }
 
     function testBurnMintedTokens() public {
+        mintAToken(ipnft, alice);
         vm.startPrank(alice);
-        mintAToken(alice, "IP Title", arUri);
         ipnft.burn(1);
         vm.stopPrank();
 
@@ -199,8 +198,8 @@ contract IPNFT3525V21Test is Test {
     }
 
     function testFailBurnOwnedTokens() public {
+        mintAToken(ipnft, alice);
         vm.startPrank(alice);
-        mintAToken(alice, "IP Title", arUri);
         ipnft.transferFrom(1, bob, 500_000);
         vm.stopPrank();
 

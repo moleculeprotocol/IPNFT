@@ -52,7 +52,7 @@ contract SchmackoSwapTest is Test {
         vm.startPrank(seller);
         nft.setApprovalForAll(address(schmackoSwap), true);
         nftId = nft.reserve();
-        nft.mintReservation(seller, nftId, 1);
+        nft.mintReservation(seller, nftId, 1, "");
         vm.stopPrank();
 
         testToken.mintTo(buyer, 1 ether);

@@ -2,8 +2,25 @@ type Ipnft @entity {
     id: ID! #tokenId
     owner: Bytes! # address
     createdAt: BigInt!
-    tokenURI: String!
+
+    balance: BigInt!
+    slotId: ID!
+
+    name: String
+    description: String
+    image: String
+
+    external_url: String
+    agreement_url: String
+    project_details_url: String
+
     listings: [Listing!] @derivedFrom(field: "ipnft")
+}
+
+type Slot @entity {
+    id: ID! #slotId
+    metadatab64: String
+    #ipnfts: [Ipnft!] @derivedFrom(field: "slot")
 }
 
 type Listing @entity {
@@ -16,19 +33,32 @@ type Listing @entity {
     unlistedAt: BigInt
     purchasedAt: BigInt
     buyer: Bytes #address
-    allowlist: [Bytes!]! #addresses that are allowed to buy
+    allowed: [Allowed!] @derivedFrom(field: "listing")
+}
+
+type Allowed @entity {
+    id: ID! #listingid-account
+    account: Bytes!
+    listing: Listing!
+    allowed: Boolean!
 }
 
 type Reservation @entity {
     id: ID! #reservationId will be future tokenId
     owner: Bytes! #address
-    uri: String
+    name: String
     createdAt: BigInt!
+}
+
+enum MintpassStatus {
+    DEFAULT
+    REDEEMED
+    REVOKED
 }
 
 type Mintpass @entity {
     id: ID! #tokenId
     owner: Bytes! #address
     createdAt: BigInt!
-    valid: Boolean
+    status: MintpassStatus
 }

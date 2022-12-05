@@ -1,32 +1,47 @@
-import { log, store } from "@graphprotocol/graph-ts";
+import { Address, log, store } from "@graphprotocol/graph-ts";
 import {
+    Redeemed as RedeemedEvent,
     Revoked as RevokedEvent,
-    TokenMinted as TokenMintedEvent,
-    TokenBurned as TokenBurnedEvent
+    Transfer as TransferEvent
 } from "../generated/Mintpass/Mintpass";
 import { Mintpass } from "../generated/schema";
 
-export function handleTokenMinted(event: TokenMintedEvent): void {
-    let mintpass = new Mintpass(event.params.tokenId.toString());
-    mintpass.owner = event.params.owner;
-    mintpass.createdAt = event.block.timestamp;
-    mintpass.valid = true;
-    mintpass.save();
+export function handleTransfer(event: TransferEvent): void {
+    if (event.params.from == Address.zero()) {
+        //mint
+        let mintpass = new Mintpass(event.params.tokenId.toString());
+        mintpass.owner = event.params.to;
+        mintpass.createdAt = event.block.timestamp;
+        mintpass.status = "DEFAULT";
+        mintpass.save();
+    } else if (event.params.to == Address.zero()) {
+        //burn
+        store.remove("Mintpass", event.params.tokenId.toString());
+    }
 }
 
 export function handleRevoked(event: RevokedEvent): void {
     let mintpass = Mintpass.load(event.params.tokenId.toString());
     if (!mintpass) {
-        log.debug(
-            `could not load mintpass from tokenid: ${event.params.tokenId.toString()}`,
+        log.warning(
+            `could not load mintpass ${event.params.tokenId.toString()}`,
             []
         );
-    } else {
-        mintpass.valid = false;
-        mintpass.save();
+        return;
     }
+    mintpass.status = "REVOKED";
+    mintpass.save();
 }
 
-export function handleTokenBurned(event: TokenBurnedEvent): void {
-    store.remove("Mintpass", event.params.tokenId.toString());
+export function handleRedeemed(event: RedeemedEvent): void {
+    let mintpass = Mintpass.load(event.params.tokenId.toString());
+    if (!mintpass) {
+        log.warning(
+            `could not load mintpass ${event.params.tokenId.toString()}`,
+            []
+        );
+        return;
+    }
+    mintpass.status = "REDEEMED";
+    mintpass.save();
 }

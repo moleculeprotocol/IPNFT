@@ -10,6 +10,8 @@ import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 contract Mintpass is Ownable, ERC721BBaseTokenURI, ERC721BBurnable {
     error AlreadyRedeemed();
     error NotRedeemable();
+    error NotOwningMintpass(uint256 id);
+    error MintPassRevoked(uint256 id);
 
     enum Status {
         DEFAULT, //0
@@ -32,16 +34,9 @@ contract Mintpass is Ownable, ERC721BBaseTokenURI, ERC721BBurnable {
      * EVENTS
      *
      */
-
-    /// Event emitted when token `tokenId` of `owner` is revoked
-    /// @param tokenId Identifier of the token
     event Revoked(uint256 indexed tokenId);
-
-    /// Event emitted when token is burned
-    /// @param tokenId Identifier of the token
-    event TokenBurned(uint256 indexed tokenId);
-
-    event TokenRedeemed(uint256 indexed tokenId);
+    event Redeemed(uint256 indexed tokenId);
+    event Burned(uint256 indexed tokenId);
 
     /**
      *
@@ -61,6 +56,16 @@ contract Mintpass is Ownable, ERC721BBaseTokenURI, ERC721BBurnable {
         _safeMint(to, amount);
     }
 
+    function authorizeMint(address to, uint256 mintPassId) public view returns (bool) {
+        if (ownerOf(mintPassId) != to) {
+            revert NotOwningMintpass(mintPassId);
+        }
+        if (!isRedeemable(mintPassId)) {
+            revert MintPassRevoked(mintPassId);
+        }
+        return true;
+    }
+
     /// @dev Mark the token as revoked
     /// @param tokenId Identifier of the token
     function revoke(uint256 tokenId) external onlyOwner {
@@ -77,7 +82,7 @@ contract Mintpass is Ownable, ERC721BBaseTokenURI, ERC721BBurnable {
             revert NotRedeemable();
         }
         _status[tokenId] = Status.REDEEMED;
-        emit TokenRedeemed(tokenId);
+        emit Redeemed(tokenId);
     }
 
     /// @dev Returns the tokenURI attached to a token
@@ -109,13 +114,6 @@ contract Mintpass is Ownable, ERC721BBaseTokenURI, ERC721BBurnable {
                 )
             )
         );
-    }
-
-    /// @dev burns a token. This is only possible by the owner of the token
-    /// @param tokenId Identifier of the token to be burned
-    function burn(uint256 tokenId) public virtual override {
-        super.burn(tokenId);
-        emit TokenBurned(tokenId);
     }
 
     function name() public pure returns (string memory) {
