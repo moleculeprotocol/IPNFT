@@ -30,6 +30,9 @@ describe("IPNFT3525", function () {
   //this is the same as IPNFT3525.t.sol:testMinting
   it("can mint and generate metadata on chain", async function () {
     // Give bob a mintpass
+    await mintpass
+        .connect(deployer)
+        .grantRole(await mintpass.MODERATOR(), deployer.address);
     await mintpass.connect(deployer).batchMint(bob.address, 1);
     expect(await mintpass.ownerOf(1)).to.equal(bob.address);
   })
