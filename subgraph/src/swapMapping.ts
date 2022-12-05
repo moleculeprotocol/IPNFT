@@ -1,5 +1,5 @@
-import { Bytes, log } from "@graphprotocol/graph-ts";
-import { Ipnft, Listing } from "../generated/schema";
+import { Bytes, log, store } from "@graphprotocol/graph-ts";
+import { Allowed, Ipnft, Listing } from "../generated/schema";
 import {
     AllowlistUpdated as AllowlistUpdatedEvent,
     Listed as ListedEvent,
@@ -20,7 +20,7 @@ export function handleListed(event: ListedEvent): void {
     listing.paymentToken = event.params.listing.paymentToken;
     listing.askPrice = event.params.listing.askPrice;
     listing.createdAt = event.block.timestamp;
-    listing.allowlist = [];
+    listing.allowed = [];
 
     listing.save();
 }
@@ -49,36 +49,26 @@ export function handleAllowlistUpdated(event: AllowlistUpdatedEvent): void {
         return;
     }
 
-    let newAllowlist: Bytes[] = listing.allowlist;
+    const allowlistId = listing.id + "-" + event.params.buyer.toHexString();
 
-    // Add to allowlist
-    if (event.params._isAllowed == true) {
-        // Check if address is already on allowlist
-        let isAlreadyOnList = false;
-        for (let i = 0; i < listing.allowlist.length; i++) {
-            if (listing.allowlist[i] == event.params.buyer) {
-                isAlreadyOnList = true;
-                break;
-            }
+    let allowed = Allowed.load(allowlistId);
+    if (allowed) {
+        if (event.params._isAllowed === false) {
+            store.remove("Allow", allowlistId);
+            return;
         }
-        // Only add user if not on allowlist yet
-        if (!isAlreadyOnList) {
-            newAllowlist.push(event.params.buyer);
-        } else {
-            log.debug("Buyer is already on the allowlist", []);
-        }
-        // Remove from allowlist
     } else {
-        newAllowlist = [];
-        for (let i = 0; i < listing.allowlist.length; i++) {
-            if (listing.allowlist[i] != event.params.buyer) {
-                newAllowlist.push(listing.allowlist[i]);
-            }
+        if (event.params._isAllowed === false) {
+            return;
         }
+        allowed = new Allowed(allowlistId);
     }
 
-    listing.allowlist = newAllowlist;
-    listing.save();
+    allowed.account = event.params.buyer;
+    allowed.listing = listing.id;
+    allowed.allowed = event.params._isAllowed;
+
+    allowed.save();
 }
 
 export function handlePurchased(event: PurchasedEvent): void {
