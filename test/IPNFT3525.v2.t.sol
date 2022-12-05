@@ -42,6 +42,7 @@ contract IPNFT3525V2Test is IPNFTMintHelper {
         ipnft.setMetadataGenerator(new IPNFTMetadata());
 
         mintpass = new Mintpass(address(ipnft));
+        mintpass.grantRole(mintpass.MODERATOR(), deployer);
         ipnft.setMintpassContract(address(mintpass));
         vm.stopPrank();
     }

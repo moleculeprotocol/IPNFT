@@ -35,6 +35,7 @@ contract UpgradeV2toV21Test is IPNFTMintHelper {
         ipnftV2.setMetadataGenerator(new IPNFTMetadata());
 
         mintpass = new Mintpass(address(ipnftV2));
+        mintpass.grantRole(mintpass.MODERATOR(), deployer);
         ipnftV2.setMintpassContract(address(mintpass));
         vm.stopPrank();
     }
