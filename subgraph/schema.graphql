@@ -33,7 +33,14 @@ type Listing @entity {
     unlistedAt: BigInt
     purchasedAt: BigInt
     buyer: Bytes #address
-    allowlist: [Bytes!]! #addresses that are allowed to buy
+    allowed: [Allowed!] @derivedFrom(field: "listing")
+}
+
+type Allowed @entity {
+    id: ID! #listingid-account
+    account: Bytes!
+    listing: Listing!
+    allowed: Boolean!
 }
 
 type Reservation @entity {
