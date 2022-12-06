@@ -89,15 +89,12 @@ contract UpgradeV2toV21Test is IPNFTMintHelper {
         deployUpgrade();
 
         vm.startPrank(alice);
-        uint256[] memory fractions = new uint256[](2);
-        fractions[0] = 500_000;
-        fractions[1] = 500_000;
-
-        ipnftV21.split(1, fractions);
+        ipnftV21.transferFrom(1, bob, 500_000);
         vm.stopPrank();
 
         assertEq(ipnftV21.totalSupply(), 2);
-        assertEq(ipnftV21.balanceOf(alice), 2);
+        assertEq(ipnftV21.balanceOf(alice), 1);
+        assertEq(ipnftV21.balanceOf(bob), 1);
         assertEq(ipnftV21.balanceOf(1), 500_000);
         assertEq(ipnftV21.balanceOf(2), 500_000);
         assertEq(ipnftV21.slotOf(2), 1);
@@ -131,6 +128,7 @@ contract UpgradeV2toV21Test is IPNFTMintHelper {
         deployUpgrade();
 
         assertEq(ipnftV21.slotOf(1), 1);
+        assertEq(ipnftV21.slotOf(2), 2);
         assertEq(ipnftV21.tokenSupplyInSlot(1), 1);
         assertEq(ipnftV21.tokenSupplyInSlot(2), 1);
 
@@ -147,8 +145,7 @@ contract UpgradeV2toV21Test is IPNFTMintHelper {
         assertEq(ipnftV21.slotOf(2), 2);
         assertEq(ipnftV21.slotOf(3), 1);
 
-        // //todo this *must* be 2, no?
-        // //assertEq(ipnftV21.tokenSupplyInSlot(1), 1);
+        assertEq(ipnftV21.tokenSupplyInSlot(1), 2);
 
         vm.startPrank(alice);
         ipnftV21.transferFrom(1, charlie, 100);
@@ -159,11 +156,8 @@ contract UpgradeV2toV21Test is IPNFTMintHelper {
         assertEq(ipnftV21.ownerOf(4), charlie);
 
         vm.startPrank(charlie);
-        uint256[] memory tokensToMerge = new uint256[](2);
-        tokensToMerge[0] = 4;
-        tokensToMerge[1] = 3;
-
-        ipnftV21.merge(tokensToMerge);
+        //ipnftV21.merge(tokensToMerge);
+        ipnftV21.transferFrom(4, 3, 100);
         vm.stopPrank();
 
         assertEq(ipnftV21.balanceOf(3), 105);
@@ -174,10 +168,10 @@ contract UpgradeV2toV21Test is IPNFTMintHelper {
         vm.startPrank(alice);
         reservationId = ipnftV21.reserve();
         ipnftV21.updateReservation(reservationId, encodedMetadata);
-        uint256 newSlotOnV3 = ipnftV2.mintReservation(alice, reservationId, 3, "");
+        uint256 newSlot = ipnftV2.mintReservation(alice, reservationId, 3, "");
         vm.stopPrank();
 
-        assertEq(newSlotOnV3, 3);
+        assertEq(newSlot, 3);
         assertEq(ipnftV21.ownerOf(5), alice);
 
         assertEq(ipnftV21.slotOf(5), 3);

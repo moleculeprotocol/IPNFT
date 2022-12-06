@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.17;
 
-import "hypercerts/ERC3525SlotEnumerableUpgradeable.sol";
+import { ERC3525SlotEnumerableUpgradeable } from "@solv/erc3525/ERC3525SlotEnumerableUpgradeable.sol";
+import { ERC3525BurnableUpgradeable } from "@solv/erc3525/ERC3525BurnableUpgradeable.sol";
+import { IERC3525 } from "@solv/erc3525/IERC3525.sol";
+import { ERC3525Upgradeable } from "@solv/erc3525/ERC3525Upgradeable.sol";
 
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
@@ -26,9 +29,6 @@ import { IIPNFTMetadata } from "./IPNFTMetadata.sol";
 |   ▓▓ \ ▓▓            | ▓▓  \▓▓▓ ▓▓        | ▓▓
  \▓▓▓▓▓▓\▓▓             \▓▓   \▓▓\▓▓         \▓▓*/
 
-/// @title minting logic
-/// @notice Contains functions and events to initialize and issue an ipnft
-/// @author contains code of bitbeckers, mr_bluesky
 contract IPNFT3525V2 is
     Initializable,
     ERC3525SlotEnumerableUpgradeable,
@@ -73,7 +73,7 @@ contract IPNFT3525V2 is
     /// @notice Emitted when an NFT is minted
     /// @param minter the minter's address
     /// @param tokenId the minted token (slot) id
-    event IPNFTMinted(address indexed minter, uint256 indexed tokenId);
+    event IPNFTMinted(address indexed minter, uint256 indexed tokenId, uint256 indexed slotId);
 
     /// @dev https://docs.opensea.io/docs/metadata-standards#freezing-metadata
     event PermanentURI(string _value, uint256 indexed _id);
@@ -88,6 +88,10 @@ contract IPNFT3525V2 is
     error InvalidInput();
     error NeedsMintpass();
     error NotOwningReservation(uint256 id);
+    error ToZeroAddress();
+    error NonExistentSlot(uint256 id);
+    error NotApprovedOrOwner();
+    error NotAvailInV2();
 
     /**
      *
@@ -105,7 +109,8 @@ contract IPNFT3525V2 is
     function initialize() public initializer {
         __Ownable_init();
         __UUPSUpgradeable_init();
-        __ERC3525Upgradeable_init();
+        __ERC3525_init(NAME, SYMBOL, DECIMALS);
+        __ERC3525SlotEnumerable_init();
 
         _reservationCounter.increment(); //start at 1.
     }
@@ -171,9 +176,7 @@ contract IPNFT3525V2 is
         mintpass.authorizeMint(_msgSender(), mintPassId);
 
         IPNFT memory ipnft = finalMetadata.length > 0 ? _parseData(finalMetadata) : _reservations[reservationId].ipnft;
-        ipnft.totalUnits = DEFAULT_VALUE;
         ipnft.version = uint16(0);
-        ipnft.exists = true;
         ipnft.minter = _msgSender();
 
         //todo: emit this, once we decided if we're sure that this one is going to be final.
@@ -182,11 +185,12 @@ contract IPNFT3525V2 is
         delete _reservations[reservationId];
         _ipnfts[reservationId] = ipnft;
 
-        /// @see _beforeValueTransfer: it creates slot with that reservation id
-        _mintValue(to, reservationId, DEFAULT_VALUE);
-
         mintpass.redeem(mintPassId);
-        emit IPNFTMinted(to, reservationId);
+        _createSlot(reservationId);
+        /// @see _beforeValueTransfer: it creates slot with that reservation id
+        uint256 tokenId = _mint(to, reservationId, DEFAULT_VALUE);
+
+        emit IPNFTMinted(to, tokenId, reservationId);
 
         return reservationId;
     }
@@ -223,7 +227,7 @@ contract IPNFT3525V2 is
     }
 
     function slotURI(uint256 slotId) public view override returns (string memory) {
-        if (!_ipnfts[slotId].exists) {
+        if (!_slotExists(slotId)) {
             revert NonExistentSlot(slotId);
         }
         IPNFT memory slot = _ipnfts[slotId];
@@ -232,7 +236,7 @@ contract IPNFT3525V2 is
 
     function tokenURI(uint256 tokenId) public view override returns (string memory) {
         uint256 slotId = slotOf(tokenId);
-        if (!_ipnfts[slotId].exists) {
+        if (!_slotExists(slotId)) {
             revert NonExistentSlot(slotId);
         }
         IPNFT memory token = _ipnfts[slotId];
@@ -244,22 +248,22 @@ contract IPNFT3525V2 is
         return _metadataGenerator.generateContractURI();
     }
 
-    function burn(uint256 tokenId_) public {
-        uint256 ipnftId = slotOf(tokenId_);
-        IPNFT storage ipnft = _ipnfts[ipnftId];
-
-        //todo this is a leftover of the fractional impl. Leave it for additional security.
-        if (balanceOf(tokenId_) != ipnft.totalUnits) {
-            revert InsufficientBalance(ipnft.totalUnits, balanceOf(tokenId_));
+    function burn(uint256 tokenId_) public virtual {
+        if (!_isApprovedOrOwner(_msgSender(), tokenId_)) {
+            revert NotApprovedOrOwner();
         }
+        super._burn(tokenId_);
+    }
 
-        ipnft.exists = false;
-        _burn(tokenId_);
+    function burnValue(uint256 tokenId_, uint256 burnValue_) public virtual {
+        revert("not available in V2");
+        // require(_isApprovedOrOwner(_msgSender(), tokenId_), "ERC3525: caller is not token owner nor approved");
+        // ERC3525Upgradeable._burnValue(tokenId_, burnValue_);
     }
 
     /**
      *
-     * DISABLE value transfers and splits in V2
+     * DISABLE value transfers in V2
      *
      */
 
@@ -267,29 +271,44 @@ contract IPNFT3525V2 is
         public
         payable
         virtual
-        override
+        override (IERC3525, ERC3525Upgradeable)
         returns (uint256)
     {
         fromTokenId_;
         to_;
         value_;
-        revert("not available in V2");
+        revert NotAvailInV2();
     }
 
-    function transferFrom(uint256 fromTokenId_, uint256 toTokenId_, uint256 value_) public payable virtual override {
+    function transferFrom(uint256 fromTokenId_, uint256 toTokenId_, uint256 value_)
+        public
+        payable
+        virtual
+        override (IERC3525, ERC3525Upgradeable)
+    {
         fromTokenId_;
         toTokenId_;
         value_;
-        revert("not available in V2");
+        revert NotAvailInV2();
     }
 
-    function approve(uint256 tokenId_, address to_, uint256 value_) external payable virtual override {
+    function approve(uint256 tokenId_, address to_, uint256 value_)
+        public
+        payable
+        virtual
+        override (IERC3525, ERC3525Upgradeable)
+    {
         tokenId_;
         to_;
         value_;
-        revert("not available in V2");
+        revert NotAvailInV2();
     }
 
+    function mintValue(uint256 tokenId_, uint256 value_) public virtual onlyOwner {
+        tokenId_;
+        value_;
+        revert NotAvailInV2();
+    }
     /**
      *
      * INTERNAL
@@ -333,9 +352,5 @@ contract IPNFT3525V2 is
         onlyOwner // solhint-disable-next-line no-empty-blocks
     {
         //empty block
-    }
-
-    function _msgSender() internal view override (ContextUpgradeable, ERC3525Upgradeable) returns (address sender) {
-        return msg.sender;
     }
 }
