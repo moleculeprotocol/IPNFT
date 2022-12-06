@@ -3,15 +3,18 @@ pragma solidity ^0.8.17;
 
 import "erc721b/extensions/ERC721BBaseTokenURI.sol";
 import "erc721b/extensions/ERC721BBurnable.sol";
-import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
+import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol";
 import { Base64 } from "@openzeppelin/contracts/utils/Base64.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 
-contract Mintpass is Ownable, ERC721BBaseTokenURI, ERC721BBurnable {
+contract Mintpass is AccessControl, ERC721BBaseTokenURI, ERC721BBurnable {
     error AlreadyRedeemed();
     error NotRedeemable();
     error NotOwningMintpass(uint256 id);
     error MintPassRevoked(uint256 id);
+
+    bytes32 public constant MODERATOR = keccak256("MODERATOR");
+    bytes32 public constant REDEEMER = keccak256("REDEEMER");
 
     enum Status {
         DEFAULT, //0
@@ -19,14 +22,12 @@ contract Mintpass is Ownable, ERC721BBaseTokenURI, ERC721BBurnable {
         REVOKED
     }
 
-    /// @dev Stores the address of the associated IP-NFT contract.
-    address public ipnftContract;
-
     // Mapping from tokenId to validity of token.
     mapping(uint256 => Status) private _status;
 
-    constructor(address ipnftContract_) Ownable() {
-        ipnftContract = ipnftContract_;
+    constructor(address ipnftContract_) {
+        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _grantRole(REDEEMER, ipnftContract_);
     }
 
     /**
@@ -52,11 +53,11 @@ contract Mintpass is Ownable, ERC721BBaseTokenURI, ERC721BBurnable {
         return _status[tokenId] == Status.DEFAULT;
     }
 
-    function batchMint(address to, uint256 amount) external onlyOwner {
+    function batchMint(address to, uint256 amount) external onlyRole(MODERATOR) {
         _safeMint(to, amount);
     }
 
-    function authorizeMint(address to, uint256 mintPassId) public view returns (bool) {
+    function authorizeMint(address to, uint256 mintPassId) public view onlyRole(REDEEMER) returns (bool) {
         if (ownerOf(mintPassId) != to) {
             revert NotOwningMintpass(mintPassId);
         }
@@ -68,7 +69,7 @@ contract Mintpass is Ownable, ERC721BBaseTokenURI, ERC721BBurnable {
 
     /// @dev Mark the token as revoked
     /// @param tokenId Identifier of the token
-    function revoke(uint256 tokenId) external onlyOwner {
+    function revoke(uint256 tokenId) external onlyRole(MODERATOR) {
         if (!isRedeemable(tokenId)) {
             revert NotRedeemable();
         }
@@ -76,8 +77,7 @@ contract Mintpass is Ownable, ERC721BBaseTokenURI, ERC721BBurnable {
         emit Revoked(tokenId);
     }
 
-    function redeem(uint256 tokenId) public {
-        require(msg.sender == address(ipnftContract), "Only IPNFT contract can set to redeemed");
+    function redeem(uint256 tokenId) public onlyRole(REDEEMER) {
         if (!isRedeemable(tokenId)) {
             revert NotRedeemable();
         }
@@ -124,7 +124,7 @@ contract Mintpass is Ownable, ERC721BBaseTokenURI, ERC721BBurnable {
         return "IPNFTMNTPSS";
     }
 
-    function supportsInterface(bytes4 interfaceId) public view virtual override (ERC721B, IERC165) returns (bool) {
+    function supportsInterface(bytes4 interfaceId) public view virtual override (ERC721B, IERC165, AccessControl) returns (bool) {
         return interfaceId == type(IERC721Metadata).interfaceId || super.supportsInterface(interfaceId);
     }
 

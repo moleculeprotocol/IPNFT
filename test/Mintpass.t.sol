@@ -18,6 +18,34 @@ contract MintpassTest is Test {
     function setUp() public {
         vm.startPrank(deployer);
         mintPass = new Mintpass(ipnftContract);
+        mintPass.grantRole(mintPass.MODERATOR(), deployer);
+        vm.stopPrank();
+    }
+
+    function testGrantingAndRevokingOfModeratorRole() public {
+        vm.startPrank(deployer);
+        mintPass.grantRole(mintPass.MODERATOR(), bob);
+        mintPass.batchMint(bob,1);
+        vm.stopPrank();
+
+        assertEq(mintPass.ownerOf(1), bob);
+        assertEq(mintPass.balanceOf(bob), 1);
+
+
+        vm.startPrank(bob);
+        mintPass.batchMint(alice, 1);
+        vm.stopPrank();
+
+        assertEq(mintPass.ownerOf(2), alice);
+        assertEq(mintPass.balanceOf(alice), 1);
+
+        vm.startPrank(deployer);
+        mintPass.revokeRole(mintPass.MODERATOR(), bob);
+        vm.stopPrank();
+
+        vm.startPrank(bob);
+        vm.expectRevert();
+        mintPass.batchMint(alice, 1);
         vm.stopPrank();
     }
 
@@ -68,7 +96,7 @@ contract MintpassTest is Test {
 
     function testSafeMintFromNotOwner() public {
         vm.startPrank(bob);
-        vm.expectRevert("Ownable: caller is not the owner");
+        vm.expectRevert();
         mintPass.batchMint(alice, 1);
 
         assertEq(mintPass.balanceOf(alice), 0);
@@ -138,7 +166,7 @@ contract MintpassTest is Test {
         vm.stopPrank();
 
         vm.startPrank(bob);
-        vm.expectRevert("Ownable: caller is not the owner");
+        vm.expectRevert();
         mintPass.revoke(1);
 
         assertEq(mintPass.isRedeemable(1), true);

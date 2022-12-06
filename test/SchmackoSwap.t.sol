@@ -38,6 +38,7 @@ contract SchmackoSwapTest is Test {
         nft = IPNFT(address(proxy));
         nft.initialize();
         mintpass = new Mintpass(address(nft));
+        mintpass.grantRole(mintpass.MODERATOR(), deployer);
         nft.setMintpassContract(address(mintpass));
         mintpass.batchMint(seller, 1);
         vm.stopPrank();
