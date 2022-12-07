@@ -85,7 +85,17 @@ contract FixtureScript is Script {
 
         schmackoSwap = new SchmackoSwap();
         myToken = new MyToken();
-        mintpass = new Mintpass(address(ipnft));
+        mintpass = new Mintpass(address(ipnftV2));
+        mintpass.grantRole(mintpass.MODERATOR(), deployer);
+
+        ipnftV2.setMetadataGenerator(new IPNFTMetadata());
+        ipnftV2.setMintpassContract(address(mintpass));
+
+        console.log("ipnftv2 %s", address(ipnftV2));
+        console.log("swap %s", address(schmackoSwap));
+        console.log("token %s", address(myToken));
+        console.log("pass %s", address(mintpass));
+
         vm.stopBroadcast();
 
         mintMintPass(bob);
