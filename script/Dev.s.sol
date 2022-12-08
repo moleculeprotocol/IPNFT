@@ -13,22 +13,25 @@ contract DevScript is Script {
     string mnemonic = "test test test test test test test test test test test junk";
 
     function run() public {
-        (address deployer, ) = deriveRememberKey(mnemonic, 0);
+        (address deployer,) = deriveRememberKey(mnemonic, 0);
         vm.startBroadcast(deployer);
-        IPNFT ipnft = new IPNFT();
-        UUPSProxy proxy = new UUPSProxy(address(ipnft), "");
-        IPNFT ipnftV2 = IPNFT(address(proxy));
-        ipnftV2.initialize();
+        IPNFT implementationV2 = new IPNFT();
+        UUPSProxy proxy = new UUPSProxy(address(implementationV2), "");
+        IPNFT ipnft = IPNFT(address(proxy));
+        ipnft.initialize();
 
         SchmackoSwap swap = new SchmackoSwap();
         MyToken token = new MyToken();
-        Mintpass pass = new Mintpass(address(ipnftV2));
-        pass.grantRole(pass.MODERATOR(), deployer);
+        Mintpass mintpass = new Mintpass(address(ipnft));
+        mintpass.grantRole(mintpass.MODERATOR(), deployer);
 
-        console.log("ipnftv2 %s", address(ipnftV2));
+        ipnft.setMintpassContract(address(mintpass));
+
+        console.log("ipnftv2 %s", address(ipnft));
         console.log("swap %s", address(swap));
         console.log("token %s", address(token));
-        console.log("pass %s", address(pass));
+        console.log("pass %s", address(mintpass));
+
         vm.stopBroadcast();
     }
 }

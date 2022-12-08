@@ -13,7 +13,6 @@ import { ERC1155Supply } from "@openzeppelin/contracts/token/ERC1155/extensions/
 contract FixtureScript is Script {
     string mnemonic = "test test test test test test test test test test test junk";
 
-    UUPSProxy proxy;
     IPNFT ipnft;
     SchmackoSwap schmackoSwap;
     Mintpass mintpass;
@@ -67,10 +66,10 @@ contract FixtureScript is Script {
 
     function run() public {
         prepareAddresses();
-        vm.startBroadcast(deployer);
 
+        vm.startBroadcast(deployer);
         IPNFT implementationV2 = new IPNFT();
-        proxy = new UUPSProxy(address(implementationV2), "");
+        UUPSProxy proxy = new UUPSProxy(address(implementationV2), "");
         ipnft = IPNFT(address(proxy));
         ipnft.initialize();
 
