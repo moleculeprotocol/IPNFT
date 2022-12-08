@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.17;
 
-import {ERC20} from "solmate/tokens/ERC20.sol";
-import {ReentrancyGuard} from "solmate/utils/ReentrancyGuard.sol";
-import {SafeTransferLib} from "solmate/utils/SafeTransferLib.sol";
-import {ERC1155Supply} from "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Supply.sol";
-import {IERC721Receiver} from "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
-import {ERC165} from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
+import { ERC20 } from "solmate/tokens/ERC20.sol";
+import { ReentrancyGuard } from "solmate/utils/ReentrancyGuard.sol";
+import { SafeTransferLib } from "solmate/utils/SafeTransferLib.sol";
+import { ERC1155Supply } from "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Supply.sol";
+import { IERC721Receiver } from "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
+import { ERC165 } from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 
 contract SchmackoSwap is ERC165, ReentrancyGuard, IERC721Receiver {
     /// ERRORS ///
@@ -48,11 +48,7 @@ contract SchmackoSwap is ERC165, ReentrancyGuard, IERC721Receiver {
     /// @param listingId The listing that is getting updated
     /// @param buyer The address of the buyer that is added
     /// @param _isAllowed If address is added or removed from allowlist
-    event AllowlistUpdated(
-        uint256 listingId,
-        address indexed buyer,
-        bool _isAllowed
-    );
+    event AllowlistUpdated(uint256 listingId, address indexed buyer, bool _isAllowed);
 
     /// @notice Used as a counter for the next sale index.
     /// @dev Initialised at 1 because it makes the first transaction slightly cheaper.
@@ -66,8 +62,8 @@ contract SchmackoSwap is ERC165, ReentrancyGuard, IERC721Receiver {
     struct Listing {
         ERC1155Supply tokenContract;
         uint256 tokenId;
-        uint256 tokenAmount;
         address creator;
+        uint256 tokenAmount;
         ERC20 paymentToken;
         uint256 askPrice;
     }
@@ -84,21 +80,14 @@ contract SchmackoSwap is ERC165, ReentrancyGuard, IERC721Receiver {
     /// @param askPrice How much you want to receive in exchange for the token
     /// @return The ID of the created listing
     /// @dev Remember to call setApprovalForAll(<address of this contract>, true) on the ERC1155's contract before calling this function
-    function list(
-        ERC1155Supply tokenContract,
-        uint256 tokenId,
-        ERC20 paymentToken,
-        uint256 askPrice
-    ) public nonReentrant returns (uint256) {
-        //TODO: revert if ERC1155 needed interface not implemented
-
-        uint256 tokenSupply = tokenContract.totalSupply(tokenId);
+    function list(ERC1155Supply tokenContract, uint256 tokenId, ERC20 paymentToken, uint256 askPrice) public nonReentrant returns (uint256) {
+        uint256 totalSupply = tokenContract.totalSupply(tokenId);
 
         Listing memory listing = Listing({
             tokenContract: tokenContract,
             tokenId: tokenId,
-            tokenAmount: tokenSupply,
             paymentToken: paymentToken,
+            tokenAmount: totalSupply,
             askPrice: askPrice,
             creator: msg.sender
         });
@@ -112,13 +101,7 @@ contract SchmackoSwap is ERC165, ReentrancyGuard, IERC721Receiver {
 
         emit Listed(listingId, listing);
 
-        tokenContract.safeTransferFrom(
-            msg.sender,
-            address(this),
-            tokenId,
-            tokenSupply,
-            ""
-        );
+        tokenContract.safeTransferFrom(msg.sender, address(this), tokenId, totalSupply, "");
 
         return listingId;
     }
@@ -134,13 +117,7 @@ contract SchmackoSwap is ERC165, ReentrancyGuard, IERC721Receiver {
 
         emit Unlisted(listingId, listing);
 
-        listing.tokenContract.safeTransferFrom(
-            address(this),
-            msg.sender,
-            listing.tokenId,
-            listing.tokenAmount,
-            ""
-        );
+        listing.tokenContract.safeTransferFrom(address(this), msg.sender, listing.tokenId, listing.tokenAmount, "");
     }
 
     /// @notice Purchase one of the listed tokens
@@ -160,59 +137,34 @@ contract SchmackoSwap is ERC165, ReentrancyGuard, IERC721Receiver {
 
         delete listings[listingId];
 
-        listing.tokenContract.safeTransferFrom(
-            address(this),
-            msg.sender,
-            listing.tokenId,
-            listing.tokenAmount,
-            ""
-        );
+        listing.tokenContract.safeTransferFrom(address(this), msg.sender, listing.tokenId, listing.tokenAmount, "");
 
-        SafeTransferLib.safeTransferFrom(
-            paymentToken,
-            msg.sender,
-            listing.creator,
-            listing.askPrice
-        );
+        SafeTransferLib.safeTransferFrom(paymentToken, msg.sender, listing.creator, listing.askPrice);
 
         emit Purchased(listingId, msg.sender, listing);
     }
 
-    function changeBuyerAllowance(
-        uint256 listingId,
-        address buyerAddress,
-        bool _isAllowed
-    ) public {
+    function changeBuyerAllowance(uint256 listingId, address buyerAddress, bool isAllowed_) public {
         Listing memory listing = listings[listingId];
 
         if (listing.creator == address(0)) revert ListingNotFound();
         if (listing.creator != msg.sender) revert Unauthorized();
-        require(
-            buyerAddress != address(0),
-            "Can't add ZERO address to allowlist"
-        );
+        require(buyerAddress != address(0), "Can't add ZERO address to allowlist");
 
-        allowlist[listingId][buyerAddress] = _isAllowed;
+        allowlist[listingId][buyerAddress] = isAllowed_;
 
-        emit AllowlistUpdated(listingId, buyerAddress, _isAllowed);
+        emit AllowlistUpdated(listingId, buyerAddress, isAllowed_);
     }
 
-    function isAllowed(uint256 listingId, address buyerAddress)
-        public
-        view
-        returns (bool)
-    {
+    function isAllowed(uint256 listingId, address buyerAddress) public view returns (bool) {
         return allowlist[listingId][buyerAddress];
     }
 
-    function supportsInterface(bytes4 interfaceId) override public view virtual returns (bool) {
-        return interfaceId == this.onERC721Received.selector
-                 || super.supportsInterface(interfaceId);
+    function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
+        return interfaceId == this.onERC721Received.selector || super.supportsInterface(interfaceId);
     }
 
-    function onERC721Received(address operator, address from, uint256 tokenId, bytes calldata data ) public override pure returns (bytes4) {
+    function onERC721Received(address operator, address from, uint256 tokenId, bytes calldata data) public pure override returns (bytes4) {
         return this.onERC721Received.selector;
     }
-
-
 }

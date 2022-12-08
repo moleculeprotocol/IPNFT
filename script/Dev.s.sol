@@ -5,14 +5,14 @@ import "forge-std/Script.sol";
 import "forge-std/console.sol";
 import { MyToken } from "../src/MyToken.sol";
 import { IPNFT } from "../src/IPNFT.sol";
-import { SchmackoSwap} from "../src/SchmackoSwap.sol";
+import { SchmackoSwap } from "../src/SchmackoSwap.sol";
 import { Mintpass } from "../src/Mintpass.sol";
+import { UUPSProxy } from "../src/UUPSProxy.sol";
 
 contract DevScript is Script {
     string mnemonic = "test test test test test test test test test test test junk";
 
     function run() public {
-        vm.startBroadcast();
         (address deployer, ) = deriveRememberKey(mnemonic, 0);
         vm.startBroadcast(deployer);
         IPNFT ipnft = new IPNFT();

@@ -4,17 +4,16 @@ pragma solidity ^0.8.13;
 import "forge-std/Script.sol";
 import "forge-std/console.sol";
 import { MyToken } from "../src/MyToken.sol";
-import { IPNFT3525V2 } from "../src/IPNFT3525V2.sol";
+import { IPNFT } from "../src/IPNFT.sol";
 import { UUPSProxy } from "../src/UUPSProxy.sol";
 import { SchmackoSwap } from "../src/SchmackoSwap.sol";
 import { Mintpass } from "../src/Mintpass.sol";
 
 contract FixtureScript is Script {
-    string mnemonic =
-        "test test test test test test test test test test test junk";
+    string mnemonic = "test test test test test test test test test test test junk";
 
     UUPSProxy proxy;
-    IPNFT3525V2 ipnft;
+    IPNFT ipnft;
     SchmackoSwap schmackoSwap;
     Mintpass mintpass;
     MyToken myToken;
@@ -37,31 +36,22 @@ contract FixtureScript is Script {
 
     function mintMintPass(address to) internal {
         vm.startBroadcast(deployer);
-        mintpass.safeMint(to);
+        mintpass.batchMint(to, 2);
         vm.stopBroadcast();
     }
 
     function mintIpnft(address from, address to) internal returns (uint256) {
         vm.startBroadcast(from);
         uint256 reservationId = ipnft.reserve();
-        ipnft.updateReservation(
-            reservationId,
-            "IP-NFT Test",
-            "ipfs://bafybeidlr6ltzbipd6ix5ckyyzwgm2pbigx7ar2ht64v4czk65pkjouire/metadata.json"
-        );
-        ipnft.mintReservation(to, reservationId, 1);
+        ipnft.updateReservation(reservationId, "ipfs://bafybeidlr6ltzbipd6ix5ckyyzwgm2pbigx7ar2ht64v4czk65pkjouire/metadata.json");
+        ipnft.mintReservation(to, reservationId, 1, "");
         vm.stopBroadcast();
         return reservationId;
     }
 
-    function createListingAndSell(
-        address from,
-        address to,
-        uint256 tokenId,
-        uint256 price
-    ) internal {
+    function createListingAndSell(address from, address to, uint256 tokenId, uint256 price) internal {
         vm.startBroadcast(from);
-        ipnft.approve(address(schmackoSwap), tokenId);
+        ipnft.setApprovalForAll(address(schmackoSwap), true);
         uint256 listingId = schmackoSwap.list(ipnft, tokenId, myToken, price);
         schmackoSwap.changeBuyerAllowance(listingId, to, true);
         vm.stopBroadcast();
@@ -78,20 +68,19 @@ contract FixtureScript is Script {
         prepareAddresses();
         vm.startBroadcast(deployer);
 
-        IPNFT3525V2 implementationV2 = new IPNFT3525V2();
+        IPNFT implementationV2 = new IPNFT();
         proxy = new UUPSProxy(address(implementationV2), "");
-        ipnft = IPNFT3525V2(address(proxy));
+        ipnft = IPNFT(address(proxy));
         ipnft.initialize();
 
         schmackoSwap = new SchmackoSwap();
         myToken = new MyToken();
-        mintpass = new Mintpass(address(ipnftV2));
+        mintpass = new Mintpass(address(ipnft));
         mintpass.grantRole(mintpass.MODERATOR(), deployer);
 
-        ipnftV2.setMetadataGenerator(new IPNFTMetadata());
-        ipnftV2.setMintpassContract(address(mintpass));
+        ipnft.setMintpassContract(address(mintpass));
 
-        console.log("ipnftv2 %s", address(ipnftV2));
+        console.log("ipnftv2 %s", address(ipnft));
         console.log("swap %s", address(schmackoSwap));
         console.log("token %s", address(myToken));
         console.log("pass %s", address(mintpass));

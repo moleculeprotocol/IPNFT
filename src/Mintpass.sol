@@ -1,27 +1,35 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.17;
 
-import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import {Counters} from "@openzeppelin/contracts/utils/Counters.sol";
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
-import {Base64} from "@openzeppelin/contracts/utils/Base64.sol";
-import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
-import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "erc721b/extensions/ERC721BBaseTokenURI.sol";
+import "erc721b/extensions/ERC721BBurnable.sol";
+import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol";
 
-contract Mintpass is ERC721, Ownable, ReentrancyGuard {
-    using Counters for Counters.Counter;
+import { Base64 } from "@openzeppelin/contracts/utils/Base64.sol";
+import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
+import { ReentrancyGuard } from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-    Counters.Counter private _tokenIdCounter;
+contract Mintpass is AccessControl, ERC721BBaseTokenURI, ERC721BBurnable {
+    error AlreadyRedeemed();
+    error NotRedeemable();
+    error NotOwningMintpass(uint256 id);
+    error MintPassRevoked(uint256 id);
 
-    /// @dev Stores the address of the associated IP-NFT contract.
-    address public ipnftContract;
+    bytes32 public constant MODERATOR = keccak256("MODERATOR");
+    bytes32 public constant REDEEMER = keccak256("REDEEMER");
 
-    // Mapping from tokenId to validity of token. If tokenId has been revoked, it will return true
-    mapping(uint256 => bool) private _revocations;
+    enum Status {
+        DEFAULT, //0
+        REDEEMED,
+        REVOKED
+    }
 
-    constructor(address ipnftContract_) ERC721("IP-NFT Mintpass", "IPNFTMP") {
-        ipnftContract = ipnftContract_;
-        _tokenIdCounter.increment();
+    // Mapping from tokenId to validity of token.
+    mapping(uint256 => Status) private _status;
+
+    constructor(address ipnftContract_) {
+        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _grantRole(REDEEMER, ipnftContract_);
     }
 
     /**
@@ -42,50 +50,36 @@ contract Mintpass is ERC721, Ownable, ReentrancyGuard {
     /// @dev Check if a token hasn't been revoked
     /// @param tokenId Identifier of the token that is checked for validity
     /// @return True if the token is valid, false otherwise
-    function isValid(uint256 tokenId) public view returns (bool) {
+    function isRedeemable(uint256 tokenId) public view returns (bool) {
         require(_exists(tokenId), "Token does not exist");
-        return !_revocations[tokenId];
+        return _status[tokenId] == Status.DEFAULT;
     }
 
-    /// @dev Mints a token to an address and approves it be handled by the IP-NFT Contract
-    /// @param to The address that the token is minted to
-    function safeMint(address to) public nonReentrant onlyOwner {
-        uint256 tokenId = _tokenIdCounter.current();
-        _tokenIdCounter.increment();
-        _safeMint(to, tokenId);
-        _approve(ipnftContract, tokenId);
-        emit TokenMinted(to, tokenId);
+    function batchMint(address to, uint256 amount) external onlyRole(MODERATOR) {
+        _safeMint(to, amount);
     }
 
-    /// @dev Mints a number of tokens to an address and approves it be handled by the IP-NFT Contract
-    /// @param to The address that the token is minted to
-    /// @param amount the amount of tokens to mint
-    function batchMint(address to, uint256 amount)
-        public
-        nonReentrant
-        onlyOwner
-    {
-        require(amount < 100, "Don't go crazy with the mints");
-
-        for (uint256 i = 0; i < amount; i++) {
-            uint256 tokenId = _tokenIdCounter.current();
-            _tokenIdCounter.increment();
-            _safeMint(to, tokenId);
-            _approve(ipnftContract, tokenId);
-            emit TokenMinted(to, tokenId);
+    function authorizeMint(address to, uint256 mintPassId) public view onlyRole(REDEEMER) returns (bool) {
+        if (ownerOf(mintPassId) != to) {
+            revert NotOwningMintpass(mintPassId);
         }
+        if (!isRedeemable(mintPassId)) {
+            revert MintPassRevoked(mintPassId);
+        }
+        return true;
     }
 
     /// @dev Mark the token as revoked
     /// @param tokenId Identifier of the token
-    function revoke(uint256 tokenId) external onlyOwner {
-        require(isValid(tokenId), "Token is already invalid");
-        _revocations[tokenId] = true;
+    function revoke(uint256 tokenId) external onlyRole(MODERATOR) {
+        if (!isRedeemable(tokenId)) {
+            revert NotRedeemable();
+        }
+        _status[tokenId] = Status.REVOKED;
         emit Revoked(tokenId);
     }
 
-    function redeem(uint256 tokenId) public {
-        require(msg.sender == address(ipnftContract), "Only IPNFT contract can set to redeemed");
+    function redeem(uint256 tokenId) public onlyRole(REDEEMER) {
         if (!isRedeemable(tokenId)) {
             revert NotRedeemable();
         }
@@ -112,9 +106,7 @@ contract Mintpass is ERC721, Ownable, ReentrancyGuard {
                         '{"name": "IP-NFT Mintpass #',
                         Strings.toString(tokenId),
                         '", "description": "This Mintpass can be used to mint one IP-NFT", "external_url": "TODO: Enter IP-NFT-UI URL", "image": "',
-                        isRedeemable(tokenId)
-                            ? "ipfs://imageToShowWhenRedeemable"
-                            : "ipfs://imageToShowWhenNotRedeemable",
+                        isRedeemable(tokenId) ? "ipfs://imageToShowWhenRedeemable" : "ipfs://imageToShowWhenNotRedeemable",
                         '", "status": "',
                         statusString,
                         '"}'
@@ -132,7 +124,7 @@ contract Mintpass is ERC721, Ownable, ReentrancyGuard {
         return "IPNFTMNTPSS";
     }
 
-    function supportsInterface(bytes4 interfaceId) public view virtual override (ERC721B, IERC165) returns (bool) {
+    function supportsInterface(bytes4 interfaceId) public view virtual override (ERC721B, IERC165, AccessControl) returns (bool) {
         return interfaceId == type(IERC721Metadata).interfaceId || super.supportsInterface(interfaceId);
     }
 
@@ -144,28 +136,8 @@ contract Mintpass is ERC721, Ownable, ReentrancyGuard {
         return super._exists(tokenId);
     }
 
-    function ownerOf(uint256 tokenId)
-        public
-        view
-        override
-        returns (string memory)
-    {
-        require(_exists(tokenId), "Token does not exist");
-        return
-            string(
-                abi.encodePacked(
-                    "data:application/json;base64,",
-                    Base64.encode(
-                        abi.encodePacked(
-                            '{"name": "IP-NFT Mintpass #',
-                            Strings.toString(tokenId),
-                            '", "description": "This Mintpass can be used to mint one IP-NFT", "external_url": "TODO: Enter IP-NFT-UI URL", "image": "TODO: Enter IPFS URL", "valid": ',
-                            _revocations[tokenId] ? "false" : "true",
-                            "}"
-                        )
-                    )
-                )
-            );
+    function ownerOf(uint256 tokenId) public view virtual override (ERC721B, ERC721BBurnable, IERC721) returns (address) {
+        return super.ownerOf(tokenId);
     }
 
     /**
@@ -176,16 +148,8 @@ contract Mintpass is ERC721, Ownable, ReentrancyGuard {
 
     /// @dev Hook that is called before every token transfer. This includes minting and burning.
     /// It checks if the token is minted or burned. If not the function is reverted.
-    function _beforeTokenTransfer(
-        address from,
-        address to,
-        uint256 tokenId,
-        uint256 batchSize
-    ) internal virtual override {
-        require(
-            from == address(0) || to == address(0),
-            "This a Soulbound token. It can only be burned."
-        );
-        super._beforeTokenTransfer(from, to, tokenId, batchSize);
+    function _beforeTokenTransfers(address from, address to, uint256 startTokenId, uint256 amount) internal virtual override {
+        require(from == address(0) || to == address(0), "This a Soulbound token. It can only be burned.");
+        super._beforeTokenTransfers(from, to, startTokenId, amount);
     }
 }
