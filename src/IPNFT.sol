@@ -128,6 +128,12 @@ contract IPNFT is ERC1155, Ownable, Pausable, ERC1155Burnable, ERC1155Supply, ER
         _mint(to, tokenId, shares, "");
     }
 
+    function distribute(uint256 fromToken, address[] memory toAddresses, uint256 value) public {
+        for (uint256 i = 0; i < toAddresses.length; i++) {
+            safeTransferFrom(msg.sender, toAddresses[i], fromToken, value, "");
+        }
+    }
+
     // Withdraw ETH from contract
     function withdrawAll() public payable onlyOwner {
         require(payable(msg.sender).send(address(this).balance), "Not authorized");
