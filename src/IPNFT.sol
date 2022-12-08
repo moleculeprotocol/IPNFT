@@ -11,6 +11,7 @@ import { CountersUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/C
 import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import { Mintpass } from "./Mintpass.sol";
+import { IReservable } from "./IReservable.sol";
 
 // import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 //import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
@@ -29,6 +30,7 @@ import { Mintpass } from "./Mintpass.sol";
 */
 
 contract IPNFT is
+    IReservable,
     ERC1155Upgradeable,
     ERC1155BurnableUpgradeable,
     ERC1155SupplyUpgradeable,
@@ -148,7 +150,11 @@ contract IPNFT is
         return mintReservation(to, reservationId, mintPassId, reservations[reservationId].tokenURI);
     }
 
-    function mintReservation(address to, uint256 reservationId, uint256 mintPassId, string memory tokenURI) public returns (uint256 tokenId) {
+    function mintReservation(address to, uint256 reservationId, uint256 mintPassId, string memory tokenURI)
+        public
+        override
+        returns (uint256 tokenId)
+    {
         if (reservations[reservationId].reserver != _msgSender()) {
             revert NotOwningReservation(reservationId);
         }
@@ -213,5 +219,14 @@ contract IPNFT is
 
     function uri(uint256 tokenId) public view virtual override (ERC1155Upgradeable, ERC1155URIStorageUpgradeable) returns (string memory) {
         return ERC1155URIStorageUpgradeable.uri(tokenId);
+    }
+
+    /// @notice upgrade authorization logic
+    function _authorizeUpgrade(address /*newImplementation*/ )
+        internal
+        override
+        onlyOwner // solhint-disable-next-line no-empty-blocks
+    {
+        //empty block
     }
 }

@@ -3,7 +3,7 @@ pragma solidity ^0.8.17;
 
 import "forge-std/Test.sol";
 import "forge-std/console.sol";
-import {Mintpass} from "../src/Mintpass.sol";
+import { Mintpass } from "../src/Mintpass.sol";
 
 contract MintpassTest is Test {
     Mintpass public mintPass;
@@ -19,11 +19,11 @@ contract MintpassTest is Test {
         vm.startPrank(deployer);
         mintPass = new Mintpass(ipnftContract);
         vm.expectEmit(true, true, true, true);
-        emit TokenMinted(bob, 1);
-        mintPass.safeMint(bob);
+        emit Transfer(address(0x0), bob, 1);
+        mintPass.batchMint(bob, 1);
 
         assertEq(mintPass.balanceOf(bob), 1);
-        assertEq(mintPass.isValid(1), true);
+        assertEq(mintPass.isRedeemable(1), true);
 
         string memory tokenUri_ = mintPass.tokenURI(1);
         assertEq(
@@ -47,7 +47,7 @@ contract MintpassTest is Test {
     function testSafeMintFromNotOwner() public {
         vm.startPrank(bob);
         vm.expectRevert("Ownable: caller is not the owner");
-        mintPass.safeMint(alice);
+        mintPass.batchMint(alice, 1);
 
         assertEq(mintPass.balanceOf(alice), 0);
         vm.stopPrank();
@@ -87,7 +87,7 @@ contract MintpassTest is Test {
         emit Revoked(1);
         mintPass.revoke(1);
 
-        assertEq(mintPass.isValid(1), false);
+        assertEq(mintPass.isRedeemable(1), false);
 
         string memory tokenUri_ = mintPass.tokenURI(1);
         assertEq(
@@ -102,7 +102,7 @@ contract MintpassTest is Test {
         vm.expectRevert("Ownable: caller is not the owner");
         mintPass.revoke(1);
 
-        assertEq(mintPass.isValid(1), true);
+        assertEq(mintPass.isRedeemable(1), true);
         vm.stopPrank();
     }
 
