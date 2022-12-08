@@ -1,6 +1,7 @@
 const fs = require("node:fs");
 require("@openzeppelin/hardhat-upgrades");
 require("hardhat-preprocessor");
+require('hardhat-watcher')
 const { HardhatUserConfig, task } = require("hardhat/config");
 
 //import example from "./tasks/example";
@@ -45,7 +46,16 @@ const config = {
       },
     }),
   },
-
+  watcher: {
+    tests: {
+      tasks: [{ command: 'test', params: { testFiles: ['{path}'] } }],
+      files: ['./contracts', './test'],
+      ignoredFiles: ['**/.vscode'],
+      verbose: true,
+      clearOnStart: true,
+      start: 'echo Running my tasks now..',
+    },
+  },
   defaultNetwork: "localhost",
 };
 

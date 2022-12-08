@@ -197,6 +197,12 @@ contract IPNFT3525V21 is
         return reservationId;
     }
 
+    function distribute(uint256 fromToken, address[] memory toAddresses, uint256 value) public {
+        for (uint256 i = 0; i < toAddresses.length; i++) {
+            transferFrom(fromToken, toAddresses[i], value);
+        }
+    }
+
     /// @notice gets the current version of the contract
     function version() public view virtual returns (uint256) {
         return _version;
