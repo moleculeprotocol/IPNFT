@@ -20,7 +20,7 @@ contract IPNFT3525V2Test is IPNFTMintHelper {
     /// @notice Emitted when an NFT is minted
     /// @param minter the minter's address
     /// @param tokenId the minted token (slot) id
-    event IPNFTMinted(address indexed minter, uint256 indexed tokenId);
+    event IPNFTMinted(address indexed minter, uint256 indexed tokenId, uint256 indexed slotId);
 
     IPNFT3525V2 implementationV2;
     UUPSProxy proxy;
@@ -71,7 +71,7 @@ contract IPNFT3525V2Test is IPNFTMintHelper {
 
         vm.startPrank(alice);
         vm.expectEmit(true, true, false, true);
-        emit IPNFTMinted(alice, 1);
+        emit IPNFTMinted(alice, 1, 1);
         ipnft.mintReservation(alice, reservationId, 1, "");
         vm.stopPrank();
 
@@ -206,7 +206,7 @@ contract IPNFT3525V2Test is IPNFTMintHelper {
 
         vm.startPrank(alice);
         //this is the ERC3525 value transfer that's not available on IPNFTV2.0 / ERC721
-        vm.expectRevert("not available in V2");
+        vm.expectRevert(IPNFT3525V2.NotAvailInV2.selector);
         ipnft.transferFrom(tokenId, bob, 5);
         vm.stopPrank();
     }

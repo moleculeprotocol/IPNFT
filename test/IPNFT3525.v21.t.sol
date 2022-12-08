@@ -55,25 +55,6 @@ contract IPNFT3525V21Test is IPNFTMintHelper {
         assertEq(ipnft.tokenOfOwnerByIndex(alice, 0), 1);
     }
 
-    // // todo: this is currently unsupported since I removed the initial fraction arg
-    // // function testCanMintWithMoreThanOneFraction() public {
-    // //     uint64[] memory fractions = new uint64[](2);
-    // //     fractions[0] = 50;
-    // //     fractions[1] = 50;
-
-    // //     bytes memory ipnftArgs = abi.encode("", "", "", fractions);
-
-    // //     ipnft.mint(alice, ipnftArgs);
-
-    // //     assertEq(ipnft.ownerOf(1), alice);
-    // //     assertEq(ipnft.ownerOf(2), alice);
-
-    // //     assertEq(ipnft.balanceOf(1), 50);
-    // //     assertEq(ipnft.balanceOf(2), 50);
-
-    // //     assertEq(ipnft.tokenSupplyInSlot(1), 2);
-    // // }
-
     function testSplitandMerge() public {
         mintAToken(ipnft, alice);
 
@@ -82,12 +63,9 @@ contract IPNFT3525V21Test is IPNFTMintHelper {
         assertEq(ipnft.tokenSupplyInSlot(1), 1);
 
         vm.startPrank(alice);
-        uint256[] memory fractions = new uint256[](2);
-        fractions[0] = 500_000;
-        fractions[1] = 500_000;
 
-        //this creates another NFT on the same slot:
-        ipnft.split(1, fractions);
+        ipnft.transferFrom(1, alice, 500_000);
+
         assertEq(ipnft.balanceOf(1), 500_000);
         assertEq(ipnft.balanceOf(2), 500_000);
 
@@ -97,22 +75,17 @@ contract IPNFT3525V21Test is IPNFTMintHelper {
         assertEq(ipnft.slotOf(1), 1);
         assertEq(ipnft.slotOf(2), 1);
 
-        //note that this is 2 now!
         assertEq(ipnft.tokenSupplyInSlot(1), 2);
         assertEq(ipnft.balanceOf(alice), 2);
 
-        //note the merge order matters: we're merging towards the last token id in the list.
-        uint256[] memory tokenIdsToMerge = new uint256[](2);
-        tokenIdsToMerge[0] = 2;
-        tokenIdsToMerge[1] = 1;
-
-        ipnft.merge(tokenIdsToMerge);
+        ipnft.transferFrom(2, 1, 500_000);
+        ipnft.burn(2);
 
         assertEq(ipnft.ownerOf(1), alice);
         assertEq(ipnft.balanceOf(1), 1_000_000);
-
-        //note that this is 1 again!
+        assertEq(ipnft.balanceOf(alice), 1);
         assertEq(ipnft.tokenSupplyInSlot(1), 1);
+
         vm.stopPrank();
     }
 
@@ -126,6 +99,7 @@ contract IPNFT3525V21Test is IPNFTMintHelper {
         assertEq(ipnft.ownerOf(2), bob);
         assertEq(ipnft.balanceOf(1), 500_000);
         assertEq(ipnft.balanceOf(2), 500_000);
+        assertEq(ipnft.tokenSupplyInSlot(1), 2);
 
         assertEq(
             ipnft.tokenURI(1),
@@ -138,55 +112,6 @@ contract IPNFT3525V21Test is IPNFTMintHelper {
             "data:application/json;base64,eyJuYW1lIjoiSVAtTkZUIFRlc3QiLCJkZXNjcmlwdGlvbiI6IlNvbWUgRGVzY3JpcHRpb24iLCJpbWFnZSI6ImFyOi8vN0RlNmRSTERhTWhNZUM2VXRtOWJCOVBSYmN2S2RpLXJ3X3NETThwSlNNVSIsImJhbGFuY2UiOiI1MDAwMDAiLCJzbG90IjoxLCJwcm9wZXJ0aWVzIjogeyJ0eXBlIjoiSVAtTkZUIiwiZXh0ZXJuYWxfdXJsIjoiaHR0cHM6Ly9kaXNjb3Zlci5tb2xlY3VsZS50by9pcG5mdC8yIiwiYWdyZWVtZW50X3VybCI6ImlwZnM6Ly9iYWZ5YmVpZXdzZjVpbGRwamJjb2syNXRyazZ6YmdhZmV1NGZ1eG9oNWl3am12Y21maTYyZG1vaGN3bS9hZ3JlZW1lbnQuanNvbiIsInByb2plY3RfZGV0YWlsc191cmwiOiJpcGZzOi8vYmFmeWJlaWZod2o3Z3g3ZmpiMmRyM3FvNGFtNmtvZzJwc2VlZ3JuZnJnNTNwbzU1enJ4enNjNmo0NWUvcHJvamVjdERldGFpbHMuanNvbiJ9fQ=="
         );
         // 'data:application/json,{"name":"IP-NFT Test","description":"Some Description","image":"ar://7De6dRLDaMhMeC6Utm9bB9PRbcvKdi-rw_sDM8pJSMU","balance":"500000","slot":1,"properties": {"type":"IP-NFT","external_url":"https://discover.molecule.to/ipnft/2","agreement_url":"ipfs://bafybeiewsf5ildpjbcok25trk6zbgafeu4fuxoh5iwjmvcmfi62dmohcwm/agreement.json","project_details_url":"ipfs://bafybeifhwj7gx7fjb2dr3qo4am6kog2pseegrnfrg53po55zrxzsc6j45e/projectDetails.json"}}'
-
-        //todo this fails because tokenSupplyInSlot isn't increased during transfers.
-        //https://github.com/Network-Goods/hypercerts-protocol/issues/54
-        //assertEq(ipnft.tokenSupplyInSlot(1), 2);
-    }
-
-    //todo: this is disabled since I removed the initial fraction arg.
-    // function testSplittingValuelessTokens() public {
-    //     uint64[] memory fractions = new uint64[](1);
-    //     fractions[0] = 0;
-
-    //     vm.startPrank(alice);
-    //     ipnft.mint(alice, abi.encode("", "", "", fractions));
-    //     assertEq(ipnft.balanceOf(alice), 1);
-    //     assertEq(ipnft.balanceOf(1), 0);
-
-    //     ipnft.transferFrom(1, bob, 0);
-    //     assertEq(ipnft.ownerOf(2), bob);
-    //     assertEq(ipnft.totalSupply(), 2);
-
-    //     vm.stopPrank();
-    //     vm.startPrank(bob);
-    //     ipnft.safeTransferFrom(bob, alice, 2);
-    //     vm.stopPrank();
-    //     vm.startPrank(alice);
-    //     uint256[] memory tokenIdsToMerge = new uint256[](2);
-    //     tokenIdsToMerge[0] = 2;
-    //     tokenIdsToMerge[1] = 1;
-    //     ipnft.merge(tokenIdsToMerge);
-    //     //todo total supply is still 2!
-    //     assertEq(ipnft.totalSupply(), 1);
-
-    //     assertEq(ipnft.balanceOf(alice), 1);
-    //     assertEq(ipnft.balanceOf(1), 0);
-
-    //     ipnft.burn(1);
-    //     //todo total supply is still 2!
-    //     assertEq(ipnft.totalSupply(), 0);
-    //     vm.stopPrank();
-    // }
-
-    function testFailCantMergeTokensThatYouDontOwn() public {
-        mintAToken(ipnft, alice);
-        vm.startPrank(alice);
-        ipnft.transferFrom(1, bob, 5);
-        uint256[] memory tokenIdsToMerge = new uint256[](2);
-        tokenIdsToMerge[0] = 2;
-        tokenIdsToMerge[1] = 1;
-        ipnft.merge(tokenIdsToMerge);
     }
 
     function testBurnMintedTokens() public {
@@ -198,7 +123,7 @@ contract IPNFT3525V21Test is IPNFTMintHelper {
         assertEq(ipnft.balanceOf(alice), 0);
     }
 
-    function testFailBurnOwnedTokens() public {
+    function testBurnOwnedTokens() public {
         mintAToken(ipnft, alice);
         vm.startPrank(alice);
         ipnft.transferFrom(1, bob, 500_000);
@@ -206,10 +131,22 @@ contract IPNFT3525V21Test is IPNFTMintHelper {
 
         vm.startPrank(bob);
         assertEq(ipnft.ownerOf(2), bob);
-        //todo only the minter (alice) can burn the token
-        //see IPNFT3525V21::burn
         ipnft.burn(2);
         assertEq(ipnft.balanceOf(bob), 0);
+        assertEq(ipnft.balanceOf(1), 500_000);
         vm.stopPrank();
+    }
+
+    function testOwnerCanMintValue() public {
+        mintAToken(ipnft, alice);
+        vm.startPrank(alice);
+        ipnft.transferFrom(1, alice, 0);
+        vm.stopPrank();
+
+        vm.startPrank(deployer);
+        ipnft.mintValue(2, 314);
+        vm.stopPrank();
+
+        assertEq(ipnft.balanceOf(2), 314);
     }
 }

@@ -5,3 +5,4 @@ forge-std/=lib/forge-std/src/
 solmate/=lib/solmate/src/
 hypercerts/=lib/hypercerts-protocol/contracts/
 erc721b/=lib/ERC721B/contracts/
+@solv/erc3525/=lib/erc-3525/contracts/
