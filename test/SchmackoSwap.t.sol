@@ -20,19 +20,18 @@ contract TestToken is ERC20("USD Coin", "USDC", 18) {
 }
 
 contract SchmackoSwapTest is Test {
-    uint256 internal nftId;
+    string arUri = "ar://tNbdHqh3AVDHVD06P0OPUXSProI5kGcZZw8IvLkekSY";
     Mintpass mintpass;
-    uint256 numTokensMinted;
-
     IPNFT internal ipnft;
     ERC1155Supply internal erc1155Supply;
 
     TestToken internal testToken;
     SchmackoSwap internal schmackoSwap;
-    address seller = address(0x1);
-    address buyer = address(0x2);
-    address otherUser = address(0x3);
-    address deployer = address(0x4);
+
+    address deployer = makeAddr("chucknorris");
+    address seller = makeAddr("seller");
+    address buyer = makeAddr("buyer");
+    address otherUser = makeAddr("otherUser");
 
     event Listed(uint256 listingId, SchmackoSwap.Listing listing);
     event Unlisted(uint256 listingId, SchmackoSwap.Listing listing);
@@ -49,43 +48,41 @@ contract SchmackoSwapTest is Test {
         erc1155Supply = ERC1155Supply(address(ipnft));
 
         mintpass = new Mintpass(address(ipnft));
+        mintpass.grantRole(mintpass.MODERATOR(), deployer);
         ipnft.setMintpassContract(address(mintpass));
         mintpass.batchMint(seller, 1);
-        vm.stopPrank();
 
         testToken = new TestToken();
+        testToken.mintTo(buyer, 1 ether);
+
         schmackoSwap = new SchmackoSwap();
-
-        // Ensure marketplace can access tokens
-        ipnft.setApprovalForAll(address(schmackoSwap), true);
-
-        // Ensure marketplace can access sellers's tokens
-        vm.startPrank(seller);
-        ipnft.setApprovalForAll(address(schmackoSwap), true);
-        nftId = ipnft.reserve();
-        ipnft.mintReservation(seller, nftId, 1);
         vm.stopPrank();
 
-        testToken.mintTo(buyer, 1 ether);
+        vm.startPrank(seller);
+        // Ensure marketplace can access sellers's tokens
+        ipnft.setApprovalForAll(address(schmackoSwap), true);
+        ipnft.reserve();
+        ipnft.mintReservation(seller, 1, 1, arUri);
+        vm.stopPrank();
     }
 
-    function testSellerHasNFTBalance() public {
-        assertEq(ipnft.balanceOf(seller, nftId), numTokensMinted);
-        assertEq(ipnft.balanceOf(buyer, nftId), 0);
-        assertEq(ipnft.totalSupply(nftId), numTokensMinted);
+    function testGeneralBalancesAndSupplies() public {
+        assertEq(ipnft.balanceOf(seller, 1), 1);
+        assertEq(ipnft.balanceOf(buyer, 1), 0);
+        assertEq(ipnft.totalSupply(1), 1);
+        assertEq(testToken.balanceOf(buyer), 1 ether);
+        assertEq(testToken.balanceOf(seller), 0);
+        assertEq(testToken.balanceOf(address(schmackoSwap)), 0);
     }
 
     function testCanCreateSale() public {
-        assertEq(ipnft.balanceOf(seller, nftId), numTokensMinted);
-
-        // Calculate the id before hand since we don't have the listing created yet
         bytes32 _listingId = keccak256(
             abi.encode(
                 SchmackoSwap.Listing({
                     tokenContract: erc1155Supply,
-                    tokenId: nftId,
-                    tokenAmount: numTokensMinted,
+                    tokenId: 1,
                     paymentToken: testToken,
+                    tokenAmount: erc1155Supply.totalSupply(1),
                     askPrice: 1 ether,
                     creator: address(seller)
                 })
@@ -94,81 +91,77 @@ contract SchmackoSwapTest is Test {
         uint256 listingId = uint256(_listingId);
 
         vm.startPrank(seller);
+        //todo test this emission test is ok
         vm.expectEmit(true, true, false, true);
         emit Listed(
             listingId,
             SchmackoSwap.Listing({
                 tokenContract: erc1155Supply,
-                tokenId: nftId,
-                tokenAmount: numTokensMinted,
+                tokenId: 1,
                 paymentToken: testToken,
+                tokenAmount: erc1155Supply.totalSupply(1),
                 askPrice: 1 ether,
                 creator: address(seller)
             })
             );
 
-        schmackoSwap.list(erc1155Supply, nftId, testToken, 1 ether);
+        schmackoSwap.list(erc1155Supply, 1, testToken, 1 ether);
         vm.stopPrank();
 
-        assertEq(ipnft.balanceOf(address(schmackoSwap), nftId), numTokensMinted);
+        assertEq(ipnft.balanceOf(address(schmackoSwap), 1), 1);
 
         (ERC1155Supply tokenContract, uint256 tokenId, address creator, uint256 tokenAmount, ERC20 paymentToken, uint256 askPrice) =
             schmackoSwap.listings(listingId);
 
         assertEq(address(tokenContract), address(ipnft));
-        assertEq(tokenId, nftId);
-        assertEq(tokenAmount, numTokensMinted);
+        assertEq(tokenId, 1);
+        assertEq(tokenAmount, 1);
         assertEq(creator, address(seller));
         assertEq(askPrice, 1 ether);
         assertEq(address(paymentToken), address(testToken));
 
-        assertEq(ipnft.balanceOf(address(seller), nftId), 0);
+        assertEq(ipnft.balanceOf(address(seller), 1), 0);
     }
 
     function testNonOwnerCannotCreateSale() public {
-        assertEq(ipnft.balanceOf(seller, nftId), numTokensMinted);
-
-        vm.prank(address(otherUser));
+        vm.prank(otherUser);
         vm.expectRevert("ERC1155: caller is not token owner or approved");
-        schmackoSwap.list(erc1155Supply, nftId, testToken, 1 ether);
+        schmackoSwap.list(erc1155Supply, 1, testToken, 1 ether);
 
-        assertEq(ipnft.balanceOf(seller, nftId), numTokensMinted);
+        assertEq(ipnft.balanceOf(seller, 1), 1);
     }
 
     function testCannotListWhenTokenIsNotApproved() public {
-        assertEq(ipnft.balanceOf(seller, nftId), numTokensMinted);
-
         vm.startPrank(seller);
         ipnft.setApprovalForAll(address(schmackoSwap), false);
 
         vm.expectRevert("ERC1155: caller is not token owner or approved");
-        schmackoSwap.list(erc1155Supply, nftId, testToken, 1 ether);
+        schmackoSwap.list(erc1155Supply, 1, testToken, 1 ether);
 
-        assertEq(ipnft.balanceOf(seller, nftId), numTokensMinted);
+        assertEq(ipnft.balanceOf(seller, 1), 1);
     }
 
     function testCanCancelSale() public {
         vm.startPrank(seller);
-        uint256 listingId = schmackoSwap.list(erc1155Supply, nftId, testToken, 1 ether);
-        (,, address creator,,,) = schmackoSwap.listings(listingId);
-        assertEq(creator, address(seller));
-        assertEq(ipnft.balanceOf(address(schmackoSwap), nftId), numTokensMinted);
+        uint256 listingId = schmackoSwap.list(erc1155Supply, 1, testToken, 1 ether);
 
+        //todo test this emission
         vm.expectEmit(true, false, false, true);
         emit Unlisted(
             listingId,
             SchmackoSwap.Listing({
                 tokenContract: erc1155Supply,
-                tokenId: nftId,
-                tokenAmount: numTokensMinted,
+                tokenId: 1,
+                tokenAmount: 1,
                 paymentToken: testToken,
                 askPrice: 1 ether,
                 creator: address(seller)
             })
             );
+
         schmackoSwap.cancel(listingId);
 
-        assertEq(ipnft.balanceOf(address(seller), nftId), numTokensMinted);
+        assertEq(ipnft.balanceOf(address(seller), 1), 1);
 
         (,, address newCreator,,,) = schmackoSwap.listings(listingId);
         assertEq(newCreator, address(0));
@@ -176,216 +169,116 @@ contract SchmackoSwapTest is Test {
 
     function testNonOwnerCannotCancelSale() public {
         vm.startPrank(seller);
-        uint256 listingId = schmackoSwap.list(erc1155Supply, nftId, testToken, 1 ether);
-        (,, address creator,,,) = schmackoSwap.listings(listingId);
-        assertEq(creator, address(seller));
-        assertEq(ipnft.balanceOf(address(schmackoSwap), nftId), numTokensMinted);
+        uint256 listingId = schmackoSwap.list(erc1155Supply, 1, testToken, 1 ether);
         vm.stopPrank();
 
         vm.prank(otherUser);
-        vm.expectRevert(abi.encodeWithSignature("Unauthorized()"));
+        vm.expectRevert(SchmackoSwap.Unauthorized.selector);
         schmackoSwap.cancel(listingId);
 
-        assertEq(ipnft.balanceOf(address(schmackoSwap), nftId), numTokensMinted);
+        assertEq(ipnft.balanceOf(address(schmackoSwap), 1), 1);
 
-        (,, address newCreator,,,) = schmackoSwap.listings(listingId);
-        assertEq(newCreator, address(seller));
+        (,, address creator,,,) = schmackoSwap.listings(listingId);
+        assertEq(creator, address(seller));
     }
 
-    function testCannotBuyNotExistingValue() public {
-        vm.expectRevert(abi.encodeWithSignature("ListingNotFound()"));
-        schmackoSwap.fulfill(1);
-    }
+    function testSellerCanManageAllowlist() public {
+        vm.startPrank(seller);
+        uint256 listingId = schmackoSwap.list(erc1155Supply, 1, testToken, 1 ether);
+        assertEq(schmackoSwap.isAllowed(listingId, buyer), false);
+        vm.stopPrank();
 
-    function testCannotBuyWithoutAllowance() public {
-        vm.deal(buyer, 1 ether);
-
-        assertEq(ipnft.balanceOf(seller, nftId), numTokensMinted);
-
-        assertEq(testToken.balanceOf(buyer), 1 ether);
-        assertEq(testToken.balanceOf(seller), 0);
+        vm.startPrank(otherUser);
+        vm.expectRevert(SchmackoSwap.Unauthorized.selector);
+        schmackoSwap.changeBuyerAllowance(listingId, buyer, true);
+        vm.stopPrank();
+        assertEq(schmackoSwap.isAllowed(listingId, buyer), false);
 
         vm.startPrank(seller);
-        uint256 listingId = schmackoSwap.list(erc1155Supply, nftId, testToken, 1 ether);
-
-        vm.expectEmit(true, true, false, false);
+        vm.expectEmit(false, false, false, true);
         emit AllowlistUpdated(listingId, address(buyer), true);
+        schmackoSwap.changeBuyerAllowance(listingId, buyer, true);
 
+        assertEq(schmackoSwap.isAllowed(listingId, buyer), true);
+        schmackoSwap.changeBuyerAllowance(listingId, buyer, false);
+        assertEq(schmackoSwap.isAllowed(listingId, buyer), false);
+    }
+
+    function testCanOnlyBuyWithSufficientBalance() public {
+        vm.startPrank(seller);
+        uint256 listingId = schmackoSwap.list(erc1155Supply, 1, testToken, 1 ether);
         schmackoSwap.changeBuyerAllowance(listingId, buyer, true);
         vm.stopPrank();
 
-        assertEq(ipnft.balanceOf(address(schmackoSwap), nftId), numTokensMinted);
-
         vm.startPrank(buyer);
-        vm.expectRevert(abi.encodeWithSignature("InsufficientAllowance()"));
+        vm.expectRevert(SchmackoSwap.InsufficientAllowance.selector);
         schmackoSwap.fulfill(listingId);
         vm.stopPrank();
 
-        assertEq(ipnft.balanceOf(address(schmackoSwap), nftId), numTokensMinted);
-    }
-
-    function testCannotBuyWithInsufficientBalance() public {
-        vm.deal(buyer, 1 ether);
-
-        assertEq(ipnft.balanceOf(address(seller), nftId), numTokensMinted);
-
-        assertEq(testToken.balanceOf(buyer), 1 ether);
-        assertEq(testToken.balanceOf(seller), 0);
-
-        vm.startPrank(seller);
-        uint256 listingId = schmackoSwap.list(erc1155Supply, nftId, testToken, 1 ether);
-
-        vm.expectEmit(true, true, false, false);
-        emit AllowlistUpdated(listingId, address(buyer), true);
-
-        schmackoSwap.changeBuyerAllowance(listingId, buyer, true);
-        vm.stopPrank();
-
-        assertEq(ipnft.balanceOf(address(schmackoSwap), nftId), numTokensMinted);
+        assertEq(ipnft.balanceOf(address(schmackoSwap), 1), 1);
 
         vm.startPrank(buyer);
         testToken.approve(address(schmackoSwap), 1 ether);
         testToken.transfer(address(0), 1 ether);
-        vm.expectRevert(abi.encodeWithSignature("InsufficientBalance()"));
+        vm.expectRevert(SchmackoSwap.InsufficientBalance.selector);
         schmackoSwap.fulfill(listingId);
-        vm.stopPrank();
 
-        assertEq(ipnft.balanceOf(address(schmackoSwap), nftId), numTokensMinted);
+        assertEq(ipnft.balanceOf(address(schmackoSwap), 1), 1);
+        vm.stopPrank();
     }
 
     function testCanBuyListing() public {
-        vm.deal(buyer, 1 ether);
-
-        assertEq(ipnft.balanceOf(address(seller), nftId), numTokensMinted);
-
-        assertEq(testToken.balanceOf(buyer), 1 ether);
-        assertEq(testToken.balanceOf(seller), 0);
-
         vm.startPrank(seller);
-        uint256 listingId = schmackoSwap.list(erc1155Supply, nftId, testToken, 1 ether);
-
-        vm.expectEmit(false, false, false, true);
-        emit AllowlistUpdated(listingId, address(buyer), true);
-
+        uint256 listingId = schmackoSwap.list(erc1155Supply, 1, testToken, 1 ether);
         schmackoSwap.changeBuyerAllowance(listingId, buyer, true);
         vm.stopPrank();
 
-        assertEq(ipnft.balanceOf(address(schmackoSwap), nftId), numTokensMinted);
-
         vm.startPrank(buyer);
+        testToken.approve(address(schmackoSwap), 1 ether);
+
         vm.expectEmit(true, false, false, true);
         emit Purchased(
             listingId,
             address(buyer),
             SchmackoSwap.Listing({
                 tokenContract: erc1155Supply,
-                tokenId: nftId,
-                tokenAmount: numTokensMinted,
+                tokenId: 1,
+                tokenAmount: 1,
                 paymentToken: testToken,
                 askPrice: 1 ether,
                 creator: address(seller)
             })
             );
 
-        testToken.approve(address(schmackoSwap), 1 ether);
-
         schmackoSwap.fulfill(listingId);
         vm.stopPrank();
 
-        assertEq(ipnft.balanceOf(address(buyer), nftId), numTokensMinted);
+        assertEq(ipnft.balanceOf(address(buyer), 1), 1);
         assertEq(testToken.balanceOf(buyer), 0);
         assertEq(testToken.balanceOf(seller), 1 ether);
 
-        // Expect listing to be removed after buy
+        // listing has been removed during sale
         (,, address creator,,,) = schmackoSwap.listings(listingId);
         assertEq(creator, address(0));
     }
 
-    function testCannotAddToAllowListforNonexistingListing() public {
+    function testCannotBuyNotExistingValue() public {
+        vm.expectRevert(SchmackoSwap.ListingNotFound.selector);
+        schmackoSwap.fulfill(1);
+    }
+
+    function testCannotManageAllowListsForNonexistingListing() public {
         vm.startPrank(seller);
-        vm.expectRevert(abi.encodeWithSignature("ListingNotFound()"));
+        vm.expectRevert(SchmackoSwap.ListingNotFound.selector);
         schmackoSwap.changeBuyerAllowance(1, buyer, true);
-    }
 
-    function testCannotRemoveFromAllowListforNonexistingListing() public {
-        vm.startPrank(seller);
-        vm.expectRevert(abi.encodeWithSignature("ListingNotFound()"));
+        vm.expectRevert(SchmackoSwap.ListingNotFound.selector);
         schmackoSwap.changeBuyerAllowance(1, buyer, false);
-    }
 
-    function testCanAddToAllowlist() public {
-        vm.startPrank(seller);
-        uint256 listingId = schmackoSwap.list(erc1155Supply, nftId, testToken, 1 ether);
-        assertEq(schmackoSwap.isAllowed(listingId, buyer), false);
-
-        vm.expectEmit(false, false, false, true);
-        emit AllowlistUpdated(listingId, address(buyer), true);
-
-        schmackoSwap.changeBuyerAllowance(listingId, buyer, true);
-
-        assertEq(schmackoSwap.isAllowed(listingId, buyer), true);
-    }
-
-    function testCannotAddZeroAddressToAllowlist() public {
-        vm.startPrank(seller);
-        uint256 listingId = schmackoSwap.list(erc1155Supply, nftId, testToken, 1 ether);
+        uint256 listingId = schmackoSwap.list(erc1155Supply, 1, testToken, 1 ether);
         vm.expectRevert("Can't add ZERO address to allowlist");
         schmackoSwap.changeBuyerAllowance(listingId, address(0), true);
 
         assertEq(schmackoSwap.isAllowed(listingId, address(0)), false);
-    }
-
-    function testonlySellerCanAddToAllowlist() public {
-        vm.startPrank(seller);
-        uint256 listingId = schmackoSwap.list(erc1155Supply, nftId, testToken, 1 ether);
-        assertEq(schmackoSwap.isAllowed(listingId, buyer), false);
-        vm.stopPrank();
-
-        vm.startPrank(otherUser);
-        vm.expectRevert(abi.encodeWithSignature("Unauthorized()"));
-        schmackoSwap.changeBuyerAllowance(listingId, buyer, true);
-
-        assertEq(schmackoSwap.isAllowed(listingId, buyer), false);
-    }
-
-    function testCanRemoveFromAllowlist() public {
-        vm.startPrank(seller);
-        uint256 listingId = schmackoSwap.list(erc1155Supply, nftId, testToken, 1 ether);
-        assertEq(schmackoSwap.isAllowed(listingId, buyer), false);
-
-        vm.expectEmit(false, false, false, true);
-        emit AllowlistUpdated(listingId, address(buyer), true);
-        emit AllowlistUpdated(listingId, address(buyer), false);
-
-        schmackoSwap.changeBuyerAllowance(listingId, buyer, true);
-
-        assertEq(schmackoSwap.isAllowed(listingId, buyer), true);
-
-        schmackoSwap.changeBuyerAllowance(listingId, buyer, false);
-        assertEq(schmackoSwap.isAllowed(listingId, buyer), false);
-    }
-
-    function testonlySellerCanRemoveFromAllowlist() public {
-        vm.startPrank(seller);
-        uint256 listingId = schmackoSwap.list(erc1155Supply, nftId, testToken, 1 ether);
-        assertEq(schmackoSwap.isAllowed(listingId, buyer), false);
-
-        vm.expectEmit(false, false, false, true);
-        emit AllowlistUpdated(listingId, address(buyer), true);
-
-        schmackoSwap.changeBuyerAllowance(listingId, buyer, true);
-        vm.stopPrank();
-
-        vm.startPrank(otherUser);
-        vm.expectRevert(abi.encodeWithSignature("Unauthorized()"));
-        schmackoSwap.changeBuyerAllowance(listingId, buyer, false);
-
-        assertEq(schmackoSwap.isAllowed(listingId, buyer), true);
-    }
-
-    function testTokenBalances() public {
-        assertEq(testToken.balanceOf(buyer), 1 ether);
-        assertEq(testToken.balanceOf(seller), 0);
-        assertEq(testToken.balanceOf(address(schmackoSwap)), 0);
     }
 }
