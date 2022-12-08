@@ -130,6 +130,10 @@ contract IPNFT is
     }
 
     function reserve() public returns (uint256) {
+        if (!(mintpass.balanceOf(_msgSender()) > 0)) {
+            revert NeedsMintpass();
+        }
+
         uint256 reservationId = _reservationCounter.current();
         _reservationCounter.increment();
         reservations[reservationId] = Reservation({reserver: _msgSender(), tokenURI: ""});

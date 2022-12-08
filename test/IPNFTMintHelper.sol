@@ -35,7 +35,7 @@ abstract contract IPNFTMintHelper is Test {
     function mintAToken(IReservable ipnft, address to) internal returns (uint256) {
         uint256 reservationId = reserveAToken(ipnft, to, arUri);
         vm.startPrank(to);
-        ipnft.mintReservation(to, reservationId, 1, "");
+        ipnft.mintReservation(to, reservationId, 1, arUri);
         vm.stopPrank();
         return reservationId;
     }
