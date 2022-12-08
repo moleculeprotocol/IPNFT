@@ -13,9 +13,6 @@ import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/O
 import { Mintpass } from "./Mintpass.sol";
 import { IReservable } from "./IReservable.sol";
 
-// import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-//import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
-
 /*
  ______ _______         __    __ ________ ________
 |      \       \       |  \  |  \        \        \
