@@ -129,8 +129,8 @@ contract UpgradeV2toV21Test is IPNFTMintHelper {
 
         assertEq(ipnftV21.slotOf(1), 1);
         assertEq(ipnftV21.slotOf(2), 2);
-        assertEq(ipnftV21.tokenSupplyInSlot(1), 1);
-        assertEq(ipnftV21.tokenSupplyInSlot(2), 1);
+        // assertEq(ipnftV21.tokenSupplyInSlot(1), 1);
+        // assertEq(ipnftV21.tokenSupplyInSlot(2), 1);
 
         vm.startPrank(alice);
         ipnftV21.transferFrom(1, charlie, 5);
@@ -145,7 +145,7 @@ contract UpgradeV2toV21Test is IPNFTMintHelper {
         assertEq(ipnftV21.slotOf(2), 2);
         assertEq(ipnftV21.slotOf(3), 1);
 
-        assertEq(ipnftV21.tokenSupplyInSlot(1), 2);
+        //assertEq(ipnftV21.tokenSupplyInSlot(1), 2);
 
         vm.startPrank(alice);
         ipnftV21.transferFrom(1, charlie, 100);

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.17;
 
-import { ERC3525SlotEnumerableUpgradeable } from "@solv/erc3525/ERC3525SlotEnumerableUpgradeable.sol";
+import { ERC3525Upgradeable } from "@solv/erc3525/ERC3525Upgradeable.sol";
 import { ERC3525BurnableUpgradeable } from "@solv/erc3525/ERC3525BurnableUpgradeable.sol";
 import { IERC3525 } from "@solv/erc3525/IERC3525.sol";
 import { ERC3525Upgradeable } from "@solv/erc3525/ERC3525Upgradeable.sol";
@@ -32,13 +32,7 @@ import { IIPNFTMetadata } from "./IPNFTMetadata.sol";
 /// @title minting logic
 /// @notice Contains functions and events to initialize and issue an ipnft
 /// @author contains code of bitbeckers, mr_bluesky
-contract IPNFT3525V21 is
-    Initializable,
-    ERC3525SlotEnumerableUpgradeable,
-    OwnableUpgradeable,
-    UUPSUpgradeable,
-    IReservable
-{
+contract IPNFT3525V21 is Initializable, ERC3525Upgradeable, OwnableUpgradeable, UUPSUpgradeable, IReservable {
     using CountersUpgradeable for CountersUpgradeable.Counter;
 
     CountersUpgradeable.Counter private _reservationCounter;
@@ -112,7 +106,6 @@ contract IPNFT3525V21 is
         __Ownable_init();
         __UUPSUpgradeable_init();
         __ERC3525_init(NAME, SYMBOL, DECIMALS);
-        __ERC3525SlotEnumerable_init();
 
         _reservationCounter.increment(); //start at 1.
     }
@@ -188,7 +181,7 @@ contract IPNFT3525V21 is
         _ipnfts[reservationId] = ipnft;
 
         mintpass.redeem(mintPassId);
-        _createSlot(reservationId);
+        //_createSlot(reservationId);
         /// @see _beforeValueTransfer: it creates slot with that reservation id
         uint256 tokenId = _mint(to, reservationId, DEFAULT_VALUE);
 
@@ -216,12 +209,7 @@ contract IPNFT3525V21 is
     /// @notice Returns a flag indicating if the contract supports the specified interface
     /// @param interfaceId Id of the interface
     /// @return true, if the interface is supported
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        override (ERC3525SlotEnumerableUpgradeable)
-        returns (bool)
-    {
+    function supportsInterface(bytes4 interfaceId) public view override (ERC3525Upgradeable) returns (bool) {
         return super.supportsInterface(interfaceId);
     }
 
@@ -234,18 +222,18 @@ contract IPNFT3525V21 is
     }
 
     function slotURI(uint256 slotId) public view override returns (string memory) {
-        if (!_slotExists(slotId)) {
-            revert NonExistentSlot(slotId);
-        }
+        // if (!_slotExists(slotId)) {
+        //     revert NonExistentSlot(slotId);
+        // }
         IPNFT memory slot = _ipnfts[slotId];
         return _metadataGenerator.generateSlotURI(slot);
     }
 
     function tokenURI(uint256 tokenId) public view override returns (string memory) {
         uint256 slotId = slotOf(tokenId);
-        if (!_slotExists(slotId)) {
-            revert NonExistentSlot(slotId);
-        }
+        // if (!_slotExists(slotId)) {
+        //     revert NonExistentSlot(slotId);
+        // }
         IPNFT memory token = _ipnfts[slotId];
         uint256 balance = balanceOf(tokenId);
         return _metadataGenerator.generateTokenURI(token, tokenId, slotId, balance);
