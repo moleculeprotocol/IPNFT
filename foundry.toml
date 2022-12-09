@@ -3,7 +3,7 @@ src = 'src'
 out = 'out'
 libs = ['lib']
 solc_version = "0.8.17"
-gas_reports = ["IPNFT", "Mintpass", "SchmackoSwap"]
+gas_reports = ["IPNFT", "IPNFTV2", "Mintpass", "SchmackoSwap"]
 
 
 [fmt]
