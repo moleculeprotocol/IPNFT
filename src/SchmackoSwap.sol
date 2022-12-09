@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.17;
 
-import { ERC20 } from "solmate/tokens/ERC20.sol";
+import { ERC20 as SolERC20 } from "solmate/tokens/ERC20.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { ReentrancyGuard } from "solmate/utils/ReentrancyGuard.sol";
 import { SafeTransferLib } from "solmate/utils/SafeTransferLib.sol";
 import { ERC1155Supply } from "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Supply.sol";
@@ -65,7 +66,7 @@ contract SchmackoSwap is ERC165, ReentrancyGuard, IERC1155Receiver {
         uint256 tokenId;
         address creator;
         uint256 tokenAmount;
-        ERC20 paymentToken;
+        IERC20 paymentToken;
         uint256 askPrice;
     }
 
@@ -81,7 +82,7 @@ contract SchmackoSwap is ERC165, ReentrancyGuard, IERC1155Receiver {
     /// @param askPrice How much you want to receive in exchange for the token
     /// @return The ID of the created listing
     /// @dev Remember to call setApprovalForAll(<address of this contract>, true) on the ERC1155's contract before calling this function
-    function list(ERC1155Supply tokenContract, uint256 tokenId, ERC20 paymentToken, uint256 askPrice) public nonReentrant returns (uint256) {
+    function list(ERC1155Supply tokenContract, uint256 tokenId, IERC20 paymentToken, uint256 askPrice) public nonReentrant returns (uint256) {
         uint256 totalSupply = tokenContract.totalSupply(tokenId);
 
         Listing memory listing = Listing({
@@ -128,7 +129,7 @@ contract SchmackoSwap is ERC165, ReentrancyGuard, IERC1155Receiver {
         if (listing.creator == address(0)) revert ListingNotFound();
         if (allowlist[listingId][msg.sender] != true) revert NotOnAllowlist();
 
-        ERC20 paymentToken = listing.paymentToken;
+        IERC20 paymentToken = listing.paymentToken;
 
         uint256 allowance = paymentToken.allowance(msg.sender, address(this));
         if (allowance < listing.askPrice) revert InsufficientAllowance();
@@ -140,7 +141,7 @@ contract SchmackoSwap is ERC165, ReentrancyGuard, IERC1155Receiver {
 
         listing.tokenContract.safeTransferFrom(address(this), msg.sender, listing.tokenId, listing.tokenAmount, "");
 
-        SafeTransferLib.safeTransferFrom(paymentToken, msg.sender, listing.creator, listing.askPrice);
+        SafeTransferLib.safeTransferFrom(SolERC20(address(paymentToken)), msg.sender, listing.creator, listing.askPrice);
 
         emit Purchased(listingId, msg.sender, listing);
     }
