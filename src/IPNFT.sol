@@ -151,11 +151,7 @@ contract IPNFT is
         return mintReservation(to, reservationId, mintPassId, reservations[reservationId].tokenURI);
     }
 
-    function mintReservation(address to, uint256 reservationId, uint256 mintPassId, string memory tokenURI)
-        public
-        override
-        returns (uint256 tokenId)
-    {
+    function mintReservation(address to, uint256 reservationId, uint256 mintPassId, string memory tokenURI) public override returns (uint256) {
         if (reservations[reservationId].reserver != _msgSender()) {
             revert NotOwningReservation(reservationId);
         }
@@ -170,7 +166,7 @@ contract IPNFT is
         _mint(to, reservationId, 1, "");
         _setURI(reservationId, tokenURI);
 
-        emit IPNFTMinted(to, tokenId, tokenURI);
+        emit IPNFTMinted(to, reservationId, tokenURI);
         return reservationId;
     }
 

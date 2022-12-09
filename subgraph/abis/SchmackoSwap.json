@@ -61,7 +61,7 @@
       {
         "components": [
           {
-            "internalType": "contract IPNFT3525V2",
+            "internalType": "contract ERC1155Supply",
             "name": "tokenContract",
             "type": "address"
           },
@@ -74,6 +74,11 @@
             "internalType": "address",
             "name": "creator",
             "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "tokenAmount",
+            "type": "uint256"
           },
           {
             "internalType": "contract ERC20",
@@ -113,7 +118,7 @@
       {
         "components": [
           {
-            "internalType": "contract IPNFT3525V2",
+            "internalType": "contract ERC1155Supply",
             "name": "tokenContract",
             "type": "address"
           },
@@ -126,6 +131,11 @@
             "internalType": "address",
             "name": "creator",
             "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "tokenAmount",
+            "type": "uint256"
           },
           {
             "internalType": "contract ERC20",
@@ -159,7 +169,7 @@
       {
         "components": [
           {
-            "internalType": "contract IPNFT3525V2",
+            "internalType": "contract ERC1155Supply",
             "name": "tokenContract",
             "type": "address"
           },
@@ -172,6 +182,11 @@
             "internalType": "address",
             "name": "creator",
             "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "tokenAmount",
+            "type": "uint256"
           },
           {
             "internalType": "contract ERC20",
@@ -220,7 +235,7 @@
       },
       {
         "internalType": "bool",
-        "name": "_isAllowed",
+        "name": "isAllowed_",
         "type": "bool"
       }
     ],
@@ -269,7 +284,7 @@
   {
     "inputs": [
       {
-        "internalType": "contract IPNFT3525V2",
+        "internalType": "contract ERC1155Supply",
         "name": "tokenContract",
         "type": "address"
       },
@@ -311,7 +326,7 @@
     "name": "listings",
     "outputs": [
       {
-        "internalType": "contract IPNFT3525V2",
+        "internalType": "contract ERC1155Supply",
         "name": "tokenContract",
         "type": "address"
       },
@@ -324,6 +339,11 @@
         "internalType": "address",
         "name": "creator",
         "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "tokenAmount",
+        "type": "uint256"
       },
       {
         "internalType": "contract ERC20",
@@ -343,26 +363,31 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "operator",
+        "name": "",
         "type": "address"
       },
       {
         "internalType": "address",
-        "name": "from",
+        "name": "",
         "type": "address"
       },
       {
-        "internalType": "uint256",
-        "name": "tokenId",
-        "type": "uint256"
+        "internalType": "uint256[]",
+        "name": "",
+        "type": "uint256[]"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "",
+        "type": "uint256[]"
       },
       {
         "internalType": "bytes",
-        "name": "data",
+        "name": "",
         "type": "bytes"
       }
     ],
-    "name": "onERC721Received",
+    "name": "onERC1155BatchReceived",
     "outputs": [
       {
         "internalType": "bytes4",
@@ -370,7 +395,46 @@
         "type": "bytes4"
       }
     ],
-    "stateMutability": "pure",
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bytes",
+        "name": "",
+        "type": "bytes"
+      }
+    ],
+    "name": "onERC1155Received",
+    "outputs": [
+      {
+        "internalType": "bytes4",
+        "name": "",
+        "type": "bytes4"
+      }
+    ],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {

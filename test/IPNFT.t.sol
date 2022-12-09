@@ -82,9 +82,8 @@ contract IPNFTTest is IPNFTMintHelper {
         uint256 reservationId = ipnft.reserve();
         ipnft.updateReservation(reservationId, ipfsUri);
 
-        //todo test this emission
-        // vm.expectEmit(true, true, false, true);
-        // emit IPNFTMinted(alice, 1, testURI);
+        vm.expectEmit(true, true, false, true);
+        emit IPNFTMinted(alice, 1, ipfsUri);
 
         ipnft.mintReservation(alice, 1, 1);
 

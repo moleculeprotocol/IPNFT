@@ -11,12 +11,15 @@ export function handleListed(event: ListedEvent): void {
     let listing = new Listing(event.params.listingId.toString());
     let ipnft = Ipnft.load(event.params.listing.tokenId.toString());
     if (!ipnft) {
-        log.debug("Could not load ipnft from tokenId", []);
+        log.error("Could not load ipnft from tokenId {}.", [
+            event.params.listing.tokenId.toString()
+        ]);
     } else {
         listing.ipnft = ipnft.id;
     }
 
     listing.creator = event.params.listing.creator;
+    listing.tokenAmount = event.params.listing.tokenAmount;
     listing.paymentToken = event.params.listing.paymentToken;
     listing.askPrice = event.params.listing.askPrice;
     listing.createdAt = event.block.timestamp;
@@ -24,6 +27,7 @@ export function handleListed(event: ListedEvent): void {
     listing.save();
 }
 
+//todo delete this maybe?
 export function handleUnlisted(event: UnlistedEvent): void {
     let listing = Listing.load(event.params.listingId.toString());
     if (!listing) {

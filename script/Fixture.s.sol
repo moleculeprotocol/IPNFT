@@ -43,8 +43,7 @@ contract FixtureScript is Script {
     function mintIpnft(address from, address to) internal returns (uint256) {
         vm.startBroadcast(from);
         uint256 reservationId = ipnft.reserve();
-        ipnft.updateReservation(reservationId, "ipfs://bafybeidlr6ltzbipd6ix5ckyyzwgm2pbigx7ar2ht64v4czk65pkjouire/metadata.json");
-        ipnft.mintReservation(to, reservationId, 1, "");
+        ipnft.mintReservation(to, reservationId, 1, "ipfs://bafybeidlr6ltzbipd6ix5ckyyzwgm2pbigx7ar2ht64v4czk65pkjouire/metadata.json");
         vm.stopBroadcast();
         return reservationId;
     }

@@ -1,13 +1,13 @@
 import { Address, log, store } from "@graphprotocol/graph-ts";
 import {
-    ReservationURIUpdated as ReservationURIUpdatedEvent,
+    ReservationUpdated as ReservationUpdatedEvent,
     Reserved as ReservedEvent,
-    TokenMinted as TokenMintedEvent,
-    TransferSingle
+    IPNFTMinted as IPNFTMintedEvent,
+    TransferSingle as TransferSingleEvent
 } from "../generated/IPNFT/IPNFT";
 import { Ipnft, Reservation } from "../generated/schema";
 
-export function handleTransferSingle(event: TransferSingle): void {
+export function handleTransferSingle(event: TransferSingleEvent): void {
     if (event.params.from !== Address.zero()) {
         let ipnft = Ipnft.load(event.params.id.toString());
         if (ipnft) {
@@ -24,9 +24,7 @@ export function handleReservation(event: ReservedEvent): void {
     reservation.save();
 }
 
-export function handleReservationURIUpdated(
-    event: ReservationURIUpdatedEvent
-): void {
+export function handleReservationUpdated(event: ReservationUpdatedEvent): void {
     const reservation = Reservation.load(event.params.reservationId.toString());
     if (!reservation) {
         log.debug(
@@ -39,10 +37,9 @@ export function handleReservationURIUpdated(
     }
 }
 
-export function handleMint(event: TokenMintedEvent): void {
+export function handleMint(event: IPNFTMintedEvent): void {
     let ipnft = new Ipnft(event.params.tokenId.toString());
-    ipnft.owner = event.params.owner;
-    ipnft.createdAt = event.block.timestamp;
+    ipnft.owner = event.params.minter;
     ipnft.tokenURI = event.params.tokenURI;
     ipnft.createdAt = event.block.timestamp;
     ipnft.save();
