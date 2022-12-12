@@ -9,6 +9,7 @@ import { UUPSProxy } from "../src/UUPSProxy.sol";
 import { SchmackoSwap } from "../src/SchmackoSwap.sol";
 import { Mintpass } from "../src/Mintpass.sol";
 import { ERC1155Supply } from "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Supply.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract FixtureScript is Script {
     string mnemonic = "test test test test test test test test test test test junk";
@@ -51,7 +52,7 @@ contract FixtureScript is Script {
     function createListingAndSell(address from, address to, uint256 tokenId, uint256 price) internal {
         vm.startBroadcast(from);
         ipnft.setApprovalForAll(address(schmackoSwap), true);
-        uint256 listingId = schmackoSwap.list(ERC1155Supply(address(ipnft)), tokenId, myToken, price);
+        uint256 listingId = schmackoSwap.list(ERC1155Supply(address(ipnft)), tokenId, IERC20(address(myToken)), price);
         schmackoSwap.changeBuyerAllowance(listingId, to, true);
         vm.stopBroadcast();
 

@@ -10,6 +10,8 @@ import { ERC1155Supply } from "@openzeppelin/contracts/token/ERC1155/extensions/
 import { Mintpass } from "../src/Mintpass.sol";
 
 import { ERC20 } from "solmate/tokens/ERC20.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+
 import { UUPSProxy } from "../src/UUPSProxy.sol";
 import { console } from "forge-std/console.sol";
 
@@ -25,7 +27,7 @@ contract SchmackoSwapTest is Test {
     IPNFT internal ipnft;
     ERC1155Supply internal erc1155Supply;
 
-    TestToken internal testToken;
+    IERC20 internal testToken;
     SchmackoSwap internal schmackoSwap;
 
     address deployer = makeAddr("chucknorris");
@@ -52,8 +54,9 @@ contract SchmackoSwapTest is Test {
         ipnft.setMintpassContract(address(mintpass));
         mintpass.batchMint(seller, 1);
 
-        testToken = new TestToken();
-        testToken.mintTo(buyer, 1 ether);
+        TestToken _testToken = new TestToken();
+        _testToken.mintTo(buyer, 1 ether);
+        testToken = IERC20(address(_testToken));
 
         schmackoSwap = new SchmackoSwap();
         vm.stopPrank();
@@ -110,7 +113,7 @@ contract SchmackoSwapTest is Test {
 
         assertEq(ipnft.balanceOf(address(schmackoSwap), 1), 1);
 
-        (ERC1155Supply tokenContract, uint256 tokenId, address creator, uint256 tokenAmount, ERC20 paymentToken, uint256 askPrice) =
+        (ERC1155Supply tokenContract, uint256 tokenId, address creator, uint256 tokenAmount, IERC20 paymentToken, uint256 askPrice) =
             schmackoSwap.listings(listingId);
 
         assertEq(address(tokenContract), address(ipnft));
