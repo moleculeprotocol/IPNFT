@@ -9,7 +9,8 @@ services:
 
   ganache:
     image: trufflesuite/ganache
-    ports: 
+    ports:
       - "8545:8545"
-    command: 
+    command:
       - --wallet.mnemonic="test test test test test test test test test test test junk"
+      - --chain.chainId=31337

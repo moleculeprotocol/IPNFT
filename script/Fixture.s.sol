@@ -29,7 +29,7 @@ contract FixtureScript is Script {
         (alice,) = deriveRememberKey(mnemonic, 2);
     }
 
-    function supplyERC20Tokens(address to, uint256 amount) internal {
+    function dealERC20(address to, uint256 amount) internal {
         vm.startBroadcast(deployer);
         myToken.mint(to, amount);
         vm.stopBroadcast();
@@ -49,16 +49,14 @@ contract FixtureScript is Script {
         return reservationId;
     }
 
-    function createListingAndSell(address from, address to, uint256 tokenId, uint256 price) internal {
-        vm.startBroadcast(from);
+    function createListingAndSell(address seller, address buyer, uint256 tokenId, uint256 price) internal {
+        vm.startBroadcast(seller);
         ipnft.setApprovalForAll(address(schmackoSwap), true);
         uint256 listingId = schmackoSwap.list(ERC1155Supply(address(ipnft)), tokenId, IERC20(address(myToken)), price);
-        schmackoSwap.changeBuyerAllowance(listingId, to, true);
+        schmackoSwap.changeBuyerAllowance(listingId, buyer, true);
         vm.stopBroadcast();
 
-        supplyERC20Tokens(to, price);
-
-        vm.startBroadcast(to);
+        vm.startBroadcast(buyer);
         myToken.approve(address(schmackoSwap), price);
         schmackoSwap.fulfill(listingId);
         vm.stopBroadcast();
@@ -90,6 +88,10 @@ contract FixtureScript is Script {
         mintMintPass(bob);
 
         uint256 tokenId = mintIpnft(bob, bob);
-        createListingAndSell(bob, alice, tokenId, 10);
+
+        dealERC20(bob, 1000 ether);
+        dealERC20(alice, 1000 ether);
+
+        createListingAndSell(bob, alice, tokenId, 1 ether);
     }
 }
