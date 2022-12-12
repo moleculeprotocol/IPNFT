@@ -9,6 +9,14 @@ import { UUPSProxy } from "../src/UUPSProxy.sol";
 import { IPNFTMintHelper } from "./IPNFTMintHelper.sol";
 import { ERC20 } from "solmate/tokens/ERC20.sol";
 
+contract Kamikaze {
+    receive() external payable { }
+
+    function bazingaa(address payable heir) public {
+        selfdestruct(heir);
+    }
+}
+
 contract IPNFTTest is IPNFTMintHelper {
     event Reserved(address indexed reserver, uint256 indexed reservationId);
     event ReservationUpdated(string name, uint256 indexed reservationId);
@@ -125,15 +133,46 @@ contract IPNFTTest is IPNFTMintHelper {
         vm.stopPrank();
     }
 
-    function testOwnerCanWithdrawAllFunds() public {
-        vm.deal(address(ipnft), 10 ether);
+    /**
+     * default payments are rejected by EIP1967...
+     */
+    function testCannotSendPlainEtherToIPNFT() public {
+        vm.deal(address(bob), 10 ether);
+
+        vm.prank(bob);
+        (bool transferWorked,) = address(ipnft).call{value: 10 ether}("");
+        assertFalse(transferWorked);
+        assertEq(address(ipnft).balance, 0);
+
+        vm.expectRevert(bytes(""));
+        payable(address(ipnft)).transfer(10 ether);
+
+        vm.stopPrank();
+    }
+
+    /**
+     * ... but when set as heir of a self destruct operation the contract accepts the money.
+     */
+
+    function testOwnerCanWithdrawEthFunds() public {
+        vm.deal(address(bob), 10 ether);
+        vm.prank(bob);
+        Kamikaze kamikaze = new Kamikaze();
+        (bool transferWorked,) = address(kamikaze).call{value: 10 ether}("");
+        assertTrue(transferWorked);
+        assertEq(address(kamikaze).balance, 10 ether);
+
+        kamikaze.bazingaa(payable(address(ipnft)));
+
         assertEq(address(ipnft).balance, 10 ether);
+        vm.stopPrank();
 
         vm.startPrank(charlie);
         vm.expectRevert("Ownable: caller is not the owner");
         ipnft.withdrawAll();
         vm.stopPrank();
 
+        assertEq(address(deployer).balance, 0);
         vm.startPrank(deployer);
         ipnft.withdrawAll();
         vm.stopPrank();
