@@ -22,9 +22,7 @@ import { IReservable } from "./IReservable.sol";
   | ▓▓ | ▓▓▓▓▓▓▓ \▓▓▓▓▓▓ ▓▓\▓▓ ▓▓ ▓▓▓▓▓     | ▓▓
  _| ▓▓_| ▓▓            | ▓▓ \▓▓▓▓ ▓▓        | ▓▓
 |   ▓▓ \ ▓▓            | ▓▓  \▓▓▓ ▓▓        | ▓▓
- \▓▓▓▓▓▓\▓▓             \▓▓   \▓▓\▓▓         \▓▓
-
-*/
+ \▓▓▓▓▓▓\▓▓             \▓▓   \▓▓\▓▓         \▓▓*/
 
 contract IPNFT is
     IReservable,
@@ -147,7 +145,7 @@ contract IPNFT is
         emit ReservationUpdated(_tokenURI, reservationId);
     }
 
-    function mintReservation(address to, uint256 mintPassId, uint256 reservationId) public returns (uint256 tokenId) {
+    function mintReservation(address to, uint256 mintPassId, uint256 reservationId) public returns (uint256) {
         return mintReservation(to, reservationId, mintPassId, reservations[reservationId].tokenURI);
     }
 

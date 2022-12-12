@@ -530,7 +530,7 @@
     "outputs": [
       {
         "internalType": "uint256",
-        "name": "tokenId",
+        "name": "",
         "type": "uint256"
       }
     ],
@@ -559,7 +559,7 @@
     "outputs": [
       {
         "internalType": "uint256",
-        "name": "tokenId",
+        "name": "",
         "type": "uint256"
       }
     ],

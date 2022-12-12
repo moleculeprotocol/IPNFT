@@ -81,7 +81,7 @@
             "type": "uint256"
           },
           {
-            "internalType": "contract ERC20",
+            "internalType": "contract IERC20",
             "name": "paymentToken",
             "type": "address"
           },
@@ -138,7 +138,7 @@
             "type": "uint256"
           },
           {
-            "internalType": "contract ERC20",
+            "internalType": "contract IERC20",
             "name": "paymentToken",
             "type": "address"
           },
@@ -189,7 +189,7 @@
             "type": "uint256"
           },
           {
-            "internalType": "contract ERC20",
+            "internalType": "contract IERC20",
             "name": "paymentToken",
             "type": "address"
           },
@@ -294,7 +294,7 @@
         "type": "uint256"
       },
       {
-        "internalType": "contract ERC20",
+        "internalType": "contract IERC20",
         "name": "paymentToken",
         "type": "address"
       },
@@ -346,7 +346,7 @@
         "type": "uint256"
       },
       {
-        "internalType": "contract ERC20",
+        "internalType": "contract IERC20",
         "name": "paymentToken",
         "type": "address"
       },
