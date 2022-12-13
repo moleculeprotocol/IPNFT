@@ -14,18 +14,17 @@ import { IAuthorizeMints } from "./IAuthorizeMints.sol";
 import { IReservable } from "./IReservable.sol";
 
 /*
- ______ _______         __    __ ________ ________
-|      \       \       |  \  |  \        \        \
- \▓▓▓▓▓▓ ▓▓▓▓▓▓▓\      | ▓▓\ | ▓▓ ▓▓▓▓▓▓▓▓\▓▓▓▓▓▓▓▓
-  | ▓▓ | ▓▓__/ ▓▓______| ▓▓▓\| ▓▓ ▓▓__      | ▓▓
-  | ▓▓ | ▓▓    ▓▓      \ ▓▓▓▓\ ▓▓ ▓▓  \     | ▓▓
-  | ▓▓ | ▓▓▓▓▓▓▓ \▓▓▓▓▓▓ ▓▓\▓▓ ▓▓ ▓▓▓▓▓     | ▓▓
- _| ▓▓_| ▓▓            | ▓▓ \▓▓▓▓ ▓▓        | ▓▓
-|   ▓▓ \ ▓▓            | ▓▓  \▓▓▓ ▓▓        | ▓▓
- \▓▓▓▓▓▓\▓▓             \▓▓   \▓▓\▓▓         \▓▓
+.____________________  ______________________     ________      ____ 
+|   \______   \      \ \_   _____/\__    ___/__  _\_____  \    /_   |
+|   ||     ___/   |   \ |    __)    |    |  \  \/ //  ____/     |   |
+|   ||    |  /    |    \|     \     |    |   \   //       \     |   |
+|___||____|  \____|__  /\___  /     |____|    \_/ \_______ \ /\ |___|
+                     \/     \/                            \/ \/      */
 
-*/
-
+/// @title IPNFTV2.1 Demo for Testing Upgrades
+/// @author molecule.to
+/// @notice Demo contract to test upgrades. Don't use like this
+/// @dev Don't use this.
 contract IPNFTV21 is
     IReservable,
     ERC1155Upgradeable,
@@ -36,21 +35,21 @@ contract IPNFTV21 is
     OwnableUpgradeable,
     PausableUpgradeable
 {
+    //drops the Pauseable extension
+
     using CountersUpgradeable for CountersUpgradeable.Counter;
 
-    struct Reservation {
-        address reserver;
-        string tokenURI;
-    }
-
     CountersUpgradeable.Counter private _reservationCounter;
-    mapping(uint256 => Reservation) public reservations;
+    mapping(uint256 => address) public reservations;
 
     /// @notice Current version of the contract
     uint16 internal _version;
 
     /// @notice e.g. a mintpass contract
     IAuthorizeMints mintAuthorizer;
+
+    /// @notice musnt't take the Pauseable property gap
+    string public aNewProperty;
 
     /**
      *
@@ -59,7 +58,6 @@ contract IPNFTV21 is
      */
 
     event Reserved(address indexed reserver, uint256 indexed reservationId);
-    event ReservationUpdated(string tokenURI, uint256 indexed reservationId);
     event IPNFTMinted(address indexed minter, uint256 indexed tokenId, string tokenURI);
 
     /// @dev https://docs.opensea.io/docs/metadata-standards#freezing-metadata
@@ -88,8 +86,9 @@ contract IPNFTV21 is
 
     /// @notice Contract initialization logic
     function initialize() public initializer {
-        __Ownable_init();
         __UUPSUpgradeable_init();
+        __Ownable_init();
+        __Pausable_init();
         __ERC1155_init("");
         __ERC1155Burnable_init();
         __ERC1155URIStorage_init();
@@ -98,12 +97,8 @@ contract IPNFTV21 is
         _reservationCounter.increment(); //start at 1.
     }
 
-    function pause() public onlyOwner {
-        _pause();
-    }
-
-    function unpause() public onlyOwner {
-        _unpause();
+    function reinit() public onlyOwner reinitializer(2) {
+        aNewProperty = "some property";
     }
 
     /**
@@ -127,26 +122,18 @@ contract IPNFTV21 is
 
         uint256 reservationId = _reservationCounter.current();
         _reservationCounter.increment();
-        reservations[reservationId] = Reservation({reserver: _msgSender(), tokenURI: ""});
+        reservations[reservationId] = _msgSender();
         emit Reserved(_msgSender(), reservationId);
         return reservationId;
     }
 
-    function updateReservation(uint256 reservationId, string calldata _tokenURI) external {
-        if (reservations[reservationId].reserver != _msgSender()) {
-            revert NotOwningReservation(reservationId);
-        }
-
-        reservations[reservationId].tokenURI = _tokenURI;
-        emit ReservationUpdated(_tokenURI, reservationId);
-    }
-
-    function mintReservation(address to, uint256 mintPassId, uint256 reservationId) public returns (uint256) {
-        return mintReservation(to, reservationId, mintPassId, reservations[reservationId].tokenURI);
-    }
-
-    function mintReservation(address to, uint256 reservationId, uint256 mintPassId, string memory tokenURI) public override returns (uint256) {
-        if (reservations[reservationId].reserver != _msgSender()) {
+    function mintReservation(address to, uint256 reservationId, uint256 mintPassId, string memory tokenURI)
+        public
+        override
+        whenNotPaused
+        returns (uint256)
+    {
+        if (reservations[reservationId] != _msgSender()) {
             revert NotOwningReservation(reservationId);
         }
 
@@ -201,7 +188,7 @@ contract IPNFTV21 is
     // }
 
     // Withdraw ETH from contract
-    function withdrawAll() public payable onlyOwner {
+    function withdrawAll() public payable whenNotPaused onlyOwner {
         require(payable(msg.sender).send(address(this).balance), "transfer failed");
     }
 

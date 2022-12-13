@@ -22,8 +22,12 @@ import { IReservable } from "./IReservable.sol";
   | ▓▓ | ▓▓▓▓▓▓▓ \▓▓▓▓▓▓ ▓▓\▓▓ ▓▓ ▓▓▓▓▓     | ▓▓
  _| ▓▓_| ▓▓            | ▓▓ \▓▓▓▓ ▓▓        | ▓▓
 |   ▓▓ \ ▓▓            | ▓▓  \▓▓▓ ▓▓        | ▓▓
- \▓▓▓▓▓▓\▓▓             \▓▓   \▓▓\▓▓         \▓▓*/
+ \▓▓▓▓▓▓\▓▓             \▓▓   \▓▓\▓▓         \▓▓
+ */
 
+/// @title IPNFTV2
+/// @author molecule.to
+/// @notice IP-NFTs capture intellectual property to be traded and fractionalized
 contract IPNFT is
     IReservable,
     ERC1155Upgradeable,
@@ -36,13 +40,8 @@ contract IPNFT is
 {
     using CountersUpgradeable for CountersUpgradeable.Counter;
 
-    struct Reservation {
-        address reserver;
-        string tokenURI;
-    }
-
     CountersUpgradeable.Counter private _reservationCounter;
-    mapping(uint256 => Reservation) public reservations;
+    mapping(uint256 => address) public reservations;
 
     /// @notice Current version of the contract
     uint16 internal _version;
@@ -57,7 +56,6 @@ contract IPNFT is
      */
 
     event Reserved(address indexed reserver, uint256 indexed reservationId);
-    event ReservationUpdated(string tokenURI, uint256 indexed reservationId);
     event IPNFTMinted(address indexed minter, uint256 indexed tokenId, string tokenURI);
 
     /// @dev https://docs.opensea.io/docs/metadata-standards#freezing-metadata
@@ -86,8 +84,9 @@ contract IPNFT is
 
     /// @notice Contract initialization logic
     function initialize() public initializer {
-        __Ownable_init();
         __UUPSUpgradeable_init();
+        __Ownable_init();
+        __Pausable_init();
         __ERC1155_init("");
         __ERC1155Burnable_init();
         __ERC1155URIStorage_init();
@@ -125,26 +124,18 @@ contract IPNFT is
 
         uint256 reservationId = _reservationCounter.current();
         _reservationCounter.increment();
-        reservations[reservationId] = Reservation({reserver: _msgSender(), tokenURI: ""});
+        reservations[reservationId] = _msgSender();
         emit Reserved(_msgSender(), reservationId);
         return reservationId;
     }
 
-    function updateReservation(uint256 reservationId, string calldata _tokenURI) external {
-        if (reservations[reservationId].reserver != _msgSender()) {
-            revert NotOwningReservation(reservationId);
-        }
-
-        reservations[reservationId].tokenURI = _tokenURI;
-        emit ReservationUpdated(_tokenURI, reservationId);
-    }
-
-    function mintReservation(address to, uint256 mintPassId, uint256 reservationId) public returns (uint256) {
-        return mintReservation(to, reservationId, mintPassId, reservations[reservationId].tokenURI);
-    }
-
-    function mintReservation(address to, uint256 reservationId, uint256 mintPassId, string memory tokenURI) public override returns (uint256) {
-        if (reservations[reservationId].reserver != _msgSender()) {
+    function mintReservation(address to, uint256 reservationId, uint256 mintPassId, string memory tokenURI)
+        public
+        override
+        whenNotPaused
+        returns (uint256)
+    {
+        if (reservations[reservationId] != _msgSender()) {
             revert NotOwningReservation(reservationId);
         }
 
@@ -162,38 +153,8 @@ contract IPNFT is
         return reservationId;
     }
 
-    // This is how a direct mint could look like for IP-NFTs that don't need encrypted legal contracts.
-    // The Question is how useful this is, after all the legal contract might still require
-    // a hard reference to the IP-NFT tokenId. For this function you wouldn't get that
-    // tokenId until after the mint of course.
-    // function directMint(address to, string memory tokenURI) public payable returns (uint256 tokenId) {
-    //     require(msg.value >= mintPrice, "Ether amount sent is too small");
-
-    //     uint256 newTokenId = _reservationCounter.current();
-    //     _reservationCounter.increment();
-
-    //     // Given that we're not super confident about the metadata being "final" yet,
-    //     // I don't think we should set the permanent URI yet.
-    //     emit PermanentURI(tokenURI, newTokenId);
-
-    //     emit TokenMinted(tokenURI, to, newTokenId, 1);
-
-    //     _mint(to, newTokenId, 1, "");
-    //     _setURI(newTokenId, tokenURI);
-
-    //     return tokenId;
-    // }
-
-    // function increaseShares(uint256 tokenId, uint256 shares, address to) public {
-    //     require(shares > 0, "IP-NFT: shares amount must be greater than 0");
-    //     require(totalSupply(tokenId) == 1, "IP-NFT: shares already minted");
-    //     require(balanceOf(_msgSender(), tokenId) == 1, "IP-NFT: not owner");
-
-    //     _mint(to, tokenId, shares, "");
-    // }
-
     // Withdraw ETH from contract
-    function withdrawAll() public payable onlyOwner {
+    function withdrawAll() public payable whenNotPaused onlyOwner {
         require(payable(msg.sender).send(address(this).balance), "transfer failed");
     }
 
