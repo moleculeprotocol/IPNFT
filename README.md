@@ -8,7 +8,7 @@ Template for NFT contracts tokenizing IP.
 
 - IP-NFT <https://goerli.etherscan.io/address/0x5fbdb2315678afecb367f032d93f642f64180aa3#code>
 - SchmackoSwap <https://goerli.etherscan.io/address/0xe7f1725e7734ce288f8367e1bb143e90bb3f0512#code>
-- The Graph: <https://api.thegraph.com/subgraphs/name/elmariachi111/schrotti-galoppi-schmacko-1>
+- The Graph: <https://thegraph.com/explorer/subgraph/dorianwilhelm/ip-nft-subgraph-goerli>
 
 ## Installation
 
@@ -56,7 +56,7 @@ We added a basic hardhat environment to this project. While foundry stays our pr
 ### Deploy local development or fixture setup
 
 - Anvil is a local testnet node shipped with Foundry. You can use it for testing your contracts from frontends or for interacting over RPC. You can also use the ganache node from docker, see above.
-- Run `anvil -h 0.0.0.0` in a terminal window and keep it running 
+- Run `anvil -h 0.0.0.0` in a terminal window and keep it running
 - Use `cast` (which is part of Foundry) to query/manipulate your deployed contract. Find out more here: <https://book.getfoundry.sh/cast/>
 
 We've got 2 scripts that deploy all contracts at once (`Dev.s.sol`) and create a base state(`Fixture.s.sol`)

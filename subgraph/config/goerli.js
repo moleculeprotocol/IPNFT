@@ -5,14 +5,18 @@ require('dotenv').config({
 })
 
 module.exports = {
-    network: 'goerli',
+    network: "goerli",
     ipnft: {
-        address: "0xA1C301D77f701037F491C074e1bD9d4ac24CF5e5",
-        startBlock: 7850325,
+        address: "0x8c3BC5679ccD46F33D0571a248985942A817328A",
+        startBlock: 8127967
     },
     schmackoSwap: {
-        address: "0x3C5c513f51Fb10eC8F546ff127074EBC29F3a24c",
-        startBlock: 7850325,
+        address: "0xC52A5d839eee47498A30b4517A573b2197F54888",
+        startBlock: 8128259
     },
+    mintpass: {
+        address: "0x9c053F391e929dEd1F10b0240bB4fbd048Ae7949",
+        startBlock: 8128057
+    }
 };
 
