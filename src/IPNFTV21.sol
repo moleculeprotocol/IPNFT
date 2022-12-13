@@ -22,9 +22,11 @@ import { IReservable } from "./IReservable.sol";
   | ▓▓ | ▓▓▓▓▓▓▓ \▓▓▓▓▓▓ ▓▓\▓▓ ▓▓ ▓▓▓▓▓     | ▓▓
  _| ▓▓_| ▓▓            | ▓▓ \▓▓▓▓ ▓▓        | ▓▓
 |   ▓▓ \ ▓▓            | ▓▓  \▓▓▓ ▓▓        | ▓▓
- \▓▓▓▓▓▓\▓▓             \▓▓   \▓▓\▓▓         \▓▓*/
+ \▓▓▓▓▓▓\▓▓             \▓▓   \▓▓\▓▓         \▓▓
 
-contract IPNFT is
+*/
+
+contract IPNFTV21 is
     IReservable,
     ERC1155Upgradeable,
     ERC1155BurnableUpgradeable,
@@ -145,7 +147,7 @@ contract IPNFT is
         emit ReservationUpdated(_tokenURI, reservationId);
     }
 
-    function mintReservation(address to, uint256 mintPassId, uint256 reservationId) public returns (uint256) {
+    function mintReservation(address to, uint256 mintPassId, uint256 reservationId) public returns (uint256 tokenId) {
         return mintReservation(to, reservationId, mintPassId, reservations[reservationId].tokenURI);
     }
 
@@ -168,6 +170,20 @@ contract IPNFT is
         return reservationId;
     }
 
+    function increaseShares(uint256 tokenId, uint256 shares, address to) public {
+        require(shares > 0, "IP-NFT: shares amount must be greater than 0");
+        require(totalSupply(tokenId) == 1, "IP-NFT: shares already minted");
+        require(balanceOf(_msgSender(), tokenId) == 1, "IP-NFT: not owner");
+
+        _mint(to, tokenId, shares, "");
+    }
+
+    function distribute(uint256 fromToken, address[] memory toAddresses, uint256 value) public {
+        for (uint256 i = 0; i < toAddresses.length; i++) {
+            safeTransferFrom(msg.sender, toAddresses[i], fromToken, value, "");
+        }
+    }
+
     // This is how a direct mint could look like for IP-NFTs that don't need encrypted legal contracts.
     // The Question is how useful this is, after all the legal contract might still require
     // a hard reference to the IP-NFT tokenId. For this function you wouldn't get that
@@ -188,14 +204,6 @@ contract IPNFT is
     //     _setURI(newTokenId, tokenURI);
 
     //     return tokenId;
-    // }
-
-    // function increaseShares(uint256 tokenId, uint256 shares, address to) public {
-    //     require(shares > 0, "IP-NFT: shares amount must be greater than 0");
-    //     require(totalSupply(tokenId) == 1, "IP-NFT: shares already minted");
-    //     require(balanceOf(_msgSender(), tokenId) == 1, "IP-NFT: not owner");
-
-    //     _mint(to, tokenId, shares, "");
     // }
 
     // Withdraw ETH from contract

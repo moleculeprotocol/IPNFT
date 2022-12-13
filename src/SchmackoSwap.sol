@@ -1,12 +1,16 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.17;
 
-import {ERC20} from "solmate/tokens/ERC20.sol";
-import {ReentrancyGuard} from "solmate/utils/ReentrancyGuard.sol";
-import {SafeTransferLib} from "solmate/utils/SafeTransferLib.sol";
-import {ERC1155Supply} from "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Supply.sol";
+import { ERC20 as SolERC20 } from "solmate/tokens/ERC20.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { ReentrancyGuard } from "solmate/utils/ReentrancyGuard.sol";
+import { SafeTransferLib } from "solmate/utils/SafeTransferLib.sol";
+import { ERC1155Supply } from "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Supply.sol";
+import { IERC1155Receiver } from "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
+import { ERC165 } from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
+import { IERC165 } from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 
-contract SchmackoSwap is ReentrancyGuard {
+contract SchmackoSwap is ERC165, ReentrancyGuard, IERC1155Receiver {
     /// ERRORS ///
 
     /// @notice Thrown when user tries to initiate an action without being authorized
@@ -46,11 +50,7 @@ contract SchmackoSwap is ReentrancyGuard {
     /// @param listingId The listing that is getting updated
     /// @param buyer The address of the buyer that is added
     /// @param _isAllowed If address is added or removed from allowlist
-    event AllowlistUpdated(
-        uint256 listingId,
-        address indexed buyer,
-        bool _isAllowed
-    );
+    event AllowlistUpdated(uint256 listingId, address indexed buyer, bool _isAllowed);
 
     /// @notice Used as a counter for the next sale index.
     /// @dev Initialised at 1 because it makes the first transaction slightly cheaper.
@@ -64,9 +64,9 @@ contract SchmackoSwap is ReentrancyGuard {
     struct Listing {
         ERC1155Supply tokenContract;
         uint256 tokenId;
-        uint256 tokenAmount;
         address creator;
-        ERC20 paymentToken;
+        uint256 tokenAmount;
+        IERC20 paymentToken;
         uint256 askPrice;
     }
 
@@ -82,21 +82,14 @@ contract SchmackoSwap is ReentrancyGuard {
     /// @param askPrice How much you want to receive in exchange for the token
     /// @return The ID of the created listing
     /// @dev Remember to call setApprovalForAll(<address of this contract>, true) on the ERC1155's contract before calling this function
-    function list(
-        ERC1155Supply tokenContract,
-        uint256 tokenId,
-        ERC20 paymentToken,
-        uint256 askPrice
-    ) public nonReentrant returns (uint256) {
-        //TODO: revert if ERC1155 needed interface not implemented
-
-        uint256 tokenSupply = tokenContract.totalSupply(tokenId);
+    function list(ERC1155Supply tokenContract, uint256 tokenId, IERC20 paymentToken, uint256 askPrice) public nonReentrant returns (uint256) {
+        uint256 totalSupply = tokenContract.totalSupply(tokenId);
 
         Listing memory listing = Listing({
             tokenContract: tokenContract,
             tokenId: tokenId,
-            tokenAmount: tokenSupply,
             paymentToken: paymentToken,
+            tokenAmount: totalSupply,
             askPrice: askPrice,
             creator: msg.sender
         });
@@ -110,13 +103,7 @@ contract SchmackoSwap is ReentrancyGuard {
 
         emit Listed(listingId, listing);
 
-        listing.tokenContract.safeTransferFrom(
-            msg.sender,
-            address(this),
-            listing.tokenId,
-            tokenSupply,
-            ""
-        );
+        tokenContract.safeTransferFrom(msg.sender, address(this), tokenId, totalSupply, "");
 
         return listingId;
     }
@@ -132,13 +119,7 @@ contract SchmackoSwap is ReentrancyGuard {
 
         emit Unlisted(listingId, listing);
 
-        listing.tokenContract.safeTransferFrom(
-            address(this),
-            msg.sender,
-            listing.tokenId,
-            listing.tokenAmount,
-            ""
-        );
+        listing.tokenContract.safeTransferFrom(address(this), msg.sender, listing.tokenId, listing.tokenAmount, "");
     }
 
     /// @notice Purchase one of the listed tokens
@@ -148,7 +129,7 @@ contract SchmackoSwap is ReentrancyGuard {
         if (listing.creator == address(0)) revert ListingNotFound();
         if (allowlist[listingId][msg.sender] != true) revert NotOnAllowlist();
 
-        ERC20 paymentToken = listing.paymentToken;
+        IERC20 paymentToken = listing.paymentToken;
 
         uint256 allowance = paymentToken.allowance(msg.sender, address(this));
         if (allowance < listing.askPrice) revert InsufficientAllowance();
@@ -158,71 +139,38 @@ contract SchmackoSwap is ReentrancyGuard {
 
         delete listings[listingId];
 
-        listing.tokenContract.safeTransferFrom(
-            address(this),
-            msg.sender,
-            listing.tokenId,
-            listing.tokenAmount,
-            ""
-        );
+        listing.tokenContract.safeTransferFrom(address(this), msg.sender, listing.tokenId, listing.tokenAmount, "");
 
-        SafeTransferLib.safeTransferFrom(
-            paymentToken,
-            msg.sender,
-            listing.creator,
-            listing.askPrice
-        );
+        SafeTransferLib.safeTransferFrom(SolERC20(address(paymentToken)), msg.sender, listing.creator, listing.askPrice);
 
         emit Purchased(listingId, msg.sender, listing);
     }
 
-    function changeBuyerAllowance(
-        uint256 listingId,
-        address buyerAddress,
-        bool _isAllowed
-    ) public {
+    function changeBuyerAllowance(uint256 listingId, address buyerAddress, bool isAllowed_) public {
         Listing memory listing = listings[listingId];
 
         if (listing.creator == address(0)) revert ListingNotFound();
         if (listing.creator != msg.sender) revert Unauthorized();
-        require(
-            buyerAddress != address(0),
-            "Can't add ZERO address to allowlist"
-        );
+        require(buyerAddress != address(0), "Can't add ZERO address to allowlist");
 
-        allowlist[listingId][buyerAddress] = _isAllowed;
+        allowlist[listingId][buyerAddress] = isAllowed_;
 
-        emit AllowlistUpdated(listingId, buyerAddress, _isAllowed);
+        emit AllowlistUpdated(listingId, buyerAddress, isAllowed_);
     }
 
-    function isAllowed(uint256 listingId, address buyerAddress)
-        public
-        view
-        returns (bool)
-    {
+    function isAllowed(uint256 listingId, address buyerAddress) public view returns (bool) {
         return allowlist[listingId][buyerAddress];
     }
 
-    // Implemented these functions so we don't get "execution reverted: ERC1155: transfer to non ERC1155Receiver implementer"
-    // when transferring ERC1155 tokens to this contract
-
-    function onERC1155Received(
-        address,
-        address,
-        uint256,
-        uint256,
-        bytes memory
-    ) public virtual returns (bytes4) {
+    function onERC1155Received(address, address, uint256, uint256, bytes memory) public virtual returns (bytes4) {
         return this.onERC1155Received.selector;
     }
 
-    function onERC1155BatchReceived(
-        address,
-        address,
-        uint256[] memory,
-        uint256[] memory,
-        bytes memory
-    ) public virtual returns (bytes4) {
+    function onERC1155BatchReceived(address, address, uint256[] memory, uint256[] memory, bytes memory) public virtual returns (bytes4) {
         return this.onERC1155BatchReceived.selector;
+    }
+
+    function supportsInterface(bytes4 interfaceId) public view virtual override (IERC165, ERC165) returns (bool) {
+        return interfaceId == this.onERC1155Received.selector || super.supportsInterface(interfaceId);
     }
 }

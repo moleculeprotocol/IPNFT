@@ -1,5 +1,5 @@
-import { Bytes, log } from "@graphprotocol/graph-ts";
-import { Ipnft, Listing } from "../generated/schema";
+import { Bytes, log, store } from "@graphprotocol/graph-ts";
+import { Allowed, Ipnft, Listing } from "../generated/schema";
 import {
     AllowlistUpdated as AllowlistUpdatedEvent,
     Listed as ListedEvent,
@@ -11,21 +11,23 @@ export function handleListed(event: ListedEvent): void {
     let listing = new Listing(event.params.listingId.toString());
     let ipnft = Ipnft.load(event.params.listing.tokenId.toString());
     if (!ipnft) {
-        log.debug("Could not load ipnft from tokenId", []);
+        log.error("Could not load ipnft from tokenId {}.", [
+            event.params.listing.tokenId.toString()
+        ]);
     } else {
         listing.ipnft = ipnft.id;
     }
 
     listing.creator = event.params.listing.creator;
-    listing.tokenSupply = event.params.listing.tokenAmount;
+    listing.tokenAmount = event.params.listing.tokenAmount;
     listing.paymentToken = event.params.listing.paymentToken;
     listing.askPrice = event.params.listing.askPrice;
     listing.createdAt = event.block.timestamp;
-    listing.allowlist = [];
 
     listing.save();
 }
 
+//todo delete this maybe?
 export function handleUnlisted(event: UnlistedEvent): void {
     let listing = Listing.load(event.params.listingId.toString());
     if (!listing) {
@@ -50,19 +52,26 @@ export function handleAllowlistUpdated(event: AllowlistUpdatedEvent): void {
         return;
     }
 
-    if (event.params._isAllowed === true) {
-        listing.allowlist.push(event.params.buyer);
-    } else {
-        let newAllowlist: Bytes[] = [];
-        for (let i = 0; i < listing.allowlist.length; i++) {
-            if (listing.allowlist[i] == event.params.buyer) {
-                newAllowlist.push(listing.allowlist[i]);
-            }
+    const allowlistId = listing.id + "-" + event.params.buyer.toHexString();
+
+    let allowed = Allowed.load(allowlistId);
+    if (allowed) {
+        if (event.params._isAllowed === false) {
+            store.remove("Allowed", allowlistId);
+            return;
         }
-        listing.allowlist = newAllowlist;
+    } else {
+        if (event.params._isAllowed === false) {
+            return;
+        }
+        allowed = new Allowed(allowlistId);
     }
 
-    listing.save();
+    allowed.account = event.params.buyer;
+    allowed.listing = listing.id;
+    allowed.allowed = event.params._isAllowed;
+
+    allowed.save();
 }
 
 export function handlePurchased(event: PurchasedEvent): void {

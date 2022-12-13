@@ -9,3 +9,10 @@
 	path = lib/solmate
 	url = https://github.com/transmissions11/solmate
 	branch = v7
+[submodule "lib/openzeppelin-contracts-upgradeable"]
+	path = lib/openzeppelin-contracts-upgradeable
+	url = https://github.com/OpenZeppelin/openzeppelin-contracts-upgradeable
+[submodule "lib/ERC721B"]
+	path = lib/ERC721B
+	url = https://github.com/badbabybearbots/ERC721B
+	branch = 0.2.1

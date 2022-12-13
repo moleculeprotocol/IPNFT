@@ -2,234 +2,229 @@
 pragma solidity ^0.8.17;
 
 import "forge-std/Test.sol";
-import {console} from "forge-std/console.sol";
-import {IPNFT} from "../src/IPNFT.sol";
+import { console } from "forge-std/console.sol";
+import { IPNFT } from "../src/IPNFT.sol";
+import { Mintpass } from "../src/Mintpass.sol";
+import { UUPSProxy } from "../src/UUPSProxy.sol";
+import { IPNFTMintHelper } from "./IPNFTMintHelper.sol";
+import { ERC20 } from "solmate/tokens/ERC20.sol";
 
-contract IPNFTTest is Test {
+contract Kamikaze {
+    receive() external payable { }
+
+    function bazingaa(address payable heir) public {
+        selfdestruct(heir);
+    }
+}
+
+contract IPNFTTest is IPNFTMintHelper {
     event Reserved(address indexed reserver, uint256 indexed reservationId);
+    event ReservationUpdated(string name, uint256 indexed reservationId);
 
-    event TokenMinted(
-        string tokenURI,
-        address indexed owner,
-        uint256 indexed tokenId,
-        uint256 sharesAmount
-    );
+    event IPNFTMinted(address indexed minter, uint256 indexed tokenId, string tokenURI);
 
-    event PermanentURI(string _value, uint256 indexed _id);
+    UUPSProxy proxy;
+    IPNFT internal ipnft;
 
-    IPNFT public token;
-    address bob = address(0x1);
-    address alice = address(0x2);
-    address deployer = address(0x3);
-    string testURI = "ipfs://QmYwAPJzv5CZsnA9LqYKXfutJzBg68";
-    string testURI2 = "ar://tNbdHqh3AVDHVD06P0OPUXSProI5kGcZZw8IvLkekSY";
-    uint256 tokenPrice = 1 ether;
+    address alice = makeAddr("alice");
+    address bob = makeAddr("bob");
+    address charlie = makeAddr("charlie");
 
     function setUp() public {
         vm.startPrank(deployer);
-        token = new IPNFT();
+        IPNFT implementationV2 = new IPNFT();
+        proxy = new UUPSProxy(address(implementationV2), "");
+        ipnft = IPNFT(address(proxy));
+        ipnft.initialize();
+
+        mintpass = new Mintpass(address(ipnft));
+        mintpass.grantRole(mintpass.MODERATOR(), deployer);
+        ipnft.setMintpassContract(address(mintpass));
         vm.stopPrank();
     }
 
     function testInitialDeploymentState() public {
-        assertEq(token.paused(), false);
-        assertEq(token.uri(0), "");
-        assertEq(token.totalSupply(0), 0);
-        assertEq(token.mintPrice(), 0 ether);
+        assertEq(ipnft.paused(), false);
+        assertEq(ipnft.uri(1), "");
+        assertEq(ipnft.totalSupply(1), 0);
     }
 
     function testTokenReservation() public {
-        vm.startPrank(bob);
-        vm.expectEmit(true, true, true, true);
-        // We emit the event we expect to see.
-        emit Reserved(bob, 0);
-        uint256 reservationId = token.reserve();
-        token.updateReservationURI(reservationId, testURI);
+        vm.startPrank(alice);
 
-        (address reserver, string memory tokenURI) = token.reservations(0);
-        assertEq(reserver, bob);
-        assertEq(tokenURI, testURI);
+        vm.expectRevert(IPNFT.NeedsMintpass.selector);
+        uint256 reservationId = ipnft.reserve();
+        vm.stopPrank();
+
+        dealMintpass(alice);
+
+        vm.startPrank(alice);
+        vm.expectEmit(true, true, true, true);
+        emit Reserved(alice, 1);
+        reservationId = ipnft.reserve();
+
+        ipnft.updateReservation(reservationId, ipfsUri);
+
+        (address reserver, string memory tokenURI) = ipnft.reservations(1);
+        assertEq(reserver, alice);
+        assertEq(tokenURI, ipfsUri);
     }
 
     function testTokenReservationCounter() public {
+        dealMintpass(alice);
+        vm.startPrank(alice);
+        ipnft.reserve();
+        vm.stopPrank();
+
+        dealMintpass(bob);
         vm.startPrank(bob);
-        vm.expectEmit(true, true, true, true);
-        // We emit the event we expect to see.
-        emit Reserved(bob, 0);
-        uint256 reservationId = token.reserve();
-        token.updateReservationURI(reservationId, testURI);
-
-        (address reserver, string memory tokenURI) = token.reservations(0);
+        ipnft.reserve();
+        (address reserver,) = ipnft.reservations(2);
         assertEq(reserver, bob);
-        assertEq(tokenURI, testURI);
-
-        token.reserve();
-        (address reserver_2, ) = token.reservations(1);
-        assertEq(reserver_2, bob);
     }
 
     function testMintFromReservation() public {
-        vm.startPrank(bob);
+        dealMintpass(alice);
 
-        uint256 reservationId = token.reserve();
-        token.updateReservationURI(reservationId, testURI);
-        vm.expectEmit(true, false, false, true);
-        emit PermanentURI(testURI, 0);
+        vm.startPrank(alice);
+        uint256 reservationId = ipnft.reserve();
+        ipnft.updateReservation(reservationId, ipfsUri);
 
         vm.expectEmit(true, true, false, true);
-        emit TokenMinted(testURI, bob, 0, 1);
+        emit IPNFTMinted(alice, 1, ipfsUri);
 
-        token.mintReservation(bob, 0);
-        assertEq(token.balanceOf(bob, 0), 1);
-        assertEq(token.uri(0), testURI);
+        ipnft.mintReservation(alice, 1, 1);
 
-        (address reserver, ) = token.reservations(0);
+        assertEq(ipnft.balanceOf(alice, 1), 1);
+        assertEq(ipnft.uri(1), ipfsUri);
+
+        (address reserver,) = ipnft.reservations(1);
         assertEq(reserver, address(0));
 
         vm.stopPrank();
     }
 
-    function testTokenURIUpdate() public {
-        vm.startPrank(bob);
-        uint256 reservationId = token.reserve();
-        token.updateReservationURI(reservationId, testURI);
-        token.mintReservation(bob, 0);
-
-        assertEq(token.uri(0), testURI);
-    }
-
     function testBurn() public {
-        vm.startPrank(bob);
-        uint256 reservationId = token.reserve();
-        token.updateReservationURI(reservationId, testURI);
-        token.mintReservation(bob, 0);
-        assertEq(token.balanceOf(bob, 0), 1);
-        token.burn(bob, 0, 1);
+        uint256 tokenId = mintAToken(ipnft, alice);
 
-        assertEq(token.balanceOf(bob, 0), 0);
-    }
+        vm.startPrank(alice);
 
-    function testUpdatedPrice() public {
-        vm.startPrank(deployer);
-        token.updateMintPrice(1 ether);
-        vm.stopPrank();
+        ipnft.burn(alice, tokenId, 1);
 
-        vm.startPrank(bob);
-        uint256 reservationId = token.reserve();
-        token.updateReservationURI(reservationId, testURI);
-        vm.expectRevert(bytes("Ether amount sent is too small"));
-        token.mintReservation(bob, 0);
-    }
-
-    function testChargeableMint() public {
-        vm.startPrank(deployer);
-        token.updateMintPrice(tokenPrice);
-        vm.stopPrank();
-
-        vm.deal(bob, tokenPrice);
-        vm.startPrank(bob);
-        uint256 reservationId = token.reserve();
-        token.updateReservationURI(reservationId, testURI);
-        token.mintReservation{value: tokenPrice}(bob, 0);
-
-        assertEq(address(bob).balance, 0);
-        assertEq(address(token).balance, tokenPrice);
-        assertEq(token.balanceOf(bob, 0), 1);
+        assertEq(ipnft.balanceOf(alice, tokenId), 0);
     }
 
     function testCantUpdateTokenURIOnMintedTokens() public {
-        vm.startPrank(bob);
-        uint256 reservationId = token.reserve();
-        token.updateReservationURI(reservationId, testURI);
-        token.mintReservation(bob, 0);
+        uint256 tokenId = mintAToken(ipnft, alice);
 
-        vm.expectRevert("IP-NFT: Reservation not valid or not owned by you");
-        token.updateReservationURI(0, testURI2);
-
-        assertEq(token.uri(0), testURI);
+        vm.startPrank(alice);
+        vm.expectRevert(abi.encodeWithSelector(IPNFT.NotOwningReservation.selector, tokenId));
+        ipnft.updateReservation(tokenId, ipfsUri);
+        vm.stopPrank();
+        assertEq(ipnft.uri(tokenId), arUri);
     }
 
     function testOnlyReservationOwnerCanMintFromReservation() public {
-        vm.startPrank(bob);
-        uint256 reservationId = token.reserve();
-        token.updateReservationURI(reservationId, testURI);
-        vm.stopPrank();
+        reserveAToken(ipnft, alice, arUri);
 
-        vm.startPrank(alice);
-        vm.expectRevert("IP-NFT: caller is not reserver");
-        token.mintReservation(address(0xDEADCAFE), 0);
+        vm.startPrank(bob);
+        vm.expectRevert(abi.encodeWithSelector(IPNFT.NotOwningReservation.selector, 1));
+        ipnft.mintReservation(bob, 1, 1);
         vm.stopPrank();
     }
 
-    function testOwnerWithdrawAll() public {
-        vm.deal(address(token), 10 ether);
-        assertEq(address(token).balance, 10 ether);
+    /**
+     * default payments are rejected by EIP1967...
+     */
+    function testCannotSendPlainEtherToIPNFT() public {
+        vm.deal(address(bob), 10 ether);
 
-        vm.startPrank(deployer);
-        token.withdrawAll();
+        vm.prank(bob);
+        (bool transferWorked,) = address(ipnft).call{value: 10 ether}("");
+        assertFalse(transferWorked);
+        assertEq(address(ipnft).balance, 0);
+
+        vm.expectRevert(bytes(""));
+        payable(address(ipnft)).transfer(10 ether);
+
+        vm.stopPrank();
+    }
+
+    /**
+     * ... but when set as heir of a self destruct operation the contract accepts the money.
+     */
+
+    function testOwnerCanWithdrawEthFunds() public {
+        vm.deal(address(bob), 10 ether);
+        vm.prank(bob);
+        Kamikaze kamikaze = new Kamikaze();
+        (bool transferWorked,) = address(kamikaze).call{value: 10 ether}("");
+        assertTrue(transferWorked);
+        assertEq(address(kamikaze).balance, 10 ether);
+
+        kamikaze.bazingaa(payable(address(ipnft)));
+
+        assertEq(address(ipnft).balance, 10 ether);
         vm.stopPrank();
 
-        assertEq(address(token).balance, 0);
+        vm.startPrank(charlie);
+        vm.expectRevert("Ownable: caller is not the owner");
+        ipnft.withdrawAll();
+        vm.stopPrank();
+
+        assertEq(address(deployer).balance, 0);
+        vm.startPrank(deployer);
+        ipnft.withdrawAll();
+        vm.stopPrank();
+
+        assertEq(address(ipnft).balance, 0);
         assertEq(address(deployer).balance, 10 ether);
     }
 
-    function testNonOwnerCannotWithdrawAll() public {
-        vm.deal(address(token), 10 ether);
-        assertEq(address(token).balance, 10 ether);
+    // function testOwnerIncreaseShares() public {
+    //     vm.startPrank(bob);
+    //     uint256 reservationId = ipnft.reserve();
+    //     ipnft.updateReservationURI(reservationId, testURI);
+    //     ipnft.mintReservation(bob, 0);
 
-        vm.startPrank(bob);
-        vm.expectRevert("Ownable: caller is not the owner");
-        token.withdrawAll();
-        vm.stopPrank();
+    //     assertEq(ipnft.balanceOf(bob, 0), 1);
 
-        assertEq(address(token).balance, 10 ether);
-        assertEq(address(bob).balance, 0);
-    }
+    //     ipnft.increaseShares(0, 9, bob);
 
-    function testOwnerIncreaseShares() public {
-        vm.startPrank(bob);
-        uint256 reservationId = token.reserve();
-        token.updateReservationURI(reservationId, testURI);
-        token.mintReservation(bob, 0);
+    //     assertEq(ipnft.balanceOf(bob, 0), 10);
+    //     assertEq(ipnft.totalSupply(0), 10);
+    // }
 
-        assertEq(token.balanceOf(bob, 0), 1);
+    // function testNonOwnerCannotIncreaseShares() public {
+    //     vm.startPrank(bob);
+    //     uint256 reservationId = ipnft.reserve();
+    //     ipnft.updateReservationURI(reservationId, testURI);
+    //     ipnft.mintReservation(bob, 0);
+    //     vm.stopPrank();
 
-        token.increaseShares(0, 9, bob);
+    //     assertEq(ipnft.balanceOf(bob, 0), 1);
 
-        assertEq(token.balanceOf(bob, 0), 10);
-        assertEq(token.totalSupply(0), 10);
-    }
+    //     vm.startPrank(alice);
+    //     vm.expectRevert("IP-NFT: not owner");
+    //     ipnft.increaseShares(0, 9, bob);
 
-    function testNonOwnerCannotIncreaseShares() public {
-        vm.startPrank(bob);
-        uint256 reservationId = token.reserve();
-        token.updateReservationURI(reservationId, testURI);
-        token.mintReservation(bob, 0);
-        vm.stopPrank();
+    //     assertEq(ipnft.balanceOf(bob, 0), 1);
+    //     assertEq(ipnft.totalSupply(0), 1);
+    // }
 
-        assertEq(token.balanceOf(bob, 0), 1);
+    // function testCannotIncreaseSharesIfAlreadyMinted() public {
+    //     vm.startPrank(bob);
+    //     uint256 reservationId = ipnft.reserve();
+    //     ipnft.updateReservationURI(reservationId, testURI);
+    //     ipnft.mintReservation(bob, 0);
+    //     ipnft.increaseShares(0, 9, bob);
 
-        vm.startPrank(alice);
-        vm.expectRevert("IP-NFT: not owner");
-        token.increaseShares(0, 9, bob);
+    //     assertEq(ipnft.balanceOf(bob, 0), 10);
 
-        assertEq(token.balanceOf(bob, 0), 1);
-        assertEq(token.totalSupply(0), 1);
-    }
+    //     vm.expectRevert("IP-NFT: shares already minted");
+    //     ipnft.increaseShares(0, 5, bob);
 
-    function testCannotIncreaseSharesIfAlreadyMinted() public {
-        vm.startPrank(bob);
-        uint256 reservationId = token.reserve();
-        token.updateReservationURI(reservationId, testURI);
-        token.mintReservation(bob, 0);
-        token.increaseShares(0, 9, bob);
-
-        assertEq(token.balanceOf(bob, 0), 10);
-
-        vm.expectRevert("IP-NFT: shares already minted");
-        token.increaseShares(0, 5, bob);
-
-        assertEq(token.balanceOf(bob, 0), 10);
-        assertEq(token.totalSupply(0), 10);
-    }
+    //     assertEq(ipnft.balanceOf(bob, 0), 10);
+    //     assertEq(ipnft.totalSupply(0), 10);
+    // }
 }
