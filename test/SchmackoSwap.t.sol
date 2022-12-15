@@ -79,19 +79,21 @@ contract SchmackoSwapTest is Test {
     }
 
     function testCanCreateSale() public {
-        bytes32 _listingId = keccak256(
-            abi.encode(
-                SchmackoSwap.Listing({
-                    tokenContract: erc1155Supply,
-                    tokenId: 1,
-                    paymentToken: testToken,
-                    tokenAmount: erc1155Supply.totalSupply(1),
-                    askPrice: 1 ether,
-                    creator: address(seller)
-                })
+        uint256 listingId = uint256(
+            keccak256(
+                abi.encode(
+                    SchmackoSwap.Listing({
+                        tokenContract: erc1155Supply,
+                        tokenId: 1,
+                        paymentToken: testToken,
+                        tokenAmount: erc1155Supply.totalSupply(1),
+                        askPrice: 1 ether,
+                        creator: address(seller)
+                    }),
+                    block.number
+                )
             )
         );
-        uint256 listingId = uint256(_listingId);
 
         vm.startPrank(seller);
         //todo test this emission test is ok

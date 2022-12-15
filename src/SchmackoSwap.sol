@@ -94,7 +94,7 @@ contract SchmackoSwap is ERC165, ReentrancyGuard, IERC1155Receiver {
             creator: msg.sender
         });
 
-        bytes32 _listingId = keccak256(abi.encode(listing));
+        bytes32 _listingId = keccak256(abi.encode(listing, block.number));
         // Left the bytes32 -> uint256 conversion in because it was
         // a pain in the ass to refactor everything else to handle bytes32
         uint256 listingId = uint256(_listingId);
