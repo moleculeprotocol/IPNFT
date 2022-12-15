@@ -8,23 +8,35 @@ import {
 } from "../generated/SchmackoSwap/SchmackoSwap";
 
 export function handleListed(event: ListedEvent): void {
-    let listing = new Listing(event.params.listingId.toString());
+    let listing = Listing.load(event.params.listingId.toString());
     let ipnft = Ipnft.load(event.params.listing.tokenId.toString());
     if (!ipnft) {
         log.error("Could not load ipnft from tokenId {}.", [
             event.params.listing.tokenId.toString()
         ]);
     } else {
-        listing.ipnft = ipnft.id;
+        if (listing) {
+            listing.unlistedAt = null;
+            // This is unnecessary I guess
+            listing.ipnft = ipnft.id;
+            listing.creator = event.params.listing.creator;
+            listing.tokenAmount = event.params.listing.tokenAmount;
+            listing.paymentToken = event.params.listing.paymentToken;
+            listing.askPrice = event.params.listing.askPrice;
+            listing.createdAt = event.block.timestamp;
+
+            listing.save();
+        } else {
+            listing = new Listing(event.params.listingId.toString());
+            listing.ipnft = ipnft.id;
+            listing.creator = event.params.listing.creator;
+            listing.tokenAmount = event.params.listing.tokenAmount;
+            listing.paymentToken = event.params.listing.paymentToken;
+            listing.askPrice = event.params.listing.askPrice;
+            listing.createdAt = event.block.timestamp;
+        }
+        listing.save();
     }
-
-    listing.creator = event.params.listing.creator;
-    listing.tokenAmount = event.params.listing.tokenAmount;
-    listing.paymentToken = event.params.listing.paymentToken;
-    listing.askPrice = event.params.listing.askPrice;
-    listing.createdAt = event.block.timestamp;
-
-    listing.save();
 }
 
 //todo delete this maybe?
