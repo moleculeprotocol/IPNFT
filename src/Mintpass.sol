@@ -111,7 +111,7 @@ contract Mintpass is AccessControl, ERC721BBaseTokenURI, ERC721BBurnable {
                             : "ar://g-ZF9NewUio2B74ChCQN0x0cj3liZPxj0H7wH-v5y98",
                         '", "attributes": [{ "trait_type": "Status", "value": "',
                         statusString,
-                        '"}]'
+                        '"}]}'
                     )
                 )
             )
