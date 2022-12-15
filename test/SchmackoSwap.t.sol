@@ -113,7 +113,7 @@ contract SchmackoSwapTest is Test {
         schmackoSwap.list(erc1155Supply, 1, testToken, 1 ether);
         vm.stopPrank();
 
-        assertEq(ipnft.balanceOf(address(schmackoSwap), 1), 1);
+        //assertEq(ipnft.balanceOf(address(schmackoSwap), 1), 1);
 
         (ERC1155Supply tokenContract, uint256 tokenId, address creator, uint256 tokenAmount, IERC20 paymentToken, uint256 askPrice) =
             schmackoSwap.listings(listingId);
@@ -125,12 +125,12 @@ contract SchmackoSwapTest is Test {
         assertEq(askPrice, 1 ether);
         assertEq(address(paymentToken), address(testToken));
 
-        assertEq(ipnft.balanceOf(address(seller), 1), 0);
+        assertEq(ipnft.balanceOf(address(seller), 1), 1);
     }
 
     function testNonOwnerCannotCreateSale() public {
         vm.prank(otherUser);
-        vm.expectRevert("ERC1155: caller is not token owner or approved");
+        vm.expectRevert(SchmackoSwap.InsufficientAllowance.selector);
         schmackoSwap.list(erc1155Supply, 1, testToken, 1 ether);
 
         assertEq(ipnft.balanceOf(seller, 1), 1);
@@ -140,7 +140,7 @@ contract SchmackoSwapTest is Test {
         vm.startPrank(seller);
         ipnft.setApprovalForAll(address(schmackoSwap), false);
 
-        vm.expectRevert("ERC1155: caller is not token owner or approved");
+        vm.expectRevert(SchmackoSwap.InsufficientAllowance.selector);
         schmackoSwap.list(erc1155Supply, 1, testToken, 1 ether);
 
         assertEq(ipnft.balanceOf(seller, 1), 1);
@@ -181,7 +181,7 @@ contract SchmackoSwapTest is Test {
         vm.expectRevert(SchmackoSwap.Unauthorized.selector);
         schmackoSwap.cancel(listingId);
 
-        assertEq(ipnft.balanceOf(address(schmackoSwap), 1), 1);
+        assertEq(ipnft.balanceOf(address(seller), 1), 1);
 
         (,, address creator,,,) = schmackoSwap.listings(listingId);
         assertEq(creator, address(seller));
@@ -220,7 +220,7 @@ contract SchmackoSwapTest is Test {
         schmackoSwap.fulfill(listingId);
         vm.stopPrank();
 
-        assertEq(ipnft.balanceOf(address(schmackoSwap), 1), 1);
+        assertEq(ipnft.balanceOf(address(seller), 1), 1);
 
         vm.startPrank(buyer);
         testToken.approve(address(schmackoSwap), 1 ether);
@@ -228,7 +228,7 @@ contract SchmackoSwapTest is Test {
         vm.expectRevert(SchmackoSwap.InsufficientBalance.selector);
         schmackoSwap.fulfill(listingId);
 
-        assertEq(ipnft.balanceOf(address(schmackoSwap), 1), 1);
+        assertEq(ipnft.balanceOf(address(seller), 1), 1);
         vm.stopPrank();
     }
 
@@ -267,6 +267,21 @@ contract SchmackoSwapTest is Test {
         assertEq(creator, address(0));
     }
 
+    function testCannotFulfillWhenSellerHasMovedTheNft() public {
+        vm.startPrank(seller);
+        uint256 listingId = schmackoSwap.list(erc1155Supply, 1, testToken, 1 ether);
+        schmackoSwap.changeBuyerAllowance(listingId, buyer, true);
+        ipnft.safeTransferFrom(seller, otherUser, 1, 1, "");
+        assertEq(ipnft.balanceOf(otherUser, 1), 1);
+        vm.stopPrank();
+
+        vm.startPrank(buyer);
+        testToken.approve(address(schmackoSwap), 1 ether);
+        vm.expectRevert("ERC1155: insufficient balance for transfer");
+        schmackoSwap.fulfill(listingId);
+        vm.stopPrank();
+    }
+
     function testCannotBuyNotExistingValue() public {
         vm.expectRevert(SchmackoSwap.ListingNotFound.selector);
         schmackoSwap.fulfill(1);
@@ -285,5 +300,12 @@ contract SchmackoSwapTest is Test {
         schmackoSwap.changeBuyerAllowance(listingId, address(0), true);
 
         assertEq(schmackoSwap.isAllowed(listingId, address(0)), false);
+    }
+
+    function testCannotSendNftsToSchmackoswap() public {
+        vm.startPrank(seller);
+        vm.expectRevert(bytes("ERC1155: transfer to non-ERC1155Receiver implementer"));
+        ipnft.safeTransferFrom(seller, address(schmackoSwap), 1, 1, "");
+        vm.stopPrank();
     }
 }

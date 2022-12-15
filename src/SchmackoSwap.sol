@@ -6,11 +6,10 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { ReentrancyGuard } from "solmate/utils/ReentrancyGuard.sol";
 import { SafeTransferLib } from "solmate/utils/SafeTransferLib.sol";
 import { ERC1155Supply } from "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Supply.sol";
-import { IERC1155Receiver } from "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
 import { ERC165 } from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 import { IERC165 } from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 
-contract SchmackoSwap is ERC165, ReentrancyGuard, IERC1155Receiver {
+contract SchmackoSwap is ERC165, ReentrancyGuard {
     /// ERRORS ///
 
     /// @notice Thrown when user tries to initiate an action without being authorized
@@ -82,35 +81,32 @@ contract SchmackoSwap is ERC165, ReentrancyGuard, IERC1155Receiver {
     /// @param askPrice How much you want to receive in exchange for the token
     /// @return The ID of the created listing
     /// @dev Remember to call setApprovalForAll(<address of this contract>, true) on the ERC1155's contract before calling this function
-    function list(ERC1155Supply tokenContract, uint256 tokenId, IERC20 paymentToken, uint256 askPrice) public nonReentrant returns (uint256) {
-        uint256 totalSupply = tokenContract.totalSupply(tokenId);
+    function list(ERC1155Supply tokenContract, uint256 tokenId, IERC20 paymentToken, uint256 askPrice) public returns (uint256) {
+        if (!tokenContract.isApprovedForAll(msg.sender, address(this))) {
+            revert InsufficientAllowance();
+        }
 
         Listing memory listing = Listing({
             tokenContract: tokenContract,
             tokenId: tokenId,
             paymentToken: paymentToken,
-            tokenAmount: totalSupply,
+            tokenAmount: tokenContract.totalSupply(tokenId),
             askPrice: askPrice,
             creator: msg.sender
         });
 
-        bytes32 _listingId = keccak256(abi.encode(listing, block.number));
-        // Left the bytes32 -> uint256 conversion in because it was
-        // a pain in the ass to refactor everything else to handle bytes32
-        uint256 listingId = uint256(_listingId);
+        uint256 listingId = uint256(keccak256(abi.encode(listing, block.number)));
 
         listings[listingId] = listing;
 
         emit Listed(listingId, listing);
-
-        tokenContract.safeTransferFrom(msg.sender, address(this), tokenId, totalSupply, "");
 
         return listingId;
     }
 
     /// @notice Cancel an existing listing
     /// @param listingId The ID for the listing you want to cancel
-    function cancel(uint256 listingId) public nonReentrant {
+    function cancel(uint256 listingId) public {
         Listing memory listing = listings[listingId];
 
         if (listing.creator != msg.sender) revert Unauthorized();
@@ -118,8 +114,6 @@ contract SchmackoSwap is ERC165, ReentrancyGuard, IERC1155Receiver {
         delete listings[listingId];
 
         emit Unlisted(listingId, listing);
-
-        listing.tokenContract.safeTransferFrom(address(this), msg.sender, listing.tokenId, listing.tokenAmount, "");
     }
 
     /// @notice Purchase one of the listed tokens
@@ -139,7 +133,7 @@ contract SchmackoSwap is ERC165, ReentrancyGuard, IERC1155Receiver {
 
         delete listings[listingId];
 
-        listing.tokenContract.safeTransferFrom(address(this), msg.sender, listing.tokenId, listing.tokenAmount, "");
+        listing.tokenContract.safeTransferFrom(listing.creator, msg.sender, listing.tokenId, listing.tokenAmount, "");
 
         SafeTransferLib.safeTransferFrom(SolERC20(address(paymentToken)), msg.sender, listing.creator, listing.askPrice);
 
@@ -162,15 +156,7 @@ contract SchmackoSwap is ERC165, ReentrancyGuard, IERC1155Receiver {
         return allowlist[listingId][buyerAddress];
     }
 
-    function onERC1155Received(address, address, uint256, uint256, bytes memory) public virtual returns (bytes4) {
-        return this.onERC1155Received.selector;
-    }
-
-    function onERC1155BatchReceived(address, address, uint256[] memory, uint256[] memory, bytes memory) public virtual returns (bytes4) {
-        return this.onERC1155BatchReceived.selector;
-    }
-
-    function supportsInterface(bytes4 interfaceId) public view virtual override (IERC165, ERC165) returns (bool) {
-        return interfaceId == this.onERC1155Received.selector || super.supportsInterface(interfaceId);
+    function supportsInterface(bytes4 interfaceId) public view virtual override (ERC165) returns (bool) {
+        return super.supportsInterface(interfaceId);
     }
 }
