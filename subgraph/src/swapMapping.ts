@@ -8,43 +8,37 @@ import {
 } from "../generated/SchmackoSwap/SchmackoSwap";
 
 export function handleListed(event: ListedEvent): void {
-    let listing = Listing.load(event.params.listingId.toString());
+    let listing = new Listing(
+        event.params.listingId.plus(event.block.number).toString()
+    );
     let ipnft = Ipnft.load(event.params.listing.tokenId.toString());
     if (!ipnft) {
         log.error("Could not load ipnft from tokenId {}.", [
             event.params.listing.tokenId.toString()
         ]);
     } else {
-        if (listing) {
-            listing.unlistedAt = null;
-            // This is unnecessary I guess
-            listing.ipnft = ipnft.id;
-            listing.creator = event.params.listing.creator;
-            listing.tokenAmount = event.params.listing.tokenAmount;
-            listing.paymentToken = event.params.listing.paymentToken;
-            listing.askPrice = event.params.listing.askPrice;
-            listing.createdAt = event.block.timestamp;
+               listing.ipnft = ipnft.id;
+           }
 
-            listing.save();
-        } else {
-            listing = new Listing(event.params.listingId.toString());
-            listing.ipnft = ipnft.id;
-            listing.creator = event.params.listing.creator;
-            listing.tokenAmount = event.params.listing.tokenAmount;
-            listing.paymentToken = event.params.listing.paymentToken;
-            listing.askPrice = event.params.listing.askPrice;
-            listing.createdAt = event.block.timestamp;
-        }
-        listing.save();
-    }
+    listing.creator = event.params.listing.creator;
+    listing.tokenAmount = event.params.listing.tokenAmount;
+    listing.paymentToken = event.params.listing.paymentToken;
+    listing.askPrice = event.params.listing.askPrice;
+    listing.createdAt = event.block.timestamp;
+
+    listing.save();
 }
 
 //todo delete this maybe?
 export function handleUnlisted(event: UnlistedEvent): void {
-    let listing = Listing.load(event.params.listingId.toString());
+    let listing = Listing.load(
+        event.params.listingId.plus(event.block.number).toString()
+    );
     if (!listing) {
         log.debug(
-            `could not load listing from listingId: ${event.params.listingId.toString()}`,
+            `could not load listing from listingId: ${event.params.listingId
+                .plus(event.block.number)
+                .toString()}`,
             []
         );
     } else {
@@ -55,10 +49,14 @@ export function handleUnlisted(event: UnlistedEvent): void {
 }
 
 export function handleAllowlistUpdated(event: AllowlistUpdatedEvent): void {
-    let listing = Listing.load(event.params.listingId.toString());
+    let listing = Listing.load(
+        event.params.listingId.plus(event.block.number).toString()
+    );
     if (!listing) {
         log.debug(
-            `could not load listing from tokenId: ${event.params.listingId.toString()}`,
+            `could not load listing from tokenId: ${event.params.listingId
+                .plus(event.block.number)
+                .toString()}`,
             []
         );
         return;
@@ -87,10 +85,14 @@ export function handleAllowlistUpdated(event: AllowlistUpdatedEvent): void {
 }
 
 export function handlePurchased(event: PurchasedEvent): void {
-    let listing = Listing.load(event.params.listingId.toString());
+    let listing = Listing.load(
+        event.params.listingId.plus(event.block.number).toString()
+    );
     if (!listing) {
         log.debug(
-            `could not load listing from listingId: ${event.params.listingId.toString()}`,
+            `could not load listing from listingId: ${event.params.listingId
+                .plus(event.block.number)
+                .toString()}`,
             []
         );
         return;
