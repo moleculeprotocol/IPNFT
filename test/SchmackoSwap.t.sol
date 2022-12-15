@@ -51,7 +51,7 @@ contract SchmackoSwapTest is Test {
 
         mintpass = new Mintpass(address(ipnft));
         mintpass.grantRole(mintpass.MODERATOR(), deployer);
-        ipnft.setMintpassContract(address(mintpass));
+        ipnft.setAuthorizer(address(mintpass));
         mintpass.batchMint(seller, 1);
 
         TestToken _testToken = new TestToken();

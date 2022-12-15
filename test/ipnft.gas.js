@@ -35,7 +35,7 @@ describe("IPNFT1155 gas usage", function () {
 
     const Mintpass = await ethers.getContractFactory("Mintpass");
     mintpass = await Mintpass.deploy(ipnftContract.address);
-    await (ipnftContract.connect(deployer)).setMintpassContract(mintpass.address);
+    await (ipnftContract.connect(deployer)).setAuthorizer(mintpass.address);
     await mintpass
       .connect(deployer)
       .grantRole(await mintpass.MODERATOR(), deployer.address);
