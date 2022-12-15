@@ -60,7 +60,7 @@ contract MintpassTest is Test {
         string memory tokenUri_ = mintPass.tokenURI(1);
         assertEq(
             tokenUri_,
-            "data:application/json;base64,eyJuYW1lIjogIklQLU5GVCBNaW50cGFzcyAjMSIsICJkZXNjcmlwdGlvbiI6ICJUaGlzIE1pbnRwYXNzIGNhbiBiZSB1c2VkIHRvIG1pbnQgb25lIElQLU5GVCIsICJleHRlcm5hbF91cmwiOiAiVE9ETzogRW50ZXIgSVAtTkZULVVJIFVSTCIsICJpbWFnZSI6ICJpcGZzOi8vaW1hZ2VUb1Nob3dXaGVuUmVkZWVtYWJsZSIsICJzdGF0dXMiOiAicmVkZWVtYWJsZSJ9"
+            "data:application/json;base64,eyJuYW1lIjogIklQLU5GVCBNaW50cGFzcyAjMSIsICJkZXNjcmlwdGlvbiI6ICJUaGlzIE1pbnRwYXNzIGNhbiBiZSB1c2VkIHRvIG1pbnQgb25lIElQLU5GVCIsICJleHRlcm5hbF91cmwiOiAiaHR0cHM6Ly9tb2xlY3VsZS50byIsICJpbWFnZSI6ICJhcjovL0s4WnlVOWZXU01nRXgwYkRSbXdkMHNYR20xUEtiX0RyMkItMjd5TXF5M1kiLCAiYXR0cmlidXRlcyI6IFt7ICJ0cmFpdF90eXBlIjogIlN0YXR1cyIsICJ2YWx1ZSI6ICJyZWRlZW1hYmxlIn1d"
         );
 
         vm.startPrank(deployer);
@@ -154,7 +154,7 @@ contract MintpassTest is Test {
         string memory tokenUri_ = mintPass.tokenURI(1);
         assertEq(
             tokenUri_,
-            "data:application/json;base64,eyJuYW1lIjogIklQLU5GVCBNaW50cGFzcyAjMSIsICJkZXNjcmlwdGlvbiI6ICJUaGlzIE1pbnRwYXNzIGNhbiBiZSB1c2VkIHRvIG1pbnQgb25lIElQLU5GVCIsICJleHRlcm5hbF91cmwiOiAiVE9ETzogRW50ZXIgSVAtTkZULVVJIFVSTCIsICJpbWFnZSI6ICJpcGZzOi8vaW1hZ2VUb1Nob3dXaGVuTm90UmVkZWVtYWJsZSIsICJzdGF0dXMiOiAicmV2b2tlZCJ9"
+            "data:application/json;base64,eyJuYW1lIjogIklQLU5GVCBNaW50cGFzcyAjMSIsICJkZXNjcmlwdGlvbiI6ICJUaGlzIE1pbnRwYXNzIGNhbiBiZSB1c2VkIHRvIG1pbnQgb25lIElQLU5GVCIsICJleHRlcm5hbF91cmwiOiAiaHR0cHM6Ly9tb2xlY3VsZS50byIsICJpbWFnZSI6ICJhcjovL2ctWkY5TmV3VWlvMkI3NENoQ1FOMHgwY2ozbGlaUHhqMEg3d0gtdjV5OTgiLCAiYXR0cmlidXRlcyI6IFt7ICJ0cmFpdF90eXBlIjogIlN0YXR1cyIsICJ2YWx1ZSI6ICJyZXZva2VkIn1d"
         );
         vm.stopPrank();
     }
