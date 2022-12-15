@@ -105,11 +105,13 @@ contract Mintpass is AccessControl, ERC721BBaseTokenURI, ERC721BBurnable {
                     abi.encodePacked(
                         '{"name": "IP-NFT Mintpass #',
                         Strings.toString(tokenId),
-                        '", "description": "This Mintpass can be used to mint one IP-NFT", "external_url": "TODO: Enter IP-NFT-UI URL", "image": "',
-                        isRedeemable(tokenId) ? "ipfs://imageToShowWhenRedeemable" : "ipfs://imageToShowWhenNotRedeemable",
-                        '", "status": "',
+                        '", "description": "This Mintpass can be used to mint one IP-NFT", "external_url": "https://molecule.to", "image": "',
+                        isRedeemable(tokenId)
+                            ? "ar://K8ZyU9fWSMgEx0bDRmwd0sXGm1PKb_Dr2B-27yMqy3Y"
+                            : "ar://g-ZF9NewUio2B74ChCQN0x0cj3liZPxj0H7wH-v5y98",
+                        '", "attributes": [{ "trait_type": "Status", "value": "',
                         statusString,
-                        '"}'
+                        '"}]'
                     )
                 )
             )
