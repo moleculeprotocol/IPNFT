@@ -1,8 +1,7 @@
-import { Address, log, store } from "@graphprotocol/graph-ts";
+import { Address, store } from "@graphprotocol/graph-ts";
 import {
-    ReservationUpdated as ReservationUpdatedEvent,
-    Reserved as ReservedEvent,
     IPNFTMinted as IPNFTMintedEvent,
+    Reserved as ReservedEvent,
     TransferSingle as TransferSingleEvent
 } from "../generated/IPNFT/IPNFT";
 import { Ipnft, Reservation } from "../generated/schema";
@@ -22,19 +21,6 @@ export function handleReservation(event: ReservedEvent): void {
     reservation.owner = event.params.reserver;
     reservation.createdAt = event.block.timestamp;
     reservation.save();
-}
-
-export function handleReservationUpdated(event: ReservationUpdatedEvent): void {
-    const reservation = Reservation.load(event.params.reservationId.toString());
-    if (!reservation) {
-        log.debug(
-            `could not load reservation from reservationId: ${event.params.reservationId.toString()}`,
-            []
-        );
-    } else {
-        reservation.uri = event.params.tokenURI;
-        reservation.save();
-    }
 }
 
 export function handleMint(event: IPNFTMintedEvent): void {

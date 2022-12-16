@@ -6,38 +6,7 @@
   },
   {
     "inputs": [],
-    "name": "EmptyInput",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "InvalidInput",
-    "type": "error"
-  },
-  {
-    "inputs": [],
     "name": "NeedsMintpass",
-    "type": "error"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "id",
-        "type": "uint256"
-      }
-    ],
-    "name": "NonExistentSlot",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "NotApprovedOrOwner",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "NotAvailInV2",
     "type": "error"
   },
   {
@@ -200,25 +169,6 @@
       }
     ],
     "name": "PermanentURI",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "string",
-        "name": "tokenURI",
-        "type": "string"
-      },
-      {
-        "indexed": true,
-        "internalType": "uint256",
-        "name": "reservationId",
-        "type": "uint256"
-      }
-    ],
-    "name": "ReservationUpdated",
     "type": "event"
   },
   {
@@ -538,35 +488,6 @@
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "to",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "mintPassId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "reservationId",
-        "type": "uint256"
-      }
-    ],
-    "name": "mintReservation",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
     "inputs": [],
     "name": "owner",
     "outputs": [
@@ -631,13 +552,8 @@
     "outputs": [
       {
         "internalType": "address",
-        "name": "reserver",
+        "name": "",
         "type": "address"
-      },
-      {
-        "internalType": "string",
-        "name": "tokenURI",
-        "type": "string"
       }
     ],
     "stateMutability": "view",
@@ -744,11 +660,11 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "mintpass_",
+        "name": "authorizer_",
         "type": "address"
       }
     ],
-    "name": "setMintpassContract",
+    "name": "setAuthorizer",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -807,24 +723,6 @@
   {
     "inputs": [],
     "name": "unpause",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "reservationId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "string",
-        "name": "_tokenURI",
-        "type": "string"
-      }
-    ],
-    "name": "updateReservation",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
