@@ -10,7 +10,7 @@ import { ERC1155SupplyUpgradeable } from "@openzeppelin/contracts-upgradeable/to
 import { CountersUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/CountersUpgradeable.sol";
 import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import { Mintpass } from "./Mintpass.sol";
+import { IAuthorizeMints } from "./IAuthorizeMints.sol";
 import { IReservable } from "./IReservable.sol";
 
 /*
@@ -49,8 +49,8 @@ contract IPNFTV21 is
     /// @notice Current version of the contract
     uint16 internal _version;
 
-    /// @notice external mintpass contract
-    Mintpass mintpass;
+    /// @notice e.g. a mintpass contract
+    IAuthorizeMints mintAuthorizer;
 
     /**
      *
@@ -70,15 +70,9 @@ contract IPNFTV21 is
      * ERRORS
      *
      */
-
-    error EmptyInput();
-    error InvalidInput();
-    error NeedsMintpass();
     error NotOwningReservation(uint256 id);
     error ToZeroAddress();
-    error NonExistentSlot(uint256 id);
-    error NotApprovedOrOwner();
-    error NotAvailInV2();
+    error NeedsMintpass();
 
     /**
      *
@@ -118,16 +112,16 @@ contract IPNFTV21 is
      *
      */
 
-    /// @notice sets the address of the Mintpass contract
-    function setMintpassContract(address mintpass_) public onlyOwner {
-        if (mintpass_ == address(0)) {
+    /// @notice sets the address of the external authorizer contract
+    function setAuthorizer(address authorizer_) public onlyOwner {
+        if (authorizer_ == address(0)) {
             revert ToZeroAddress();
         }
-        mintpass = Mintpass(mintpass_);
+        mintAuthorizer = IAuthorizeMints(authorizer_);
     }
 
     function reserve() public returns (uint256) {
-        if (!(mintpass.balanceOf(_msgSender()) > 0)) {
+        if (!mintAuthorizer.authorizeReservation(_msgSender())) {
             revert NeedsMintpass();
         }
 
@@ -147,7 +141,7 @@ contract IPNFTV21 is
         emit ReservationUpdated(_tokenURI, reservationId);
     }
 
-    function mintReservation(address to, uint256 mintPassId, uint256 reservationId) public returns (uint256 tokenId) {
+    function mintReservation(address to, uint256 mintPassId, uint256 reservationId) public returns (uint256) {
         return mintReservation(to, reservationId, mintPassId, reservations[reservationId].tokenURI);
     }
 
@@ -156,12 +150,12 @@ contract IPNFTV21 is
             revert NotOwningReservation(reservationId);
         }
 
-        mintpass.authorizeMint(_msgSender(), mintPassId);
+        mintAuthorizer.authorizeMint(_msgSender(), to, abi.encode(mintPassId));
 
         //todo: emit this, once we decided if we're sure that this one is going to be final.
         //emit PermanentURI(tokenURI, reservationId);
         delete reservations[reservationId];
-        mintpass.redeem(mintPassId);
+        mintAuthorizer.redeem(abi.encode(mintPassId));
 
         _mint(to, reservationId, 1, "");
         _setURI(reservationId, tokenURI);

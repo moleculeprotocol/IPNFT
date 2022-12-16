@@ -76,7 +76,7 @@ contract FixtureScript is Script {
         mintpass = new Mintpass(address(ipnft));
         mintpass.grantRole(mintpass.MODERATOR(), deployer);
 
-        ipnft.setMintpassContract(address(mintpass));
+        ipnft.setAuthorizer(address(mintpass));
 
         console.log("ipnftv2 %s", address(ipnft));
         console.log("swap %s", address(schmackoSwap));

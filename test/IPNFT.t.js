@@ -18,7 +18,7 @@ describe("IPNFT fundamentals", function () {
     const Mintpass = await ethers.getContractFactory("Mintpass");
     mintpass = await Mintpass.deploy(ipnftContract.address);
 
-    await (ipnftContract.connect(deployer)).setMintpassContract(mintpass.address);
+    await (ipnftContract.connect(deployer)).setAuthorizer(mintpass.address);
   });
 
 

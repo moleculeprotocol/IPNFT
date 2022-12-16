@@ -8,8 +8,9 @@ import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol"
 import { Base64 } from "@openzeppelin/contracts/utils/Base64.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 import { ReentrancyGuard } from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import { IAuthorizeMints } from "./IAuthorizeMints.sol";
 
-contract Mintpass is AccessControl, ERC721BBaseTokenURI, ERC721BBurnable {
+contract Mintpass is AccessControl, ERC721BBaseTokenURI, ERC721BBurnable, IAuthorizeMints {
     error AlreadyRedeemed();
     error NotRedeemable();
     error NotOwningMintpass(uint256 id);
@@ -59,8 +60,14 @@ contract Mintpass is AccessControl, ERC721BBaseTokenURI, ERC721BBurnable {
         _safeMint(to, amount);
     }
 
-    function authorizeMint(address to, uint256 mintPassId) public view onlyRole(REDEEMER) returns (bool) {
-        if (ownerOf(mintPassId) != to) {
+    function authorizeReservation(address reserver) external view returns (bool) {
+        return (balanceOf(reserver) > 0);
+    }
+
+    function authorizeMint(address minter, address to, bytes memory data) external view onlyRole(REDEEMER) returns (bool) {
+        uint256 mintPassId = abi.decode(data, (uint256));
+
+        if (ownerOf(mintPassId) != minter) {
             revert NotOwningMintpass(mintPassId);
         }
         if (!isRedeemable(mintPassId)) {
@@ -79,12 +86,13 @@ contract Mintpass is AccessControl, ERC721BBaseTokenURI, ERC721BBurnable {
         emit Revoked(tokenId);
     }
 
-    function redeem(uint256 tokenId) public onlyRole(REDEEMER) {
-        if (!isRedeemable(tokenId)) {
+    function redeem(bytes memory data) external onlyRole(REDEEMER) {
+        uint256 mintPassId = abi.decode(data, (uint256));
+        if (!isRedeemable(mintPassId)) {
             revert NotRedeemable();
         }
-        _status[tokenId] = Status.REDEEMED;
-        emit Redeemed(tokenId);
+        _status[mintPassId] = Status.REDEEMED;
+        emit Redeemed(mintPassId);
     }
 
     /// @dev Returns the tokenURI attached to a token

@@ -39,7 +39,7 @@ contract IPNFTTest is IPNFTMintHelper {
 
         mintpass = new Mintpass(address(ipnft));
         mintpass.grantRole(mintpass.MODERATOR(), deployer);
-        ipnft.setMintpassContract(address(mintpass));
+        ipnft.setAuthorizer(address(mintpass));
         vm.stopPrank();
     }
 
