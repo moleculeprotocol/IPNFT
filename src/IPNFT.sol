@@ -139,7 +139,9 @@ contract IPNFT is
             revert NotOwningReservation(reservationId);
         }
 
-        mintAuthorizer.authorizeMint(_msgSender(), to, abi.encode(mintPassId));
+        if (!mintAuthorizer.authorizeMint(_msgSender(), to, abi.encode(mintPassId))) {
+            revert NeedsMintpass();
+        }
 
         //todo: emit this, once we decided if we're sure that this one is going to be final.
         //emit PermanentURI(tokenURI, reservationId);
