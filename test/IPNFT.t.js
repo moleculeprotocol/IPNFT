@@ -21,5 +21,14 @@ describe("IPNFT fundamentals", function () {
     await (ipnftContract.connect(deployer)).setAuthorizer(mintpass.address);
   });
 
+  it("validates updates", async function () {
+    const result = await upgrades.validateUpgrade(
+      ipnftContract.address,
+      await ethers.getContractFactory("IPNFTV21"),
+      {
+        kind: "uups"
+      }
+    )
+  })
 
 });

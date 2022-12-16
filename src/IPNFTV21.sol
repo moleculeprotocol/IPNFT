@@ -25,6 +25,7 @@ import { IReservable } from "./IReservable.sol";
 /// @author molecule.to
 /// @notice Demo contract to test upgrades. Don't use like this
 /// @dev Don't use this.
+
 contract IPNFTV21 is
     IReservable,
     ERC1155Upgradeable,
@@ -35,8 +36,6 @@ contract IPNFTV21 is
     OwnableUpgradeable,
     PausableUpgradeable
 {
-    //drops the Pauseable extension
-
     using CountersUpgradeable for CountersUpgradeable.Counter;
 
     CountersUpgradeable.Counter private _reservationCounter;
@@ -127,12 +126,7 @@ contract IPNFTV21 is
         return reservationId;
     }
 
-    function mintReservation(address to, uint256 reservationId, uint256 mintPassId, string memory tokenURI)
-        public
-        override
-        whenNotPaused
-        returns (uint256)
-    {
+    function mintReservation(address to, uint256 reservationId, uint256 mintPassId, string memory tokenURI) public override returns (uint256) {
         if (reservations[reservationId] != _msgSender()) {
             revert NotOwningReservation(reservationId);
         }
@@ -188,7 +182,7 @@ contract IPNFTV21 is
     // }
 
     // Withdraw ETH from contract
-    function withdrawAll() public payable whenNotPaused onlyOwner {
+    function withdrawAll() public payable onlyOwner {
         require(payable(msg.sender).send(address(this).balance), "transfer failed");
     }
 

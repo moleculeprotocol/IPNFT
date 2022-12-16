@@ -11,14 +11,6 @@ import { UUPSProxy } from "../src/UUPSProxy.sol";
 import { IPNFTMintHelper } from "./IPNFTMintHelper.sol";
 import { ERC20 } from "solmate/tokens/ERC20.sol";
 
-contract Kamikaze {
-    receive() external payable { }
-
-    function bazingaa(address payable heir) public {
-        selfdestruct(heir);
-    }
-}
-
 contract IPNFTUpgrades is IPNFTMintHelper {
     event Reserved(address indexed reserver, uint256 indexed reservationId);
     event ReservationUpdated(string name, uint256 indexed reservationId);
@@ -42,7 +34,7 @@ contract IPNFTUpgrades is IPNFTMintHelper {
 
         mintpass = new Mintpass(address(ipnft));
         mintpass.grantRole(mintpass.MODERATOR(), deployer);
-        ipnft.setMintpassContract(address(mintpass));
+        ipnft.setAuthorizer(address(mintpass));
         vm.stopPrank();
     }
 
@@ -88,7 +80,6 @@ contract IPNFTUpgrades is IPNFTMintHelper {
         dealMintpass(bob);
 
         vm.startPrank(bob);
-        vm.expectRevert(bytes("Pausable: paused"));
         ipnftV21.reserve();
         vm.stopPrank();
     }

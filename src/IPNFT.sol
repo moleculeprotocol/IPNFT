@@ -117,7 +117,7 @@ contract IPNFT is
         mintAuthorizer = IAuthorizeMints(authorizer_);
     }
 
-    function reserve() public returns (uint256) {
+    function reserve() public whenNotPaused returns (uint256) {
         if (!mintAuthorizer.authorizeReservation(_msgSender())) {
             revert NeedsMintpass();
         }
