@@ -23,19 +23,18 @@ abstract contract IPNFTMintHelper is Test {
         vm.stopPrank();
     }
 
-    function reserveAToken(IReservable ipnft, address to, string memory tokenUri) internal returns (uint256) {
+    function reserveAToken(IReservable ipnft, address to) internal returns (uint256) {
         dealMintpass(to);
         vm.startPrank(to);
         uint256 reservationId = ipnft.reserve();
-        ipnft.updateReservation(reservationId, tokenUri);
         vm.stopPrank();
         return reservationId;
     }
 
     function mintAToken(IReservable ipnft, address to) internal returns (uint256) {
-        uint256 reservationId = reserveAToken(ipnft, to, arUri);
+        uint256 reservationId = reserveAToken(ipnft, to);
         vm.startPrank(to);
-        ipnft.mintReservation(to, reservationId, 1, arUri);
+        ipnft.mintReservation(to, reservationId, reservationId, arUri);
         vm.stopPrank();
         return reservationId;
     }

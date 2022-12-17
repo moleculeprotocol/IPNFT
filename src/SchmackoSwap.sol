@@ -9,6 +9,9 @@ import { ERC1155Supply } from "@openzeppelin/contracts/token/ERC1155/extensions/
 import { ERC165 } from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 import { IERC165 } from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 
+/// @title SchmackoSwap
+/// @author molecule.to
+/// @notice a sales contract that lets NFT holders list items with an ask price and control who can fulfill their offers. Accepts arbitrary ERC20 tokens as payment.
 contract SchmackoSwap is ERC165, ReentrancyGuard {
     /// ERRORS ///
 
@@ -24,7 +27,7 @@ contract SchmackoSwap is ERC165, ReentrancyGuard {
     /// @notice Thrown when the buyer hasn't approved the marketplace to transfer their payment tokens
     error InsufficientAllowance();
 
-    /// @notice Thrown when the buyer has insufficient funds to purchase the listing
+    /// @notice Thrown when the buyer has insufficient funds to purchase the listing or when the seller doesn't own all instances of the ERC1155 token
     error InsufficientBalance();
 
     /// EVENTS ///
@@ -75,12 +78,12 @@ contract SchmackoSwap is ERC165, ReentrancyGuard {
     /// @notice An indexed list of allowlist spots
     mapping(uint256 => mapping(address => bool)) allowlist;
 
-    /// @notice List an ERC1155 token for sale
+    /// @notice Lists the full supply of an ERC1155 token for sale
     /// @param tokenContract The ERC1155 contract for the token you're listing
     /// @param tokenId The ID of the token you're listing
     /// @param askPrice How much you want to receive in exchange for the token
     /// @return The ID of the created listing
-    /// @dev Remember to call setApprovalForAll(<address of this contract>, true) on the ERC1155's contract before calling this function
+    /// @dev Remember to call `setApprovalForAll(<address of this contract>, true)` on the ERC1155's contract before calling this function
     function list(ERC1155Supply tokenContract, uint256 tokenId, IERC20 paymentToken, uint256 askPrice) public returns (uint256) {
         if (!tokenContract.isApprovedForAll(msg.sender, address(this))) {
             revert InsufficientAllowance();
@@ -140,6 +143,10 @@ contract SchmackoSwap is ERC165, ReentrancyGuard {
         emit Purchased(listingId, msg.sender, listing);
     }
 
+    /// @notice lets the seller allow or disallow a certain buyer to fulfill the listing
+    /// @param listingId The ID for the listing you want to purchase
+    /// @param buyerAddress the address to change allowance for
+    /// @param isAllowed_ whether to allow or disallow `buyerAddress` to fulfill the listing
     function changeBuyerAllowance(uint256 listingId, address buyerAddress, bool isAllowed_) public {
         Listing memory listing = listings[listingId];
 

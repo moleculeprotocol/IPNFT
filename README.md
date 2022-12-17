@@ -48,12 +48,12 @@ We added a basic hardhat environment to this project. While foundry stays our pr
 
 ### General config
 
-- The deploy script we're using is located in `script/IPNFT.sol`
+- The deploy scripts are located in `script`
 - Copy `.env.example` to `.env`
-- To deploy on a testnet, set the deployer's `PRIVATE_KEY` variable in the `.env` file. This can be exported from Metamask.
 - Set the `ETHERSCAN_KEY` if you want to verify deployed contracts on Etherscan.
+- Set a moderator address that's going to be enabled to issue and revoke mintpasses
 
-### Deploy local development or fixture setup
+### Deploy for local development
 
 - Anvil is a local testnet node shipped with Foundry. You can use it for testing your contracts from frontends or for interacting over RPC. You can also use the ganache node from docker, see above.
 - Run `anvil -h 0.0.0.0` in a terminal window and keep it running
@@ -70,14 +70,31 @@ Alternatively, `Fixture.s.sol` deploys all contracts to a local node and also cr
 - Mint an IP-NFT to #1
 - Let #1 sell that IP-NFT to #2
 
-### Deploy to Goerli Testnet
+### Deploy to a live network
 
-The easiest way to deploy contracts without exposing a local private key is the thirdweb. Here's how you initialize the process from the root folder of any web3 app: `npx thirdweb@latest deploy`
+The easiest way to deploy contracts without exposing a local private key is the thirdweb. Here's how you initialize the process from the root folder: `npx thirdweb@latest deploy`
 
-If you like to do it manually, we got you covered:
+#### Deploy manually
 
-1. Make sure you have a private key in your `.env` file that has Goerli Testnet ETH on it. Otherwise you won't be able to deploy a contract because of insufficient funds.
-2. Run `source .env` to get the ENV variables into your current terminal session.
-3. Deploy IPNFT `forge script script/IPNFT.s.sol:IPNFTScript --fork-url $GOERLI_RPC_URL --private-key $PRIVATE_KEY --broadcast -vvvv`
-4. Deploy sales contract `forge script script/SchmackoSwap.s.sol:SchmackoSwapScript --fork-url $GOERLI_RPC_URL --private-key $PRIVATE_KEY --broadcast -vvvv`
-5. alternatively get an etherscan key to verify the contract during deployment `forge script script/IPNFT.s.sol:IPNFTScript --fork-url $GOERLI_RPC_URL --private-key $PRIVATE_KEY --verify --etherscan-api-key $ETHERSCAN_KEY --broadcast -vvvv` .
+The `Deploy.s.sol` script deploys all three contracts (IPNFT, Schmackoswap and Mintpass) manually and sets up a first moderator (defined by the `MODERATOR_ADDRESS` env var). Make sure that you're using the correct moderator address for the network you're deploying to.
+
+You _can_ place required env vars in your `.env` file and run `source .env` to get them into your current terminal session or provide them when invoking the command.
+
+1. Make sure you have the private key for your deployer account at hand and that it has ETH on the target network on it.
+2. run `forge script script/Deploy.s.sol:DeployScript --rpc-url $RPC_URL --interactives 1 --sender <deployer address> --broadcast -vvvv`
+3. Paste the private key for the deployer account
+4. to verify the contract during deployment, get an Etherscan API key and add `--verify --etherscan-api-key $ETHERSCAN_API_KEY` to the command.
+
+> This is _not_ possible at the moment, but stay tuned:  
+> Alternatively, start Truffle Dashboard suite and use its RPC URL to sign off transactions with Metamask:
+> `npx truffle dashboard` > `MODERATOR_ADDRESS=<first moderator> forge script script/Deploy.s.sol:DeployScript --rpc-url http://localhost:24012/rpc --sender <deployer address> --froms <deployer address> --broadcast -vvvv`
+
+### Manually Verify contracts on Etherscan
+
+full docs: https://book.getfoundry.sh/reference/forge/forge-verify-contract
+
+`forge verify-contract --chain-id 5 <address> IPNFT`
+
+or, if you need to verify with constructor arguments:
+
+`forge verify-contract --chain-id 5 <address> Mintpass --constructor-args $(cast abi-encode "constructor(address)" "0xabcdef")`
