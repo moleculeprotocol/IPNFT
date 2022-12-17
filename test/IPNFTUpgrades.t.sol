@@ -13,9 +13,6 @@ import { ERC20 } from "solmate/tokens/ERC20.sol";
 
 contract IPNFTUpgrades is IPNFTMintHelper {
     event Reserved(address indexed reserver, uint256 indexed reservationId);
-    event ReservationUpdated(string name, uint256 indexed reservationId);
-
-    event IPNFTMinted(address indexed minter, uint256 indexed tokenId, string tokenURI);
 
     UUPSProxy proxy;
     IPNFT internal ipnft;

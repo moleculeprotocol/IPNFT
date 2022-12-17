@@ -25,7 +25,7 @@ export function handleReservation(event: ReservedEvent): void {
 
 export function handleMint(event: IPNFTMintedEvent): void {
     let ipnft = new Ipnft(event.params.tokenId.toString());
-    ipnft.owner = event.params.minter;
+    ipnft.owner = event.params.owner;
     ipnft.tokenURI = event.params.tokenURI;
     ipnft.createdAt = event.block.timestamp;
     ipnft.save();

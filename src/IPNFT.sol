@@ -25,7 +25,7 @@ import { IReservable } from "./IReservable.sol";
  \▓▓▓▓▓▓\▓▓             \▓▓   \▓▓\▓▓         \▓▓
  */
 
-/// @title IPNFTV2
+/// @title IPNFT V2
 /// @author molecule.to
 /// @notice IP-NFTs capture intellectual property to be traded and fractionalized
 contract IPNFT is
@@ -41,6 +41,8 @@ contract IPNFT is
     using CountersUpgradeable for CountersUpgradeable.Counter;
 
     CountersUpgradeable.Counter private _reservationCounter;
+
+    /// @notice by reserving a mint an user captures a new token id
     mapping(uint256 => address) public reservations;
 
     /// @notice Current version of the contract
@@ -49,19 +51,16 @@ contract IPNFT is
     /// @notice e.g. a mintpass contract
     IAuthorizeMints mintAuthorizer;
 
-    /**
+    /*
      *
      * EVENTS
      *
      */
 
     event Reserved(address indexed reserver, uint256 indexed reservationId);
-    event IPNFTMinted(address indexed minter, uint256 indexed tokenId, string tokenURI);
+    event IPNFTMinted(address indexed owner, uint256 indexed tokenId, string tokenURI);
 
-    /// @dev https://docs.opensea.io/docs/metadata-standards#freezing-metadata
-    event PermanentURI(string _value, uint256 indexed _id);
-
-    /**
+    /*
      *
      * ERRORS
      *
@@ -70,7 +69,7 @@ contract IPNFT is
     error ToZeroAddress();
     error NeedsMintpass();
 
-    /**
+    /*
      *
      * DEPLOY
      *
@@ -89,8 +88,8 @@ contract IPNFT is
         __Pausable_init();
         __ERC1155_init("");
         __ERC1155Burnable_init();
-        __ERC1155URIStorage_init();
         __ERC1155Supply_init();
+        __ERC1155URIStorage_init();
 
         _reservationCounter.increment(); //start at 1.
     }
@@ -103,13 +102,12 @@ contract IPNFT is
         _unpause();
     }
 
-    /**
+    /*
      *
      * PUBLIC
      *
      */
 
-    /// @notice sets the address of the external authorizer contract
     function setAuthorizer(address authorizer_) public onlyOwner {
         if (authorizer_ == address(0)) {
             revert ToZeroAddress();
@@ -117,6 +115,7 @@ contract IPNFT is
         mintAuthorizer = IAuthorizeMints(authorizer_);
     }
 
+    /// @notice reserves a new token id. Checks that the caller is authorized, according to the current implementation of IAuthorizeMints.
     function reserve() public whenNotPaused returns (uint256) {
         if (!mintAuthorizer.authorizeReservation(_msgSender())) {
             revert NeedsMintpass();
@@ -128,6 +127,14 @@ contract IPNFT is
         emit Reserved(_msgSender(), reservationId);
         return reservationId;
     }
+
+    /**
+     * @notice mints an IPNFT with `tokenURI` as source of metadata. Invalidates the reservation. Redeems `mintpassId` on the authorizer contract
+     * @param to address the recipient of the NFT
+     * @param reservationId the reserved token id that has been reserved with `reserve()`
+     * @param mintPassId an id that's handed over to the `IAuthorizeMints` interface
+     * @param tokenURI a location that resolves to a valid IP-NFT metadata structure
+     */
 
     function mintReservation(address to, uint256 reservationId, uint256 mintPassId, string memory tokenURI)
         public
@@ -143,8 +150,6 @@ contract IPNFT is
             revert NeedsMintpass();
         }
 
-        //todo: emit this, once we decided if we're sure that this one is going to be final.
-        //emit PermanentURI(tokenURI, reservationId);
         delete reservations[reservationId];
         mintAuthorizer.redeem(abi.encode(mintPassId));
 
@@ -155,22 +160,9 @@ contract IPNFT is
         return reservationId;
     }
 
-    // Withdraw ETH from contract
+    /// @notice in case someone sends Eth to this contract, this function gets it out again
     function withdrawAll() public payable whenNotPaused onlyOwner {
         require(payable(msg.sender).send(address(this).balance), "transfer failed");
-    }
-
-    // The following functions are overrides required by Solidity.
-
-    function _beforeTokenTransfer(address operator, address from, address to, uint256[] memory ids, uint256[] memory amounts, bytes memory data)
-        internal
-        override (ERC1155Upgradeable, ERC1155SupplyUpgradeable)
-    {
-        super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
-    }
-
-    function uri(uint256 tokenId) public view virtual override (ERC1155Upgradeable, ERC1155URIStorageUpgradeable) returns (string memory) {
-        return ERC1155URIStorageUpgradeable.uri(tokenId);
     }
 
     /// @notice upgrade authorization logic
@@ -180,5 +172,18 @@ contract IPNFT is
         onlyOwner // solhint-disable-next-line no-empty-blocks
     {
         //empty block
+    }
+
+    /// @dev override required by Solidity.
+    function _beforeTokenTransfer(address operator, address from, address to, uint256[] memory ids, uint256[] memory amounts, bytes memory data)
+        internal
+        override (ERC1155Upgradeable, ERC1155SupplyUpgradeable)
+    {
+        super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
+    }
+
+    /// @dev override required by Solidity.
+    function uri(uint256 tokenId) public view virtual override (ERC1155Upgradeable, ERC1155URIStorageUpgradeable) returns (string memory) {
+        return ERC1155URIStorageUpgradeable.uri(tokenId);
     }
 }

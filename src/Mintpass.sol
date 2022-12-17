@@ -10,6 +10,9 @@ import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 import { ReentrancyGuard } from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import { IAuthorizeMints } from "./IAuthorizeMints.sol";
 
+/// @title Mintpass
+/// @author molecule.to
+/// @notice a soulbound (non transferrable) NFT that permits holders to mint IP-NFTs
 contract Mintpass is AccessControl, ERC721BBaseTokenURI, ERC721BBurnable, IAuthorizeMints {
     error AlreadyRedeemed();
     error NotRedeemable();
@@ -25,12 +28,12 @@ contract Mintpass is AccessControl, ERC721BBaseTokenURI, ERC721BBurnable, IAutho
         REVOKED
     }
 
-    // Mapping from tokenId to validity of token.
+    ///@notice Mapping from tokenId to validity of token.
     mapping(uint256 => Status) private _status;
 
-    constructor(address ipnftContract_) {
+    constructor(address ipnftContract) {
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
-        _grantRole(REDEEMER, ipnftContract_);
+        _grantRole(REDEEMER, ipnftContract);
     }
 
     /**
@@ -47,24 +50,27 @@ contract Mintpass is AccessControl, ERC721BBaseTokenURI, ERC721BBurnable, IAutho
      * PUBLIC
      *
      */
-
-    /// @dev Check if a token hasn't been revoked
-    /// @param tokenId Identifier of the token that is checked for validity
-    /// @return True if the token is valid, false otherwise
+    /// @param tokenId Identifier of the mint pass that is checked for validity
+    /// @return bool true if the mint pass has been redeemed already
     function isRedeemable(uint256 tokenId) public view returns (bool) {
         require(_exists(tokenId), "Token does not exist");
         return _status[tokenId] == Status.DEFAULT;
     }
 
+    /// @notice mints an arbitrary amount of mintpasses to `to`. Only callable by a `MODERATOR` role.
     function batchMint(address to, uint256 amount) external onlyRole(MODERATOR) {
         _safeMint(to, amount);
     }
 
-    function authorizeReservation(address reserver) external view returns (bool) {
+    /// @dev see {IAuthorizeMints-authorizeReservation}
+    function authorizeReservation(address reserver) external view override returns (bool) {
         return (balanceOf(reserver) > 0);
     }
 
-    function authorizeMint(address minter, address to, bytes memory data) external view onlyRole(REDEEMER) returns (bool) {
+    /// @dev see {IAuthorizeMints-authorizeMint}
+    /// @dev reverts when authorization conditions are not met
+    /// @param data must be a single `uint256` value: the mint pass id that's to be authorized
+    function authorizeMint(address minter, address to, bytes memory data) external view override onlyRole(REDEEMER) returns (bool) {
         uint256 mintPassId = abi.decode(data, (uint256));
 
         if (ownerOf(mintPassId) != minter) {
@@ -76,7 +82,19 @@ contract Mintpass is AccessControl, ERC721BBaseTokenURI, ERC721BBurnable, IAutho
         return true;
     }
 
-    /// @dev Mark the token as revoked
+    /// @dev see {IAuthorizeMints-redeem}
+    /// @dev reverts when authorization conditions are not met
+    /// @param data must be a single `uint256` value: the mint pass id that's to be redeemed
+    function redeem(bytes memory data) external override onlyRole(REDEEMER) {
+        uint256 mintPassId = abi.decode(data, (uint256));
+        if (!isRedeemable(mintPassId)) {
+            revert NotRedeemable();
+        }
+        _status[mintPassId] = Status.REDEEMED;
+        emit Redeemed(mintPassId);
+    }
+
+    /// @dev Mark `tokenOd` as revoked by a `MODERATOR` role
     /// @param tokenId Identifier of the token
     function revoke(uint256 tokenId) external onlyRole(MODERATOR) {
         if (!isRedeemable(tokenId)) {
@@ -86,17 +104,8 @@ contract Mintpass is AccessControl, ERC721BBaseTokenURI, ERC721BBurnable, IAutho
         emit Revoked(tokenId);
     }
 
-    function redeem(bytes memory data) external onlyRole(REDEEMER) {
-        uint256 mintPassId = abi.decode(data, (uint256));
-        if (!isRedeemable(mintPassId)) {
-            revert NotRedeemable();
-        }
-        _status[mintPassId] = Status.REDEEMED;
-        emit Redeemed(mintPassId);
-    }
-
-    /// @dev Returns the tokenURI attached to a token
     /// @param tokenId Identifier of the token
+    /// @return string a base64 encoded JSON structure containing the token's redemption status
     function tokenURI(uint256 tokenId) public view override returns (string memory) {
         string memory statusString = "redeemable";
         if (_status[tokenId] == Status.REVOKED) {
