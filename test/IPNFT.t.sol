@@ -82,6 +82,7 @@ contract IPNFTTest is IPNFTMintHelper {
 
         vm.startPrank(alice);
         uint256 reservationId = ipnft.reserve();
+        assertEq(ipnft.ownerOf(1), address(0));
 
         vm.expectEmit(true, true, false, true);
         emit IPNFTMinted(alice, 1, ipfsUri);
@@ -91,7 +92,7 @@ contract IPNFTTest is IPNFTMintHelper {
         assertEq(ipnft.uri(1), ipfsUri);
 
         assertEq(ipnft.reservations(1), address(0));
-
+        assertEq(ipnft.ownerOf(1), alice);
         vm.stopPrank();
     }
 
@@ -103,6 +104,7 @@ contract IPNFTTest is IPNFTMintHelper {
         ipnft.burn(alice, tokenId, 1);
 
         assertEq(ipnft.balanceOf(alice, tokenId), 0);
+        assertEq(ipnft.ownerOf(tokenId), address(0));
     }
 
     function testOnlyReservationOwnerCanMintFromReservation() public {

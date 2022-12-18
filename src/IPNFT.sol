@@ -51,6 +51,9 @@ contract IPNFT is
     /// @notice e.g. a mintpass contract
     IAuthorizeMints mintAuthorizer;
 
+    ///@notice this only works for token ids with a supply of 1
+    mapping(uint256 => address) public ownerOf;
+
     /*
      *
      * EVENTS
@@ -180,6 +183,24 @@ contract IPNFT is
         override (ERC1155Upgradeable, ERC1155SupplyUpgradeable)
     {
         super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
+    }
+
+    function _afterTokenTransfer(address operator, address from, address to, uint256[] memory ids, uint256[] memory amounts, bytes memory data)
+        internal
+        override (ERC1155Upgradeable)
+    {
+        super._afterTokenTransfer(operator, from, to, ids, amounts, data);
+
+        for (uint256 i = 0; i < ids.length; i++) {
+            if (totalSupply(ids[i]) == 1 && amounts[i] == 1) {
+                ownerOf[ids[i]] = to;
+            } else {
+                //burnt
+                if (totalSupply(ids[i]) == 0) {
+                    ownerOf[ids[i]] = address(0);
+                }
+            }
+        }
     }
 
     /// @dev override required by Solidity.

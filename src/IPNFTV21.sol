@@ -39,6 +39,8 @@ contract IPNFTV21 is
     using CountersUpgradeable for CountersUpgradeable.Counter;
 
     CountersUpgradeable.Counter private _reservationCounter;
+
+    /// @notice by reserving a mint an user captures a new token id
     mapping(uint256 => address) public reservations;
 
     /// @notice Current version of the contract
@@ -46,6 +48,9 @@ contract IPNFTV21 is
 
     /// @notice e.g. a mintpass contract
     IAuthorizeMints mintAuthorizer;
+
+    ///@notice this only works for token ids with a supply of 1
+    mapping(uint256 => address) public ownerOf;
 
     /// @notice musnt't take the Pauseable property gap
     string public aNewProperty;
@@ -90,8 +95,8 @@ contract IPNFTV21 is
         __Pausable_init();
         __ERC1155_init("");
         __ERC1155Burnable_init();
-        __ERC1155URIStorage_init();
         __ERC1155Supply_init();
+        __ERC1155URIStorage_init();
 
         _reservationCounter.increment(); //start at 1.
     }
@@ -186,19 +191,6 @@ contract IPNFTV21 is
         require(payable(msg.sender).send(address(this).balance), "transfer failed");
     }
 
-    // The following functions are overrides required by Solidity.
-
-    function _beforeTokenTransfer(address operator, address from, address to, uint256[] memory ids, uint256[] memory amounts, bytes memory data)
-        internal
-        override (ERC1155Upgradeable, ERC1155SupplyUpgradeable)
-    {
-        super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
-    }
-
-    function uri(uint256 tokenId) public view virtual override (ERC1155Upgradeable, ERC1155URIStorageUpgradeable) returns (string memory) {
-        return ERC1155URIStorageUpgradeable.uri(tokenId);
-    }
-
     /// @notice upgrade authorization logic
     function _authorizeUpgrade(address /*newImplementation*/ )
         internal
@@ -206,5 +198,36 @@ contract IPNFTV21 is
         onlyOwner // solhint-disable-next-line no-empty-blocks
     {
         //empty block
+    }
+
+    /// @dev override required by Solidity.
+    function _beforeTokenTransfer(address operator, address from, address to, uint256[] memory ids, uint256[] memory amounts, bytes memory data)
+        internal
+        override (ERC1155Upgradeable, ERC1155SupplyUpgradeable)
+    {
+        super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
+    }
+
+    function _afterTokenTransfer(address operator, address from, address to, uint256[] memory ids, uint256[] memory amounts, bytes memory data)
+        internal
+        override (ERC1155Upgradeable)
+    {
+        super._afterTokenTransfer(operator, from, to, ids, amounts, data);
+
+        for (uint256 i = 0; i < ids.length; i++) {
+            if (totalSupply(ids[i]) == 1 && amounts[i] == 1) {
+                ownerOf[ids[i]] = to;
+            } else {
+                //burnt
+                if (totalSupply(ids[i]) == 0) {
+                    ownerOf[ids[i]] = address(0);
+                }
+            }
+        }
+    }
+
+    /// @dev override required by Solidity.
+    function uri(uint256 tokenId) public view virtual override (ERC1155Upgradeable, ERC1155URIStorageUpgradeable) returns (string memory) {
+        return ERC1155URIStorageUpgradeable.uri(tokenId);
     }
 }
