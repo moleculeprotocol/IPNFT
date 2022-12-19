@@ -98,3 +98,8 @@ full docs: https://book.getfoundry.sh/reference/forge/forge-verify-contract
 or, if you need to verify with constructor arguments:
 
 `forge verify-contract --chain-id 5 <address> Mintpass --constructor-args $(cast abi-encode "constructor(address)" "0xabcdef")`
+
+## Interacting with cast
+
+when having an RPC_URL in your local env, you can simply call view functions like this:
+`cast call $IPNFT_ADDRESS "tokenURI(uint256)" 1 | cast --to-ascii`

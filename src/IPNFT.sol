@@ -51,6 +51,8 @@ contract IPNFT is
     /// @notice e.g. a mintpass contract
     IAuthorizeMints mintAuthorizer;
 
+    mapping(uint256 => mapping(address => uint256)) internal readAllowances;
+
     /*
      *
      * EVENTS
@@ -68,6 +70,7 @@ contract IPNFT is
     error NotOwningReservation(uint256 id);
     error ToZeroAddress();
     error NeedsMintpass();
+    error InsufficientBalance();
 
     /*
      *
@@ -135,7 +138,6 @@ contract IPNFT is
      * @param mintPassId an id that's handed over to the `IAuthorizeMints` interface
      * @param tokenURI a location that resolves to a valid IP-NFT metadata structure
      */
-
     function mintReservation(address to, uint256 reservationId, uint256 mintPassId, string memory tokenURI)
         public
         override
@@ -160,9 +162,38 @@ contract IPNFT is
         return reservationId;
     }
 
+    /**
+     * @notice grants time limited "read" access to gated resources
+     * @param reader the address that should be able to access gated content
+     * @param tokenId token id
+     * @param until the timestamp when read access expires (unsafe but good enough for this use case)
+     */
+    function grantReadAccess(address reader, uint256 tokenId, uint256 until) public {
+        if (balanceOf(_msgSender(), tokenId) == 0) {
+            revert InsufficientBalance();
+        }
+
+        require(until > block.timestamp, "until in the past");
+
+        readAllowances[tokenId][reader] = until;
+    }
+
+    /**
+     * @notice check whether `reader` shall be able to access gated content behind `tokenId`
+     * @param reader the address in question
+     * @param tokenId token id
+     * @return bool current read allowance
+     */
+    function canRead(address reader, uint256 tokenId) public view returns (bool) {
+        if (balanceOf(reader, tokenId) > 0) {
+            return true;
+        }
+        return readAllowances[tokenId][reader] > block.timestamp;
+    }
+
     /// @notice in case someone sends Eth to this contract, this function gets it out again
     function withdrawAll() public payable whenNotPaused onlyOwner {
-        require(payable(msg.sender).send(address(this).balance), "transfer failed");
+        require(payable(_msgSender()).send(address(this).balance), "transfer failed");
     }
 
     /// @notice upgrade authorization logic

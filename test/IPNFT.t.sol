@@ -169,4 +169,28 @@ contract IPNFTTest is IPNFTMintHelper {
         ipnft.reserve();
         vm.stopPrank();
     }
+
+    function testOwnerCanGrantReadAccess() public {
+        uint256 tokenId = mintAToken(ipnft, alice);
+
+        //owners can always read
+        assertTrue(ipnft.canRead(alice, tokenId));
+
+        assertFalse(ipnft.canRead(bob, tokenId));
+
+        vm.expectRevert(IPNFT.InsufficientBalance.selector);
+        ipnft.grantReadAccess(bob, tokenId, block.timestamp + 60);
+
+        vm.startPrank(alice);
+        vm.expectRevert(bytes("until in the past"));
+        ipnft.grantReadAccess(bob, tokenId, block.timestamp);
+
+        ipnft.grantReadAccess(bob, tokenId, block.timestamp + 60);
+        assertTrue(ipnft.canRead(bob, tokenId));
+        vm.warp(block.timestamp + 55);
+        assertTrue(ipnft.canRead(bob, tokenId));
+
+        vm.warp(block.timestamp + 60);
+        assertFalse(ipnft.canRead(bob, tokenId));
+    }
 }

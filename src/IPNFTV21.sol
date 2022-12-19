@@ -47,6 +47,8 @@ contract IPNFTV21 is
     /// @notice e.g. a mintpass contract
     IAuthorizeMints mintAuthorizer;
 
+    mapping(uint256 => mapping(address => uint256)) internal readAllowances;
+
     /// @notice musnt't take the Pauseable property gap
     string public aNewProperty;
 
@@ -70,8 +72,9 @@ contract IPNFTV21 is
     error NotOwningReservation(uint256 id);
     error ToZeroAddress();
     error NeedsMintpass();
+    error InsufficientBalance();
 
-    /**
+    /*
      *
      * DEPLOY
      *
@@ -114,6 +117,7 @@ contract IPNFTV21 is
         mintAuthorizer = IAuthorizeMints(authorizer_);
     }
 
+    /// @notice reserves a new token id. Checks that the caller is authorized, according to the current implementation of IAuthorizeMints.
     function reserve() public returns (uint256) {
         if (!mintAuthorizer.authorizeReservation(_msgSender())) {
             revert NeedsMintpass();
@@ -126,6 +130,13 @@ contract IPNFTV21 is
         return reservationId;
     }
 
+    /**
+     * @notice mints an IPNFT with `tokenURI` as source of metadata. Invalidates the reservation. Redeems `mintpassId` on the authorizer contract
+     * @param to address the recipient of the NFT
+     * @param reservationId the reserved token id that has been reserved with `reserve()`
+     * @param mintPassId an id that's handed over to the `IAuthorizeMints` interface
+     * @param tokenURI a location that resolves to a valid IP-NFT metadata structure
+     */
     function mintReservation(address to, uint256 reservationId, uint256 mintPassId, string memory tokenURI) public override returns (uint256) {
         if (reservations[reservationId] != _msgSender()) {
             revert NotOwningReservation(reservationId);
@@ -159,31 +170,38 @@ contract IPNFTV21 is
         }
     }
 
-    // This is how a direct mint could look like for IP-NFTs that don't need encrypted legal contracts.
-    // The Question is how useful this is, after all the legal contract might still require
-    // a hard reference to the IP-NFT tokenId. For this function you wouldn't get that
-    // tokenId until after the mint of course.
-    // function directMint(address to, string memory tokenURI) public payable returns (uint256 tokenId) {
-    //     require(msg.value >= mintPrice, "Ether amount sent is too small");
+    /**
+     * @notice grants time limited "read" access to gated resources
+     * @param reader the address that should be able to access gated content
+     * @param tokenId token id
+     * @param until the timestamp when read access expires (unsafe but good enough for this use case)
+     */
+    function grantReadAccess(address reader, uint256 tokenId, uint256 until) public {
+        if (balanceOf(_msgSender(), tokenId) == 0) {
+            revert InsufficientBalance();
+        }
 
-    //     uint256 newTokenId = _reservationCounter.current();
-    //     _reservationCounter.increment();
+        require(until > block.timestamp, "until in the past");
 
-    //     // Given that we're not super confident about the metadata being "final" yet,
-    //     // I don't think we should set the permanent URI yet.
-    //     emit PermanentURI(tokenURI, newTokenId);
+        readAllowances[tokenId][reader] = until;
+    }
 
-    //     emit TokenMinted(tokenURI, to, newTokenId, 1);
-
-    //     _mint(to, newTokenId, 1, "");
-    //     _setURI(newTokenId, tokenURI);
-
-    //     return tokenId;
-    // }
+    /**
+     * @notice check whether `reader` shall be able to access gated content behind `tokenId`
+     * @param reader the address in question
+     * @param tokenId token id
+     * @return bool current read allowance
+     */
+    function canRead(address reader, uint256 tokenId) public view returns (bool) {
+        if (balanceOf(reader, tokenId) > 0) {
+            return true;
+        }
+        return readAllowances[tokenId][reader] > block.timestamp;
+    }
 
     // Withdraw ETH from contract
     function withdrawAll() public payable onlyOwner {
-        require(payable(msg.sender).send(address(this).balance), "transfer failed");
+        require(payable(_msgSender()).send(address(this).balance), "transfer failed");
     }
 
     // The following functions are overrides required by Solidity.
