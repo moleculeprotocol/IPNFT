@@ -12,7 +12,7 @@
         "prepare:goerli": "mustache config/goerli.js subgraph.template.yaml > subgraph.yaml",
         "prepare:mainnet": "mustache config/mainnet.js subgraph.template.yaml > subgraph.yaml",
         "deploy:goerli": "graph deploy --node https://api.thegraph.com/deploy/ dorianwilhelm/ip-nft-subgraph-goerli",
-        "deploy": "graph deploy --node https://api.thegraph.com/deploy/ moleculeprotocol/ipnft-subgraph",
+        "deploy": "graph deploy --product hosted-service moleculeprotocol/ip-nft-mainnet",
         "create-local": "graph create --node http://localhost:8020/ moleculeprotocol/ipnft-subgraph",
         "remove-local": "graph remove --node http://localhost:8020/ moleculeprotocol/ipnft-subgraph",
         "deploy-local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 moleculeprotocol/ipnft-subgraph",
