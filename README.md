@@ -15,6 +15,8 @@ Template for NFT contracts tokenizing IP.
 
 - IP-NFT <https://goerli.etherscan.io/address/0x5fbdb2315678afecb367f032d93f642f64180aa3#code>
 - SchmackoSwap <https://goerli.etherscan.io/address/0xe7f1725e7734ce288f8367e1bb143e90bb3f0512#code>
+- Mintpass <https://goerli.etherscan.io/address/0xaf0f99dcc64e8a6549d32013ac9f2c3fa7834688>
+- HeadlessDispenser <https://goerli.etherscan.io/address/0x0F1Bd197c5dCC6bC7E8025037a7780010E2Cd22A#code>
 - The Graph: <https://thegraph.com/explorer/subgraph/dorianwilhelm/ip-nft-subgraph-goerli>
 
 ## Installation
