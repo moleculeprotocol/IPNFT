@@ -1,21 +1,15 @@
 {
-  "name": "molecule-ipnft",
-  "description": "customized environment for web3 development",
-  "version": "0.0.3",
-  "private": true,
-  "workspaces": [
-    "chain"
-  ],
-  "scripts": {
-    "chain": "yarn workspace @molecule-ipnft/chain chain",
-    "compile": "yarn workspace @molecule-ipnft/chain compile",
-    "test:chain": "yarn workspace @molecule-ipnft/chain test",
-    "deploy:local": "yarn workspace @molecule-ipnft/chain deploy",
-    "deploy:rinkeby": "yarn workspace @molecule-ipnft/chain deploy --network rinkeby",
-    "deploy:goerli": "yarn workspace @molecule-ipnft/chain deploy --network goerli",
-    "deploy:mainnet": "yarn workspace @molecule-ipnft/chain deploy --network mainnet"
-  },
+  "license": "UNLICENSED",
+  "scripts": {},
   "devDependencies": {
-    "ts-node": "^9.1.1"
-  }
+    "@nomicfoundation/hardhat-network-helpers": "^1.0.6",
+    "@nomiclabs/hardhat-ethers": "^2.2.1",
+    "@nomiclabs/hardhat-etherscan": "^3.1.2",
+    "@openzeppelin/hardhat-upgrades": "^1.21.0",
+    "chai": "^4.3.7",
+    "ethers": "^5.7.2",
+    "hardhat": "^2.12.2",
+    "hardhat-preprocessor": "^0.1.5"
+  },
+  "dependencies": {}
 }

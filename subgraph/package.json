@@ -1,0 +1,30 @@
+{
+    "name": "@molecule/ipfnt-subgraph",
+    "license": "UNLICENSED",
+    "scripts": {
+        "codegen": "graph codegen",
+        "build": "graph codegen && graph build",
+        "create-abis": "yarn create-ipnft-abi && yarn create-schmackoswap-abi && yarn create-mintpass-abi",
+        "create-ipnft-abi": "cat ../out/IPNFT.sol/IPNFT.json | jq .abi > ./abis/IPNFT.json",
+        "create-mintpass-abi": "cat ../out/Mintpass.sol/Mintpass.json | jq .abi > ./abis/Mintpass.json",
+        "create-schmackoswap-abi": "cat ../out/SchmackoSwap.sol/SchmackoSwap.json | jq .abi > ./abis/SchmackoSwap.json",
+        "prepare:local": "mustache config/local.js subgraph.template.yaml > subgraph.yaml",
+        "prepare:goerli": "mustache config/goerli.js subgraph.template.yaml > subgraph.yaml",
+        "prepare:mainnet": "mustache config/mainnet.js subgraph.template.yaml > subgraph.yaml",
+        "deploy:goerli": "graph deploy --node https://api.thegraph.com/deploy/ dorianwilhelm/ip-nft-subgraph-goerli",
+        "deploy": "graph deploy --product hosted-service moleculeprotocol/ip-nft-mainnet",
+        "create-local": "graph create --node http://localhost:8020/ moleculeprotocol/ipnft-subgraph",
+        "remove-local": "graph remove --node http://localhost:8020/ moleculeprotocol/ipnft-subgraph",
+        "deploy-local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 moleculeprotocol/ipnft-subgraph",
+        "test": "graph test"
+    },
+    "dependencies": {
+        "@graphprotocol/graph-cli": "0.35.0",
+        "@graphprotocol/graph-ts": "0.28.1",
+        "dotenv": "^16.0.3",
+        "mustache": "^4.2.0"
+    },
+    "devDependencies": {
+        "matchstick-as": "0.5.0"
+    }
+}
