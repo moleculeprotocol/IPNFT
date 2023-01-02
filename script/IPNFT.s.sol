@@ -7,7 +7,7 @@ import "../src/IPNFT.sol";
 import { UUPSProxy } from "../src/UUPSProxy.sol";
 
 contract IPNFTScript is Script {
-    function setUp() public {}
+    function setUp() public { }
 
     function run() public {
         vm.startBroadcast();
