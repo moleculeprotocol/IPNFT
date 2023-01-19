@@ -15,6 +15,7 @@ lib/*
 # hardhat 
 node_modules
 cache_hardhat/
+cache_forge/
 artifacts/
 .openzeppelin/unknown-*
 
