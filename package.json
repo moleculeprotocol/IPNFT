@@ -2,6 +2,7 @@
   "license": "UNLICENSED",
   "scripts": {},
   "devDependencies": {
+    "@nomicfoundation/hardhat-foundry": "^1.0.0",
     "@nomicfoundation/hardhat-network-helpers": "^1.0.6",
     "@nomiclabs/hardhat-ethers": "^2.2.1",
     "@nomiclabs/hardhat-etherscan": "^3.1.2",
