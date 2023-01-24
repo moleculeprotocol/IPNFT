@@ -6,7 +6,7 @@ import "forge-std/console.sol";
 import "../src/SchmackoSwap.sol";
 
 contract SchmackoSwapScript is Script {
-    function setUp() public {}
+    function setUp() public { }
 
     function run() public {
         vm.startBroadcast();
