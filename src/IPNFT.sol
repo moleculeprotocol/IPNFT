@@ -177,6 +177,7 @@ contract IPNFT is
      * @param tokenId token id
      * @param until the timestamp when read access expires (unsafe but good enough for this use case)
      */
+
     function grantReadAccess(address reader, uint256 tokenId, uint256 until) public {
         if (balanceOf(_msgSender(), tokenId) == 0) {
             revert InsufficientBalance();
@@ -217,13 +218,13 @@ contract IPNFT is
     /// @dev override required by Solidity.
     function _beforeTokenTransfer(address operator, address from, address to, uint256[] memory ids, uint256[] memory amounts, bytes memory data)
         internal
-        override (ERC1155Upgradeable, ERC1155SupplyUpgradeable)
+        override(ERC1155Upgradeable, ERC1155SupplyUpgradeable)
     {
         super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
     }
 
     /// @dev override required by Solidity.
-    function uri(uint256 tokenId) public view virtual override (ERC1155Upgradeable, ERC1155URIStorageUpgradeable) returns (string memory) {
+    function uri(uint256 tokenId) public view virtual override(ERC1155Upgradeable, ERC1155URIStorageUpgradeable) returns (string memory) {
         return ERC1155URIStorageUpgradeable.uri(tokenId);
     }
 }
