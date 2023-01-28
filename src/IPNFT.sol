@@ -53,6 +53,8 @@ contract IPNFT is
 
     mapping(uint256 => mapping(address => uint256)) internal readAllowances;
 
+    mapping(uint256 => bool) public isTokenLocked;
+
     /*
      *
      * EVENTS
@@ -162,12 +164,21 @@ contract IPNFT is
         return reservationId;
     }
 
+    //todo: only fractionalizer
+    function lockToken(uint256 tokenId, bool isLocked) public {
+        if (balanceOf(_msgSender(), tokenId) == 0) {
+            revert InsufficientBalance();
+        }
+
+        isTokenLocked[tokenId] = isLocked;
+    }
     /**
      * @notice grants time limited "read" access to gated resources
      * @param reader the address that should be able to access gated content
      * @param tokenId token id
      * @param until the timestamp when read access expires (unsafe but good enough for this use case)
      */
+
     function grantReadAccess(address reader, uint256 tokenId, uint256 until) public {
         if (balanceOf(_msgSender(), tokenId) == 0) {
             revert InsufficientBalance();
@@ -210,6 +221,11 @@ contract IPNFT is
         internal
         override (ERC1155Upgradeable, ERC1155SupplyUpgradeable)
     {
+        for (uint256 i = 0; i < ids.length; i++) {
+            if (isTokenLocked[ids[i]]) {
+                revert("token is locked");
+            }
+        }
         super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
     }
 
