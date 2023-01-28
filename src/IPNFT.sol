@@ -196,6 +196,7 @@ contract IPNFT is
      * @param tokenId token id
      * @param until the timestamp when read access expires (unsafe but good enough for this use case)
      */
+
     function grantReadAccess(address reader, uint256 tokenId, uint256 until) public {
         if (balanceOf(_msgSender(), tokenId) == 0) {
             revert InsufficientBalance();
