@@ -2,7 +2,7 @@
 pragma solidity ^0.8.17;
 
 import "forge-std/Test.sol";
-import { SchmackoSwap } from "../src/SchmackoSwap.sol";
+import { SchmackoSwap, ListingState } from "../src/SchmackoSwap.sol";
 
 import { IPNFT } from "../src/IPNFT.sol";
 import { ERC1155Supply } from "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Supply.sol";
@@ -89,7 +89,8 @@ contract SchmackoSwapTest is Test {
                         paymentToken: testToken,
                         tokenAmount: erc1155Supply.totalSupply(1),
                         askPrice: 1 ether,
-                        creator: address(seller)
+                        creator: address(seller),
+                        listingState: ListingState.LISTED
                     }),
                     block.number
                 )
@@ -107,7 +108,8 @@ contract SchmackoSwapTest is Test {
                 paymentToken: testToken,
                 tokenAmount: erc1155Supply.totalSupply(1),
                 askPrice: 1 ether,
-                creator: address(seller)
+                creator: address(seller),
+                listingState: ListingState.LISTED
             })
             );
 
@@ -116,8 +118,15 @@ contract SchmackoSwapTest is Test {
 
         //assertEq(ipnft.balanceOf(address(schmackoSwap), 1), 1);
 
-        (ERC1155Supply tokenContract, uint256 tokenId, address creator, uint256 tokenAmount, IERC20 paymentToken, uint256 askPrice) =
-            schmackoSwap.listings(listingId);
+        (
+            ERC1155Supply tokenContract,
+            uint256 tokenId,
+            address creator,
+            uint256 tokenAmount,
+            IERC20 paymentToken,
+            uint256 askPrice,
+            ListingState listingState
+        ) = schmackoSwap.listings(listingId);
 
         assertEq(address(tokenContract), address(ipnft));
         assertEq(tokenId, 1);
@@ -125,7 +134,7 @@ contract SchmackoSwapTest is Test {
         assertEq(creator, address(seller));
         assertEq(askPrice, 1 ether);
         assertEq(address(paymentToken), address(testToken));
-
+        assertEq(uint256(listingState), 0);
         assertEq(ipnft.balanceOf(address(seller), 1), 1);
     }
 
@@ -161,16 +170,17 @@ contract SchmackoSwapTest is Test {
                 tokenAmount: 1,
                 paymentToken: testToken,
                 askPrice: 1 ether,
-                creator: address(seller)
+                creator: address(seller),
+                listingState: ListingState.CANCELLED
             })
             );
 
         schmackoSwap.cancel(listingId);
 
         assertEq(ipnft.balanceOf(address(seller), 1), 1);
-
-        (,, address newCreator,,,) = schmackoSwap.listings(listingId);
-        assertEq(newCreator, address(0));
+        (,, address newCreator,,,, ListingState listingState) = schmackoSwap.listings(listingId);
+        assertEq(uint256(listingState), 1);
+        assertEq(newCreator, seller);
     }
 
     function testNonOwnerCannotCancelSale() public {
@@ -184,7 +194,7 @@ contract SchmackoSwapTest is Test {
 
         assertEq(ipnft.balanceOf(address(seller), 1), 1);
 
-        (,, address creator,,,) = schmackoSwap.listings(listingId);
+        (,, address creator,,,,) = schmackoSwap.listings(listingId);
         assertEq(creator, address(seller));
     }
 
@@ -252,7 +262,8 @@ contract SchmackoSwapTest is Test {
                 tokenAmount: 1,
                 paymentToken: testToken,
                 askPrice: 1 ether,
-                creator: address(seller)
+                creator: address(seller),
+                listingState: ListingState.FULFILLED
             })
             );
 
@@ -264,8 +275,9 @@ contract SchmackoSwapTest is Test {
         assertEq(testToken.balanceOf(seller), 1 ether);
 
         // listing has been removed during sale
-        (,, address creator,,,) = schmackoSwap.listings(listingId);
-        assertEq(creator, address(0));
+        (,, address creator,,,, ListingState listingState) = schmackoSwap.listings(listingId);
+        assertEq(uint256(listingState), 2);
+        assertEq(creator, seller);
     }
 
     function testCannotFulfillWhenSellerHasMovedTheNft() public {
