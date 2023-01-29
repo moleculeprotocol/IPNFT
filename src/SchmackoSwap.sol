@@ -9,6 +9,12 @@ import { ERC1155Supply } from "@openzeppelin/contracts/token/ERC1155/extensions/
 import { ERC165 } from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 import { IERC165 } from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 
+enum ListingState {
+    LISTED,
+    CANCELLED,
+    FULFILLED
+}
+
 /// @title SchmackoSwap
 /// @author molecule.to
 /// @notice a sales contract that lets NFT holders list items with an ask price and control who can fulfill their offers. Accepts arbitrary ERC20 tokens as payment.
@@ -70,7 +76,10 @@ contract SchmackoSwap is ERC165, ReentrancyGuard {
         uint256 tokenAmount;
         IERC20 paymentToken;
         uint256 askPrice;
+        ListingState listingState;
     }
+
+    mapping(uint256 => mapping(address => bool)) listingOperators;
 
     /// @notice An indexed list of listings
     mapping(uint256 => Listing) public listings;
@@ -95,10 +104,12 @@ contract SchmackoSwap is ERC165, ReentrancyGuard {
             paymentToken: paymentToken,
             tokenAmount: tokenContract.totalSupply(tokenId),
             askPrice: askPrice,
-            creator: msg.sender
+            creator: msg.sender,
+            listingState: ListingState.LISTED
         });
 
         uint256 listingId = uint256(keccak256(abi.encode(listing, block.number)));
+        listingOperators[listingId][msg.sender] = true;
 
         listings[listingId] = listing;
 
@@ -107,16 +118,28 @@ contract SchmackoSwap is ERC165, ReentrancyGuard {
         return listingId;
     }
 
-    /// @notice Cancel an existing listing
-    /// @param listingId The ID for the listing you want to cancel
-    function cancel(uint256 listingId) public {
-        Listing memory listing = listings[listingId];
+    function isApprovedListingOperator(uint256 listingId, address operator) public view returns (bool) {
+        return listingOperators[listingId][operator];
+    }
 
+    function approveListingOperator(uint256 listingId, address operator, bool approved) public {
+        Listing memory listing = listings[listingId];
         if (listing.creator != msg.sender) revert Unauthorized();
 
-        delete listings[listingId];
+        listingOperators[listingId][operator] = approved;
+    }
 
-        emit Unlisted(listingId, listing);
+    /// @notice Cancel an existing listing
+    /// @param listingId The ID for the listing you want to cancel
+
+    function cancel(uint256 listingId) public {
+        if (!isApprovedListingOperator(listingId, msg.sender)) revert Unauthorized();
+        Listing memory listing = listings[listingId];
+        if (listing.listingState != ListingState.LISTED) {
+            revert("cant cancel an inactive listing");
+        }
+        listings[listingId].listingState = ListingState.CANCELLED;
+        emit Unlisted(listingId, listings[listingId]);
     }
 
     /// @notice Purchase one of the listed tokens
@@ -134,13 +157,13 @@ contract SchmackoSwap is ERC165, ReentrancyGuard {
         uint256 buyerBalance = paymentToken.balanceOf(msg.sender);
         if (buyerBalance < listing.askPrice) revert InsufficientBalance();
 
-        delete listings[listingId];
+        listings[listingId].listingState = ListingState.FULFILLED;
 
         listing.tokenContract.safeTransferFrom(listing.creator, msg.sender, listing.tokenId, listing.tokenAmount, "");
 
         SafeTransferLib.safeTransferFrom(SolERC20(address(paymentToken)), msg.sender, listing.creator, listing.askPrice);
 
-        emit Purchased(listingId, msg.sender, listing);
+        emit Purchased(listingId, msg.sender, listings[listingId]);
     }
 
     /// @notice lets the seller allow or disallow a certain buyer to fulfill the listing
@@ -151,7 +174,7 @@ contract SchmackoSwap is ERC165, ReentrancyGuard {
         Listing memory listing = listings[listingId];
 
         if (listing.creator == address(0)) revert ListingNotFound();
-        if (listing.creator != msg.sender) revert Unauthorized();
+        if (!isApprovedListingOperator(listingId, msg.sender)) revert Unauthorized();
         require(buyerAddress != address(0), "Can't add ZERO address to allowlist");
 
         allowlist[listingId][buyerAddress] = isAllowed_;
