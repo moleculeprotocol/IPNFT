@@ -1,37 +1,33 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import {ERC1155Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
-import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import {PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
-import {ERC1155URIStorageUpgradeable} from
-    "@openzeppelin/contracts-upgradeable/token/ERC1155/extensions/ERC1155URIStorageUpgradeable.sol";
-import {ERC1155BurnableUpgradeable} from
-    "@openzeppelin/contracts-upgradeable/token/ERC1155/extensions/ERC1155BurnableUpgradeable.sol";
-import {ERC1155SupplyUpgradeable} from
-    "@openzeppelin/contracts-upgradeable/token/ERC1155/extensions/ERC1155SupplyUpgradeable.sol";
-import {CountersUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/CountersUpgradeable.sol";
-import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import {IAuthorizeMints} from "./IAuthorizeMints.sol";
-import {IReservable, IReservableV21} from "./IReservable.sol";
+import { ERC1155Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
+import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import { PausableUpgradeable } from "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
+import { ERC1155URIStorageUpgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC1155/extensions/ERC1155URIStorageUpgradeable.sol";
+import { ERC1155BurnableUpgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC1155/extensions/ERC1155BurnableUpgradeable.sol";
+import { ERC1155SupplyUpgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC1155/extensions/ERC1155SupplyUpgradeable.sol";
+import { CountersUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/CountersUpgradeable.sol";
+import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import { IAuthorizeMints } from "./IAuthorizeMints.sol";
+import { IReservable, IReservableV21 } from "./IReservable.sol";
 
 /*
- ______ _______         __    __ ________ ________
-|      \       \       |  \  |  \        \        \
- \▓▓▓▓▓▓ ▓▓▓▓▓▓▓\      | ▓▓\ | ▓▓ ▓▓▓▓▓▓▓▓\▓▓▓▓▓▓▓▓
-  | ▓▓ | ▓▓__/ ▓▓______| ▓▓▓\| ▓▓ ▓▓__      | ▓▓
-  | ▓▓ | ▓▓    ▓▓      \ ▓▓▓▓\ ▓▓ ▓▓  \     | ▓▓
-  | ▓▓ | ▓▓▓▓▓▓▓ \▓▓▓▓▓▓ ▓▓\▓▓ ▓▓ ▓▓▓▓▓     | ▓▓
- _| ▓▓_| ▓▓            | ▓▓ \▓▓▓▓ ▓▓        | ▓▓
-|   ▓▓ \ ▓▓            | ▓▓  \▓▓▓ ▓▓        | ▓▓
- \▓▓▓▓▓▓\▓▓             \▓▓   \▓▓\▓▓         \▓▓
- */
+.___ __________ _______  ______________________       ________    ________   
+|   |\______   \\      \ \_   _____/\__    ___/___  __\_____  \   \_____  \  
+|   | |     ___//   |   \ |    __)    |    |   \  \/ / /  ____/    /  ____/  
+|   | |    |   /    |    \|     \     |    |    \   / /       \   /       \  
+|___| |____|   \____|__  /\___  /     |____|     \_/  \_______ \/\\_______ \ 
+                       \/     \/                              \/\/        \/ 
+                                                                               
+*/
 
-/// @title IPNFT V2.1
+/// @title IPNFTV2.2 Demo for Testing Upgrades
 /// @author molecule.to
-/// @notice IP-NFTs capture intellectual property to be traded and fractionalized
-contract IPNFTV21 is
+/// @notice Demo contract to test upgrades. Don't use like this
+/// @dev Don't use this.
+contract IPNFTV22 is
     IReservableV21,
     ERC1155Upgradeable,
     ERC1155BurnableUpgradeable,
@@ -57,6 +53,9 @@ contract IPNFTV21 is
     mapping(uint256 => mapping(address => uint256)) internal readAllowances;
 
     uint256 constant SYMBOLIC_MINT_FEE = 0.001 ether;
+
+    /// @notice musnt't take the minting fee property gap
+    string public aNewProperty;
 
     /*
      *
@@ -111,13 +110,16 @@ contract IPNFTV21 is
         _unpause();
     }
 
+    function reinit() public onlyOwner reinitializer(2) {
+        aNewProperty = "some property";
+    }
+
     /*
      *
      * PUBLIC
      *
      */
 
-    /// @notice sets the address of the external authorizer contract
     function setAuthorizer(address authorizer_) public onlyOwner {
         if (authorizer_ == address(0)) {
             revert ToZeroAddress();
@@ -126,7 +128,7 @@ contract IPNFTV21 is
     }
 
     /// @notice reserves a new token id. Checks that the caller is authorized, according to the current implementation of IAuthorizeMints.
-    function reserve() public whenNotPaused returns (uint256) {
+    function reserve() public returns (uint256) {
         if (!mintAuthorizer.authorizeReservation(_msgSender())) {
             revert NeedsMintpass();
         }
@@ -174,6 +176,20 @@ contract IPNFTV21 is
         return reservationId;
     }
 
+    function increaseShares(uint256 tokenId, uint256 shares, address to) public {
+        require(shares > 0, "IP-NFT: shares amount must be greater than 0");
+        require(totalSupply(tokenId) == 1, "IP-NFT: shares already minted");
+        require(balanceOf(_msgSender(), tokenId) == 1, "IP-NFT: not owner");
+
+        _mint(to, tokenId, shares, "");
+    }
+
+    function distribute(uint256 fromToken, address[] memory toAddresses, uint256 value) public {
+        for (uint256 i = 0; i < toAddresses.length; i++) {
+            safeTransferFrom(msg.sender, toAddresses[i], fromToken, value, "");
+        }
+    }
+
     /**
      * @notice grants time limited "read" access to gated resources
      * @param reader the address that should be able to access gated content
@@ -203,7 +219,7 @@ contract IPNFTV21 is
         return readAllowances[tokenId][reader] > block.timestamp;
     }
 
-    /// @notice in case someone sends Eth to this contract, this function gets it out again
+    /// @notice retrieve this contract's funds
     function withdrawAll() public payable whenNotPaused onlyOwner {
         require(payable(_msgSender()).send(address(this).balance), "transfer failed");
     }
@@ -218,25 +234,15 @@ contract IPNFTV21 is
     }
 
     /// @dev override required by Solidity.
-    function _beforeTokenTransfer(
-        address operator,
-        address from,
-        address to,
-        uint256[] memory ids,
-        uint256[] memory amounts,
-        bytes memory data
-    ) internal override (ERC1155Upgradeable, ERC1155SupplyUpgradeable) {
+    function _beforeTokenTransfer(address operator, address from, address to, uint256[] memory ids, uint256[] memory amounts, bytes memory data)
+        internal
+        override (ERC1155Upgradeable, ERC1155SupplyUpgradeable)
+    {
         super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
     }
 
     /// @dev override required by Solidity.
-    function uri(uint256 tokenId)
-        public
-        view
-        virtual
-        override (ERC1155Upgradeable, ERC1155URIStorageUpgradeable)
-        returns (string memory)
-    {
+    function uri(uint256 tokenId) public view virtual override (ERC1155Upgradeable, ERC1155URIStorageUpgradeable) returns (string memory) {
         return ERC1155URIStorageUpgradeable.uri(tokenId);
     }
 }

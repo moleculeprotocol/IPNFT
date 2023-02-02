@@ -5,3 +5,11 @@ interface IReservable {
     function reserve() external returns (uint256);
     function mintReservation(address to, uint256 reservationId, uint256 mintPassId, string memory tokenURI) external returns (uint256 tokenId);
 }
+
+interface IReservableV21 {
+    function reserve() external returns (uint256);
+    function mintReservation(address to, uint256 reservationId, uint256 mintPassId, string memory tokenURI)
+        external
+        payable
+        returns (uint256 tokenId);
+}

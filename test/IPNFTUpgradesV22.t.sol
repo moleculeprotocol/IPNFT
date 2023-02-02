@@ -5,22 +5,23 @@ import "forge-std/Test.sol";
 import { console } from "forge-std/console.sol";
 import { IPNFT } from "../src/IPNFT.sol";
 import { IPNFTV21 } from "../src/IPNFTV21.sol";
+import { IPNFTV22 } from "../src/IPNFTV22.sol";
 
 import { Mintpass } from "../src/Mintpass.sol";
 import { UUPSProxy } from "../src/UUPSProxy.sol";
 import { IPNFTMintHelper } from "./IPNFTMintHelper.sol";
 import { ERC20 } from "solmate/tokens/ERC20.sol";
 
-contract IPNFTUpgrades is IPNFTMintHelper {
+contract IPNFTUpgradesV22 is IPNFTMintHelper {
     event Reserved(address indexed reserver, uint256 indexed reservationId);
 
     UUPSProxy proxy;
     IPNFT internal ipnft;
     IPNFTV21 internal ipnftV21;
+    IPNFTV22 internal ipnftV22;
 
     address alice = makeAddr("alice");
     address bob = makeAddr("bob");
-    address charlie = makeAddr("charlie");
 
     function setUp() public {
         vm.startPrank(deployer);
@@ -39,20 +40,25 @@ contract IPNFTUpgrades is IPNFTMintHelper {
         IPNFTV21 implementationV21 = new IPNFTV21();
         ipnft.upgradeTo(address(implementationV21));
 
-        ipnftV21 = IPNFTV21(address(proxy));
-        ipnftV21.reinit();
+        IPNFTV22 implementationV22 = new IPNFTV22();
+        ipnft.upgradeTo(address(implementationV22));
+        ipnftV22 = IPNFTV22(address(proxy));
+        ipnftV22.reinit();
     }
 
-    function testUpgradeContract() public {
+    function testUpgradeToV22() public {
         vm.startPrank(deployer);
         doUpgrade();
-        assertEq(ipnftV21.totalSupply(0), 0);
+        assertEq(ipnftV22.totalSupply(0), 0);
 
         vm.expectRevert("Initializable: contract is already initialized");
-        ipnftV21.reinit();
+        ipnftV22.initialize();
+
+        vm.expectRevert("Initializable: contract is already initialized");
+        ipnftV22.reinit();
         vm.stopPrank();
 
-        assertEq(ipnftV21.aNewProperty(), "some property");
+        assertEq(ipnftV22.aNewProperty(), "some property");
     }
 
     function testTokensSurviveUpgrade() public {
@@ -62,8 +68,8 @@ contract IPNFTUpgrades is IPNFTMintHelper {
         doUpgrade();
         vm.stopPrank();
 
-        assertEq(ipnftV21.totalSupply(1), 1);
-        assertEq(ipnftV21.balanceOf(alice, 1), 1);
+        assertEq(ipnftV22.totalSupply(1), 1);
+        assertEq(ipnftV22.balanceOf(alice, 1), 1);
     }
 
     function testLosesPauseability() public {
@@ -77,7 +83,8 @@ contract IPNFTUpgrades is IPNFTMintHelper {
         dealMintpass(bob);
 
         vm.startPrank(bob);
-        ipnftV21.reserve();
+        //can reserve even though it was supposed to fail when paused before
+        ipnftV22.reserve();
         vm.stopPrank();
     }
 }

@@ -5,7 +5,7 @@ import "forge-std/Test.sol";
 import { console } from "forge-std/console.sol";
 
 import { Mintpass } from "../src/Mintpass.sol";
-import { IReservable } from "../src/IReservable.sol";
+import { IReservable, IReservableV21 } from "../src/IReservable.sol";
 import { UUPSProxy } from "../src/UUPSProxy.sol";
 
 abstract contract IPNFTMintHelper is Test {
@@ -34,6 +34,16 @@ abstract contract IPNFTMintHelper is Test {
     function mintAToken(IReservable ipnft, address to) internal returns (uint256) {
         uint256 reservationId = reserveAToken(ipnft, to);
         vm.startPrank(to);
+        ipnft.mintReservation(to, reservationId, reservationId, arUri);
+        vm.stopPrank();
+        return reservationId;
+    }
+
+    function mintATokenV21(IReservableV21 ipnft, address to) internal returns (uint256) {
+        dealMintpass(to);
+        vm.startPrank(to);
+        uint256 reservationId = ipnft.reserve();
+
         ipnft.mintReservation(to, reservationId, reservationId, arUri);
         vm.stopPrank();
         return reservationId;
