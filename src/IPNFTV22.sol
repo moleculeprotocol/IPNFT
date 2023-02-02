@@ -11,7 +11,7 @@ import { CountersUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/C
 import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import { IAuthorizeMints } from "./IAuthorizeMints.sol";
-import { IReservable, IReservableV21 } from "./IReservable.sol";
+import { IReservable } from "./IReservable.sol";
 
 /*
 .___ __________ _______  ______________________       ________    ________   
@@ -28,7 +28,7 @@ import { IReservable, IReservableV21 } from "./IReservable.sol";
 /// @notice Demo contract to test upgrades. Don't use like this
 /// @dev Don't use this.
 contract IPNFTV22 is
-    IReservableV21,
+    IReservable,
     ERC1155Upgradeable,
     ERC1155BurnableUpgradeable,
     ERC1155SupplyUpgradeable,

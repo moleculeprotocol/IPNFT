@@ -4,7 +4,6 @@ pragma solidity ^0.8.17;
 import "forge-std/Test.sol";
 import { console } from "forge-std/console.sol";
 import { IPNFT } from "../src/IPNFT.sol";
-import { IPNFTV21 } from "../src/IPNFTV21.sol";
 import { IPNFTV22 } from "../src/IPNFTV22.sol";
 
 import { Mintpass } from "../src/Mintpass.sol";
@@ -12,21 +11,21 @@ import { UUPSProxy } from "../src/UUPSProxy.sol";
 import { IPNFTMintHelper } from "./IPNFTMintHelper.sol";
 import { ERC20 } from "solmate/tokens/ERC20.sol";
 
-contract IPNFTUpgradesV22 is IPNFTMintHelper {
+contract IPNFTUpgrades is IPNFTMintHelper {
     event Reserved(address indexed reserver, uint256 indexed reservationId);
 
     UUPSProxy proxy;
     IPNFT internal ipnft;
-    IPNFTV21 internal ipnftV21;
     IPNFTV22 internal ipnftV22;
 
     address alice = makeAddr("alice");
     address bob = makeAddr("bob");
+    address charlie = makeAddr("charlie");
 
     function setUp() public {
         vm.startPrank(deployer);
-        IPNFT implementationV2 = new IPNFT();
-        proxy = new UUPSProxy(address(implementationV2), "");
+        IPNFT implementationV21 = new IPNFT();
+        proxy = new UUPSProxy(address(implementationV21), "");
         ipnft = IPNFT(address(proxy));
         ipnft.initialize();
 
@@ -34,19 +33,18 @@ contract IPNFTUpgradesV22 is IPNFTMintHelper {
         mintpass.grantRole(mintpass.MODERATOR(), deployer);
         ipnft.setAuthorizer(address(mintpass));
         vm.stopPrank();
+        vm.deal(alice, 0.05 ether);
     }
 
     function doUpgrade() public {
-        IPNFTV21 implementationV21 = new IPNFTV21();
-        ipnft.upgradeTo(address(implementationV21));
-
         IPNFTV22 implementationV22 = new IPNFTV22();
         ipnft.upgradeTo(address(implementationV22));
+
         ipnftV22 = IPNFTV22(address(proxy));
         ipnftV22.reinit();
     }
 
-    function testUpgradeToV22() public {
+    function testUpgradeContract() public {
         vm.startPrank(deployer);
         doUpgrade();
         assertEq(ipnftV22.totalSupply(0), 0);
@@ -54,10 +52,7 @@ contract IPNFTUpgradesV22 is IPNFTMintHelper {
         vm.expectRevert("Initializable: contract is already initialized");
         ipnftV22.initialize();
 
-        vm.expectRevert("Initializable: contract is already initialized");
-        ipnftV22.reinit();
         vm.stopPrank();
-
         assertEq(ipnftV22.aNewProperty(), "some property");
     }
 

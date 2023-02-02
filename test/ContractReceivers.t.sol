@@ -107,7 +107,7 @@ contract ContractReceiverTest is IPNFTMintHelper {
 
         testToken = new TestToken();
         testToken.mintTo(buyer, 1 ether);
-
+        vm.deal(owner, 0.05 ether);
         vm.stopPrank();
     }
 
@@ -118,9 +118,9 @@ contract ContractReceiverTest is IPNFTMintHelper {
         uint256 reservationId = ipnft.reserve();
         BoringContractWallet boringWallet = new BoringContractWallet();
         vm.expectRevert(bytes("ERC1155: transfer to non-ERC1155Receiver implementer"));
-        ipnft.mintReservation(address(boringWallet), reservationId, 1, arUri);
+        ipnft.mintReservation{value: MINTING_FEE}(address(boringWallet), reservationId, 1, arUri);
         CleverContractWallet wallet = new CleverContractWallet();
-        ipnft.mintReservation(address(wallet), reservationId, 1, arUri);
+        ipnft.mintReservation{value: MINTING_FEE}(address(wallet), reservationId, 1, arUri);
         vm.stopPrank();
 
         assertEq(ipnft.balanceOf(address(wallet), 1), 1);
@@ -137,7 +137,7 @@ contract ContractReceiverTest is IPNFTMintHelper {
         vm.startPrank(owner);
         CleverContractWallet wallet = new CleverContractWallet();
         uint256 reservationId = ipnft.reserve();
-        ipnft.mintReservation(address(wallet), reservationId, 1, arUri);
+        ipnft.mintReservation{value: MINTING_FEE}(address(wallet), reservationId, 1, arUri);
 
         uint256 listingId = wallet.startSelling(address(schmackoSwap), address(ipnft), address(testToken), 1, address(buyerWallet));
         vm.stopPrank();

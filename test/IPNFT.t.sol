@@ -38,6 +38,9 @@ contract IPNFTTest is IPNFTMintHelper {
         mintpass = new Mintpass(address(ipnft));
         mintpass.grantRole(mintpass.MODERATOR(), deployer);
         ipnft.setAuthorizer(address(mintpass));
+
+        vm.deal(alice, 0.05 ether);
+
         vm.stopPrank();
     }
 
@@ -83,9 +86,12 @@ contract IPNFTTest is IPNFTMintHelper {
         vm.startPrank(alice);
         uint256 reservationId = ipnft.reserve();
 
+        vm.expectRevert(IPNFT.MintingFeeTooLow.selector);
+        ipnft.mintReservation(alice, reservationId, 1, ipfsUri);
+
         vm.expectEmit(true, true, false, true);
         emit IPNFTMinted(alice, 1, ipfsUri);
-        ipnft.mintReservation(alice, reservationId, 1, ipfsUri);
+        ipnft.mintReservation{value: MINTING_FEE}(alice, reservationId, reservationId, ipfsUri);
 
         assertEq(ipnft.balanceOf(alice, 1), 1);
         assertEq(ipnft.uri(1), ipfsUri);

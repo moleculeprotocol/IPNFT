@@ -25,7 +25,7 @@ import { IReservable } from "./IReservable.sol";
  \▓▓▓▓▓▓\▓▓             \▓▓   \▓▓\▓▓         \▓▓
  */
 
-/// @title IPNFT V2
+/// @title IPNFT V2.1
 /// @author molecule.to
 /// @notice IP-NFTs capture intellectual property to be traded and fractionalized
 contract IPNFT is
@@ -53,6 +53,8 @@ contract IPNFT is
 
     mapping(uint256 => mapping(address => uint256)) internal readAllowances;
 
+    uint256 constant SYMBOLIC_MINT_FEE = 0.001 ether;
+
     /*
      *
      * EVENTS
@@ -71,6 +73,7 @@ contract IPNFT is
     error ToZeroAddress();
     error NeedsMintpass();
     error InsufficientBalance();
+    error MintingFeeTooLow();
 
     /*
      *
@@ -140,6 +143,7 @@ contract IPNFT is
      */
     function mintReservation(address to, uint256 reservationId, uint256 mintPassId, string memory tokenURI)
         public
+        payable
         override
         whenNotPaused
         returns (uint256)
@@ -150,6 +154,10 @@ contract IPNFT is
 
         if (!mintAuthorizer.authorizeMint(_msgSender(), to, abi.encode(mintPassId))) {
             revert NeedsMintpass();
+        }
+
+        if (msg.value < SYMBOLIC_MINT_FEE) {
+            revert MintingFeeTooLow();
         }
 
         delete reservations[reservationId];

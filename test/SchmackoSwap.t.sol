@@ -61,11 +61,12 @@ contract SchmackoSwapTest is Test {
         schmackoSwap = new SchmackoSwap();
         vm.stopPrank();
 
+        vm.deal(seller, 0.001 ether);
         vm.startPrank(seller);
         // Ensure marketplace can access sellers's tokens
         ipnft.setApprovalForAll(address(schmackoSwap), true);
         ipnft.reserve();
-        ipnft.mintReservation(seller, 1, 1, arUri);
+        ipnft.mintReservation{value: 0.001 ether}(seller, 1, 1, arUri);
         vm.stopPrank();
     }
 
