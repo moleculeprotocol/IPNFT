@@ -29,6 +29,8 @@ describe("IPNFT fundamentals", function () {
         kind: "uups"
       }
     )
+    //this didn't throw :)
+    expect(1).to.eq(1)
   })
 
 });

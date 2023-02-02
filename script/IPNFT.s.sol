@@ -16,5 +16,7 @@ contract IPNFTScript is Script {
         IPNFT ipnftV2 = IPNFT(address(proxy));
         ipnftV2.initialize();
         vm.stopBroadcast();
+
+        console.log("ipnftV2 address %s", address(ipnftV2));
     }
 }

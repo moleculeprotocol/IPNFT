@@ -99,6 +99,22 @@ To manually broadcast a bundle of deploy transactions, you can use `Deploy.s.sol
 > Alternatively, start Truffle Dashboard suite and use its RPC URL to sign off transactions with Metamask:
 > `npx truffle dashboard` > `MODERATOR_ADDRESS=<first moderator> forge script script/Deploy.s.sol:DeployScript --rpc-url http://localhost:24012/rpc --sender <deployer address> --froms <deployer address> --broadcast -vvvv`
 
+### Testing a manual upgrade
+
+deploy the old version
+
+```
+forge script script/IPNFT.s.sol --rpc-url $ANVIL_RPC_URL -vvvv --broadcast --private-key ...
+```
+
+switch your branch or get the new contract impl at hand
+
+```
+PROXY_ADDRESS=<the proxy address> forge script script/UpgradeImplementation.s.sol --rpc-url $ANVIL_RPC_URL --sender <proxy-owner-address>
+```
+
+(or use your pk and --broadcast to submit it)
+
 ### Manually Verify contracts on Etherscan
 
 full docs: https://book.getfoundry.sh/reference/forge/forge-verify-contract
