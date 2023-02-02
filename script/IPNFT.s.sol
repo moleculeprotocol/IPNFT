@@ -11,12 +11,12 @@ contract IPNFTScript is Script {
 
     function run() public {
         vm.startBroadcast();
-        IPNFT implementationV2 = new IPNFT();
-        UUPSProxy proxy = new UUPSProxy(address(implementationV2), "");
+        IPNFT implementationV21 = new IPNFT();
+        UUPSProxy proxy = new UUPSProxy(address(implementationV21), "");
         IPNFT ipnftV2 = IPNFT(address(proxy));
         ipnftV2.initialize();
         vm.stopBroadcast();
 
-        console.log("ipnftV2 address %s", address(ipnftV2));
+        console.log("ipnftV2 address %s", address(implementationV21));
     }
 }

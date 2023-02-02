@@ -168,6 +168,17 @@ contract IPNFTTest is IPNFTMintHelper {
         assertEq(address(deployer).balance, 10 ether);
     }
 
+    function testCanWithdrawMintingFees() public {
+        mintAToken(ipnft, alice);
+
+        assertEq(address(ipnft).balance, 0.001 ether);
+        vm.startPrank(deployer);
+        ipnft.withdrawAll();
+        vm.stopPrank();
+        assertEq(address(ipnft).balance, 0 ether);
+        assertEq(deployer.balance, 0.001 ether);
+    }
+
     function testCantMintWhenPaused() public {
         vm.startPrank(deployer);
         ipnft.pause();
