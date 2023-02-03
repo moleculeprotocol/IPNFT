@@ -19,8 +19,8 @@
         "test": "graph test"
     },
     "dependencies": {
-        "@graphprotocol/graph-cli": "0.37.0",
-        "@graphprotocol/graph-ts": "0.29.2",
+        "@graphprotocol/graph-cli": "0.38.0",
+        "@graphprotocol/graph-ts": "0.29.3",
         "dotenv": "^16.0.3",
         "mustache": "^4.2.0"
     },
