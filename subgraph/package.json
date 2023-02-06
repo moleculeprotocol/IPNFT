@@ -15,7 +15,7 @@
         "deploy": "graph deploy --product hosted-service moleculeprotocol/ip-nft-mainnet",
         "create-local": "graph create --node http://localhost:8020/ moleculeprotocol/ipnft-subgraph",
         "remove-local": "graph remove --node http://localhost:8020/ moleculeprotocol/ipnft-subgraph",
-        "deploy-local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 moleculeprotocol/ipnft-subgraph",
+        "deploy-local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 moleculeprotocol/ipnft-subgraph -l v0.0.1",
         "test": "graph test"
     },
     "dependencies": {

@@ -48,7 +48,8 @@ contract ApproveAndBuy is Script {
         //it will change when you change anything on the Fixture script
         //note that the listing id that Fixture.s.sol yields is `16185769725485246688025311063236252188876072066352957050030366145926139000485` instead!
         //this here is the id that's written :D . I found it by temporarily storing it in the Swap contract and reading it again.
-        uint256 listingId = 87888238617997826246110403553206171583436135582654702175720284244287514795609;
+        uint256 listingId = 0x07978a5320f4729945363609d7a337361d654c274949b7d8af9628d5ef19f489;
+        //uint256 listingId = 87888238617997826246110403553206171583436135582654702175720284244287514795609;
         fulfillListing(listingId);
     }
 }

@@ -13,13 +13,13 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import { DevScript } from "./Dev.s.sol";
 
-contract FixtureScript is Script {
+contract MintScript is Script {
     string mnemonic = "test test test test test test test test test test test junk";
 
-    IPNFT ipnft;
-    SchmackoSwap schmackoSwap;
-    Mintpass mintpass;
-    MyToken myToken;
+    IPNFT ipnft = IPNFT(0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512);
+    SchmackoSwap schmackoSwap = SchmackoSwap(0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9);
+    Mintpass mintpass = Mintpass(0x5FC8d32690cc91D4c39d9d3abcBD16989F875707);
+    MyToken myToken = MyToken(0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9);
 
     address deployer;
     address bob;
@@ -62,26 +62,6 @@ contract FixtureScript is Script {
 
     function run() public {
         prepareAddresses();
-
-        vm.startBroadcast(deployer);
-        IPNFT implementationV2 = new IPNFT();
-        UUPSProxy proxy = new UUPSProxy(address(implementationV2), "");
-        ipnft = IPNFT(address(proxy));
-        ipnft.initialize();
-
-        schmackoSwap = new SchmackoSwap();
-        myToken = new MyToken();
-        mintpass = new Mintpass(address(ipnft));
-        mintpass.grantRole(mintpass.MODERATOR(), deployer);
-
-        ipnft.setAuthorizer(address(mintpass));
-
-        console.log("ipnftv2 %s", address(ipnft));
-        console.log("swap %s", address(schmackoSwap));
-        console.log("token %s", address(myToken));
-        console.log("pass %s", address(mintpass));
-
-        vm.stopBroadcast();
 
         mintMintPass(bob);
 

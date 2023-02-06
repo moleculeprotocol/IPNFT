@@ -1,6 +1,13 @@
 #https://github.com/graphprotocol/graph-node/blob/master/docker/docker-compose.yml
 version: '3'
 services:
+  anvil: 
+    image: ghcr.io/foundry-rs/foundry:latest
+    command: 
+      - "anvil --host 0.0.0.0"
+    ports:
+      - '8545:8545'
+
   graph-node:
     image: graphprotocol/graph-node
     ports:
@@ -20,7 +27,8 @@ services:
       postgres_pass: let-me-in
       postgres_db: graph-node
       ipfs: 'ipfs:5001'
-      ethereum: 'mainnet:http://host.docker.internal:8545'
+      #ethereum: 'mainnet:http://host.docker.internal:8545'
+      ethereum: 'mainnet:http://anvil:8545'
       GRAPH_LOG: info
       GRAPH_ALLOW_NON_DETERMINISTIC_IPFS: 1
   ipfs:
@@ -43,5 +51,5 @@ services:
       POSTGRES_PASSWORD: let-me-in
       POSTGRES_DB: graph-node
       PGDATA: '/data/postgres'
-    volumes:
-      - ./data/postgres:/var/lib/postgresql/data
+    # volumes:
+    #   - ./data/postgres:/var/lib/postgresql/data
