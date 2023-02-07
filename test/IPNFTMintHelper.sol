@@ -17,6 +17,8 @@ abstract contract IPNFTMintHelper is Test {
 
     address deployer = makeAddr("chucknorris");
 
+    uint256 constant MINTING_FEE = 0.001 ether;
+
     function dealMintpass(address to) internal {
         vm.startPrank(deployer);
         mintpass.batchMint(to, 1);
@@ -32,9 +34,11 @@ abstract contract IPNFTMintHelper is Test {
     }
 
     function mintAToken(IReservable ipnft, address to) internal returns (uint256) {
-        uint256 reservationId = reserveAToken(ipnft, to);
+        dealMintpass(to);
         vm.startPrank(to);
-        ipnft.mintReservation(to, reservationId, reservationId, arUri);
+        uint256 reservationId = ipnft.reserve();
+
+        ipnft.mintReservation{value: MINTING_FEE}(to, reservationId, reservationId, arUri);
         vm.stopPrank();
         return reservationId;
     }

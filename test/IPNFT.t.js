@@ -24,11 +24,13 @@ describe("IPNFT fundamentals", function () {
   it("validates updates", async function () {
     const result = await upgrades.validateUpgrade(
       ipnftContract.address,
-      await ethers.getContractFactory("IPNFTV21"),
+      await ethers.getContractFactory("IPNFTV22"),
       {
         kind: "uups"
       }
     )
+    //this didn't throw :)
+    expect(1).to.eq(1)
   })
 
 });

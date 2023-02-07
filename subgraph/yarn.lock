@@ -208,22 +208,22 @@
     "@ethersproject/strings" "^5.7.0"
 
 "@float-capital/float-subgraph-uncrashable@^0.0.0-alpha.4":
-  version "0.0.0-internal-testing.4"
-  resolved "https://registry.yarnpkg.com/@float-capital/float-subgraph-uncrashable/-/float-subgraph-uncrashable-0.0.0-internal-testing.4.tgz#7886b6fc1c75ea5b36d4c953e7150875954b94cf"
-  integrity sha512-jjGnze6R8ro5Stf1mQwOPVCCmOf6smEZeDD7q2QEP14Mg8O5zTfvE/3U2bHAiV1y8G+affZsBu9sG1yarD/WRw==
+  version "0.0.0-internal-testing.5"
+  resolved "https://registry.yarnpkg.com/@float-capital/float-subgraph-uncrashable/-/float-subgraph-uncrashable-0.0.0-internal-testing.5.tgz#060f98440f6e410812766c5b040952d2d02e2b73"
+  integrity sha512-yZ0H5e3EpAYKokX/AbtplzlvSxEJY7ZfpvQyDzyODkks0hakAAlDG6fQu1SlDJMWorY7bbq1j7fCiFeTWci6TA==
   dependencies:
     "@rescript/std" "9.0.0"
     graphql "^16.6.0"
     graphql-import-node "^0.0.5"
     js-yaml "^4.1.0"
 
-"@graphprotocol/graph-cli@0.37.0":
-  version "0.37.0"
-  resolved "https://registry.yarnpkg.com/@graphprotocol/graph-cli/-/graph-cli-0.37.0.tgz#42d7a40748ee7628bab653984e61b4496507ff4b"
-  integrity sha512-p//lNNxDTFO05LntKHeDt1sCwRxJHsdcIN2P9/FPnxE5Z2N3n3z0jHEifRhxrPpfkjKyydStT7TM5QMCqxf1kQ==
+"@graphprotocol/graph-cli@0.38.0":
+  version "0.38.0"
+  resolved "https://registry.yarnpkg.com/@graphprotocol/graph-cli/-/graph-cli-0.38.0.tgz#80508db59289d18ad597c9dd860c2a0158268014"
+  integrity sha512-9WiVp96iSsoQ5iJaQrGTraH+reaGteQDSfWEc1TlDTJ8UqBPLus3a8zSjbN7iAkctgujIEHTdtdBMZZXY94RlQ==
   dependencies:
     "@float-capital/float-subgraph-uncrashable" "^0.0.0-alpha.4"
-    assemblyscript "0.19.10"
+    assemblyscript "0.19.23"
     binary-install-raw "0.0.13"
     chalk "3.0.0"
     chokidar "3.5.1"
@@ -234,12 +234,11 @@
     glob "7.1.6"
     gluegun "https://github.com/edgeandnode/gluegun#v4.3.1-pin-colors-dep"
     graphql "15.5.0"
-    immutable "3.8.2"
+    immutable "4.2.1"
     ipfs-http-client "34.0.0"
     jayson "3.6.6"
     js-yaml "3.13.1"
     node-fetch "2.6.0"
-    pkginfo "0.4.1"
     prettier "1.19.1"
     request "2.88.2"
     semver "7.3.5"
@@ -249,10 +248,10 @@
     which "2.0.2"
     yaml "1.9.2"
 
-"@graphprotocol/graph-ts@0.29.2":
-  version "0.29.2"
-  resolved "https://registry.yarnpkg.com/@graphprotocol/graph-ts/-/graph-ts-0.29.2.tgz#aee9c5717d005145a11b5bc21b1ad3967e7f339a"
-  integrity sha512-tYpV/hkRZPEgICwJ1n8y5CXGSdFGGHFeGX5n5y9ScA+9TnQvh2dwah054wTKAEepTPd2Pq+De8e+SSQmKIkmZg==
+"@graphprotocol/graph-ts@0.29.3":
+  version "0.29.3"
+  resolved "https://registry.yarnpkg.com/@graphprotocol/graph-ts/-/graph-ts-0.29.3.tgz#f0a664790e966f5fb9bce317a8861e84ec1f3394"
+  integrity sha512-FXBLGlunOSwjiUXYEz1J9J/I2D/myldyib/9v0R+gn/NJaYqUkXD39UmIuRxqj9cBzB/FYojHzoHidIG5nYZDw==
   dependencies:
     assemblyscript "0.19.10"
 
@@ -496,7 +495,7 @@ assemblyscript@0.19.10:
     binaryen "101.0.0-nightly.20210723"
     long "^4.0.0"
 
-assemblyscript@^0.19.20:
+assemblyscript@0.19.23, assemblyscript@^0.19.20:
   version "0.19.23"
   resolved "https://registry.yarnpkg.com/assemblyscript/-/assemblyscript-0.19.23.tgz#16ece69f7f302161e2e736a0f6a474e6db72134c"
   integrity sha512-fwOQNZVTMga5KRsfY80g7cpOl4PsFQczMwHzdtgoqLXaYhkhavufKb0sB0l3T1DUxpAufA0KNhlbpuuhZUwxMA==
@@ -1608,10 +1607,10 @@ ieee754@^1.1.13, ieee754@^1.2.1:
   resolved "https://registry.yarnpkg.com/ieee754/-/ieee754-1.2.1.tgz#8eb7a10a63fff25d15a57b001586d177d1b0d352"
   integrity sha512-dcyqhDvX1C46lXZcVqCpK+FtMRQVdIMN6/Df5js2zouUsqG7I6sFxitIC+7KYK29KdXOLHdu9zL4sFnoVQnqaA==
 
-immutable@3.8.2:
-  version "3.8.2"
-  resolved "https://registry.yarnpkg.com/immutable/-/immutable-3.8.2.tgz#c2439951455bb39913daf281376f1530e104adf3"
-  integrity sha512-15gZoQ38eYjEjxkorfbcgBKBL6R7T459OuK+CpcWt7O3KF4uPCx2tD0uFETlUDIyo+1789crbMhTvQBSR5yBMg==
+immutable@4.2.1:
+  version "4.2.1"
+  resolved "https://registry.yarnpkg.com/immutable/-/immutable-4.2.1.tgz#8a4025691018c560a40c67e43d698f816edc44d4"
+  integrity sha512-7WYV7Q5BTs0nlQm7tl92rDYYoyELLKHoDMBKhrxEoiV4mrfVdRz8hzPiYOzH7yWjzoVEamxRuAqhxL2PLRwZYQ==
 
 import-fresh@^3.1.0:
   version "3.3.0"
@@ -2698,11 +2697,6 @@ picomatch@^2.0.4, picomatch@^2.2.1:
   version "2.3.1"
   resolved "https://registry.yarnpkg.com/picomatch/-/picomatch-2.3.1.tgz#3ba3833733646d9d3e4995946c1365a67fb07a42"
   integrity sha512-JU3teHTNjmE2VCGFzuY8EXzCDVwEqB2a8fsIvwaStHhAWJEeVd1o1QD80CU6+ZdEXXSLbSsuLwJjkCBWqRQUVA==
-
-pkginfo@0.4.1:
-  version "0.4.1"
-  resolved "https://registry.yarnpkg.com/pkginfo/-/pkginfo-0.4.1.tgz#b5418ef0439de5425fc4995042dced14fb2a84ff"
-  integrity sha512-8xCNE/aT/EXKenuMDZ+xTVwkT8gsoHN2z/Q29l80u0ppGEXVvsKRzNMbtKhg8LS8k1tJLAHHylf6p4VFmP6XUQ==
 
 pluralize@^8.0.0:
   version "8.0.0"

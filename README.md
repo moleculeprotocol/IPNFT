@@ -75,9 +75,9 @@ You can place required env vars in your `.env` file and run `source .env` to get
 - Anvil is a local testnet node shipped with Foundry. You can use it for testing your contracts from frontends or for interacting over RPC. You can also use the ganache node from docker, see the [accompanying README in the `subgraph` folder](./subgraph/README.md).
 - Run `anvil -h 0.0.0.0` in a terminal window and keep it running
 
-To just deploy all contracts using the default mnemonic's first account, run `forge script script/Dev.s.sol:DevScript --fork-url $ANVIL_RPC_URL --broadcast -vvvv`
+To just deploy all contracts using the default mnemonic's first account, run `forge script script/dev/Dev.s.sol:DevScript --fork-url $ANVIL_RPC_URL --broadcast -vvvv`
 
-Alternatively, `Fixture.s.sol` deploys all contracts to a local node and also creates a base state for frontend devs. It uses the 3 first accounts from the default mnemonic. Run `forge script script/Fixture.s.sol:FixtureScript --fork-url $ANVIL_RPC_URL --broadcast -vvvv` to
+Alternatively, `dev/Fixture.s.sol` deploys all contracts to a local node and also creates a base state for frontend devs. It uses the 3 first accounts from the default mnemonic. Run `forge script script/dev/Fixture.s.sol --fork-url $ANVIL_RPC_URL --broadcast` to setup all contracts and start a a listing and finalize the listing with `forge script script/dev/ApproveAndBuy.s.sol --fork-url $ANVIL_RPC_URL --broadcast`. See the inline comment on why these are 2 scripts.
 
 - Deploy all contracts as #0
 - Issue one Mintpass by #0 to #1
@@ -98,6 +98,22 @@ To manually broadcast a bundle of deploy transactions, you can use `Deploy.s.sol
 > This is _not_ possible at the moment, but stay tuned:  
 > Alternatively, start Truffle Dashboard suite and use its RPC URL to sign off transactions with Metamask:
 > `npx truffle dashboard` > `MODERATOR_ADDRESS=<first moderator> forge script script/Deploy.s.sol:DeployScript --rpc-url http://localhost:24012/rpc --sender <deployer address> --froms <deployer address> --broadcast -vvvv`
+
+### Testing a manual upgrade
+
+deploy the old version
+
+```
+forge script script/IPNFT.s.sol --rpc-url $ANVIL_RPC_URL -vvvv --broadcast --private-key ...
+```
+
+switch your branch or get the new contract impl at hand
+
+```
+PROXY_ADDRESS=<the proxy address> forge script script/UpgradeImplementation.s.sol --rpc-url $ANVIL_RPC_URL --sender <proxy-owner-address>
+```
+
+(or use your pk and --broadcast to submit it)
 
 ### Manually Verify contracts on Etherscan
 
@@ -120,7 +136,9 @@ When having an RPC_URL in your local env, you e.g. can simply call view function
 
 Here are some helpful interaction examples with the contracts that you can execute from your command line. Ensure your local environment contains all contract addresses and is sourced to your terminal. We're using your local PRIVATE_KEY here
 
-> TODO mintpass logic is not covered here
+Manually issue 2 mintpasses to anvil address #1
+
+`cast send -i $MINTPASS_ADDRESS --private-key $PRIVATE_KEY "batchMint(address,uint256)" 0x70997970C51812dc3A010C7d01b50e0d17dc79C8 2`
 
 Create a reservation
 

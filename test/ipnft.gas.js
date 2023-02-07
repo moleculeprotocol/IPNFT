@@ -17,6 +17,7 @@ const logGas = (operation, receipt) => {
 
 const imageUrl = "ar://7De6dRLDaMhMeC6Utm9bB9PRbcvKdi-rw_sDM8pJSMU";
 const pepeUrl = "ipfs://bafybeidlr6ltzbipd6ix5ckyyzwgm2pbigx7ar2ht64v4czk65pkjouire/metadata.json";
+const mintingFee = ethers.utils.parseUnits("0.001");
 
 describe("IPNFT1155 gas usage", function () {
 
@@ -29,7 +30,7 @@ describe("IPNFT1155 gas usage", function () {
   });
 
   it("deploys and mints the first nft", async function () {
-    const IPNFT = await ethers.getContractFactory("IPNFTV21");
+    const IPNFT = await ethers.getContractFactory("IPNFTV22");
     //ipnftContract = await _IPNFT.deploy();
     ipnftContract = await upgrades.deployProxy(IPNFT, { kind: "uups" });
 
@@ -50,7 +51,7 @@ describe("IPNFT1155 gas usage", function () {
     const _ipnft = ipnftContract.connect(alice)
 
     await _ipnft.reserve();
-    const mintRes = await _ipnft["mintReservation(address,uint256,uint256,string)"](alice.address, 1, 1, pepeUrl)
+    const mintRes = await _ipnft["mintReservation(address,uint256,uint256,string)"](alice.address, 1, 1, pepeUrl, { value: mintingFee })
     logGas("mint an 1155 NFT", await mintRes.wait());
 
     const sharesRes = await _ipnft.increaseShares(1, 1_000_000, alice.address);
