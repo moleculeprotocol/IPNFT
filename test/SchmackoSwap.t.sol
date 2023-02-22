@@ -5,7 +5,7 @@ import "forge-std/Test.sol";
 import { SchmackoSwap, ListingState } from "../src/SchmackoSwap.sol";
 
 import { IPNFT } from "../src/IPNFT.sol";
-import { ERC1155Supply } from "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Supply.sol";
+import { IERC1155Supply } from "../src/IERC1155Supply.sol";
 
 import { Mintpass } from "../src/Mintpass.sol";
 
@@ -25,7 +25,7 @@ contract SchmackoSwapTest is Test {
     string arUri = "ar://tNbdHqh3AVDHVD06P0OPUXSProI5kGcZZw8IvLkekSY";
     Mintpass mintpass;
     IPNFT internal ipnft;
-    ERC1155Supply internal erc1155Supply;
+    IERC1155Supply internal erc1155Supply;
 
     IERC20 internal testToken;
     SchmackoSwap internal schmackoSwap;
@@ -47,7 +47,7 @@ contract SchmackoSwapTest is Test {
         ipnft = IPNFT(address(proxy));
         ipnft.initialize();
 
-        erc1155Supply = ERC1155Supply(address(ipnft));
+        erc1155Supply = IERC1155Supply(address(ipnft));
 
         mintpass = new Mintpass(address(ipnft));
         mintpass.grantRole(mintpass.MODERATOR(), deployer);
@@ -119,7 +119,7 @@ contract SchmackoSwapTest is Test {
         //assertEq(ipnft.balanceOf(address(schmackoSwap), 1), 1);
 
         (
-            ERC1155Supply tokenContract,
+            IERC1155Supply tokenContract,
             uint256 tokenId,
             address creator,
             uint256 tokenAmount,

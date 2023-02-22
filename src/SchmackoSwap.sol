@@ -5,9 +5,10 @@ import { ERC20 as SolERC20 } from "solmate/tokens/ERC20.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { ReentrancyGuard } from "solmate/utils/ReentrancyGuard.sol";
 import { SafeTransferLib } from "solmate/utils/SafeTransferLib.sol";
-import { ERC1155Supply } from "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Supply.sol";
+// import { ERC1155Supply } from "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Supply.sol";
 import { ERC165 } from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 import { IERC165 } from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+import { IERC1155Supply } from "./IERC1155Supply.sol";
 
 enum ListingState {
     LISTED,
@@ -70,7 +71,7 @@ contract SchmackoSwap is ERC165, ReentrancyGuard {
     /// @param creator The address of the seller
     /// @param askPrice The amount the seller is asking for in exchange for the token
     struct Listing {
-        ERC1155Supply tokenContract;
+        IERC1155Supply tokenContract;
         uint256 tokenId;
         address creator;
         uint256 tokenAmount;
@@ -93,7 +94,7 @@ contract SchmackoSwap is ERC165, ReentrancyGuard {
     /// @param askPrice How much you want to receive in exchange for the token
     /// @return The ID of the created listing
     /// @dev Remember to call `setApprovalForAll(<address of this contract>, true)` on the ERC1155's contract before calling this function
-    function list(ERC1155Supply tokenContract, uint256 tokenId, IERC20 paymentToken, uint256 askPrice) public returns (uint256) {
+    function list(IERC1155Supply tokenContract, uint256 tokenId, IERC20 paymentToken, uint256 askPrice) public returns (uint256) {
         if (!tokenContract.isApprovedForAll(msg.sender, address(this))) {
             revert InsufficientAllowance();
         }
