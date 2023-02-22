@@ -3,12 +3,12 @@ pragma solidity ^0.8.13;
 
 import "forge-std/Script.sol";
 import "forge-std/console.sol";
-import { MyToken } from "../../src/MyToken.sol";
-import { IPNFT } from "../../src/IPNFT.sol";
-import { UUPSProxy } from "../../src/UUPSProxy.sol";
-import { SchmackoSwap } from "../../src/SchmackoSwap.sol";
-import { Mintpass } from "../../src/Mintpass.sol";
-import { ERC1155Supply } from "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Supply.sol";
+import { MyToken } from "../src/MyToken.sol";
+import { IPNFT } from "../src/IPNFT.sol";
+import { UUPSProxy } from "../src/UUPSProxy.sol";
+import { SchmackoSwap } from "../src/SchmackoSwap.sol";
+import { Mintpass } from "../src/Mintpass.sol";
+import { IERC1155Supply } from "../src/IERC1155Supply.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import { DevScript } from "./Dev.s.sol";
@@ -46,7 +46,7 @@ contract FixtureScript is Script {
     function mintIpnft(address from, address to) internal returns (uint256) {
         vm.startBroadcast(from);
         uint256 reservationId = ipnft.reserve();
-        ipnft.mintReservation{value: 0.001 ether}(to, reservationId, 1, "ar://cy7I6VoEXhO5rHrq8siFYtelM9YZKyoGj3vmGwJZJOc");
+        ipnft.mintReservation{ value: 0.001 ether }(to, reservationId, 1, "ar://cy7I6VoEXhO5rHrq8siFYtelM9YZKyoGj3vmGwJZJOc");
         vm.stopBroadcast();
         return reservationId;
     }
@@ -54,6 +54,9 @@ contract FixtureScript is Script {
     function createListing(address seller, uint256 tokenId, uint256 price) internal returns (uint256) {
         vm.startBroadcast(seller);
         ipnft.setApprovalForAll(address(schmackoSwap), true);
+        uint256 listingId = schmackoSwap.list(IERC1155Supply(address(ipnft)), tokenId, IERC20(address(myToken)), price);
+        schmackoSwap.changeBuyerAllowance(listingId, buyer, true);
+        vm.stopBroadcast();
 
         uint256 listingId = schmackoSwap.list(ERC1155Supply(address(ipnft)), tokenId, IERC20(address(myToken)), price);
         vm.stopBroadcast();
