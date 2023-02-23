@@ -52,7 +52,7 @@ contract FractionalizerTest is Test {
         mintpass.batchMint(originalOwner, 1);
 
         fractionalizer = new Fractionalizer();
-        fractionalizer.initialize();
+        fractionalizer.initialize(schmackoSwap);
         fractionalizer.setFeeReceiver(protocolOwner);
 
         vm.stopPrank();
@@ -72,7 +72,7 @@ contract FractionalizerTest is Test {
         //the original nft *stays* at the owner
         assertEq(ipnft.balanceOf(originalOwner, 1), 1);
 
-        (,, uint256 totalIssued,,) = fractionalizer.fractionalized(fractionId);
+        (,, uint256 totalIssued,,,) = fractionalizer.fractionalized(fractionId);
         assertEq(totalIssued, 100_000);
 
         vm.startPrank(originalOwner);
@@ -98,25 +98,24 @@ contract FractionalizerTest is Test {
         assertEq(fractionalizer.balanceOf(originalOwner, fractionId), 150_000);
         assertEq(fractionalizer.totalSupply(fractionId), 200_000);
 
-        (,, uint256 totalIssued,,) = fractionalizer.fractionalized(fractionId);
+        (,, uint256 totalIssued,,,) = fractionalizer.fractionalized(fractionId);
         assertEq(totalIssued, 200_000);
     }
 
-    function helpCreateListing() public returns (uint256 fractionId, uint256 listingId) {
-        vm.startPrank(originalOwner);
-        fractionId = fractionalizer.fractionalizeUniqueERC1155(ipnft, 1, agreementHash, 100_000);
+    function helpCreateListing(uint256 price) public returns (uint256 listingId) {
         ipnft.setApprovalForAll(address(schmackoSwap), true);
-        listingId = schmackoSwap.listFor(ipnft, 1, erc20, 1_000_000 ether, address(fractionalizer));
-
-        fractionalizer.listings(fractionId);
-        assertFalse(listingId == 0);
+        listingId = schmackoSwap.listFor(ipnft, 1, erc20, price, address(fractionalizer));
 
         schmackoSwap.changeBuyerAllowance(listingId, ipnftBuyer, true);
-        vm.stopPrank();
+        return listingId;
     }
 
     function testCreateListingAndSell() public {
-        (, uint256 listingId) = helpCreateListing();
+        vm.startPrank(originalOwner);
+        fractionalizer.fractionalizeUniqueERC1155(ipnft, 1, agreementHash, 100_000);
+        uint256 listingId = helpCreateListing(1_000_000 ether);
+        vm.stopPrank();
+
         (,,,,,,, ListingState listingState) = schmackoSwap.listings(listingId);
         assertEq(uint256(listingState), uint256(ListingState.LISTED));
 
@@ -136,16 +135,46 @@ contract FractionalizerTest is Test {
     }
 
     function testClaimBuyoutShares() public {
-        (uint256 fractionId, uint256 listingId) = helpCreateListing();
+        vm.startPrank(originalOwner);
+        uint256 fractionId = fractionalizer.fractionalizeUniqueERC1155(ipnft, 1, agreementHash, 100_000);
+
+        fractionalizer.safeTransferFrom(originalOwner, alice, fractionId, 25_000, "");
+        fractionalizer.safeTransferFrom(originalOwner, bob, fractionId, 25_000, "");
+
+        uint256 listingId = helpCreateListing(1_000_000 ether);
+        vm.stopPrank();
+
         vm.startPrank(ipnftBuyer);
         erc20.approve(address(schmackoSwap), 1_000_000 ether);
         schmackoSwap.fulfill(listingId);
         vm.stopPrank();
 
-        vm.startPrank(charlie); // *anyone* (!) can start this. This is an oracle call.
-        fractionalizer.startWithdrawalsOrCancel(schmackoSwap, fractionId);
+        vm.startPrank(alice);
+        //someone must start the withdrawal phase first
+        vm.expectRevert("claiming not available (yet)");
+        fractionalizer.burnToWithdrawShare(fractionId);
         vm.stopPrank();
+
+        // this is wanted: *anyone* (!) can call this. This is an oracle call.
+        vm.startPrank(charlie);
+        fractionalizer.afterSale(listingId, fractionId);
+        vm.stopPrank();
+
+        vm.startPrank(alice);
+        (IERC20 tokenContract, uint256 amount) = fractionalizer.claimableTokens(fractionId, alice);
+        assertEq(amount, 250_000 ether);
+        fractionalizer.burnToWithdrawShare(fractionId);
+        vm.stopPrank();
+
+        assertEq(erc20.balanceOf(alice), 250_000 ether);
+        assertEq(erc20.balanceOf(address(fractionalizer)), 750_000 ether);
+        assertEq(fractionalizer.totalSupply(fractionId), 75_000);
+
+        assertEq(fractionalizer.balanceOf(alice, 1), 0);
+        (, uint256 remainingAmount) = fractionalizer.claimableTokens(fractionId, alice);
+        assertEq(remainingAmount, 0);
     }
+    //todo test claim shares can be transferred to others and are still redeemable
 
     function testCollectionBalanceMustBeOne() public {
         //cant fractionalize 1155 tokens with a supply > 1
