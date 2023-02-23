@@ -90,6 +90,7 @@ contract SchmackoSwapTest is Test {
                         tokenAmount: erc1155Supply.totalSupply(1),
                         askPrice: 1 ether,
                         creator: address(seller),
+                        beneficiary: address(seller),
                         listingState: ListingState.LISTED
                     }),
                     block.number
@@ -109,6 +110,7 @@ contract SchmackoSwapTest is Test {
                 tokenAmount: erc1155Supply.totalSupply(1),
                 askPrice: 1 ether,
                 creator: address(seller),
+                beneficiary: address(seller),
                 listingState: ListingState.LISTED
             })
             );
@@ -125,6 +127,7 @@ contract SchmackoSwapTest is Test {
             uint256 tokenAmount,
             IERC20 paymentToken,
             uint256 askPrice,
+            address beneficiary,
             ListingState listingState
         ) = schmackoSwap.listings(listingId);
 
@@ -132,6 +135,7 @@ contract SchmackoSwapTest is Test {
         assertEq(tokenId, 1);
         assertEq(tokenAmount, 1);
         assertEq(creator, address(seller));
+        assertEq(beneficiary, address(seller));
         assertEq(askPrice, 1 ether);
         assertEq(address(paymentToken), address(testToken));
         assertEq(uint256(listingState), 0);
@@ -171,6 +175,7 @@ contract SchmackoSwapTest is Test {
                 paymentToken: testToken,
                 askPrice: 1 ether,
                 creator: address(seller),
+                beneficiary: address(seller),
                 listingState: ListingState.CANCELLED
             })
             );
@@ -178,7 +183,7 @@ contract SchmackoSwapTest is Test {
         schmackoSwap.cancel(listingId);
 
         assertEq(ipnft.balanceOf(address(seller), 1), 1);
-        (,, address newCreator,,,, ListingState listingState) = schmackoSwap.listings(listingId);
+        (,, address newCreator,,,,, ListingState listingState) = schmackoSwap.listings(listingId);
         assertEq(uint256(listingState), 1);
         assertEq(newCreator, seller);
     }
@@ -194,7 +199,7 @@ contract SchmackoSwapTest is Test {
 
         assertEq(ipnft.balanceOf(address(seller), 1), 1);
 
-        (,, address creator,,,,) = schmackoSwap.listings(listingId);
+        (,, address creator,,,,,) = schmackoSwap.listings(listingId);
         assertEq(creator, address(seller));
     }
 
@@ -259,10 +264,11 @@ contract SchmackoSwapTest is Test {
             SchmackoSwap.Listing({
                 tokenContract: erc1155Supply,
                 tokenId: 1,
+                creator: address(seller),
                 tokenAmount: 1,
                 paymentToken: testToken,
                 askPrice: 1 ether,
-                creator: address(seller),
+                beneficiary: address(seller),
                 listingState: ListingState.FULFILLED
             })
             );
@@ -275,7 +281,7 @@ contract SchmackoSwapTest is Test {
         assertEq(testToken.balanceOf(seller), 1 ether);
 
         // listing has been removed during sale
-        (,, address creator,,,, ListingState listingState) = schmackoSwap.listings(listingId);
+        (,, address creator,,,,, ListingState listingState) = schmackoSwap.listings(listingId);
         assertEq(uint256(listingState), 2);
         assertEq(creator, seller);
     }
