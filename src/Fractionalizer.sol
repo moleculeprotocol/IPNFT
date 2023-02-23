@@ -19,12 +19,6 @@ import { SchmackoSwap, ListingState } from "./SchmackoSwap.sol";
 /// @author molecule.to
 /// @notice
 contract Fractionalizer is ERC1155SupplyUpgradeable, UUPSUpgradeable, OwnableUpgradeable {
-    struct Withdrawal {
-        uint256 listingId;
-        IERC20 paymentToken;
-        uint256 tokenAmount;
-    }
-
     struct Fractionalized {
         IERC1155Supply collection;
         uint256 tokenId;
@@ -32,26 +26,22 @@ contract Fractionalizer is ERC1155SupplyUpgradeable, UUPSUpgradeable, OwnableUpg
         uint256 totalIssued;
         address originalOwner;
         bytes32 agreementHash;
+        uint256 fulfilledListingId;
     }
 
-    //uint256 stillAvailable;
-
-    //    struct Claim { }
-
     IPNFT ipnft;
-    //SchmackoSwap schmackoSwap;
+    SchmackoSwap schmackoSwap;
 
     address feeReceiver;
     uint256 fractionalizationPercentage;
 
     mapping(uint256 => Fractionalized) public fractionalized;
-    mapping(uint256 => uint256) public listings;
     mapping(address => mapping(uint256 => uint256)) claimAllowance;
-    mapping(uint256 => Withdrawal) withdrawals;
 
-    function initialize() public initializer {
+    function initialize(SchmackoSwap _schmackoSwap) public initializer {
         __UUPSUpgradeable_init();
         __Ownable_init();
+        schmackoSwap = _schmackoSwap;
         //not calling the ERC1155 initializer, since we don't need an URI
     }
 
@@ -70,63 +60,91 @@ contract Fractionalizer is ERC1155SupplyUpgradeable, UUPSUpgradeable, OwnableUpg
         if (collection.totalSupply(tokenId) != 1) {
             revert("can only fractionalize singleton ERC1155 collections");
         }
-        //todo ensure we can only call this once per sales cycle
         if (collection.balanceOf(msg.sender, tokenId) != 1) {
             revert("only owner can initialize fractions");
         }
 
-        //todo: ensure that collection supports the IERC1155Supply interface or adapt Schmackoswap
-        fractionId = uint256(keccak256(abi.encodePacked(collection, tokenId)));
+        fractionId = uint256(keccak256(abi.encodePacked(msg.sender, collection, tokenId)));
 
-        fractionalized[fractionId] = Fractionalized(collection, tokenId, fractionsAmount, _msgSender(), agreementHash);
+        // ensure we can only call this once per sales cycle
+        if (address(fractionalized[fractionId].collection) != address(0)) {
+            revert("token is already fractionalized");
+        }
+
+        fractionalized[fractionId] = Fractionalized(collection, tokenId, fractionsAmount, _msgSender(), agreementHash, 0);
 
         _mint(_msgSender(), fractionId, fractionsAmount, "");
         //todo: if we want to take a protocol fee, this might be agood point of doing so.
 
-        //transfer the NFT to Fractionalizer so it can't be transferred while fractionalized
+        //alternatively: transfer the NFT to Fractionalizer so it can't be transferred while fractionalized
         //collection.safeTransferFrom(_msgSender(), address(this), tokenId, 1, "");
     }
 
     function increaseFractions(uint256 fractionId, uint256 fractionsAmount) external {
         Fractionalized memory _fractionalized = fractionalized[fractionId];
+
         if (_msgSender() != _fractionalized.originalOwner) {
             revert("only the original owner can update the distribution scheme");
+        }
+        if (_fractionalized.fulfilledListingId != 0) {
+            revert("can't increase fraction shares of an item that's already been sold");
         }
         fractionalized[fractionId].totalIssued += fractionsAmount;
         _mint(_fractionalized.originalOwner, fractionId, fractionsAmount, "");
     }
 
-    function startWithdrawalsOrCancel(SchmackoSwap schmackoSwap, uint256 fractionId) public {
-        uint256 listingId = listings[fractionId];
-        (,,,, IERC20 paymentToken, uint256 askPrice,, ListingState listingState) = schmackoSwap.listings(listingId);
-        if (listingState == ListingState.CANCELLED) {
-            delete listings[fractionId];
-        } else if (listingState == ListingState.FULFILLED) {
-            if (withdrawals[fractionId].listingId != 0) {
-                revert("Withdrawal phase already initiated");
-            }
-            if (paymentToken.balanceOf(address(this)) < askPrice) {
-                //todo: this is warning, we still could proceed, since it's too late here anyway ;)
-                revert("the fulfillment doesn't match the ask");
-            }
-            withdrawals[fractionId] = Withdrawal(listingId, paymentToken, askPrice);
+    function afterSale(uint256 listingId, uint256 fractionId) public {
+        Fractionalized storage frac = fractionalized[fractionId];
+        if (frac.fulfilledListingId != 0) {
+            revert("Withdrawal phase already initiated");
         }
+
+        //todo: this is a deep dependency on our own sales contract
+        //we alternatively could have the token owner transfer the proceeds and announce the claims to be withdrawable
+        (IERC1155Supply tokenContract, uint256 tokenId,,,,, address beneficiary, ListingState listingState) = schmackoSwap.listings(listingId);
+        if (listingState != ListingState.FULFILLED) {
+            revert("listing is not fulfilled");
+        }
+        if (tokenContract != frac.collection || tokenId != frac.tokenId) {
+            revert("listing doesnt refer to fraction");
+        }
+        if (beneficiary != address(this)) {
+            revert("listing didnt payout fractionalizer");
+        }
+
+        // if (paymentToken.balanceOf(address(this)) < askPrice) {
+        //     //todo: this is warning, we still could proceed, since it's too late here anyway ;)
+        //     revert("the fulfillment doesn't match the ask");
+        // }
+        frac.fulfilledListingId = listingId;
+    }
+
+    function claimableTokens(uint256 fractionId, address tokenHolder) public view returns (IERC20 paymentToken, uint256 amount) {
+        uint256 balance = balanceOf(tokenHolder, fractionId);
+
+        if (fractionalized[fractionId].fulfilledListingId == 0) {
+            revert("claiming not available (yet)");
+        }
+
+        (,,,, IERC20 _paymentToken, uint256 askPrice,,) = schmackoSwap.listings(fractionalized[fractionId].fulfilledListingId);
+
+        //todo: check this 10 times:
+        return (_paymentToken, balance * (askPrice / fractionalized[fractionId].totalIssued));
     }
 
     function burnToWithdrawShare(uint256 fractionId) public {
         uint256 balance = balanceOf(_msgSender(), fractionId);
         if (balance == 0) {
-            revert("you dont own that many fractions");
-        }
-        Withdrawal memory withdrawal = withdrawals[fractionId];
-        if (withdrawals[fractionId].listingId == 0) {
-            revert("no withdrawals available");
+            revert("you dont own any fractions");
         }
 
-        //todo: check this 10 times:
-        uint256 erc20rate = balance * (withdrawal.tokenAmount / fractionalized[fractionId].totalIssued);
+        (IERC20 paymentToken, uint256 erc20shares) = claimableTokens(fractionId, _msgSender());
+        if (erc20shares == 0) {
+            revert("shares are 0");
+        }
+
         _burn(_msgSender(), fractionId, balance);
-        withdrawal.paymentToken.transferFrom(address(this), _msgSender(), erc20rate);
+        paymentToken.transfer(_msgSender(), erc20shares);
     }
 
     // function supportsInterface(bytes4 interfaceId) public view virtual override (ERC1155ReceiverUpgradeable, ERC1155Upgradeable) returns (bool) {
