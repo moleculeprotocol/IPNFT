@@ -95,15 +95,6 @@ contract SchmackoSwap is ERC165, ReentrancyGuard {
     /// @param askPrice How much you want to receive in exchange for the token
     /// @return The ID of the created listing
     /// @dev Remember to call `setApprovalForAll(<address of this contract>, true)` on the ERC1155's contract before calling this function
-    function listFor(IERC1155Supply tokenContract, uint256 tokenId, IERC20 paymentToken, uint256 askPrice, address beneficiary)
-        public
-        returns (uint256)
-    {
-        uint256 listingId = list(tokenContract, tokenId, paymentToken, askPrice);
-        listings[listingId].beneficiary = beneficiary;
-        return listingId;
-    }
-
     function list(IERC1155Supply tokenContract, uint256 tokenId, IERC20 paymentToken, uint256 askPrice) public returns (uint256) {
         if (!tokenContract.isApprovedForAll(msg.sender, address(this))) {
             revert InsufficientAllowance();
@@ -129,23 +120,24 @@ contract SchmackoSwap is ERC165, ReentrancyGuard {
         return listingId;
     }
 
-    // function isApprovedListingOperator(uint256 listingId, address operator) public view returns (bool) {
-    //     return listingOperators[listingId][operator];
-    // }
-
-    // function approveListingOperator(uint256 listingId, address operator, bool approved) public {
-    //     Listing memory listing = listings[listingId];
-    //     if (listing.creator != msg.sender) revert Unauthorized();
-
-    //     listingOperators[listingId][operator] = approved;
-    // }
+    function listFor(IERC1155Supply tokenContract, uint256 tokenId, IERC20 paymentToken, uint256 askPrice, address beneficiary)
+        public
+        returns (uint256)
+    {
+        uint256 listingId = list(tokenContract, tokenId, paymentToken, askPrice);
+        //todo: this stays unmentioned in the emitted event!
+        listings[listingId].beneficiary = beneficiary;
+        return listingId;
+    }
 
     /// @notice Cancel an existing listing
     /// @param listingId The ID for the listing you want to cancel
-
     function cancel(uint256 listingId) public {
-        //if (!isApprovedListingOperator(listingId, msg.sender)) revert Unauthorized();
         Listing memory listing = listings[listingId];
+        if (listing.creator != msg.sender) {
+            revert Unauthorized();
+        }
+
         if (listing.listingState != ListingState.LISTED) {
             revert("cant cancel an inactive listing");
         }
@@ -159,6 +151,7 @@ contract SchmackoSwap is ERC165, ReentrancyGuard {
         Listing memory listing = listings[listingId];
         if (listing.creator == address(0)) revert ListingNotFound();
         if (allowlist[listingId][msg.sender] != true) revert NotOnAllowlist();
+        if (listing.listingState != ListingState.LISTED) revert("listing not active anymore");
 
         IERC20 paymentToken = listing.paymentToken;
 
@@ -185,7 +178,7 @@ contract SchmackoSwap is ERC165, ReentrancyGuard {
         Listing memory listing = listings[listingId];
 
         if (listing.creator == address(0)) revert ListingNotFound();
-        //if (!isApprovedListingOperator(listingId, msg.sender)) revert Unauthorized();
+        if (listing.creator != msg.sender) revert Unauthorized();
         require(buyerAddress != address(0), "Can't add ZERO address to allowlist");
 
         allowlist[listingId][buyerAddress] = isAllowed_;
