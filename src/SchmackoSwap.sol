@@ -77,10 +77,11 @@ contract SchmackoSwap is ERC165, ReentrancyGuard {
         uint256 tokenAmount;
         IERC20 paymentToken;
         uint256 askPrice;
+        address beneficiary;
         ListingState listingState;
     }
 
-    mapping(uint256 => mapping(address => bool)) listingOperators;
+    //mapping(uint256 => mapping(address => bool)) listingOperators;
 
     /// @notice An indexed list of listings
     mapping(uint256 => Listing) public listings;
@@ -94,6 +95,15 @@ contract SchmackoSwap is ERC165, ReentrancyGuard {
     /// @param askPrice How much you want to receive in exchange for the token
     /// @return The ID of the created listing
     /// @dev Remember to call `setApprovalForAll(<address of this contract>, true)` on the ERC1155's contract before calling this function
+    function listFor(IERC1155Supply tokenContract, uint256 tokenId, IERC20 paymentToken, uint256 askPrice, address beneficiary)
+        public
+        returns (uint256)
+    {
+        uint256 listingId = list(tokenContract, tokenId, paymentToken, askPrice);
+        listings[listingId].beneficiary = beneficiary;
+        return listingId;
+    }
+
     function list(IERC1155Supply tokenContract, uint256 tokenId, IERC20 paymentToken, uint256 askPrice) public returns (uint256) {
         if (!tokenContract.isApprovedForAll(msg.sender, address(this))) {
             revert InsufficientAllowance();
@@ -106,11 +116,11 @@ contract SchmackoSwap is ERC165, ReentrancyGuard {
             tokenAmount: tokenContract.totalSupply(tokenId),
             askPrice: askPrice,
             creator: msg.sender,
+            beneficiary: msg.sender,
             listingState: ListingState.LISTED
         });
 
         uint256 listingId = uint256(keccak256(abi.encode(listing, block.number)));
-        listingOperators[listingId][msg.sender] = true;
 
         listings[listingId] = listing;
 
@@ -119,22 +129,22 @@ contract SchmackoSwap is ERC165, ReentrancyGuard {
         return listingId;
     }
 
-    function isApprovedListingOperator(uint256 listingId, address operator) public view returns (bool) {
-        return listingOperators[listingId][operator];
-    }
+    // function isApprovedListingOperator(uint256 listingId, address operator) public view returns (bool) {
+    //     return listingOperators[listingId][operator];
+    // }
 
-    function approveListingOperator(uint256 listingId, address operator, bool approved) public {
-        Listing memory listing = listings[listingId];
-        if (listing.creator != msg.sender) revert Unauthorized();
+    // function approveListingOperator(uint256 listingId, address operator, bool approved) public {
+    //     Listing memory listing = listings[listingId];
+    //     if (listing.creator != msg.sender) revert Unauthorized();
 
-        listingOperators[listingId][operator] = approved;
-    }
+    //     listingOperators[listingId][operator] = approved;
+    // }
 
     /// @notice Cancel an existing listing
     /// @param listingId The ID for the listing you want to cancel
 
     function cancel(uint256 listingId) public {
-        if (!isApprovedListingOperator(listingId, msg.sender)) revert Unauthorized();
+        //if (!isApprovedListingOperator(listingId, msg.sender)) revert Unauthorized();
         Listing memory listing = listings[listingId];
         if (listing.listingState != ListingState.LISTED) {
             revert("cant cancel an inactive listing");
@@ -162,7 +172,7 @@ contract SchmackoSwap is ERC165, ReentrancyGuard {
 
         listing.tokenContract.safeTransferFrom(listing.creator, msg.sender, listing.tokenId, listing.tokenAmount, "");
 
-        SafeTransferLib.safeTransferFrom(SolERC20(address(paymentToken)), msg.sender, listing.creator, listing.askPrice);
+        SafeTransferLib.safeTransferFrom(SolERC20(address(paymentToken)), msg.sender, listing.beneficiary, listing.askPrice);
 
         emit Purchased(listingId, msg.sender, listings[listingId]);
     }
@@ -175,7 +185,7 @@ contract SchmackoSwap is ERC165, ReentrancyGuard {
         Listing memory listing = listings[listingId];
 
         if (listing.creator == address(0)) revert ListingNotFound();
-        if (!isApprovedListingOperator(listingId, msg.sender)) revert Unauthorized();
+        //if (!isApprovedListingOperator(listingId, msg.sender)) revert Unauthorized();
         require(buyerAddress != address(0), "Can't add ZERO address to allowlist");
 
         allowlist[listingId][buyerAddress] = isAllowed_;
