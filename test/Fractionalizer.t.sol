@@ -24,6 +24,8 @@ contract FractionalizerTest is Test {
 
     //Alice, Bob and Charlie are fraction holders
     address alice = makeAddr("alice");
+    uint256 alicePk;
+
     address bob = makeAddr("bob");
     address charlie = makeAddr("charlie");
 
@@ -34,6 +36,8 @@ contract FractionalizerTest is Test {
     IERC20 internal erc20;
 
     function setUp() public {
+        (alice, alicePk) = makeAddrAndKey("alice");
+
         vm.startPrank(deployer);
         IPNFT implementationV2 = new IPNFT();
         UUPSProxy proxy = new UUPSProxy(address(implementationV2), "");
@@ -149,10 +153,12 @@ contract FractionalizerTest is Test {
         schmackoSwap.fulfill(listingId);
         vm.stopPrank();
 
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(alicePk, keccak256(bytes(fractionalizer.specificTermsV1(fractionId))));
+
         vm.startPrank(alice);
         //someone must start the withdrawal phase first
         vm.expectRevert("claiming not available (yet)");
-        fractionalizer.burnToWithdrawShare(fractionId);
+        fractionalizer.burnToWithdrawShare(fractionId, v, r, s);
         vm.stopPrank();
 
         // this is wanted: *anyone* (!) can call this. This is an oracle call.
@@ -163,7 +169,7 @@ contract FractionalizerTest is Test {
         vm.startPrank(alice);
         (IERC20 tokenContract, uint256 amount) = fractionalizer.claimableTokens(fractionId, alice);
         assertEq(amount, 250_000 ether);
-        fractionalizer.burnToWithdrawShare(fractionId);
+        fractionalizer.burnToWithdrawShare(fractionId, v, r, s);
         vm.stopPrank();
 
         assertEq(erc20.balanceOf(alice), 250_000 ether);
@@ -178,5 +184,21 @@ contract FractionalizerTest is Test {
 
     function testCollectionBalanceMustBeOne() public {
         //cant fractionalize 1155 tokens with a supply > 1
+    }
+
+    function testProveSig() public {
+        vm.startPrank(originalOwner);
+        uint256 fractionId = fractionalizer.fractionalizeUniqueERC1155(ipnft, 1, agreementHash, 100_000);
+        fractionalizer.safeTransferFrom(originalOwner, alice, fractionId, 25_000, "");
+        vm.stopPrank();
+
+        string memory terms = fractionalizer.specificTermsV1(fractionId);
+        console.log(terms);
+        bytes32 termsHash = keccak256(bytes(terms));
+
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(alicePk, termsHash);
+
+        address signer = fractionalizer.signedTerms(fractionId, v, r, s);
+        assertEq(signer, alice);
     }
 }

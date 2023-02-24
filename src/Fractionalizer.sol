@@ -8,6 +8,7 @@ import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/O
 import { IERC1155 } from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import { ERC1155ReceiverUpgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC1155/utils/ERC1155ReceiverUpgradeable.sol";
 import { CountersUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/CountersUpgradeable.sol";
+import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IERC1155Supply } from "./IERC1155Supply.sol";
@@ -36,7 +37,6 @@ contract Fractionalizer is ERC1155SupplyUpgradeable, UUPSUpgradeable, OwnableUpg
     uint256 fractionalizationPercentage;
 
     mapping(uint256 => Fractionalized) public fractionalized;
-    mapping(address => mapping(uint256 => uint256)) claimAllowance;
 
     function initialize(SchmackoSwap _schmackoSwap) public initializer {
         __UUPSUpgradeable_init();
@@ -132,7 +132,7 @@ contract Fractionalizer is ERC1155SupplyUpgradeable, UUPSUpgradeable, OwnableUpg
         return (_paymentToken, balance * (askPrice / fractionalized[fractionId].totalIssued));
     }
 
-    function burnToWithdrawShare(uint256 fractionId) public {
+    function burnToWithdrawShare(uint256 fractionId, uint8 v, bytes32 r, bytes32 s) public {
         uint256 balance = balanceOf(_msgSender(), fractionId);
         if (balance == 0) {
             revert("you dont own any fractions");
@@ -143,8 +143,35 @@ contract Fractionalizer is ERC1155SupplyUpgradeable, UUPSUpgradeable, OwnableUpg
             revert("shares are 0");
         }
 
+        if (_msgSender() != signedTerms(fractionId, v, r, s)) {
+            revert("holder hasn't accepted the terms for this IPNFT");
+        }
+
         _burn(_msgSender(), fractionId, balance);
         paymentToken.transfer(_msgSender(), erc20shares);
+    }
+
+    function specificTermsV1(uint256 fractionId) public view returns (string memory) {
+        Fractionalized memory frac = fractionalized[fractionId];
+
+        return string(
+            abi.encodePacked(
+                "As a fraction holder of IPNFT #",
+                Strings.toString(frac.tokenId),
+                ", I accept all terms that I've read here: ",
+                Strings.toHexString(uint256(frac.agreementHash)),
+                "\n\n",
+                "Chain Id: ",
+                Strings.toString(block.chainid),
+                "\n",
+                "Version: 1"
+            )
+        );
+    }
+
+    function signedTerms(uint256 fractionId, uint8 v, bytes32 r, bytes32 s) public view returns (address) {
+        bytes32 termsHash = keccak256(bytes(specificTermsV1(fractionId)));
+        return ecrecover(termsHash, v, r, s);
     }
 
     // function supportsInterface(bytes4 interfaceId) public view virtual override (ERC1155ReceiverUpgradeable, ERC1155Upgradeable) returns (bool) {
