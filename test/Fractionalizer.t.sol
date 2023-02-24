@@ -159,6 +159,7 @@ contract FractionalizerTest is Test {
         //someone must start the withdrawal phase first
         vm.expectRevert("claiming not available (yet)");
         fractionalizer.burnToWithdrawShare(fractionId, v, r, s);
+        assertFalse(fractionalizer.signedTerms(fractionId, alice));
         vm.stopPrank();
 
         // this is wanted: *anyone* (!) can call this. This is an oracle call.
@@ -167,7 +168,7 @@ contract FractionalizerTest is Test {
         vm.stopPrank();
 
         vm.startPrank(alice);
-        (IERC20 tokenContract, uint256 amount) = fractionalizer.claimableTokens(fractionId, alice);
+        (, uint256 amount) = fractionalizer.claimableTokens(fractionId, alice);
         assertEq(amount, 250_000 ether);
         fractionalizer.burnToWithdrawShare(fractionId, v, r, s);
         vm.stopPrank();
@@ -179,6 +180,9 @@ contract FractionalizerTest is Test {
         assertEq(fractionalizer.balanceOf(alice, 1), 0);
         (, uint256 remainingAmount) = fractionalizer.claimableTokens(fractionId, alice);
         assertEq(remainingAmount, 0);
+
+        //a side effect of burning is that we mark the terms as accepted
+        assertTrue(fractionalizer.signedTerms(fractionId, alice));
     }
     //todo test claim shares can be transferred to others and are still redeemable
 
@@ -198,7 +202,7 @@ contract FractionalizerTest is Test {
 
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(alicePk, termsHash);
 
-        address signer = fractionalizer.signedTerms(fractionId, v, r, s);
+        address signer = fractionalizer.signedBy(fractionId, v, r, s);
         assertEq(signer, alice);
     }
 }
