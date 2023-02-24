@@ -37,6 +37,7 @@ contract Fractionalizer is ERC1155SupplyUpgradeable, UUPSUpgradeable, OwnableUpg
     uint256 fractionalizationPercentage;
 
     mapping(uint256 => Fractionalized) public fractionalized;
+    mapping(uint256 => mapping(address => bool)) public signedTerms;
 
     function initialize(SchmackoSwap _schmackoSwap) public initializer {
         __UUPSUpgradeable_init();
@@ -133,6 +134,11 @@ contract Fractionalizer is ERC1155SupplyUpgradeable, UUPSUpgradeable, OwnableUpg
     }
 
     function burnToWithdrawShare(uint256 fractionId, uint8 v, bytes32 r, bytes32 s) public {
+        acceptTerms(fractionId, v, r, s);
+        burnToWithdrawShare(fractionId);
+    }
+
+    function burnToWithdrawShare(uint256 fractionId) public {
         uint256 balance = balanceOf(_msgSender(), fractionId);
         if (balance == 0) {
             revert("you dont own any fractions");
@@ -141,10 +147,6 @@ contract Fractionalizer is ERC1155SupplyUpgradeable, UUPSUpgradeable, OwnableUpg
         (IERC20 paymentToken, uint256 erc20shares) = claimableTokens(fractionId, _msgSender());
         if (erc20shares == 0) {
             revert("shares are 0");
-        }
-
-        if (_msgSender() != signedTerms(fractionId, v, r, s)) {
-            revert("holder hasn't accepted the terms for this IPNFT");
         }
 
         _burn(_msgSender(), fractionId, balance);
@@ -169,11 +171,20 @@ contract Fractionalizer is ERC1155SupplyUpgradeable, UUPSUpgradeable, OwnableUpg
         );
     }
 
-    function signedTerms(uint256 fractionId, uint8 v, bytes32 r, bytes32 s) public view returns (address) {
+    function signedBy(uint256 fractionId, uint8 v, bytes32 r, bytes32 s) public view returns (address) {
         bytes32 termsHash = keccak256(bytes(specificTermsV1(fractionId)));
         return ecrecover(termsHash, v, r, s);
     }
 
+    //todo make this eip1271 compatible
+    function acceptTerms(uint256 fractionId, uint8 v, bytes32 r, bytes32 s) public {
+        address signer = signedBy(fractionId, v, r, s);
+        //todo discuss whether only the signer himself should be able to call this
+        // if (signedBy != _msgSender()) {
+        //     revert("you're not the one who signed the terms");
+        // }
+        signedTerms[fractionId][signer] = true;
+    }
     // function supportsInterface(bytes4 interfaceId) public view virtual override (ERC1155ReceiverUpgradeable, ERC1155Upgradeable) returns (bool) {
     //     return super.supportsInterface(interfaceId);
     // }
