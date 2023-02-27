@@ -16,3 +16,7 @@
 	path = lib/ERC721B
 	url = https://github.com/badbabybearbots/ERC721B
 	branch = 0.2.1
+[submodule "lib/optimism"]
+	path = lib/optimism
+	url = https://github.com/ethereum-optimism/optimism
+	branch = v1.0.0
