@@ -11,5 +11,8 @@
     "ethers": "^5.7.2",
     "hardhat": "^2.12.6"
   },
-  "dependencies": {}
+  "dependencies": {
+    "@eth-optimism/sdk": "^1.10.4",
+    "dotenv": "^16.0.3"
+  }
 }
