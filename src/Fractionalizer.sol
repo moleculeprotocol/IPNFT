@@ -7,31 +7,28 @@ import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils
 import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import { IERC1155 } from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import { ERC1155ReceiverUpgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC1155/utils/ERC1155ReceiverUpgradeable.sol";
-import { CountersUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/CountersUpgradeable.sol";
+
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IERC1155Supply } from "./IERC1155Supply.sol";
 
-import { IPNFT } from "./IPNFT.sol";
-import { SchmackoSwap, ListingState } from "./SchmackoSwap.sol";
+import { ICrossDomainMessenger } from "@eth-optimism/contracts/libraries/bridge/ICrossDomainMessenger.sol";
 
 /// @title Fractionalizer
 /// @author molecule.to
 /// @notice
 contract Fractionalizer is ERC1155SupplyUpgradeable, UUPSUpgradeable, OwnableUpgradeable {
     struct Fractionalized {
-        IERC1155Supply collection;
+        address collection;
         uint256 tokenId;
         //needed to remember an individual's share after others burn their tokens
         uint256 totalIssued;
         address originalOwner;
         bytes32 agreementHash;
-        uint256 fulfilledListingId;
+        IERC20 paymentToken;
+        uint256 paidPrice;
     }
-
-    IPNFT ipnft;
-    SchmackoSwap schmackoSwap;
 
     address feeReceiver;
     uint256 fractionalizationPercentage;
@@ -39,10 +36,17 @@ contract Fractionalizer is ERC1155SupplyUpgradeable, UUPSUpgradeable, OwnableUpg
     mapping(uint256 => Fractionalized) public fractionalized;
     mapping(uint256 => mapping(address => bool)) public signedTerms;
 
-    function initialize(SchmackoSwap _schmackoSwap) public initializer {
+    modifier onlyBridge () {
+        address cdmAddr = getCdmAddr();
+        if (cdmAddr == address(0)) {
+            revert("this must only be called by the l1l2 bridge");
+        }
+        _;
+    }
+
+    function initialize() public initializer {
         __UUPSUpgradeable_init();
         __Ownable_init();
-        schmackoSwap = _schmackoSwap;
         //not calling the ERC1155 initializer, since we don't need an URI
     }
 
@@ -54,31 +58,30 @@ contract Fractionalizer is ERC1155SupplyUpgradeable, UUPSUpgradeable, OwnableUpg
         fractionalizationPercentage = fractionalizationPercentage_;
     }
 
-    function fractionalizeUniqueERC1155(IERC1155Supply collection, uint256 tokenId, bytes32 agreementHash, uint256 fractionsAmount)
-        external
-        returns (uint256 fractionId)
+    /**
+     * @param fractionId the fractionalized token id as computed on the l1 network
+     */
+    function fractionalizeUniqueERC1155(uint256 fractionId, address collection, uint256 tokenId, bytes32 agreementHash, uint256 fractionsAmount)
+        public
+        onlyBridge
+        returns (uint256)
     {
-        if (collection.totalSupply(tokenId) != 1) {
-            revert("can only fractionalize singleton ERC1155 collections");
-        }
-        if (collection.balanceOf(msg.sender, tokenId) != 1) {
-            revert("only owner can initialize fractions");
-        }
+        // If it is a cross domain message, find out where it is from
+        address txL1OriginAddr = ICrossDomainMessenger(cdmAddr).xDomainMessageSender();
 
-        fractionId = uint256(keccak256(abi.encodePacked(msg.sender, collection, tokenId)));
+        if (uint256(keccak256(abi.encodePacked(txL1OriginAddr, collection, tokenId))) != fractionId) {
+            revert("only the owner may fractionalize on the collection")
+        }
 
         // ensure we can only call this once per sales cycle
         if (address(fractionalized[fractionId].collection) != address(0)) {
             revert("token is already fractionalized");
         }
 
-        fractionalized[fractionId] = Fractionalized(collection, tokenId, fractionsAmount, _msgSender(), agreementHash, 0);
+        fractionalized[fractionId] = Fractionalized(collection, tokenId, fractionsAmount, txL1OriginAddr, agreementHash, address(0), 0);
 
-        _mint(_msgSender(), fractionId, fractionsAmount, "");
+        _mint(txL1OriginAddr, fractionId, fractionsAmount, "");
         //todo: if we want to take a protocol fee, this might be agood point of doing so.
-
-        //alternatively: transfer the NFT to Fractionalizer so it can't be transferred while fractionalized
-        //collection.safeTransferFrom(_msgSender(), address(this), tokenId, 1, "");
     }
 
     function increaseFractions(uint256 fractionId, uint256 fractionsAmount) external {
@@ -94,10 +97,17 @@ contract Fractionalizer is ERC1155SupplyUpgradeable, UUPSUpgradeable, OwnableUpg
         _mint(_fractionalized.originalOwner, fractionId, fractionsAmount, "");
     }
 
-    function afterSale(uint256 listingId, uint256 fractionId) public {
+    function afterSale(uint256 fractionId, address paymentToken, uint256 paidPrice) public onlyBridge {
+
         Fractionalized storage frac = fractionalized[fractionId];
         if (frac.fulfilledListingId != 0) {
             revert("Withdrawal phase already initiated");
+        }
+
+        address txL1OriginAddr = ICrossDomainMessenger(cdmAddr).xDomainMessageSender();
+        //todo: this should be enforced by the dispatcher contract
+        if (txL1OriginAddr != frac.originalOwner) {
+            revert("only callable by original owner");
         }
 
         //todo: this is a deep dependency on our own sales contract
@@ -117,20 +127,20 @@ contract Fractionalizer is ERC1155SupplyUpgradeable, UUPSUpgradeable, OwnableUpg
         //     //todo: this is warning, we still could proceed, since it's too late here anyway ;)
         //     revert("the fulfillment doesn't match the ask");
         // }
-        frac.fulfilledListingId = listingId;
+        frac.paymentToken = paymentToken;
+        frac.paidPrice = paidPrice;
     }
 
     function claimableTokens(uint256 fractionId, address tokenHolder) public view returns (IERC20 paymentToken, uint256 amount) {
-        uint256 balance = balanceOf(tokenHolder, fractionId);
+        Fractionalized storage frac = fractionalized[fractionId];
 
-        if (fractionalized[fractionId].fulfilledListingId == 0) {
+        if (frac.paymentToken == address(0) || frac.paidPrice == 0) {
             revert("claiming not available (yet)");
         }
 
-        (,,,, IERC20 _paymentToken, uint256 askPrice,,) = schmackoSwap.listings(fractionalized[fractionId].fulfilledListingId);
-
+        uint256 balance = balanceOf(tokenHolder, fractionId);
         //todo: check this 10 times:
-        return (_paymentToken, balance * (askPrice / fractionalized[fractionId].totalIssued));
+        return (frac.paymentToken, balance * (frac.paidPrice / frac.totalIssued));
     }
 
     function burnToWithdrawShare(uint256 fractionId, uint8 v, bytes32 r, bytes32 s) public {
@@ -142,6 +152,9 @@ contract Fractionalizer is ERC1155SupplyUpgradeable, UUPSUpgradeable, OwnableUpg
         uint256 balance = balanceOf(_msgSender(), fractionId);
         if (balance == 0) {
             revert("you dont own any fractions");
+        }
+        if (!signedTerms[fractionId][_msgSender()]) {
+            revert("you haven't accepted the terms");
         }
 
         (IERC20 paymentToken, uint256 erc20shares) = claimableTokens(fractionId, _msgSender());
@@ -201,8 +214,34 @@ contract Fractionalizer is ERC1155SupplyUpgradeable, UUPSUpgradeable, OwnableUpg
     //     return bytes4(keccak256("onERC1155BatchReceived(address,address,uint256[],uint256[],bytes)"));
     // }
 
-    /// @notice upgrade authorization logic
+    // Get the cross domain messenger address, if any
+    function getCdmAddress() private view returns (address) {
+        // Get the cross domain messenger's address each time.
+        // This is less resource intensive than writing to storage.
+        address cdmAddr = address(0);
 
+        // Mainnet
+        if (block.chainid == 1) {
+            cdmAddr = 0x25ace71c97B33Cc4729CF772ae268934F7ab5fA1;
+        }
+
+        // Goerli
+        if (block.chainid == 5) {
+            cdmAddr = 0x5086d1eEF304eb5284A0f6720f79403b4e9bE294;
+        }
+
+        // L2 (same address on every network)
+        if (block.chainid == 10 || block.chainid == 420) {
+            cdmAddr = 0x4200000000000000000000000000000000000007;
+        }
+
+        // If this isn't a cross domain message
+        if (msg.sender != cdmAddr) {
+            return address(0);
+        }
+    }
+
+    /// @notice upgrade authorization logic
     function _authorizeUpgrade(address /*newImplementation*/ )
         internal
         override
