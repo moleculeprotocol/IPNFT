@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
+import { IERC1155Supply } from "./IERC1155Supply.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { ICrossDomainMessenger } from "@eth-optimism/contracts/libraries/bridge/ICrossDomainMessenger.sol";
 import { IL1ERC20Bridge } from "@eth-optimism/contracts/L1/messaging/IL1ERC20Bridge.sol";
 import { SchmackoSwap, ListingState } from "./SchmackoSwap.sol";
-import { OptimismContracts } from "./OptimismContracts.sol";
+import { ContractRegistry } from "./ContractRegistry.sol";
 
 contract FractionalizerL2Dispatcher {
     struct Fractionalized {
@@ -15,17 +16,20 @@ contract FractionalizerL2Dispatcher {
         uint256 fulfilledListingId;
     }
 
-    address fractionalizerAddrL2;
+    ContractRegistry registry;
     SchmackoSwap schmackoSwap;
 
-    mapping(uint256 => address) public fractionalized;
+    mapping(uint256 => Fractionalized) public fractionalized;
 
-    function construct(SchmackoSwap _schmackoSwap, fractionalizerAddressL2_) public {
+    constructor(SchmackoSwap _schmackoSwap, ContractRegistry _registry) {
         schmackoSwap = _schmackoSwap;
-        fractionalizerAddrL2 = fractionalizerAddressL2_;
+        registry = _registry;
     }
 
-    function initializeFractionalization(IERC1155Supply collection, uint256 tokenId, bytes32 agreementHash, uint256 fractionsAmount) {
+    function initializeFractionalization(IERC1155Supply collection, uint256 tokenId, bytes32 agreementHash, uint256 fractionsAmount)
+        external
+        returns (uint256)
+    {
         if (collection.totalSupply(tokenId) != 1) {
             revert("can only fractionalize ERC1155 tokens with a supply of 1");
         }
@@ -34,9 +38,7 @@ contract FractionalizerL2Dispatcher {
             revert("only owner can initialize fractions");
         }
 
-        address crossDomainMessengerAddr = getCrossdomainMessengerAddress();
-
-        fractionId = uint256(keccak256(abi.encodePacked(msg.sender, collection, tokenId)));
+        uint256 fractionId = uint256(keccak256(abi.encodePacked(msg.sender, collection, tokenId)));
         fractionalized[fractionId] = Fractionalized(collection, tokenId, msg.sender, 0);
 
         bytes memory message =
@@ -45,11 +47,13 @@ contract FractionalizerL2Dispatcher {
         //alternatively: transfer the NFT to Fractionalizer so it can't be transferred while fractionalized
         //collection.safeTransferFrom(_msgSender(), address(this), tokenId, 1, "");
 
+        address crossDomainMessengerAddr = registry.safeGet("CrossdomainMessenger");
         ICrossDomainMessenger(crossDomainMessengerAddr).sendMessage(
-            fractionalizerAddrL2,
+            registry.safeGet("FractionalizerL2"),
             message,
             1_000_000 // within the free gas limit amount
         );
+        return fractionId;
     }
 
     /// @notice Anyone can call this once they observe the sale to activate the share payout phase
@@ -83,9 +87,10 @@ contract FractionalizerL2Dispatcher {
 
         //bridge ERC20 to L2, right here
         //https://community.optimism.io/docs/developers/bridge/standard-bridge/#
-        address bridgeAddr = OptimismContracts.getStandardBridgeAddress();
-        address crossDomainMessengerAddr = OptimismContracts.getCrossdomainMessengerAddress();
-        address tokenL2Address = OptimismContracts.getTokenAddressL2(address(_paymentToken));
+        address bridgeAddr = registry.safeGet("StandardBridge");
+        address crossDomainMessengerAddr = registry.safeGet("CrossdomainMessenger");
+        address fractionalizerAddrL2 = registry.safeGet("FractionalizerL2");
+        address tokenL2Address = registry.safeGet(address(_paymentToken));
 
         //todo: the approval should be provided in general.
         if (_paymentToken.allowance(address(this), bridgeAddr) < askPrice) {
@@ -95,7 +100,7 @@ contract FractionalizerL2Dispatcher {
         }
 
         //good luck figuring the reason for this one out:
-        uint256 _minGasLimit = 20_000;
+        uint32 _minGasLimit = 20_000;
         IL1ERC20Bridge(bridgeAddr).depositERC20To(address(_paymentToken), tokenL2Address, fractionalizerAddrL2, askPrice, _minGasLimit, "");
 
         //initiate sale on L2
