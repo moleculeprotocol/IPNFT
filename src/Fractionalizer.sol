@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.17;
 
+import "forge-std/console.sol";
+
 //import { ERC1155Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
 import { ERC1155SupplyUpgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC1155/extensions/ERC1155SupplyUpgradeable.sol";
 import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
@@ -34,7 +36,6 @@ contract Fractionalizer is ERC1155SupplyUpgradeable, UUPSUpgradeable, OwnableUpg
 
     address feeReceiver;
     uint256 fractionalizationPercentage;
-
     mapping(uint256 => Fractionalized) public fractionalized;
     mapping(address => mapping(uint256 => uint256)) claimAllowance;
 
@@ -43,6 +44,17 @@ contract Fractionalizer is ERC1155SupplyUpgradeable, UUPSUpgradeable, OwnableUpg
         __Ownable_init();
         schmackoSwap = _schmackoSwap;
         //not calling the ERC1155 initializer, since we don't need an URI
+    }
+
+    modifier notClaiming(uint256 fractionId) {
+        if (address(fractionalized[fractionId].paymentToken) != address(0)) {
+            revert("already in claiming phase");
+        }
+        _;
+    }
+
+    constructor() {
+        _disableInitializers();
     }
 
     function setFeeReceiver(address _feeReceiver) public {
