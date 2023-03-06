@@ -28,6 +28,17 @@ IP-NFTs allow their users to tokenize intellectual property. This repo contains 
 - Subgraph: <https://api.thegraph.com/subgraphs/name/dorianwilhelm/ip-nft-subgraph-goerli/graphql>
 - Impl 2.2 0x026fa78c956ddf29fa84371460727bac0fd6204a
 
+- Contract Registry 0x91d6984adecadeb13f8bef2db8c4cb896210fcb1
+  https://goerli.etherscan.io/address/0x91d6984adecadeb13f8bef2db8c4cb896210fcb1#code
+
+- Fractionalizer Dispatcher L1: 0xB3bE2424FBc0A9cCb3FB5fFD5655235F21855526
+  (Impl no 5 0x65a188248dD02477f45122ec060e328976526817)
+  <https://goerli.etherscan.io/address/0xB3bE2424FBc0A9cCb3FB5fFD5655235F21855526>
+
+- Fractionalizer L2: 0x5DAbAF3C3F92F889394aD4304B1E2E90DBa57E3b
+  (Impl no 2 0x0fC61bC878aA3843d97Ea1165c4Db5D7481C1e4C)
+  <https://goerli-optimism.etherscan.io/address/0x5DAbAF3C3F92F889394aD4304B1E2E90DBa57E3b>
+
 ## Prerequisites
 
 To work with this repository you have to install Foundry (<https://getfoundry.sh>). Run the following command in your terminal, then follow the onscreen instructions (macOS and Linux):
@@ -131,6 +142,44 @@ full docs: https://book.getfoundry.sh/reference/forge/forge-verify-contract
 or, if you need to verify with constructor arguments:
 
 `forge verify-contract --chain-id 5 <address> Mintpass --constructor-args $(cast abi-encode "constructor(address)" "0xabcdef")`
+
+### Fractionalizer
+
+The fractionalizer consists of two contracts: The Dispatcher (`L1FractionalizerDispatcher`) lives on L1. IP-NFT owners call it to initiate a fractionalization event on L2. It checks that the IP-NFT belongs to the current user, verifies that this IP-NFT has not been fractionalized before and dispatches a message to the respective L2 contract that will issue fractions. The L2 contract (`Fractionalizer`) first checks that its been called by the L2 messaging bridge and that the call originated from the L1 contract (the dispatcher). It then verifies that the computed fraction id matches the input parameters and issues the requested amount of fractions to the IP-NFT owner on the L2 network. The dispatcher depends on a named registry (`ContractRegistry`) to resolve contract addresses and token address translations. This must be deployed before the dispatcher itself so it can be provided as a construcutor argument. For convenience we added 2 premade registries for Görli and mainnet but you can deploy and maintain fully custom ones. The fractionalization contracts are deployed as upgradeable 1967/UUPSProxies using the original OZ implementation.
+
+#### Deploying
+
+Note that for these deployments you'll need different RPC_URLs for L1 and L2. Also, the Optimism block explorer doesn't work with your Etherscan api key. You must log into it individually and create a dedicated api key for contract code validation.
+Manual deployment order
+
+- deploy registry for Görli
+  `NETWORK=5 forge script script/DeployContractRegistry.s.sol --rpc-url $RPC_URL_L1 --broadcast -vvvv`
+
+- deploy L1 dispatcher
+  `SOS_ADDRESS=<schmackoswapOnL1> REGISTRY_ADDRESS=<registry address> forge script script/DeployFractionalizerL1.s.sol --rpc-url $RPC_URL_1 --broadcast -vvvv`
+
+- deploy L2 fractionalizer
+  `forge script script/DeployFractionalizerL2.s.sol --rpc-url $RPC_URL_L2 --broadcast -vvvv`
+
+- set L2 address on registry
+  `cast send --rpc-url $RPC_URL_L1 -i <registry address> "register(bytes32,address)" $(cast --from-utf8 "FractionalizerL2") <fractionalizer address on L2>`
+
+- set L1 dispatcher's address on L2 fractionalizer (so it can verify incoming message calls)
+  `cast send --rpc-url $RPC_URL_L2 -i <L2 fractionalizer contract> "setFractionalizerDispatcherL1(address)"  <dispatcher address on L1>`
+
+note that the registry doesnt use strings but bytes32 as keys. To manually retrieve registered names you can convert strings to their byte32 encoded counterparts locally, like so
+`cast --from-utf8 "CrossdomainMessenger"`
+
+We also included helpers to quickly deploy updated versions of the contracts. You must call their `updateTo` functions individually, though.
+
+- verify the L1 dispatcher impl
+  `ETHERSCAN_API_KEY=<görli api key> forge verify-contract --chain-id 5 <new impl addr> FractionalizerL2Dispatcher`
+
+- verify the L2 fractionalizer impl
+  `ETHERSCAN_API_KEY=<optimism-görli api key> forge verify-contract --chain-id 420 <new impl addr> Fractionalizer`
+
+- verify an EIP1967 proxy
+  `ETHERSCAN_API_KEY=... forge verify-contract --chain-id 420 <proxy address> ERC1967Proxy --constructor-args $(cast abi-encode "constructor(address,bytes)" "<initial implementation address>" "")`
 
 ## Interacting with cast
 
