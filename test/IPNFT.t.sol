@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
 import "forge-std/Test.sol";
@@ -127,7 +127,7 @@ contract IPNFTTest is IPNFTMintHelper {
         vm.deal(address(bob), 10 ether);
 
         vm.prank(bob);
-        (bool transferWorked,) = address(ipnft).call{value: 10 ether}("");
+        (bool transferWorked,) = address(ipnft).call{ value: 10 ether }("");
         assertFalse(transferWorked);
         assertEq(address(ipnft).balance, 0);
 
@@ -145,7 +145,7 @@ contract IPNFTTest is IPNFTMintHelper {
         vm.deal(address(bob), 10 ether);
         vm.prank(bob);
         Kamikaze kamikaze = new Kamikaze();
-        (bool transferWorked,) = address(kamikaze).call{value: 10 ether}("");
+        (bool transferWorked,) = address(kamikaze).call{ value: 10 ether }("");
         assertTrue(transferWorked);
         assertEq(address(kamikaze).balance, 10 ether);
 
