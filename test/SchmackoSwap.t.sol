@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
 import "forge-std/Test.sol";
@@ -113,7 +113,7 @@ contract SchmackoSwapTest is Test {
                 beneficiary: address(seller),
                 listingState: ListingState.LISTED
             })
-            );
+        );
 
         schmackoSwap.list(erc1155Supply, 1, testToken, 1 ether);
         vm.stopPrank();
@@ -178,7 +178,7 @@ contract SchmackoSwapTest is Test {
                 beneficiary: address(seller),
                 listingState: ListingState.CANCELLED
             })
-            );
+        );
 
         schmackoSwap.cancel(listingId);
 
@@ -271,7 +271,7 @@ contract SchmackoSwapTest is Test {
                 beneficiary: address(seller),
                 listingState: ListingState.FULFILLED
             })
-            );
+        );
 
         schmackoSwap.fulfill(listingId);
         vm.stopPrank();
