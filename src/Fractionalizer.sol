@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.17;
 
+import "forge-std/console.sol";
+
 //import { ERC1155Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
 import { ERC1155SupplyUpgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC1155/extensions/ERC1155SupplyUpgradeable.sol";
 import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
@@ -14,6 +16,7 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IERC1155Supply } from "./IERC1155Supply.sol";
 
 import { ICrossDomainMessenger } from "@eth-optimism/contracts/libraries/bridge/ICrossDomainMessenger.sol";
+import "@openzeppelin/contracts/crosschain/optimism/CrossChainEnabledOptimism.sol";
 
 /// @title Fractionalizer
 /// @author molecule.to
@@ -33,13 +36,13 @@ contract Fractionalizer is ERC1155SupplyUpgradeable, UUPSUpgradeable, OwnableUpg
 
     address feeReceiver;
     uint256 fractionalizationPercentage;
-    ICrossDomainMessenger crossDomainMessenger = ICrossDomainMessenger(0x4200000000000000000000000000000000000007);
+    ICrossDomainMessenger crossDomainMessenger;
 
     mapping(uint256 => Fractionalized) public fractionalized;
     mapping(uint256 => mapping(address => bool)) public signedTerms;
 
     modifier onlyXDomain() {
-        if (msg.sender != address(crossDomainMessenger)) {
+        if (_msgSender() != address(crossDomainMessenger)) {
             revert("this must only be called by the l1l2 bridge");
         }
         _;
@@ -52,9 +55,14 @@ contract Fractionalizer is ERC1155SupplyUpgradeable, UUPSUpgradeable, OwnableUpg
         _;
     }
 
+    constructor() {
+        _disableInitializers();
+    }
+
     function initialize() public initializer {
         __UUPSUpgradeable_init();
         __Ownable_init();
+        crossDomainMessenger = ICrossDomainMessenger(0x4200000000000000000000000000000000000007);
         //not calling the ERC1155 initializer, since we don't need an URI
     }
 
