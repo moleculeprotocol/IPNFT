@@ -2,12 +2,15 @@
 pragma solidity ^0.8.17;
 
 import "forge-std/Test.sol";
+
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+
 import { console } from "forge-std/console.sol";
 import { IPNFT } from "../src/IPNFT.sol";
 import { Mintpass } from "../src/Mintpass.sol";
 import { UUPSProxy } from "../src/UUPSProxy.sol";
 import { IPNFTMintHelper } from "./IPNFTMintHelper.sol";
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { Fractionalizer } from "../src/Fractionalizer.sol";
 import { IERC1155Supply } from "../src/IERC1155Supply.sol";
 import { SchmackoSwap, ListingState } from "../src/SchmackoSwap.sol";
@@ -36,7 +39,7 @@ contract FractionalizerTest is Test {
     function setUp() public {
         vm.startPrank(deployer);
         IPNFT implementationV2 = new IPNFT();
-        UUPSProxy proxy = new UUPSProxy(address(implementationV2), "");
+        ERC1967Proxy proxy = new ERC1967Proxy(address(implementationV2), "");
         IPNFT _ipnft = IPNFT(address(proxy));
         _ipnft.initialize();
         ipnft = IERC1155Supply(address(_ipnft));
