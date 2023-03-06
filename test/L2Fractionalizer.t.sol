@@ -7,6 +7,7 @@ import { console } from "forge-std/console.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { ICrossDomainMessenger } from "@eth-optimism/contracts/libraries/bridge/ICrossDomainMessenger.sol";
 import { MockCrossDomainMessenger } from "./helpers/MockCrossDomainMessenger.sol";
+import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
 import { Fractionalizer } from "../src/Fractionalizer.sol";
 import { MyToken } from "../src/MyToken.sol";
@@ -46,7 +47,15 @@ contract L2FractionalizerTest is Test {
         vm.etch(PREDEPLOYED_XDOMAIN_MESSENGER, address(xDomainMessenger).code);
         xDomainMessenger = MockCrossDomainMessenger(PREDEPLOYED_XDOMAIN_MESSENGER);
 
-        fractionalizer = new Fractionalizer();
+        fractionalizer = Fractionalizer(
+            address(
+                new ERC1967Proxy(
+                    address(
+                        new Fractionalizer()
+                    ), ""
+                )
+            )
+        );
         fractionalizer.initialize();
 
         //fractionalizer.setFeeReceiver(protocolOwner);
