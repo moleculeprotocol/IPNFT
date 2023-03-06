@@ -41,9 +41,18 @@ contract Fractionalizer is ERC1155SupplyUpgradeable, UUPSUpgradeable, OwnableUpg
     mapping(uint256 => Fractionalized) public fractionalized;
     mapping(uint256 => mapping(address => bool)) public signedTerms;
 
+    address fractionalizerDispatcherOnL1;
+
     modifier onlyXDomain() {
         if (_msgSender() != address(crossDomainMessenger)) {
             revert("this must only be called by the l1l2 bridge");
+        }
+        _;
+    }
+
+    modifier onlyDispatcher() {
+        if (fractionalizerDispatcherOnL1 != crossDomainMessenger.xDomainMessageSender()) {
+            revert("may only be called by the dispatcher contract on L1");
         }
         _;
     }
@@ -66,6 +75,10 @@ contract Fractionalizer is ERC1155SupplyUpgradeable, UUPSUpgradeable, OwnableUpg
         //not calling the ERC1155 initializer, since we don't need an URI
     }
 
+    function setFractionalizerDispatcherL1(address _fractionalizerDispatcherOnL1) public onlyOwner {
+        fractionalizerDispatcherOnL1 = _fractionalizerDispatcherOnL1;
+    }
+
     function setFeeReceiver(address _feeReceiver) public {
         feeReceiver = _feeReceiver;
     }
@@ -77,14 +90,15 @@ contract Fractionalizer is ERC1155SupplyUpgradeable, UUPSUpgradeable, OwnableUpg
     /**
      * @param fractionId the fractionalized token id as computed on the l1 network
      */
-    function fractionalizeUniqueERC1155(uint256 fractionId, address collection, uint256 tokenId, bytes32 agreementHash, uint256 fractionsAmount)
-        public
-        onlyXDomain
-    {
-        // If it is a cross domain message, find out where it is from
-        address txL1OriginAddr = crossDomainMessenger.xDomainMessageSender();
-
-        if (uint256(keccak256(abi.encodePacked(txL1OriginAddr, collection, tokenId))) != fractionId) {
+    function fractionalizeUniqueERC1155(
+        uint256 fractionId,
+        address collection,
+        uint256 tokenId,
+        address originalOwner,
+        bytes32 agreementHash,
+        uint256 fractionsAmount
+    ) public onlyXDomain onlyDispatcher {
+        if (uint256(keccak256(abi.encodePacked(originalOwner, collection, tokenId))) != fractionId) {
             revert("only the owner may fractionalize on the collection");
         }
 
@@ -93,9 +107,9 @@ contract Fractionalizer is ERC1155SupplyUpgradeable, UUPSUpgradeable, OwnableUpg
             revert("token is already fractionalized");
         }
 
-        fractionalized[fractionId] = Fractionalized(collection, tokenId, fractionsAmount, txL1OriginAddr, agreementHash, IERC20(address(0)), 0);
+        fractionalized[fractionId] = Fractionalized(collection, tokenId, fractionsAmount, originalOwner, agreementHash, IERC20(address(0)), 0);
 
-        _mint(txL1OriginAddr, fractionId, fractionsAmount, "");
+        _mint(originalOwner, fractionId, fractionsAmount, "");
         //todo: if we want to take a protocol fee, this might be agood point of doing so.
     }
 
@@ -112,16 +126,11 @@ contract Fractionalizer is ERC1155SupplyUpgradeable, UUPSUpgradeable, OwnableUpg
 
     //TODO: important: *this* must only be callable with a proof that the original trade has occurred
     //otherwise we must restrict this call to the "trusted" original owner
-    function afterSale(uint256 fractionId, address paymentToken, uint256 paidPrice) public onlyXDomain {
+    function afterSale(uint256 fractionId, address paymentToken, uint256 paidPrice) public onlyXDomain onlyDispatcher {
         Fractionalized storage frac = fractionalized[fractionId];
-        address txL1OriginAddr = crossDomainMessenger.xDomainMessageSender();
-        //todo: this should be enforced by the dispatcher contract
-        if (txL1OriginAddr != frac.originalOwner) {
-            revert("only callable by original owner");
-        }
 
+        //TODO: this is a warning, we still could proceed, since it's too late here anyway ;)
         // if (paymentToken.balanceOf(address(this)) < askPrice) {
-        //     //todo: this is warning, we still could proceed, since it's too late here anyway ;)
         //     revert("the fulfillment doesn't match the ask");
         // }
         frac.paymentToken = IERC20(paymentToken);

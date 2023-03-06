@@ -25,6 +25,10 @@ contract FractionalizerL2Dispatcher is UUPSUpgradeable, OwnableUpgradeable {
 
     mapping(uint256 => Fractionalized) public fractionalized;
 
+    //good luck figuring the right value for this one:
+    //https://community.optimism.io/docs/developers/bridge/messaging/#communication-basics-between-layers
+    uint32 constant MIN_GASLIMIT = 1_000_000;
+
     function initialize(SchmackoSwap _schmackoSwap, ContractRegistry _registry) public initializer {
         __UUPSUpgradeable_init();
         __Ownable_init();
@@ -45,25 +49,31 @@ contract FractionalizerL2Dispatcher is UUPSUpgradeable, OwnableUpgradeable {
             revert("can only fractionalize ERC1155 tokens with a supply of 1");
         }
 
-        if (collection.balanceOf(msg.sender, tokenId) != 1) {
+        if (collection.balanceOf(_msgSender(), tokenId) != 1) {
             revert("only owner can initialize fractions");
         }
 
-        uint256 fractionId = uint256(keccak256(abi.encodePacked(msg.sender, collection, tokenId)));
-        fractionalized[fractionId] = Fractionalized(collection, tokenId, msg.sender, 0);
+        uint256 fractionId = uint256(keccak256(abi.encodePacked(_msgSender(), collection, tokenId)));
+        fractionalized[fractionId] = Fractionalized(collection, tokenId, _msgSender(), 0);
 
-        bytes memory message =
-            abi.encodeWithSignature("fractionalizeUniqueERC1155(uint256,bytes32,uint256)", fractionId, agreementHash, fractionsAmount);
+        bytes memory message = abi.encodeWithSignature(
+            "fractionalizeUniqueERC1155(uint256,address,uint256,address,bytes32,uint256)",
+            fractionId,
+            collection,
+            tokenId,
+            _msgSender(),
+            agreementHash,
+            fractionsAmount
+        );
 
         //alternatively: transfer the NFT to Fractionalizer so it can't be transferred while fractionalized
         //collection.safeTransferFrom(_msgSender(), address(this), tokenId, 1, "");
 
         address crossDomainMessengerAddr = registry.safeGet("CrossdomainMessenger");
-        ICrossDomainMessenger(crossDomainMessengerAddr).sendMessage(
-            registry.safeGet("FractionalizerL2"),
-            message,
-            1_000_000 // within the free gas limit amount
-        );
+
+        ICrossDomainMessenger(crossDomainMessengerAddr).sendMessage(registry.safeGet("FractionalizerL2"), message, 250_000);
+        //MIN_GASLIMIT // within the free gas limit amount
+
         return fractionId;
     }
 
@@ -110,9 +120,7 @@ contract FractionalizerL2Dispatcher is UUPSUpgradeable, OwnableUpgradeable {
             }
         }
 
-        //good luck figuring the reason for this one out:
-        uint32 _minGasLimit = 20_000;
-        IL1ERC20Bridge(bridgeAddr).depositERC20To(address(_paymentToken), tokenL2Address, fractionalizerAddrL2, askPrice, _minGasLimit, "");
+        IL1ERC20Bridge(bridgeAddr).depositERC20To(address(_paymentToken), tokenL2Address, fractionalizerAddrL2, askPrice, MIN_GASLIMIT, "");
 
         //initiate sale on L2
         //todo: the bridged tokens should arrive at L2 first for this to work.
@@ -123,7 +131,7 @@ contract FractionalizerL2Dispatcher is UUPSUpgradeable, OwnableUpgradeable {
         ICrossDomainMessenger(crossDomainMessengerAddr).sendMessage(
             fractionalizerAddrL2,
             message,
-            1_000_000 // within the free gas limit amount
+            MIN_GASLIMIT // within the free gas limit amount
         );
     }
 

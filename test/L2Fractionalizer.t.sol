@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
 import "forge-std/Test.sol";
@@ -23,6 +23,7 @@ contract L2FractionalizerTest is Test {
     address originalOwner = makeAddr("daoMultisig");
     address ipnftBuyer = makeAddr("ipnftbuyer");
     address ipnftContract = makeAddr("ipnftv21");
+    address L1DispatcherContract = makeAddr("L1Dispatcher");
 
     //Alice, Bob and Charlie are fraction holders
     address alice = makeAddr("alice");
@@ -57,7 +58,7 @@ contract L2FractionalizerTest is Test {
             )
         );
         fractionalizer.initialize();
-
+        fractionalizer.setFractionalizerDispatcherL1(L1DispatcherContract);
         //fractionalizer.setFeeReceiver(protocolOwner);
 
         vm.stopPrank();
@@ -67,8 +68,8 @@ contract L2FractionalizerTest is Test {
         fractionId = uint256(keccak256(abi.encodePacked(originalOwner, ipnftContract, uint256(1))));
 
         vm.startPrank(PREDEPLOYED_XDOMAIN_MESSENGER);
-        xDomainMessenger.setSender(originalOwner);
-        fractionalizer.fractionalizeUniqueERC1155(fractionId, ipnftContract, uint256(1), agreementHash, 100_000);
+        xDomainMessenger.setSender(L1DispatcherContract);
+        fractionalizer.fractionalizeUniqueERC1155(fractionId, ipnftContract, uint256(1), originalOwner, agreementHash, 100_000);
         vm.stopPrank();
     }
 
@@ -112,10 +113,10 @@ contract L2FractionalizerTest is Test {
         uint256 fractionId = helpInitializeFractions();
 
         vm.startPrank(PREDEPLOYED_XDOMAIN_MESSENGER);
-        xDomainMessenger.setSender(originalOwner);
+        xDomainMessenger.setSender(L1DispatcherContract);
 
         vm.expectRevert("token is already fractionalized");
-        fractionalizer.fractionalizeUniqueERC1155(fractionId, ipnftContract, uint256(1), agreementHash, 100_000);
+        fractionalizer.fractionalizeUniqueERC1155(fractionId, ipnftContract, uint256(1), originalOwner, agreementHash, 100_000);
         vm.stopPrank();
     }
 
@@ -136,7 +137,7 @@ contract L2FractionalizerTest is Test {
         vm.stopPrank();
 
         vm.startPrank(PREDEPLOYED_XDOMAIN_MESSENGER);
-        xDomainMessenger.setSender(originalOwner);
+        xDomainMessenger.setSender(L1DispatcherContract);
 
         //todo: this shall be callable by anyone but it must be ensured on L2
         //that the deal really happened.
@@ -172,7 +173,7 @@ contract L2FractionalizerTest is Test {
         vm.stopPrank();
 
         vm.startPrank(PREDEPLOYED_XDOMAIN_MESSENGER);
-        xDomainMessenger.setSender(originalOwner);
+        xDomainMessenger.setSender(L1DispatcherContract);
         fractionalizer.afterSale(fractionId, address(erc20), 1_000_000 ether);
         vm.stopPrank();
 
