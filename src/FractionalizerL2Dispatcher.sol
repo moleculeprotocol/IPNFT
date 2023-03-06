@@ -1,14 +1,18 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import { IERC1155Supply } from "./IERC1155Supply.sol";
+import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { ICrossDomainMessenger } from "@eth-optimism/contracts/libraries/bridge/ICrossDomainMessenger.sol";
 import { IL1ERC20Bridge } from "@eth-optimism/contracts/L1/messaging/IL1ERC20Bridge.sol";
-import { SchmackoSwap, ListingState } from "./SchmackoSwap.sol";
-import { ContractRegistry } from "./ContractRegistry.sol";
 
-contract FractionalizerL2Dispatcher {
+import { IERC1155Supply } from "./IERC1155Supply.sol";
+import { ContractRegistry } from "./ContractRegistry.sol";
+import { SchmackoSwap, ListingState } from "./SchmackoSwap.sol";
+
+contract FractionalizerL2Dispatcher is UUPSUpgradeable, OwnableUpgradeable {
     struct Fractionalized {
         IERC1155Supply collection;
         uint256 tokenId;
@@ -21,9 +25,16 @@ contract FractionalizerL2Dispatcher {
 
     mapping(uint256 => Fractionalized) public fractionalized;
 
-    constructor(SchmackoSwap _schmackoSwap, ContractRegistry _registry) {
+    function initialize(SchmackoSwap _schmackoSwap, ContractRegistry _registry) public initializer {
+        __UUPSUpgradeable_init();
+        __Ownable_init();
+
         schmackoSwap = _schmackoSwap;
         registry = _registry;
+    }
+
+    constructor() {
+        _disableInitializers();
     }
 
     function initializeFractionalization(IERC1155Supply collection, uint256 tokenId, bytes32 agreementHash, uint256 fractionsAmount)
@@ -115,4 +126,7 @@ contract FractionalizerL2Dispatcher {
             1_000_000 // within the free gas limit amount
         );
     }
+
+    /// @dev see UUPSUpgradeable
+    function _authorizeUpgrade(address /*newImplementation*/ ) internal override onlyOwner { }
 }

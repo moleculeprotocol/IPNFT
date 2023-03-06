@@ -4,6 +4,7 @@ pragma solidity ^0.8.17;
 import "forge-std/Test.sol";
 import { ICrossDomainMessenger } from "@eth-optimism/contracts/libraries/bridge/ICrossDomainMessenger.sol";
 import { IL1ERC20Bridge } from "@eth-optimism/contracts/L1/messaging/IL1ERC20Bridge.sol";
+import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
@@ -14,7 +15,6 @@ import { AuthorizeAll } from "./helpers/AuthorizeAll.sol";
 import { IPNFTMintHelper } from "./IPNFTMintHelper.sol";
 
 import { IPNFT } from "../src/IPNFT.sol";
-import { UUPSProxy } from "../src/UUPSProxy.sol";
 import { Fractionalizer } from "../src/Fractionalizer.sol";
 import { ContractRegistry } from "../src/ContractRegistry.sol";
 import { FractionalizerL2Dispatcher } from "../src/FractionalizerL2Dispatcher.sol";
@@ -49,7 +49,7 @@ contract L1FractionalizerDispatcher is Test {
 
         vm.startPrank(deployer);
         IPNFT implementationV2 = new IPNFT();
-        UUPSProxy proxy = new UUPSProxy(address(implementationV2), "");
+        ERC1967Proxy proxy = new ERC1967Proxy(address(implementationV2), "");
         IPNFT _ipnft = IPNFT(address(proxy));
         _ipnft.initialize();
         ipnft = IERC1155Supply(address(_ipnft));
@@ -66,7 +66,17 @@ contract L1FractionalizerDispatcher is Test {
         registry.register("StandardBridge", address(new MockStandardBridge()));
         registry.register("FractionalizerL2", makeAddr("fractionalizerAddrL2"));
         registry.register(address(myToken), makeAddr("myTokenOnL2"));
-        fractionalizer = new FractionalizerL2Dispatcher(schmackoSwap, registry);
+
+        fractionalizer = FractionalizerL2Dispatcher(
+            address(
+                new ERC1967Proxy(
+                    address(
+                        new FractionalizerL2Dispatcher()
+                    ), ""
+                )
+            )
+        );
+        fractionalizer.initialize(schmackoSwap, registry);
 
         vm.stopPrank();
 
