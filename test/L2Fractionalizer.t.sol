@@ -23,7 +23,7 @@ contract L2FractionalizerTest is Test {
     address originalOwner = makeAddr("daoMultisig");
     address ipnftBuyer = makeAddr("ipnftbuyer");
     address ipnftContract = makeAddr("ipnftv21");
-    address L1DispatcherContract = makeAddr("L1Dispatcher");
+    address FakeL1DispatcherContract = makeAddr("L1Dispatcher");
 
     //Alice, Bob and Charlie are fraction holders
     address alice = makeAddr("alice");
@@ -58,7 +58,7 @@ contract L2FractionalizerTest is Test {
             )
         );
         fractionalizer.initialize();
-        fractionalizer.setFractionalizerDispatcherL1(L1DispatcherContract);
+        fractionalizer.setFractionalizerDispatcherL1(FakeL1DispatcherContract);
         //fractionalizer.setFeeReceiver(protocolOwner);
 
         vm.stopPrank();
@@ -67,10 +67,11 @@ contract L2FractionalizerTest is Test {
     function helpInitializeFractions() internal returns (uint256 fractionId) {
         fractionId = uint256(keccak256(abi.encodePacked(originalOwner, ipnftContract, uint256(1))));
 
-        vm.startPrank(PREDEPLOYED_XDOMAIN_MESSENGER);
-        xDomainMessenger.setSender(L1DispatcherContract);
-        fractionalizer.fractionalizeUniqueERC1155(fractionId, ipnftContract, uint256(1), originalOwner, agreementHash, 100_000);
-        vm.stopPrank();
+        xDomainMessenger.setSender(FakeL1DispatcherContract);
+        bytes memory message =
+            abi.encodeCall(Fractionalizer.fractionalizeUniqueERC1155, (fractionId, ipnftContract, uint256(1), originalOwner, agreementHash, 100_000));
+
+        xDomainMessenger.sendMessage(address(fractionalizer), message, 1_900_000);
     }
 
     function testIssueFractions() public {
@@ -112,12 +113,12 @@ contract L2FractionalizerTest is Test {
     function testCanBeFractionalizedOnlyOnce() public {
         uint256 fractionId = helpInitializeFractions();
 
-        vm.startPrank(PREDEPLOYED_XDOMAIN_MESSENGER);
-        xDomainMessenger.setSender(L1DispatcherContract);
-
-        vm.expectRevert("token is already fractionalized");
-        fractionalizer.fractionalizeUniqueERC1155(fractionId, ipnftContract, uint256(1), originalOwner, agreementHash, 100_000);
-        vm.stopPrank();
+        vm.expectRevert("relay failed: token is already fractionalized");
+        xDomainMessenger.sendMessage(
+            address(fractionalizer),
+            abi.encodeCall(Fractionalizer.fractionalizeUniqueERC1155, (fractionId, ipnftContract, uint256(1), originalOwner, agreementHash, 200_000)),
+            1_900_000
+        );
     }
 
     // function helpCreateListing(uint256 price) public returns (uint256 listingId) {
@@ -137,7 +138,7 @@ contract L2FractionalizerTest is Test {
         vm.stopPrank();
 
         vm.startPrank(PREDEPLOYED_XDOMAIN_MESSENGER);
-        xDomainMessenger.setSender(L1DispatcherContract);
+        xDomainMessenger.setSender(FakeL1DispatcherContract);
 
         //todo: this shall be callable by anyone but it must be ensured on L2
         //that the deal really happened.
@@ -173,7 +174,7 @@ contract L2FractionalizerTest is Test {
         vm.stopPrank();
 
         vm.startPrank(PREDEPLOYED_XDOMAIN_MESSENGER);
-        xDomainMessenger.setSender(L1DispatcherContract);
+        xDomainMessenger.setSender(FakeL1DispatcherContract);
         fractionalizer.afterSale(fractionId, address(erc20), 1_000_000 ether);
         vm.stopPrank();
 
