@@ -217,6 +217,29 @@ check that original owner owns 100000 fractions now
 
 > 100000
 
+get token uri
+
+`cast call --rpc-url $ANVIL_RPC_URL 0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9 "uri(uint256)" 0xe0ab3d7476064dbd63263d0632e299da8528ff449841b11a29555ac405a090cd | cast --to-ascii`
+
+after decoding from b64:
+
+```json
+{
+  "name": "Fractions of 0xcf7ed3acca5a467e9e704c703e8d87f634fb0fc9 / 1",
+  "description": "this token represents fractions of the underlying asset",
+  "decimals": 0,
+  "external_url": "https://molecule.to",
+  "image": "",
+  "properties": {
+    "collection": "0xcf7ed3acca5a467e9e704c703e8d87f634fb0fc9",
+    "token_id": 1,
+    "agreement_hash": "0x61677265656d656e740000000000000000000000000000000000000000000000",
+    "original_owner": "0x70997970c51812dc3a010c7d01b50e0d17dc79c8",
+    "supply": 100000
+  }
+}
+```
+
 ## General: Interacting with cast
 
 `cast` is another CLI command installed by Foundry and allows you to query/manipulate your deployed contracts easily. Find out more here: <https://book.getfoundry.sh/cast/>
