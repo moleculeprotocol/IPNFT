@@ -10,6 +10,10 @@ import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/O
 import { IERC1155 } from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import { ERC1155ReceiverUpgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC1155/utils/ERC1155ReceiverUpgradeable.sol";
 import { CountersUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/CountersUpgradeable.sol";
+import { Base64 } from "@openzeppelin/contracts/utils/Base64.sol";
+
+import { ListingState } from "./SchmackoSwap.sol";
+import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IERC1155Supply } from "./IERC1155Supply.sol";
@@ -183,5 +187,46 @@ contract Fractionalizer is ERC1155SupplyUpgradeable, UUPSUpgradeable, OwnableUpg
         onlyOwner // solhint-disable-next-line no-empty-blocks
     {
         //empty block
+    }
+
+    function uri(uint256 id) public view virtual override returns (string memory) {
+        Fractionalized memory frac = fractionalized[id];
+
+        string memory collection = Strings.toHexString(frac.collection);
+        string memory tokenId = Strings.toString(frac.tokenId);
+
+        string memory props = string(
+            abi.encodePacked(
+                '"properties": {',
+                '"collection": "',
+                collection,
+                '","token_id": ',
+                tokenId,
+                ',"agreement_hash": "',
+                Strings.toHexString(uint256(frac.agreementHash)),
+                '","original_owner": "',
+                Strings.toHexString(frac.originalOwner),
+                '","supply": ',
+                Strings.toString(frac.totalIssued),
+                "}"
+            )
+        );
+
+        return string(
+            abi.encodePacked(
+                "data:application/json;base64,",
+                Base64.encode(
+                    abi.encodePacked(
+                        '{"name": "Fractions of ',
+                        collection,
+                        " / ",
+                        tokenId,
+                        '","description": "this token represents fractions of the underlying asset","decimals": 0,"external_url": "https://molecule.to","image": "",',
+                        props,
+                        "}"
+                    )
+                )
+            )
+        );
     }
 }
