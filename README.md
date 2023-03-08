@@ -158,7 +158,43 @@ We also included helpers to quickly deploy updated versions of the contracts. Yo
 - verify an EIP1967 proxy
   `ETHERSCAN_API_KEY=... forge verify-contract --chain-id 420 <proxy address> ERC1967Proxy --constructor-args $(cast abi-encode "constructor(address,bytes)" "<initial implementation address>" "")`
 
-## Interacting with cast
+#### mocking xdomain interactions so you can call the Fractionalizer's methods directly
+
+forge script --rpc-url $ANVIL_RPC_URL script/dev/DeployMockedFractionalizer.s.sol:DeployMockedFractionalizer --private-key $PRIVATE_KEY -vvv --broadcast
+
+> mock xdomain messenger 0x5FbDB2315678afecb367f032d93F642f64180aa3
+> fractionalizer l2 0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9
+
+compute a fraction token id (you can use chisel) (originalOwner,collection,tokenid) for demonstration reasons we're using the fractionalizer NFT as collection address, this normally would be your IPNFT contract:
+`keccak256(abi.encodePacked(0x70997970C51812dc3A010C7d01b50e0d17dc79C8, 0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9, uint256(1)))`
+
+> 0xe0ab3d7476064dbd63263d0632e299da8528ff449841b11a29555ac405a090cd
+
+compute some agreement hash
+`cast --format-bytes32-string "agreement"`
+
+> 0x61677265656d656e740000000000000000000000000000000000000000000000
+
+build the call signature / message
+`cast calldata "fractionalizeUniqueERC1155(uint256,address,uint256,address,bytes32,uint256)" 0xe0ab3d7476064dbd63263d0632e299da8528ff449841b11a29555ac405a090cd 0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9 1 0x70997970C51812dc3A010C7d01b50e0d17dc79C8 0x61677265656d656e740000000000000000000000000000000000000000000000 100000`
+
+> 0x327faeb2e0ab3d7476064dbd63263d0632e299da8528ff449841b11a29555ac405a090cd000000000000000000000000cf7ed3acca5a467e9e704c703e8d87f634fb0fc9000000000000000000000000000000000000000000000000000000000000000100000000000000000000000070997970c51812dc3a010c7d01b50e0d17dc79c861677265656d656e74000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000186a0
+
+call through the mocked message sender
+
+`cast send --rpc-url $ANVIL_RPC_URL --private-key $PRIVATE_KEY 0x5FbDB2315678afecb367f032d93F642f64180aa3 "sendMessage(address,bytes,uint32)" "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9" 0x327faeb2e0ab3d7476064dbd63263d0632e299da8528ff449841b11a29555ac405a090cd000000000000000000000000cf7ed3acca5a467e9e704c703e8d87f634fb0fc9000000000000000000000000000000000000000000000000000000000000000100000000000000000000000070997970c51812dc3a010c7d01b50e0d17dc79c861677265656d656e74000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000186a0 1000000`
+
+check that original owner owns 100000 fractions now
+
+`cast call --rpc-url $ANVIL_RPC_URL 0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9 "totalSupply(uint256)" 0xe0ab3d7476064dbd63263d0632e299da8528ff449841b11a29555ac405a090cd`
+
+> 0x00000000000000000000000000000000000000000000000000000000000186a0
+
+`cast --to-base 0x00000000000000000000000000000000000000000000000000000000000186a0 10`
+
+> 100000
+
+## General: Interacting with cast
 
 `cast` is another CLI command installed by Foundry and allows you to query/manipulate your deployed contracts easily. Find out more here: <https://book.getfoundry.sh/cast/>
 
