@@ -121,14 +121,6 @@ contract L2FractionalizerTest is Test {
         );
     }
 
-    // function helpCreateListing(uint256 price) public returns (uint256 listingId) {
-    //     ipnft.setApprovalForAll(address(schmackoSwap), true);
-    //     listingId = schmackoSwap.listFor(ipnft, 1, erc20, price, address(fractionalizer));
-
-    //     schmackoSwap.changeBuyerAllowance(listingId, ipnftBuyer, true);
-    //     return listingId;
-    // }
-
     function testStartClaimingPhase() public {
         uint256 fractionId = helpInitializeFractions();
 
@@ -140,11 +132,9 @@ contract L2FractionalizerTest is Test {
         vm.startPrank(PREDEPLOYED_XDOMAIN_MESSENGER);
         xDomainMessenger.setSender(FakeL1DispatcherContract);
 
-        //todo: this shall be callable by anyone but it must be ensured on L2
-        //that the deal really happened.
-        //todo: prove we cannot start withdrawals before this point
         fractionalizer.afterSale(fractionId, address(erc20), 1_000_000 ether);
         vm.stopPrank();
+        //todo: prove we cannot start withdrawals before this point
 
         vm.startPrank(originalOwner);
         vm.expectRevert("already in claiming phase");
@@ -169,7 +159,7 @@ contract L2FractionalizerTest is Test {
         vm.startPrank(alice);
         //someone must start the claiming phase first
         vm.expectRevert("claiming not available (yet)");
-        fractionalizer.burnToWithdrawShare(fractionId, v, r, s);
+        fractionalizer.burnToWithdrawShare(fractionId, abi.encodePacked(r, s, v));
         assertFalse(fractionalizer.signedTerms(fractionId, alice));
         vm.stopPrank();
 
@@ -181,7 +171,7 @@ contract L2FractionalizerTest is Test {
         vm.startPrank(alice);
         (, uint256 amount) = fractionalizer.claimableTokens(fractionId, alice);
         assertEq(amount, 250_000 ether);
-        fractionalizer.burnToWithdrawShare(fractionId, v, r, s);
+        fractionalizer.burnToWithdrawShare(fractionId, abi.encodePacked(r, s, v));
         vm.stopPrank();
 
         assertEq(erc20.balanceOf(alice), 250_000 ether);
@@ -208,7 +198,7 @@ contract L2FractionalizerTest is Test {
         (v, r, s) = vm.sign(charliePk, keccak256(bytes(fractionalizer.specificTermsV1(fractionId))));
 
         vm.startPrank(charlie);
-        fractionalizer.acceptTerms(fractionId, v, r, s);
+        fractionalizer.acceptTerms(fractionId, abi.encodePacked(r, s, v));
         fractionalizer.burnToWithdrawShare(fractionId);
         vm.stopPrank();
 
@@ -220,6 +210,14 @@ contract L2FractionalizerTest is Test {
     //     //cant fractionalize 1155 tokens with a supply > 1
     // }
 
+    // function testThatContractSignaturesAreAccepted() public {
+    //     //craft an eip1271 signature
+    // }
+
+    // function testMetaTxAreAcceptedForTransfers() public {
+    //     //call the transfer methods with signed meta transactions
+    // }
+
     function testProveSigAndAcceptTerms() public {
         uint256 fractionId = helpInitializeFractions();
 
@@ -228,13 +226,12 @@ contract L2FractionalizerTest is Test {
         bytes32 termsHash = keccak256(bytes(terms));
 
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(alicePk, termsHash);
-
-        address signer = fractionalizer.signedBy(fractionId, v, r, s);
-        assertEq(signer, alice);
+        bytes memory xsignature = abi.encodePacked(r, s, v);
+        assertTrue(fractionalizer.isValidSignature(fractionId, alice, xsignature));
 
         assertFalse(fractionalizer.signedTerms(fractionId, alice));
         vm.startPrank(alice);
-        fractionalizer.acceptTerms(fractionId, v, r, s);
+        fractionalizer.acceptTerms(fractionId, xsignature);
         vm.stopPrank();
         assertTrue(fractionalizer.signedTerms(fractionId, alice));
     }
