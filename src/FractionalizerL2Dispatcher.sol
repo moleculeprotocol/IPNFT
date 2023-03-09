@@ -12,6 +12,11 @@ import { IERC1155Supply } from "./IERC1155Supply.sol";
 import { ContractRegistry } from "./ContractRegistry.sol";
 import { SchmackoSwap, ListingState } from "./SchmackoSwap.sol";
 
+/**
+ * @title FractionalizerL2Dispatcher
+ * @author molecule.to
+ * @notice controls fractionalizer contract on L2
+ */
 contract FractionalizerL2Dispatcher is UUPSUpgradeable, OwnableUpgradeable {
     struct Fractionalized {
         IERC1155Supply collection;
@@ -20,23 +25,32 @@ contract FractionalizerL2Dispatcher is UUPSUpgradeable, OwnableUpgradeable {
         uint256 fulfilledListingId;
     }
 
+    uint32 constant MIN_GASLIMIT = 1_000_000;
+
     ContractRegistry registry;
     SchmackoSwap schmackoSwap;
 
     mapping(uint256 => Fractionalized) public fractionalized;
 
-    function initialize(SchmackoSwap _schmackoSwap, ContractRegistry _registry) public initializer {
-        __UUPSUpgradeable_init();
-        __Ownable_init();
-
-        schmackoSwap = _schmackoSwap;
-        registry = _registry;
-    }
-
     constructor() {
         _disableInitializers();
     }
 
+    function initialize(SchmackoSwap _schmackoSwap, ContractRegistry _registry) public initializer {
+        __UUPSUpgradeable_init();
+        __Ownable_init();
+        schmackoSwap = _schmackoSwap;
+        registry = _registry;
+    }
+
+    /**
+     * @notice call this as the owner of a singular token on an IERC1155 collection to issue fractions for it on L2
+     *
+     * @param collection      IERC1155  any erc1155 token collection that signals their token amount
+     * @param tokenId          uint256  the token id on the origin collection
+     * @param agreementHash    bytes32  a content hash that identifies the terms underlying the issued fractions
+     * @param fractionsAmount  uint256  the initial amount of fractions issued
+     */
     function initializeFractionalization(IERC1155Supply collection, uint256 tokenId, bytes32 agreementHash, uint256 fractionsAmount)
         external
         returns (uint256)
@@ -59,15 +73,17 @@ contract FractionalizerL2Dispatcher is UUPSUpgradeable, OwnableUpgradeable {
         //collection.safeTransferFrom(_msgSender(), address(this), tokenId, 1, "");
 
         address crossDomainMessengerAddr = registry.safeGet("CrossdomainMessenger");
-        ICrossDomainMessenger(crossDomainMessengerAddr).sendMessage(
-            registry.safeGet("FractionalizerL2"),
-            message,
-            1_000_000 // within the free gas limit amount
-        );
+        ICrossDomainMessenger(crossDomainMessengerAddr).sendMessage(registry.safeGet("FractionalizerL2"), message, MIN_GASLIMIT);
+
         return fractionId;
     }
 
-    /// @notice Anyone can call this once they observe the sale to activate the share payout phase
+    /**
+     * @notice Anyone can call this after having observed the sale to activate the share payout phase on L2
+     *
+     * @param fractionId    uint256     the unique fraction id
+     * @param listingId     uint256     the listing id on Schmackoswap
+     */
     function afterSale(uint256 fractionId, uint256 listingId) external {
         Fractionalized storage frac = fractionalized[fractionId];
         if (frac.fulfilledListingId != 0) {
