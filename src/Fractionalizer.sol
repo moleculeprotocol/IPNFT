@@ -1,16 +1,13 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import "forge-std/console.sol";
-
-//import { ERC1155Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
 import { ERC1155SupplyUpgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC1155/extensions/ERC1155SupplyUpgradeable.sol";
 import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import { IERC1155 } from "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import { ERC1155ReceiverUpgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC1155/utils/ERC1155ReceiverUpgradeable.sol";
 import { Base64 } from "@openzeppelin/contracts/utils/Base64.sol";
-
+import { SignatureChecker } from "@openzeppelin/contracts/utils/cryptography/SignatureChecker.sol";
 import { ListingState } from "./SchmackoSwap.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 
@@ -20,21 +17,27 @@ import { IERC1155Supply } from "./IERC1155Supply.sol";
 import { ICrossDomainMessenger } from "@eth-optimism/contracts/libraries/bridge/ICrossDomainMessenger.sol";
 import "@openzeppelin/contracts/crosschain/optimism/CrossChainEnabledOptimism.sol";
 
+struct Fractionalized {
+    address collection;
+    uint256 tokenId;
+    //needed to remember an individual's share after others burn their tokens
+    uint256 totalIssued;
+    address originalOwner;
+    bytes32 agreementHash;
+    IERC20 paymentToken;
+    uint256 paidPrice;
+}
+
 /// @title Fractionalizer
 /// @author molecule.to
 /// @notice only deployed on L2, controlled by xdomain messages
-
 contract Fractionalizer is ERC1155SupplyUpgradeable, UUPSUpgradeable, OwnableUpgradeable {
-    struct Fractionalized {
-        address collection;
-        uint256 tokenId;
-        //needed to remember an individual's share after others burn their tokens
-        uint256 totalIssued;
-        address originalOwner;
-        bytes32 agreementHash;
-        IERC20 paymentToken;
-        uint256 paidPrice;
-    }
+    event FractionsCreated(address indexed collection, uint256 indexed tokenId, address emitter, uint256 indexed fractionId, bytes32 agreementHash);
+    event SalesActivated(uint256 fractionId, address paymentToken, uint256 paidPrice);
+    event TermsAccepted(uint256 indexed fractionId, address indexed signer);
+    event SharesClaimed(uint256 indexed fractionId, address indexed claimer, uint256 amount);
+    //listen for mints instead:
+    //event FractionsEmitted(uint256 fractionId, uint256 amount);
 
     address feeReceiver;
     uint256 fractionalizationPercentage;
@@ -113,6 +116,7 @@ contract Fractionalizer is ERC1155SupplyUpgradeable, UUPSUpgradeable, OwnableUpg
 
         _mint(originalOwner, fractionId, fractionsAmount, "");
         //todo: if we want to take a protocol fee, this might be agood point of doing so.
+        emit FractionsCreated(collection, tokenId, originalOwner, fractionId, agreementHash);
     }
 
     function increaseFractions(uint256 fractionId, uint256 fractionsAmount) external notClaiming(fractionId) {
@@ -126,8 +130,9 @@ contract Fractionalizer is ERC1155SupplyUpgradeable, UUPSUpgradeable, OwnableUpg
         _mint(_fractionalized.originalOwner, fractionId, fractionsAmount, "");
     }
 
-    //TODO: important: *this* must only be callable with a proof that the original trade has occurred
-    //otherwise we must restrict this call to the "trusted" original owner
+    /**
+     * @dev since we gate this with `onlyDispatcher`, we can assume that L1 has checked that the trade has actually occurred.
+     */
     function afterSale(uint256 fractionId, address paymentToken, uint256 paidPrice) public onlyXDomain onlyDispatcher {
         Fractionalized storage frac = fractionalized[fractionId];
 
@@ -137,6 +142,7 @@ contract Fractionalizer is ERC1155SupplyUpgradeable, UUPSUpgradeable, OwnableUpg
         // }
         frac.paymentToken = IERC20(paymentToken);
         frac.paidPrice = paidPrice;
+        emit SalesActivated(fractionId, paymentToken, paidPrice);
     }
 
     function claimableTokens(uint256 fractionId, address tokenHolder) public view returns (IERC20 paymentToken, uint256 amount) {
@@ -151,8 +157,8 @@ contract Fractionalizer is ERC1155SupplyUpgradeable, UUPSUpgradeable, OwnableUpg
         return (frac.paymentToken, balance * (frac.paidPrice / frac.totalIssued));
     }
 
-    function burnToWithdrawShare(uint256 fractionId, uint8 v, bytes32 r, bytes32 s) public {
-        acceptTerms(fractionId, v, r, s);
+    function burnToWithdrawShare(uint256 fractionId, bytes memory signature) public {
+        acceptTerms(fractionId, signature);
         burnToWithdrawShare(fractionId);
     }
 
@@ -192,20 +198,21 @@ contract Fractionalizer is ERC1155SupplyUpgradeable, UUPSUpgradeable, OwnableUpg
         );
     }
 
-    //todo consider using https://docs.openzeppelin.com/contracts/4.x/utilities#checking_signatures_on_chain to make this safer.
-    function signedBy(uint256 fractionId, uint8 v, bytes32 r, bytes32 s) public view returns (address) {
+    function isValidSignature(uint256 fractionId, address signer, bytes memory signature) public view returns (bool) {
         bytes32 termsHash = keccak256(bytes(specificTermsV1(fractionId)));
-        return ecrecover(termsHash, v, r, s);
+        return SignatureChecker.isValidSignatureNow(signer, termsHash, signature);
     }
 
-    //todo make this eip1271 compatible
-    function acceptTerms(uint256 fractionId, uint8 v, bytes32 r, bytes32 s) public {
-        address signer = signedBy(fractionId, v, r, s);
-        //todo discuss whether only the signer himself should be able to call this
-        // if (signedBy != _msgSender()) {
-        //     revert("you're not the one who signed the terms");
-        // }
-        signedTerms[fractionId][signer] = true;
+    /**
+     * @param fractionId fraction id
+     * @param signature bytes encoded signature, for eip155: abi.encodePacked(r, s, v)
+     */
+    function acceptTerms(uint256 fractionId, bytes memory signature) public {
+        if (!isValidSignature(fractionId, _msgSender(), signature)) {
+            revert("signature not valid");
+        }
+        signedTerms[fractionId][_msgSender()] = true;
+        emit TermsAccepted(fractionId, _msgSender());
     }
     // function supportsInterface(bytes4 interfaceId) public view virtual override (ERC1155ReceiverUpgradeable, ERC1155Upgradeable) returns (bool) {
     //     return super.supportsInterface(interfaceId);
