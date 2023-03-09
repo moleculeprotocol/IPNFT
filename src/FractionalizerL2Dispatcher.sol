@@ -86,6 +86,31 @@ contract FractionalizerL2Dispatcher is UUPSUpgradeable, OwnableUpgradeable {
     }
 
     /**
+     * @notice initialize the sales phase manually
+     *
+     * @param   fractionId    uint256  the fraction id
+     * @param   paymentToken  IERC20   the paymen token contract address
+     * @param   price         uint256  the price the NFT has been sold for.
+     */
+    function afterSale(uint256 fractionId, IERC20 paymentToken, uint256 price) external {
+        Fractionalized storage frac = fractionalized[fractionId];
+        if (_msgSender() != frac.originalOwner) {
+            revert("only the original owner may initialize the sale phase manually");
+        }
+
+        //simulate a schmackoswap listing id
+        frac.fulfilledListingId = uint256(
+            keccak256(
+                abi.encodePacked(
+                    frac.collection, frac.tokenId, paymentToken, uint256(1), price, msg.sender, address(this), ListingState.FULFILLED, block.number
+                )
+            )
+        );
+        paymentToken.transferFrom(_msgSender(), address(this), price);
+        _startSalesPhase(fractionId, paymentToken, price);
+    }
+
+    /**
      * @notice Anyone can call this after having observed the sale to activate the share payout phase on L2
      *
      * @param fractionId    uint256     the unique fraction id
@@ -118,7 +143,10 @@ contract FractionalizerL2Dispatcher is UUPSUpgradeable, OwnableUpgradeable {
         //     revert("the fulfillment doesn't match the ask");
         // }
         frac.fulfilledListingId = listingId;
+        _startSalesPhase(fractionId, _paymentToken, askPrice);
+    }
 
+    function _startSalesPhase(uint256 fractionId, IERC20 _paymentToken, uint256 price) internal {
         //bridge ERC20 to L2, right here
         //https://community.optimism.io/docs/developers/bridge/standard-bridge/#
         address bridgeAddr = registry.safeGet("StandardBridge");
@@ -127,19 +155,19 @@ contract FractionalizerL2Dispatcher is UUPSUpgradeable, OwnableUpgradeable {
         address tokenL2Address = registry.safeGet(address(_paymentToken));
 
         //todo: the approval should be provided in general.
-        if (_paymentToken.allowance(address(this), bridgeAddr) < askPrice) {
-            if (!_paymentToken.approve(bridgeAddr, askPrice)) {
+        if (_paymentToken.allowance(address(this), bridgeAddr) < price) {
+            if (!_paymentToken.approve(bridgeAddr, price)) {
                 revert("approval failed");
             }
         }
 
-        IL1ERC20Bridge(bridgeAddr).depositERC20To(address(_paymentToken), tokenL2Address, fractionalizerAddrL2, askPrice, MIN_GASLIMIT, "");
+        IL1ERC20Bridge(bridgeAddr).depositERC20To(address(_paymentToken), tokenL2Address, fractionalizerAddrL2, price, MIN_GASLIMIT, "");
 
         //initiate sale on L2
         //todo: the bridged tokens should arrive at L2 first for this to work.
         //calling this from here ensures this is a valid sales phase intitialization
         //on L2 you cannot prove this!
-        bytes memory message = abi.encodeWithSignature("afterSale(uint256,address,uint256)", fractionId, address(_paymentToken), askPrice);
+        bytes memory message = abi.encodeWithSignature("afterSale(uint256,address,uint256)", fractionId, address(_paymentToken), price);
 
         ICrossDomainMessenger(crossDomainMessengerAddr).sendMessage(
             fractionalizerAddrL2,

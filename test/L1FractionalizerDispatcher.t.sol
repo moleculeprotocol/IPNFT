@@ -133,11 +133,37 @@ contract L1FractionalizerDispatcher is Test {
         erc20.approve(address(schmackoSwap), 1_000_000 ether);
         schmackoSwap.fulfill(listingId);
         vm.stopPrank();
+        assertEq(erc20.balanceOf(address(fractionalizer)), 1_000_000 ether);
 
         // this is wanted: *anyone* (!) can call this. This is an oracle call.
         vm.startPrank(charlie);
         fractionalizer.afterSale(fractionId, listingId);
         vm.stopPrank();
+
+        assertEq(erc20.balanceOf(address(fractionalizer)), 0);
+        (,,, uint256 fulfilledListingId) = fractionalizer.fractionalized(fractionId);
+        assertEq(listingId, fulfilledListingId);
+    }
+
+    function testManuallyStartClaimingPhase() public {
+        vm.startPrank(originalOwner);
+        uint256 fractionId = fractionalizer.initializeFractionalization(ipnft, 1, agreementHash, 100_000);
+        erc20.approve(address(fractionalizer), 1_000_000 ether);
+        ipnft.safeTransferFrom(originalOwner, ipnftBuyer, 1, 1, "");
+        vm.stopPrank();
+
+        vm.startPrank(ipnftBuyer);
+        erc20.transfer(originalOwner, 1_000_000 ether);
+        vm.stopPrank();
+
+        // this is wanted: *anyone* (!) can call this. This is an oracle call.
+        vm.startPrank(originalOwner);
+        fractionalizer.afterSale(fractionId, erc20, 1_000_000 ether);
+        vm.stopPrank();
+
+        assertEq(erc20.balanceOf(address(originalOwner)), 0);
+        (,,, uint256 fulfilledListingId) = fractionalizer.fractionalized(fractionId);
+        assertFalse(fulfilledListingId == 0);
     }
     //todo test claim shares can be transferred to others and are still redeemable
 
