@@ -11,6 +11,7 @@ import { Base64 } from "@openzeppelin/contracts/utils/Base64.sol";
 import { SignatureChecker } from "@openzeppelin/contracts/utils/cryptography/SignatureChecker.sol";
 import { ListingState } from "./SchmackoSwap.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
+import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IERC1155Supply } from "./IERC1155Supply.sol";
@@ -210,7 +211,7 @@ contract Fractionalizer is ERC1155SupplyUpgradeable, UUPSUpgradeable, OwnableUpg
     }
 
     function isValidSignature(uint256 fractionId, address signer, bytes memory signature) public view returns (bool) {
-        bytes32 termsHash = keccak256(bytes(specificTermsV1(fractionId)));
+        bytes32 termsHash = ECDSA.toEthSignedMessageHash(abi.encodePacked(specificTermsV1(fractionId)));
         return SignatureChecker.isValidSignatureNow(signer, termsHash, signature);
     }
 

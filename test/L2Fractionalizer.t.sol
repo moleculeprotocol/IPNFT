@@ -8,6 +8,7 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { ICrossDomainMessenger } from "@eth-optimism/contracts/libraries/bridge/ICrossDomainMessenger.sol";
 import { MockCrossDomainMessenger } from "./helpers/MockCrossDomainMessenger.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
 import { Fractionalizer } from "../src/Fractionalizer.sol";
 import { MyToken } from "../src/MyToken.sol";
@@ -152,7 +153,7 @@ contract L2FractionalizerTest is Test {
         erc20.transfer(address(fractionalizer), 1_000_000 ether);
         vm.stopPrank();
 
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(alicePk, keccak256(bytes(fractionalizer.specificTermsV1(fractionId))));
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(alicePk, ECDSA.toEthSignedMessageHash(abi.encodePacked(fractionalizer.specificTermsV1(fractionId))));
 
         vm.startPrank(alice);
         //someone must start the claiming phase first
@@ -193,7 +194,7 @@ contract L2FractionalizerTest is Test {
         (, uint256 claimableByCharlie) = fractionalizer.claimableTokens(fractionId, charlie);
         assertEq(claimableByCharlie, 200_000 ether);
 
-        (v, r, s) = vm.sign(charliePk, keccak256(bytes(fractionalizer.specificTermsV1(fractionId))));
+        (v, r, s) = vm.sign(charliePk, ECDSA.toEthSignedMessageHash(abi.encodePacked(fractionalizer.specificTermsV1(fractionId))));
 
         vm.startPrank(charlie);
         fractionalizer.acceptTerms(fractionId, abi.encodePacked(r, s, v));
@@ -221,7 +222,7 @@ contract L2FractionalizerTest is Test {
 
         string memory terms = fractionalizer.specificTermsV1(fractionId);
         console.log(terms);
-        bytes32 termsHash = keccak256(bytes(terms));
+        bytes32 termsHash = ECDSA.toEthSignedMessageHash(abi.encodePacked(terms));
 
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(alicePk, termsHash);
         bytes memory xsignature = abi.encodePacked(r, s, v);
