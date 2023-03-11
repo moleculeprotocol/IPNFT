@@ -167,7 +167,7 @@ contract FractionalizerL2Dispatcher is UUPSUpgradeable, OwnableUpgradeable {
         //todo: the bridged tokens should arrive at L2 first for this to work.
         //calling this from here ensures this is a valid sales phase intitialization
         //on L2 you cannot prove this!
-        bytes memory message = abi.encodeWithSignature("afterSale(uint256,address,uint256)", fractionId, address(_paymentToken), price);
+        bytes memory message = abi.encodeWithSignature("afterSale(uint256,address,uint256)", fractionId, tokenL2Address, price);
 
         ICrossDomainMessenger(crossDomainMessengerAddr).sendMessage(
             fractionalizerAddrL2,
