@@ -31,11 +31,11 @@ IP-NFTs allow their users to tokenize intellectual property. This repo contains 
   https://goerli.etherscan.io/address/0x91d6984adecadeb13f8bef2db8c4cb896210fcb1#code
 
 - Fractionalizer Dispatcher L1: 0xB3bE2424FBc0A9cCb3FB5fFD5655235F21855526
-  (Impl no 5 0x65a188248dD02477f45122ec060e328976526817)
+  (Impl no 6 0x2fe1cebB70Fc2aD853cc321B2e235410345178Ad)
   <https://goerli.etherscan.io/address/0xB3bE2424FBc0A9cCb3FB5fFD5655235F21855526>
 
 - Fractionalizer L2: 0x5DAbAF3C3F92F889394aD4304B1E2E90DBa57E3b
-  (Impl no 2 0x0fC61bC878aA3843d97Ea1165c4Db5D7481C1e4C)
+  (Impl no 3 0xF4cE955D3b5E3A46ABeD75579fA5B7863E0DA064)
   <https://goerli-optimism.etherscan.io/address/0x5DAbAF3C3F92F889394aD4304B1E2E90DBa57E3b>
 
 ## Prerequisites
