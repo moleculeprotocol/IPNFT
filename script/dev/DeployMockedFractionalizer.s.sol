@@ -11,6 +11,8 @@ import { MockCrossDomainMessenger } from "../../test/helpers/MockCrossDomainMess
 import { Fractionalizer } from "../../src/Fractionalizer.sol";
 
 contract TestableFractionalizer is Fractionalizer {
+    constructor(address trustedForwarder) Fractionalizer(trustedForwarder) { }
+
     function __dangerouslyOverrideXDomainMessenger(address _testMessenger) public {
         crossDomainMessenger = ICrossDomainMessenger(_testMessenger);
     }
@@ -29,7 +31,7 @@ contract DeployMockedFractionalizer is Script {
             address(
                 new ERC1967Proxy(
                     address(
-                        new TestableFractionalizer()
+                        new TestableFractionalizer(address(0))
                     ), ""
                 )
             )
