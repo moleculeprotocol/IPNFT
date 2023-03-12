@@ -71,6 +71,9 @@ contract Fractionalizer is ERC1155SupplyUpgradeable, UUPSUpgradeable, ERC2771Con
         _;
     }
 
+    //todo consider setting this one: https://docs.opengsn.org/contracts/#trusted-forwarder-minimum-viable-trust
+    //görli op: 0xB2b5841DBeF766d4b521221732F9B618fCf34A87
+    //op: 0xB2b5841DBeF766d4b521221732F9B618fCf34A87
     constructor(address trustedForwarder) ERC2771ContextUpgradeable(trustedForwarder) {
         _disableInitializers();
         //see https://github.com/OpenZeppelin/openzeppelin-contracts-upgradeable/pull/155
