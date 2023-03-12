@@ -2,5 +2,6 @@ ds-test/=lib/forge-std/lib/ds-test/src/
 forge-std/=lib/forge-std/src/
 @openzeppelin/contracts-upgradeable/=lib/openzeppelin-contracts-upgradeable/contracts/
 @openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/
+@eth-optimism/contracts/=lib/optimism/packages/contracts/contracts/
 solmate/=lib/solmate/src/
 erc721b/=lib/ERC721B/contracts/

@@ -27,6 +27,17 @@ IP-NFTs allow their users to tokenize intellectual property. This repo contains 
 - HeadlessDispenser <https://goerli.etherscan.io/address/0x0F1Bd197c5dCC6bC7E8025037a7780010E2Cd22A#code>
 - Subgraph: <https://api.thegraph.com/subgraphs/name/dorianwilhelm/ip-nft-subgraph-goerli/graphql>
 
+- Contract Registry 0x91d6984adecadeb13f8bef2db8c4cb896210fcb1
+  https://goerli.etherscan.io/address/0x91d6984adecadeb13f8bef2db8c4cb896210fcb1#code
+
+- Fractionalizer Dispatcher L1: 0xB3bE2424FBc0A9cCb3FB5fFD5655235F21855526
+  (Impl no 6 0x2fe1cebB70Fc2aD853cc321B2e235410345178Ad)
+  <https://goerli.etherscan.io/address/0xB3bE2424FBc0A9cCb3FB5fFD5655235F21855526>
+
+- Fractionalizer L2: 0x5DAbAF3C3F92F889394aD4304B1E2E90DBa57E3b
+  (Impl no 3 0xF4cE955D3b5E3A46ABeD75579fA5B7863E0DA064)
+  <https://goerli-optimism.etherscan.io/address/0x5DAbAF3C3F92F889394aD4304B1E2E90DBa57E3b>
+
 ## Prerequisites
 
 To work with this repository you have to install Foundry (<https://getfoundry.sh>). Run the following command in your terminal, then follow the onscreen instructions (macOS and Linux):
@@ -109,7 +120,104 @@ or, if you need to verify with constructor arguments:
 
 `forge verify-contract --chain-id 5 <address> Mintpass --constructor-args $(cast abi-encode "constructor(address)" "0xabcdef")`
 
-## Interacting with cast
+### Fractionalizer
+
+The fractionalizer consists of two contracts: The Dispatcher (`L1FractionalizerDispatcher`) lives on L1. IP-NFT owners call it to initiate a fractionalization event on L2. It checks that the IP-NFT belongs to the current user, verifies that this IP-NFT has not been fractionalized before and dispatches a message to the respective L2 contract that will issue fractions. The L2 contract (`Fractionalizer`) first checks that its been called by the L2 messaging bridge and that the call originated from the L1 contract (the dispatcher). It then verifies that the computed fraction id matches the input parameters and issues the requested amount of fractions to the IP-NFT owner on the L2 network. The dispatcher depends on a named registry (`ContractRegistry`) to resolve contract addresses and token address translations. This must be deployed before the dispatcher itself so it can be provided as a construcutor argument. For convenience we added 2 premade registries for Görli and mainnet but you can deploy and maintain fully custom ones. The fractionalization contracts are deployed as upgradeable 1967/UUPSProxies using the original OZ implementation.
+
+#### Deploying
+
+Note that for these deployments you'll need different RPC_URLs for L1 and L2. Also, the Optimism block explorer doesn't work with your Etherscan api key. You must log into it individually and create a dedicated api key for contract code validation.
+Manual deployment order
+
+- deploy registry for Görli
+  `NETWORK=5 forge script script/DeployContractRegistry.s.sol --rpc-url $RPC_URL_L1 --broadcast -vvvv`
+
+- deploy L1 dispatcher
+  `SOS_ADDRESS=<schmackoswapOnL1> REGISTRY_ADDRESS=<registry address> forge script script/DeployFractionalizerL1.s.sol --rpc-url $RPC_URL_1 --broadcast -vvvv`
+
+- deploy L2 fractionalizer
+  `forge script script/DeployFractionalizerL2.s.sol --rpc-url $RPC_URL_L2 --broadcast -vvvv`
+
+- set L2 address on registry
+  `cast send --rpc-url $RPC_URL_L1 -i <registry address> "register(bytes32,address)" $(cast --from-utf8 "FractionalizerL2") <fractionalizer address on L2>`
+
+- set L1 dispatcher's address on L2 fractionalizer (so it can verify incoming message calls)
+  `cast send --rpc-url $RPC_URL_L2 -i <L2 fractionalizer contract> "setFractionalizerDispatcherL1(address)"  <dispatcher address on L1>`
+
+note that the registry doesnt use strings but bytes32 as keys. To manually retrieve registered names you can convert strings to their byte32 encoded counterparts locally, like so
+`cast --from-utf8 "CrossdomainMessenger"`
+
+We also included helpers to quickly deploy updated versions of the contracts. You must call their `updateTo` functions individually, though.
+
+- verify the L1 dispatcher impl
+  `ETHERSCAN_API_KEY=<görli api key> forge verify-contract --chain-id 5 <new impl addr> FractionalizerL2Dispatcher`
+
+- verify the L2 fractionalizer impl
+  `ETHERSCAN_API_KEY=<optimism-görli api key> forge verify-contract --chain-id 420 <new impl addr> Fractionalizer`
+
+- verify an EIP1967 proxy
+  `ETHERSCAN_API_KEY=... forge verify-contract --chain-id 420 <proxy address> ERC1967Proxy --constructor-args $(cast abi-encode "constructor(address,bytes)" "<initial implementation address>" "")`
+
+#### mocking xdomain interactions so you can call the Fractionalizer's methods directly
+
+forge script --rpc-url $ANVIL_RPC_URL script/dev/DeployMockedFractionalizer.s.sol:DeployMockedFractionalizer --private-key $PRIVATE_KEY -vvv --broadcast
+
+> mock xdomain messenger 0x5FbDB2315678afecb367f032d93F642f64180aa3
+> fractionalizer l2 0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9
+
+compute a fraction token id (you can use chisel) (originalOwner,collection,tokenid) for demonstration reasons we're using the fractionalizer NFT as collection address, this normally would be your IPNFT contract:
+`keccak256(abi.encodePacked(0x70997970C51812dc3A010C7d01b50e0d17dc79C8, 0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9, uint256(1)))`
+
+> 0xe0ab3d7476064dbd63263d0632e299da8528ff449841b11a29555ac405a090cd
+
+compute some agreement hash
+`cast --format-bytes32-string "agreement"`
+
+> 0x61677265656d656e740000000000000000000000000000000000000000000000
+
+build the call signature / message
+`cast calldata "fractionalizeUniqueERC1155(uint256,address,uint256,address,bytes32,uint256)" 0xe0ab3d7476064dbd63263d0632e299da8528ff449841b11a29555ac405a090cd 0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9 1 0x70997970C51812dc3A010C7d01b50e0d17dc79C8 0x61677265656d656e740000000000000000000000000000000000000000000000 100000`
+
+> 0x327faeb2e0ab3d7476064dbd63263d0632e299da8528ff449841b11a29555ac405a090cd000000000000000000000000cf7ed3acca5a467e9e704c703e8d87f634fb0fc9000000000000000000000000000000000000000000000000000000000000000100000000000000000000000070997970c51812dc3a010c7d01b50e0d17dc79c861677265656d656e74000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000186a0
+
+call through the mocked message sender
+
+`cast send --rpc-url $ANVIL_RPC_URL --private-key $PRIVATE_KEY 0x5FbDB2315678afecb367f032d93F642f64180aa3 "sendMessage(address,bytes,uint32)" "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9" 0x327faeb2e0ab3d7476064dbd63263d0632e299da8528ff449841b11a29555ac405a090cd000000000000000000000000cf7ed3acca5a467e9e704c703e8d87f634fb0fc9000000000000000000000000000000000000000000000000000000000000000100000000000000000000000070997970c51812dc3a010c7d01b50e0d17dc79c861677265656d656e74000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000186a0 1000000`
+
+check that original owner owns 100000 fractions now
+
+`cast call --rpc-url $ANVIL_RPC_URL 0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9 "totalSupply(uint256)" 0xe0ab3d7476064dbd63263d0632e299da8528ff449841b11a29555ac405a090cd`
+
+> 0x00000000000000000000000000000000000000000000000000000000000186a0
+
+`cast --to-base 0x00000000000000000000000000000000000000000000000000000000000186a0 10`
+
+> 100000
+
+get token uri
+
+`cast call --rpc-url $ANVIL_RPC_URL 0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9 "uri(uint256)" 0xe0ab3d7476064dbd63263d0632e299da8528ff449841b11a29555ac405a090cd | cast --to-ascii`
+
+after decoding from b64:
+
+```json
+{
+  "name": "Fractions of 0xcf7ed3acca5a467e9e704c703e8d87f634fb0fc9 / 1",
+  "description": "this token represents fractions of the underlying asset",
+  "decimals": 0,
+  "external_url": "https://molecule.to",
+  "image": "",
+  "properties": {
+    "collection": "0xcf7ed3acca5a467e9e704c703e8d87f634fb0fc9",
+    "token_id": 1,
+    "agreement_hash": "0x61677265656d656e740000000000000000000000000000000000000000000000",
+    "original_owner": "0x70997970c51812dc3a010c7d01b50e0d17dc79c8",
+    "supply": 100000
+  }
+}
+```
+
+## General: Interacting with cast
 
 `cast` is another CLI command installed by Foundry and allows you to query/manipulate your deployed contracts easily. Find out more here: <https://book.getfoundry.sh/cast/>
 
