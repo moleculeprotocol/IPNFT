@@ -53,7 +53,7 @@ contract L2FractionalizerTest is Test {
             address(
                 new ERC1967Proxy(
                     address(
-                        new Fractionalizer()
+                        new Fractionalizer(address(0))
                     ), ""
                 )
             )

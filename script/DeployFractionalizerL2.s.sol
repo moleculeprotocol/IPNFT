@@ -17,7 +17,7 @@ contract DeployFractionalizerL2 is Script {
             address(
                 new ERC1967Proxy(
                     address(
-                        new Fractionalizer()
+                        new Fractionalizer(address(0))
                     ), ""
                 )
             )
