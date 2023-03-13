@@ -24,7 +24,7 @@ describe("IPNFT fundamentals", function () {
   it("validates updates", async function () {
     const result = await upgrades.validateUpgrade(
       ipnftContract.address,
-      await ethers.getContractFactory("IPNFTV22"),
+      await ethers.getContractFactory("IPNFTV23"),
       {
         kind: "uups"
       }

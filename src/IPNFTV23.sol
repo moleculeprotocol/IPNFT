@@ -16,17 +16,18 @@ import { IReservable } from "./IReservable.sol";
 /*
 .___ __________ _______  ______________________       ________    ________   
 |   |\______   \\      \ \_   _____/\__    ___/___  __\_____  \   \_____  \  
-|   | |     ___//   |   \ |    __)    |    |   \  \/ / /  ____/    /  ____/  
-|   | |    |   /    |    \|     \     |    |    \   / /       \   /       \  
-|___| |____|   \____|__  /\___  /     |____|     \_/  \_______ \/\\_______ \ 
-                       \/     \/                              \/\/        \/ 
+|   | |     ___//   |   \ |    __)    |    |   \  \/ / /  ____/     _(__  <  
+|   | |    |   /    |    \|     \     |    |    \   / /       \    /       \ 
+|___| |____|   \____|__  /\___  /     |____|     \_/  \_______ \/\/______  / 
+                       \/     \/                              \/\/       \/  
+                                                                               
                                                                                */
 
 /// @title IPNFTV2.2 Demo for Testing Upgrades
 /// @author molecule.to
 /// @notice Demo contract to test upgrades. Don't use like this
 /// @dev Don't use this.
-contract IPNFTV22 is
+contract IPNFTV23 is
     IReservable,
     ERC1155Upgradeable,
     ERC1155BurnableUpgradeable,
@@ -52,6 +53,8 @@ contract IPNFTV22 is
     mapping(uint256 => mapping(address => uint256)) internal readAllowances;
 
     uint256 constant SYMBOLIC_MINT_FEE = 0.001 ether;
+
+    mapping(uint256 => string) public symbol;
 
     /// @notice musnt't take the minting fee property gap
     string public aNewProperty;
@@ -140,7 +143,21 @@ contract IPNFTV22 is
     }
 
     /**
+     * @param _symbol a string that's the foundation for ticker symbols on assets derived by this NFT
+     */
+    function mintReservation(address to, uint256 reservationId, uint256 mintPassId, string memory tokenURI, string memory _symbol)
+        public
+        payable
+        whenNotPaused
+        returns (uint256)
+    {
+        symbol[reservationId] = _symbol;
+        return mintReservation(to, reservationId, mintPassId, tokenURI);
+    }
+
+    /**
      * @notice mints an IPNFT with `tokenURI` as source of metadata. Invalidates the reservation. Redeems `mintpassId` on the authorizer contract
+     * @notice We are charging a nominal fee to symbolically represent the transfer of ownership rights, for a price of .001 ETH (<$2USD at current prices). This helps the ensure the protocol is affordable to almost all projects, but discourages frivolous IP-NFT minting.
      * @param to address the recipient of the NFT
      * @param reservationId the reserved token id that has been reserved with `reserve()`
      * @param mintPassId an id that's handed over to the `IAuthorizeMints` interface
@@ -175,20 +192,6 @@ contract IPNFTV22 is
         return reservationId;
     }
 
-    function increaseShares(uint256 tokenId, uint256 shares, address to) public {
-        require(shares > 0, "IP-NFT: shares amount must be greater than 0");
-        require(totalSupply(tokenId) == 1, "IP-NFT: shares already minted");
-        require(balanceOf(_msgSender(), tokenId) == 1, "IP-NFT: not owner");
-
-        _mint(to, tokenId, shares, "");
-    }
-
-    function distribute(uint256 fromToken, address[] memory toAddresses, uint256 value) public {
-        for (uint256 i = 0; i < toAddresses.length; i++) {
-            safeTransferFrom(msg.sender, toAddresses[i], fromToken, value, "");
-        }
-    }
-
     /**
      * @notice grants time limited "read" access to gated resources
      * @param reader the address that should be able to access gated content
@@ -218,7 +221,14 @@ contract IPNFTV22 is
         return readAllowances[tokenId][reader] > block.timestamp;
     }
 
-    /// @notice retrieve this contract's funds
+    function updateSymbol(uint256 tokenId, string calldata newSymbol) external {
+        if (balanceOf(_msgSender(), tokenId) == 0) {
+            revert InsufficientBalance();
+        }
+        symbol[tokenId] = newSymbol;
+    }
+
+    /// @notice in case someone sends Eth to this contract, this function gets it out again
     function withdrawAll() public payable whenNotPaused onlyOwner {
         require(payable(_msgSender()).send(address(this).balance), "transfer failed");
     }

@@ -91,7 +91,7 @@ contract IPNFTTest is IPNFTMintHelper {
 
         vm.expectEmit(true, true, false, true);
         emit IPNFTMinted(alice, 1, ipfsUri);
-        ipnft.mintReservation{value: MINTING_FEE}(alice, reservationId, reservationId, ipfsUri);
+        ipnft.mintReservation{ value: MINTING_FEE }(alice, reservationId, reservationId, ipfsUri);
 
         assertEq(ipnft.balanceOf(alice, 1), 1);
         assertEq(ipnft.uri(1), ipfsUri);
@@ -99,6 +99,17 @@ contract IPNFTTest is IPNFTMintHelper {
         assertEq(ipnft.reservations(1), address(0));
 
         vm.stopPrank();
+    }
+
+    function testMintingWithSymbols() public {
+        dealMintpass(alice);
+
+        vm.startPrank(alice);
+        uint256 reservationId = ipnft.reserve();
+        ipnft.mintReservation{ value: MINTING_FEE }(alice, reservationId, reservationId, arUri, DEFAULT_SYMBOL);
+        vm.stopPrank();
+
+        assertEq(ipnft.symbol(reservationId), DEFAULT_SYMBOL);
     }
 
     function testBurn() public {
@@ -127,7 +138,7 @@ contract IPNFTTest is IPNFTMintHelper {
         vm.deal(address(bob), 10 ether);
 
         vm.prank(bob);
-        (bool transferWorked,) = address(ipnft).call{value: 10 ether}("");
+        (bool transferWorked,) = address(ipnft).call{ value: 10 ether }("");
         assertFalse(transferWorked);
         assertEq(address(ipnft).balance, 0);
 
@@ -145,7 +156,7 @@ contract IPNFTTest is IPNFTMintHelper {
         vm.deal(address(bob), 10 ether);
         vm.prank(bob);
         Kamikaze kamikaze = new Kamikaze();
-        (bool transferWorked,) = address(kamikaze).call{value: 10 ether}("");
+        (bool transferWorked,) = address(kamikaze).call{ value: 10 ether }("");
         assertTrue(transferWorked);
         assertEq(address(kamikaze).balance, 10 ether);
 
@@ -179,7 +190,7 @@ contract IPNFTTest is IPNFTMintHelper {
         assertEq(deployer.balance, 0.001 ether);
     }
 
-    function testCantMintWhenPaused() public {
+    function testCannotMintWhenPaused() public {
         vm.startPrank(deployer);
         ipnft.pause();
         vm.expectRevert(bytes("Pausable: paused"));

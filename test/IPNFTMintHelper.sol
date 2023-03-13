@@ -18,6 +18,7 @@ abstract contract IPNFTMintHelper is Test {
     address deployer = makeAddr("chucknorris");
 
     uint256 constant MINTING_FEE = 0.001 ether;
+    string DEFAULT_SYMBOL = "MOL-0001";
 
     function dealMintpass(address to) internal {
         vm.startPrank(deployer);
@@ -38,7 +39,7 @@ abstract contract IPNFTMintHelper is Test {
         vm.startPrank(to);
         uint256 reservationId = ipnft.reserve();
 
-        ipnft.mintReservation{value: MINTING_FEE}(to, reservationId, reservationId, arUri);
+        ipnft.mintReservation{ value: MINTING_FEE }(to, reservationId, reservationId, arUri);
         vm.stopPrank();
         return reservationId;
     }
