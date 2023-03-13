@@ -65,7 +65,7 @@ contract IPNFTUpgrades is IPNFTMintHelper {
 
         assertEq(ipnftV23.totalSupply(1), 1);
         assertEq(ipnftV23.balanceOf(alice, 1), 1);
-        assertEq(ipnftV23.symbol(1), "");
+        assertEq(ipnftV23.symbol(1), DEFAULT_SYMBOL);
     }
 
     function testLosesPauseability() public {

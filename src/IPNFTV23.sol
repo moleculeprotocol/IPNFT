@@ -66,7 +66,7 @@ contract IPNFTV23 is
      */
 
     event Reserved(address indexed reserver, uint256 indexed reservationId);
-    event IPNFTMinted(address indexed owner, uint256 indexed tokenId, string tokenURI);
+    event IPNFTMinted(address indexed owner, uint256 indexed tokenId, string tokenURI, string symbol);
 
     /*
      *
@@ -143,16 +143,15 @@ contract IPNFTV23 is
     }
 
     /**
-     * @param _symbol a string that's the foundation for ticker symbols on assets derived by this NFT
+     * @notice deprecated: the old interface without a symbol.
      */
-    function mintReservation(address to, uint256 reservationId, uint256 mintPassId, string memory tokenURI, string memory _symbol)
+    function mintReservation(address to, uint256 reservationId, uint256 mintPassId, string memory tokenURI)
         public
         payable
         whenNotPaused
         returns (uint256)
     {
-        symbol[reservationId] = _symbol;
-        return mintReservation(to, reservationId, mintPassId, tokenURI);
+        return mintReservation(to, reservationId, mintPassId, tokenURI, "");
     }
 
     /**
@@ -163,7 +162,7 @@ contract IPNFTV23 is
      * @param mintPassId an id that's handed over to the `IAuthorizeMints` interface
      * @param tokenURI a location that resolves to a valid IP-NFT metadata structure
      */
-    function mintReservation(address to, uint256 reservationId, uint256 mintPassId, string memory tokenURI)
+    function mintReservation(address to, uint256 reservationId, uint256 mintPassId, string memory tokenURI, string memory _symbol)
         public
         payable
         override
@@ -184,11 +183,11 @@ contract IPNFTV23 is
 
         delete reservations[reservationId];
         mintAuthorizer.redeem(abi.encode(mintPassId));
+        symbol[reservationId] = _symbol;
 
         _mint(to, reservationId, 1, "");
         _setURI(reservationId, tokenURI);
-
-        emit IPNFTMinted(to, reservationId, tokenURI);
+        emit IPNFTMinted(to, reservationId, tokenURI, _symbol);
         return reservationId;
     }
 
