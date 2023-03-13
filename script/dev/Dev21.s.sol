@@ -10,12 +10,15 @@ import { SchmackoSwap } from "../../src/SchmackoSwap.sol";
 import { AuthorizeAll } from "../../src/helpers/AuthorizeAll.sol";
 import { IAuthorizeMints } from "../../src/IAuthorizeMints.sol";
 import { UUPSProxy } from "../../src/UUPSProxy.sol";
+import { Mintpass } from "../../src/Mintpass.sol";
 
 /*
 forge script --rpc-url $RPC_URL script/dev/Dev21.s.sol:DeployIpnftV21 -vvvv --broadcast
 forge script --rpc-url $RPC_URL script/dev/Dev21.s.sol:Reserve -vvvv --broadcast
 forge script --rpc-url $RPC_URL script/dev/Dev21.s.sol:Reserve -vvvv --broadcast
 RESERVATION=1 forge script --rpc-url $RPC_URL script/dev/Dev21.s.sol:MintV21 -vvvv --broadcast
+
+then
 forge script --rpc-url $RPC_URL script/dev/Dev21.s.sol:UpgradeIpnftV22 -vvvv --broadcast
 RESERVATION=2 forge script --rpc-url $RPC_URL script/dev/Dev21.s.sol:MintV22 -vvvv --broadcast
 
@@ -35,9 +38,18 @@ contract DeployIpnftV21 is Script {
         UUPSProxy proxy = new UUPSProxy(address(implementationV21), "");
         IPNFTV21 ipnft = IPNFTV21(address(proxy));
         ipnft.initialize();
+
+        //only here to have addresses for subgraph in place
+        SchmackoSwap swap = new SchmackoSwap();
+        MyToken token = new MyToken();
+        Mintpass mintpass = new Mintpass(address(ipnft));
+
         ipnft.setAuthorizer(address(new AuthorizeAll()));
 
         console.log("ipnftv21 %s", address(ipnft));
+        console.log("swap %s", address(swap));
+        console.log("token %s", address(token));
+        console.log("pass %s", address(mintpass));
 
         vm.stopBroadcast();
     }
