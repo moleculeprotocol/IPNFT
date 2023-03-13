@@ -20,8 +20,7 @@ import { IReservable } from "./IReservable.sol";
 |   | |    |   /    |    \|     \     |    |    \   / /       \   /       \  
 |___| |____|   \____|__  /\___  /     |____|     \_/  \_______ \/\\_______ \ 
                        \/     \/                              \/\/        \/ 
-                                                                               
-*/
+                                                                               */
 
 /// @title IPNFTV2.2 Demo for Testing Upgrades
 /// @author molecule.to
@@ -236,13 +235,18 @@ contract IPNFTV22 is
     /// @dev override required by Solidity.
     function _beforeTokenTransfer(address operator, address from, address to, uint256[] memory ids, uint256[] memory amounts, bytes memory data)
         internal
-        override (ERC1155Upgradeable, ERC1155SupplyUpgradeable)
+        override(ERC1155Upgradeable, ERC1155SupplyUpgradeable)
     {
         super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
     }
 
     /// @dev override required by Solidity.
-    function uri(uint256 tokenId) public view virtual override (ERC1155Upgradeable, ERC1155URIStorageUpgradeable) returns (string memory) {
+    function uri(uint256 tokenId) public view virtual override(ERC1155Upgradeable, ERC1155URIStorageUpgradeable) returns (string memory) {
         return ERC1155URIStorageUpgradeable.uri(tokenId);
+    }
+
+    /// @notice https://docs.opensea.io/docs/contract-level-metadata
+    function contractURI() public pure returns (string memory) {
+        return "https://mint.molecule.to/contract-metadata/ipnft.json";
     }
 }
