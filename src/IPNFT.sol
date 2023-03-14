@@ -67,7 +67,7 @@ contract IPNFT is
     event Reserved(address indexed reserver, uint256 indexed reservationId);
     event IPNFTMinted(address indexed owner, uint256 indexed tokenId, string tokenURI);
     event SymbolUpdated(uint256 indexed tokenId, string symbol);
-    event ReadAccessGranted(address indexed reader, uint256 indexed tokenId, uint256 until);
+    event ReadAccessGranted(uint256 indexed tokenId, address indexed reader, uint256 until);
 
     /*
      *
@@ -205,7 +205,7 @@ contract IPNFT is
         require(until > block.timestamp, "until in the past");
 
         readAllowances[tokenId][reader] = until;
-        emit ReadAccessGranted(reader, tokenId, until);
+        emit ReadAccessGranted(tokenId, reader, until);
     }
 
     /**

@@ -21,7 +21,7 @@ contract IPNFTTest is IPNFTMintHelper {
     event Reserved(address indexed reserver, uint256 indexed reservationId);
     event IPNFTMinted(address indexed owner, uint256 indexed tokenId, string tokenURI);
     event SymbolUpdated(uint256 indexed tokenId, string symbol);
-    event ReadAccessGranted(address indexed reader, uint256 indexed tokenId, uint256 until);
+    event ReadAccessGranted(uint256 indexed tokenId, address indexed reader, uint256 until);
 
     UUPSProxy proxy;
     IPNFT internal ipnft;
@@ -208,7 +208,7 @@ contract IPNFTTest is IPNFTMintHelper {
         ipnft.grantReadAccess(bob, tokenId, block.timestamp);
 
         vm.expectEmit(true, true, false, true);
-        emit ReadAccessGranted(bob, tokenId, block.timestamp + 60);
+        emit ReadAccessGranted(tokenId, bob, block.timestamp + 60);
         ipnft.grantReadAccess(bob, tokenId, block.timestamp + 60);
         assertTrue(ipnft.canRead(bob, tokenId));
         vm.warp(block.timestamp + 55);
