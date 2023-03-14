@@ -23,7 +23,7 @@ import { IReservable } from "./IReservable.sol";
                                                                                
                                                                                */
 
-/// @title IPNFTV2.2 Demo for Testing Upgrades
+/// @title IPNFTV2.3 Demo for Testing Upgrades
 /// @author molecule.to
 /// @notice Demo contract to test upgrades. Don't use like this
 /// @dev Don't use this.
@@ -54,6 +54,7 @@ contract IPNFTV23 is
 
     uint256 constant SYMBOLIC_MINT_FEE = 0.001 ether;
 
+    /// @notice an IPNFT's base symbol, to be determined by the minter / owner. E.g. BIO-00001
     mapping(uint256 => string) public symbol;
 
     /// @notice musnt't take the minting fee property gap
@@ -66,7 +67,8 @@ contract IPNFTV23 is
      */
 
     event Reserved(address indexed reserver, uint256 indexed reservationId);
-    event IPNFTMinted(address indexed owner, uint256 indexed tokenId, string tokenURI, string symbol);
+    event IPNFTMinted(address indexed owner, uint256 indexed tokenId, string tokenURI);
+    event SymbolUpdated(uint256 indexed tokenId, string symbol);
 
     /*
      *
@@ -157,10 +159,12 @@ contract IPNFTV23 is
     /**
      * @notice mints an IPNFT with `tokenURI` as source of metadata. Invalidates the reservation. Redeems `mintpassId` on the authorizer contract
      * @notice We are charging a nominal fee to symbolically represent the transfer of ownership rights, for a price of .001 ETH (<$2USD at current prices). This helps the ensure the protocol is affordable to almost all projects, but discourages frivolous IP-NFT minting.
+     *
      * @param to address the recipient of the NFT
      * @param reservationId the reserved token id that has been reserved with `reserve()`
      * @param mintPassId an id that's handed over to the `IAuthorizeMints` interface
      * @param tokenURI a location that resolves to a valid IP-NFT metadata structure
+     * @param _symbol a symbol that represents the IPNFT's derivatives. Can be changed by the owner
      */
     function mintReservation(address to, uint256 reservationId, uint256 mintPassId, string memory tokenURI, string memory _symbol)
         public
@@ -183,11 +187,12 @@ contract IPNFTV23 is
 
         delete reservations[reservationId];
         mintAuthorizer.redeem(abi.encode(mintPassId));
-        symbol[reservationId] = _symbol;
 
         _mint(to, reservationId, 1, "");
         _setURI(reservationId, tokenURI);
-        emit IPNFTMinted(to, reservationId, tokenURI, _symbol);
+        emit IPNFTMinted(to, reservationId, tokenURI);
+
+        _updateSymbol(reservationId, _symbol);
         return reservationId;
     }
 
@@ -220,11 +225,20 @@ contract IPNFTV23 is
         return readAllowances[tokenId][reader] > block.timestamp;
     }
 
-    function updateSymbol(uint256 tokenId, string calldata newSymbol) external {
+    /**
+     * @param tokenId ipnft token id
+     * @param newSymbol the new symbol for this ipnft
+     */
+    function updateSymbol(uint256 tokenId, string memory newSymbol) external {
         if (balanceOf(_msgSender(), tokenId) == 0) {
             revert InsufficientBalance();
         }
+        _updateSymbol(tokenId, newSymbol);
+    }
+
+    function _updateSymbol(uint256 tokenId, string memory newSymbol) internal {
         symbol[tokenId] = newSymbol;
+        emit SymbolUpdated(tokenId, newSymbol);
     }
 
     /// @notice in case someone sends Eth to this contract, this function gets it out again

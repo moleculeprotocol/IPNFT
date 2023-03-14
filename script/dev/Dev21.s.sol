@@ -5,7 +5,7 @@ import "forge-std/Script.sol";
 import "forge-std/console.sol";
 import { MyToken } from "../../src/MyToken.sol";
 import { IPNFT } from "../../src/IPNFT.sol";
-import { IPNFTV21 } from "../../src/IPNFTV21.sol";
+import { IPNFTV21 } from "../../src/old/IPNFTV21.sol";
 import { SchmackoSwap } from "../../src/SchmackoSwap.sol";
 import { AuthorizeAll } from "../../src/helpers/AuthorizeAll.sol";
 import { IAuthorizeMints } from "../../src/IAuthorizeMints.sol";
@@ -26,7 +26,10 @@ cast call 0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512 "uri(uint256)" 1 | cast --t
 cast call 0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512 "uri(uint256)" 2 | cast --to-ascii
 
 cast call 0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512 "symbol(uint256)" 1 | cast --to-ascii
-cast call 0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512 "symbol(uint256)" 2 | cast --to-ascii*/
+cast call 0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512 "symbol(uint256)" 2 | cast --to-ascii
+
+cast send -i $IPNFT_ADDRESS --private-key PK_ACCOUNT_1  "updateSymbol(uint256,string)" 1 "FOO-001"
+**/
 
 contract DeployIpnftV21 is Script {
     string mnemonic = "test test test test test test test test test test test junk";

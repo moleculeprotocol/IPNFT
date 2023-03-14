@@ -10,7 +10,7 @@ import { ERC1155SupplyUpgradeable } from "@openzeppelin/contracts-upgradeable/to
 import { CountersUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/CountersUpgradeable.sol";
 import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import { IAuthorizeMints } from "./IAuthorizeMints.sol";
+import { IAuthorizeMints } from "../IAuthorizeMints.sol";
 
 interface IReservable {
     function reserve() external returns (uint256);
