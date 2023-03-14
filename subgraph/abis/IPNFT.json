@@ -112,12 +112,6 @@
         "internalType": "string",
         "name": "tokenURI",
         "type": "string"
-      },
-      {
-        "indexed": false,
-        "internalType": "string",
-        "name": "symbol",
-        "type": "string"
       }
     ],
     "name": "IPNFTMinted",
@@ -185,6 +179,25 @@
       }
     ],
     "name": "Reserved",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "symbol",
+        "type": "string"
+      }
+    ],
+    "name": "SymbolUpdated",
     "type": "event"
   },
   {

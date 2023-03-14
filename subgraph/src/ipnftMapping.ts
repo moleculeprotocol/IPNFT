@@ -2,6 +2,7 @@ import { Address, store } from "@graphprotocol/graph-ts";
 import {
     IPNFTMinted as IPNFTMintedEvent,
     Reserved as ReservedEvent,
+    SymbolUpdated as SymbolUpdatedEvent,
     TransferSingle as TransferSingleEvent
 } from "../generated/IPNFT/IPNFT";
 import { Ipnft, Reservation } from "../generated/schema";
@@ -28,8 +29,15 @@ export function handleMint(event: IPNFTMintedEvent): void {
     ipnft.owner = event.params.owner;
     ipnft.tokenURI = event.params.tokenURI;
     ipnft.createdAt = event.block.timestamp;
-    ipnft.symbol = event.params.symbol;
     ipnft.save();
 
     store.remove("Reservation", event.params.tokenId.toString());
+}
+
+export function handleSymbolUpdated(event: SymbolUpdatedEvent): void {
+    let ipnft = Ipnft.load(event.params.tokenId.toString());
+    if (ipnft) {
+        ipnft.symbol = event.params.symbol;
+        ipnft.save();
+    }
 }

@@ -65,7 +65,8 @@ contract IPNFT is
      */
 
     event Reserved(address indexed reserver, uint256 indexed reservationId);
-    event IPNFTMinted(address indexed owner, uint256 indexed tokenId, string tokenURI, string symbol);
+    event IPNFTMinted(address indexed owner, uint256 indexed tokenId, string tokenURI);
+    event SymbolUpdated(uint256 indexed tokenId, string symbol);
 
     /*
      *
@@ -152,10 +153,12 @@ contract IPNFT is
     /**
      * @notice mints an IPNFT with `tokenURI` as source of metadata. Invalidates the reservation. Redeems `mintpassId` on the authorizer contract
      * @notice We are charging a nominal fee to symbolically represent the transfer of ownership rights, for a price of .001 ETH (<$2USD at current prices). This helps the ensure the protocol is affordable to almost all projects, but discourages frivolous IP-NFT minting.
+     *
      * @param to address the recipient of the NFT
      * @param reservationId the reserved token id that has been reserved with `reserve()`
      * @param mintPassId an id that's handed over to the `IAuthorizeMints` interface
      * @param tokenURI a location that resolves to a valid IP-NFT metadata structure
+     * @param _symbol a symbol that represents the IPNFT's derivatives. Can be changed by the owner
      */
     function mintReservation(address to, uint256 reservationId, uint256 mintPassId, string memory tokenURI, string memory _symbol)
         public
@@ -178,11 +181,12 @@ contract IPNFT is
 
         delete reservations[reservationId];
         mintAuthorizer.redeem(abi.encode(mintPassId));
-        symbol[reservationId] = _symbol;
 
         _mint(to, reservationId, 1, "");
         _setURI(reservationId, tokenURI);
-        emit IPNFTMinted(to, reservationId, tokenURI, _symbol);
+        emit IPNFTMinted(to, reservationId, tokenURI);
+
+        _updateSymbol(reservationId, _symbol);
         return reservationId;
     }
 
@@ -215,11 +219,20 @@ contract IPNFT is
         return readAllowances[tokenId][reader] > block.timestamp;
     }
 
-    function updateSymbol(uint256 tokenId, string calldata newSymbol) external {
+    /**
+     * @param tokenId ipnft token id
+     * @param newSymbol the new symbol for this ipnft
+     */
+    function updateSymbol(uint256 tokenId, string memory newSymbol) external {
         if (balanceOf(_msgSender(), tokenId) == 0) {
             revert InsufficientBalance();
         }
+        _updateSymbol(tokenId, newSymbol);
+    }
+
+    function _updateSymbol(uint256 tokenId, string memory newSymbol) internal {
         symbol[tokenId] = newSymbol;
+        emit SymbolUpdated(tokenId, newSymbol);
     }
 
     /// @notice in case someone sends Eth to this contract, this function gets it out again
@@ -239,13 +252,13 @@ contract IPNFT is
     /// @dev override required by Solidity.
     function _beforeTokenTransfer(address operator, address from, address to, uint256[] memory ids, uint256[] memory amounts, bytes memory data)
         internal
-        override(ERC1155Upgradeable, ERC1155SupplyUpgradeable)
+        override (ERC1155Upgradeable, ERC1155SupplyUpgradeable)
     {
         super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
     }
 
     /// @dev override required by Solidity.
-    function uri(uint256 tokenId) public view virtual override(ERC1155Upgradeable, ERC1155URIStorageUpgradeable) returns (string memory) {
+    function uri(uint256 tokenId) public view virtual override (ERC1155Upgradeable, ERC1155URIStorageUpgradeable) returns (string memory) {
         return ERC1155URIStorageUpgradeable.uri(tokenId);
     }
 

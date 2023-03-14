@@ -39,7 +39,7 @@ abstract contract IPNFTMintHelper is Test {
         vm.startPrank(to);
         uint256 reservationId = ipnft.reserve();
 
-        ipnft.mintReservation{ value: MINTING_FEE }(to, reservationId, reservationId, arUri, DEFAULT_SYMBOL);
+        ipnft.mintReservation{value: MINTING_FEE}(to, reservationId, reservationId, arUri, DEFAULT_SYMBOL);
         vm.stopPrank();
         return reservationId;
     }

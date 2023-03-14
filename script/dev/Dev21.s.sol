@@ -93,7 +93,7 @@ contract MintV21 is Script {
 
         vm.startBroadcast(owner);
         IPNFTV21 ipnft = IPNFTV21(0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512);
-        ipnft.mintReservation{ value: 0.001 ether }(owner, reservationId, 0, "ipfs://tokenURI");
+        ipnft.mintReservation{value: 0.001 ether}(owner, reservationId, 0, "ipfs://tokenURI");
         vm.stopBroadcast();
     }
 }
@@ -107,7 +107,7 @@ contract MintV22 is Script {
 
         vm.startBroadcast(owner);
         IPNFT ipnft = IPNFT(0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512);
-        ipnft.mintReservation{ value: 0.001 ether }(owner, reservationId, 0, "ipfs://tokenURI/V22", "SYMBOL-00001");
+        ipnft.mintReservation{value: 0.001 ether}(owner, reservationId, 0, "ipfs://tokenURI/V22", "SYMBOL-00001");
         vm.stopBroadcast();
     }
 }
