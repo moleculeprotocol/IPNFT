@@ -67,6 +67,7 @@ contract IPNFT is
     event Reserved(address indexed reserver, uint256 indexed reservationId);
     event IPNFTMinted(address indexed owner, uint256 indexed tokenId, string tokenURI);
     event SymbolUpdated(uint256 indexed tokenId, string symbol);
+    event ReadAccessGranted(address indexed reader, uint256 indexed tokenId, uint256 until);
 
     /*
      *
@@ -204,6 +205,7 @@ contract IPNFT is
         require(until > block.timestamp, "until in the past");
 
         readAllowances[tokenId][reader] = until;
+        emit ReadAccessGranted(reader, tokenId, until);
     }
 
     /**
@@ -252,13 +254,13 @@ contract IPNFT is
     /// @dev override required by Solidity.
     function _beforeTokenTransfer(address operator, address from, address to, uint256[] memory ids, uint256[] memory amounts, bytes memory data)
         internal
-        override (ERC1155Upgradeable, ERC1155SupplyUpgradeable)
+        override(ERC1155Upgradeable, ERC1155SupplyUpgradeable)
     {
         super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
     }
 
     /// @dev override required by Solidity.
-    function uri(uint256 tokenId) public view virtual override (ERC1155Upgradeable, ERC1155URIStorageUpgradeable) returns (string memory) {
+    function uri(uint256 tokenId) public view virtual override(ERC1155Upgradeable, ERC1155URIStorageUpgradeable) returns (string memory) {
         return ERC1155URIStorageUpgradeable.uri(tokenId);
     }
 

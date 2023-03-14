@@ -21,6 +21,7 @@ contract IPNFTTest is IPNFTMintHelper {
     event Reserved(address indexed reserver, uint256 indexed reservationId);
     event IPNFTMinted(address indexed owner, uint256 indexed tokenId, string tokenURI);
     event SymbolUpdated(uint256 indexed tokenId, string symbol);
+    event ReadAccessGranted(address indexed reader, uint256 indexed tokenId, uint256 until);
 
     UUPSProxy proxy;
     IPNFT internal ipnft;
@@ -94,7 +95,7 @@ contract IPNFTTest is IPNFTMintHelper {
         emit IPNFTMinted(alice, 1, ipfsUri);
         vm.expectEmit(true, false, false, false);
         emit SymbolUpdated(reservationId, DEFAULT_SYMBOL);
-        ipnft.mintReservation{value: MINTING_FEE}(alice, reservationId, reservationId, ipfsUri, DEFAULT_SYMBOL);
+        ipnft.mintReservation{ value: MINTING_FEE }(alice, reservationId, reservationId, ipfsUri, DEFAULT_SYMBOL);
 
         assertEq(ipnft.balanceOf(alice, 1), 1);
         assertEq(ipnft.uri(1), ipfsUri);
@@ -131,7 +132,7 @@ contract IPNFTTest is IPNFTMintHelper {
         vm.deal(address(bob), 10 ether);
 
         vm.prank(bob);
-        (bool transferWorked,) = address(ipnft).call{value: 10 ether}("");
+        (bool transferWorked,) = address(ipnft).call{ value: 10 ether }("");
         assertFalse(transferWorked);
         assertEq(address(ipnft).balance, 0);
 
@@ -149,7 +150,7 @@ contract IPNFTTest is IPNFTMintHelper {
         vm.deal(address(bob), 10 ether);
         vm.prank(bob);
         Kamikaze kamikaze = new Kamikaze();
-        (bool transferWorked,) = address(kamikaze).call{value: 10 ether}("");
+        (bool transferWorked,) = address(kamikaze).call{ value: 10 ether }("");
         assertTrue(transferWorked);
         assertEq(address(kamikaze).balance, 10 ether);
 
@@ -206,6 +207,8 @@ contract IPNFTTest is IPNFTMintHelper {
         vm.expectRevert(bytes("until in the past"));
         ipnft.grantReadAccess(bob, tokenId, block.timestamp);
 
+        vm.expectEmit(true, true, false, true);
+        emit ReadAccessGranted(bob, tokenId, block.timestamp + 60);
         ipnft.grantReadAccess(bob, tokenId, block.timestamp + 60);
         assertTrue(ipnft.canRead(bob, tokenId));
         vm.warp(block.timestamp + 55);
