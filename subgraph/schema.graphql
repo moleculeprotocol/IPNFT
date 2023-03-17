@@ -23,7 +23,7 @@ type Listing @entity {
 }
 
 type CanRead @entity {
-  id: ID! #keccak(ipnft,address)
+  id: ID! #keccak(tokenId,address)
   ipnft: Ipnft!
   reader: Bytes! #address
   until: BigInt

@@ -1,5 +1,11 @@
-import { Address, ByteArray, store } from '@graphprotocol/graph-ts'
-import { crypto } from '@graphprotocol/graph-ts'
+import {
+  Address,
+  ByteArray,
+  crypto,
+  ethereum,
+  store
+} from '@graphprotocol/graph-ts'
+
 import {
   IPNFTMinted as IPNFTMintedEvent,
   Reserved as ReservedEvent,
@@ -25,10 +31,27 @@ export function handleReadAccess(event: ReadAccessGrantedEvent): void {
     return
   }
 
-  const canReadIdBytes = new ByteArray(32 + 20)
-  canReadIdBytes.set(event.params.tokenId, 0)
-  canReadIdBytes.set(event.params.reader, 32)
-  const canReadId = crypto.keccak256(canReadIdBytes).toHexString()
+  //read access ids are keccak256(abi.encode(tokenId,address))
+  //eg: 1 0x70997970c51812dc3a010c7d01b50e0d17dc79c8
+  //keccak(0x000000000000000000000000000000000000000000000000000000000000000100000000000000000000000070997970c51812dc3a010c7d01b50e0d17dc79c8)
+  //-> 0x2dcd0246be9dc8135a607e7e3f46bb8a93ebed3ec895527f1ace3477797a0adf
+  //in ethers: ethers.utils.keccak256(ethers.utils.defaultAbiCoder.encode(["uint256","address"], [1,"0x70997970c51812dc3a010c7d01b50e0d17dc79c8"]))
+  //in solidity: keccak256(abi.encode(tokenId,reader));
+
+  let tupleArray: Array<ethereum.Value> = [
+    ethereum.Value.fromUnsignedBigInt(event.params.tokenId),
+    ethereum.Value.fromAddress(event.params.reader)
+  ]
+  //https://thegraph.com/docs/en/release-notes/assemblyscript-migration-guide/#casting
+  let tuple = changetype<ethereum.Tuple>(tupleArray)
+  let encoded = ethereum.encode(ethereum.Value.fromTuple(tuple))
+  if (!encoded) {
+    return
+  }
+
+  const canReadId = crypto
+    .keccak256(changetype<ByteArray>(encoded))
+    .toHexString()
 
   let canRead = new CanRead(canReadId)
   canRead.ipnft = ipnft.id
