@@ -1,49 +1,57 @@
 type Ipnft @entity {
-    id: ID! #tokenId
-    owner: Bytes! # address
-    createdAt: BigInt!
-    tokenURI: String!
-    listings: [Listing!] @derivedFrom(field: "ipnft")
-    symbol: String
+  id: ID! #tokenId
+  owner: Bytes! # address
+  createdAt: BigInt!
+  tokenURI: String!
+  listings: [Listing!] @derivedFrom(field: "ipnft")
+  symbol: String
+  readers: [CanRead!] @derivedFrom(field: "ipnft")
 }
 
 type Listing @entity {
-    id: ID!
-    ipnft: Ipnft!
-    creator: Bytes! #address
-    tokenAmount: BigInt! #the amount of this token to sell, usually 1
-    paymentToken: Bytes! #address ERC20 Token
-    askPrice: BigInt!
-    createdAt: BigInt!
-    unlistedAt: BigInt
-    purchasedAt: BigInt
-    buyer: Bytes #address
-    allowed: [Allowed!] @derivedFrom(field: "listing")
+  id: ID!
+  ipnft: Ipnft!
+  creator: Bytes! #address
+  tokenAmount: BigInt! #the amount of this token to sell, usually 1
+  paymentToken: Bytes! #address ERC20 Token
+  askPrice: BigInt!
+  createdAt: BigInt!
+  unlistedAt: BigInt
+  purchasedAt: BigInt
+  buyer: Bytes #address
+  allowed: [Allowed!] @derivedFrom(field: "listing")
+}
+
+type CanRead @entity {
+  id: ID! #keccak(ipnft,address)
+  ipnft: Ipnft!
+  reader: Bytes! #address
+  until: BigInt
 }
 
 type Allowed @entity {
-    id: ID! #listingid-account
-    account: Bytes!
-    listing: Listing!
-    allowed: Boolean!
+  id: ID! #listingid-account
+  account: Bytes!
+  listing: Listing!
+  allowed: Boolean!
 }
 
 type Reservation @entity {
-    id: ID! #reservationId will be future tokenId
-    owner: Bytes! #address
-    uri: String
-    createdAt: BigInt!
+  id: ID! #reservationId will be future tokenId
+  owner: Bytes! #address
+  uri: String
+  createdAt: BigInt!
 }
 
 enum MintpassStatus {
-    DEFAULT
-    REDEEMED
-    REVOKED
+  DEFAULT
+  REDEEMED
+  REVOKED
 }
 
 type Mintpass @entity {
-    id: ID! #tokenId
-    owner: Bytes! #address
-    createdAt: BigInt!
-    status: MintpassStatus
+  id: ID! #tokenId
+  owner: Bytes! #address
+  createdAt: BigInt!
+  status: MintpassStatus
 }
