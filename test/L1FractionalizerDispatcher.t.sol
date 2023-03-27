@@ -37,6 +37,7 @@ contract L1FractionalizerDispatcher is Test {
 
     address bob = makeAddr("bob");
     address charlie = makeAddr("charlie");
+    address escrow = makeAddr("escrow");
 
     IERC1155Supply internal ipnft;
     FractionalizerL2Dispatcher internal fractionalizer;
@@ -168,7 +169,34 @@ contract L1FractionalizerDispatcher is Test {
     //     (,,,, uint256 fulfilledListingId) = fractionalizer.fractionalized(fractionId);
     //     assertFalse(fulfilledListingId == 0);
     // }
-    //todo test claim shares can be transferred to others and are still redeemable
+
+    function testEscrowedFractionalization() public {
+        vm.startPrank(originalOwner);
+        ipnft.setApprovalForAll(address(fractionalizer), true);
+        fractionalizer.initializeFractionalization(ipnft, 1, escrow, agreementHash, 100_000);
+        vm.stopPrank();
+
+        //here, the escrow contract initiates the listing
+        vm.startPrank(escrow);
+        uint256 listingId = helpCreateListing(1_000_000 ether);
+        vm.stopPrank();
+
+        (,,,,,,, ListingState listingState) = schmackoSwap.listings(listingId);
+        assertEq(uint256(listingState), uint256(ListingState.LISTED));
+
+        vm.startPrank(ipnftBuyer);
+        erc20.approve(address(schmackoSwap), 1_000_000 ether);
+        schmackoSwap.fulfill(listingId);
+        vm.stopPrank();
+
+        assertEq(ipnft.balanceOf(ipnftBuyer, 1), 1);
+        assertEq(ipnft.balanceOf(escrow, 1), 0);
+        assertEq(erc20.balanceOf(escrow), 0);
+        assertEq(erc20.balanceOf(address(fractionalizer)), 1_000_000 ether);
+
+        (,,,,,,, ListingState listingState2) = schmackoSwap.listings(listingId);
+        assertEq(uint256(listingState2), uint256(ListingState.FULFILLED));
+    }
 
     function testCollectionBalanceMustBeOne() public {
         //cant fractionalize 1155 tokens with a supply > 1
