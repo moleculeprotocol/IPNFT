@@ -96,6 +96,17 @@ contract SchmackoSwap is ERC165, ReentrancyGuard {
     /// @return The ID of the created listing
     /// @dev Remember to call `setApprovalForAll(<address of this contract>, true)` on the ERC1155's contract before calling this function
     function list(IERC1155Supply tokenContract, uint256 tokenId, IERC20 paymentToken, uint256 askPrice) public returns (uint256) {
+        return list(tokenContract, tokenId, paymentToken, askPrice, msg.sender);
+    }
+
+    /**
+     * {inheritDoc list}
+     * @param beneficiary address the account that will receive the funds after fulfillment. In case of fractionalization this should be the FractionalizerL2Dispatcher
+     */
+    function list(IERC1155Supply tokenContract, uint256 tokenId, IERC20 paymentToken, uint256 askPrice, address beneficiary)
+        public
+        returns (uint256)
+    {
         if (!tokenContract.isApprovedForAll(msg.sender, address(this))) {
             revert InsufficientAllowance();
         }
@@ -107,7 +118,7 @@ contract SchmackoSwap is ERC165, ReentrancyGuard {
             tokenAmount: tokenContract.totalSupply(tokenId),
             askPrice: askPrice,
             creator: msg.sender,
-            beneficiary: msg.sender,
+            beneficiary: beneficiary,
             listingState: ListingState.LISTED
         });
 
@@ -117,16 +128,7 @@ contract SchmackoSwap is ERC165, ReentrancyGuard {
 
         emit Listed(listingId, listing);
 
-        return listingId;
-    }
-
-    function listFor(IERC1155Supply tokenContract, uint256 tokenId, IERC20 paymentToken, uint256 askPrice, address beneficiary)
-        public
-        returns (uint256)
-    {
-        uint256 listingId = list(tokenContract, tokenId, paymentToken, askPrice);
         //todo: this stays unmentioned in the emitted event!
-        listings[listingId].beneficiary = beneficiary;
         return listingId;
     }
 
@@ -173,24 +175,30 @@ contract SchmackoSwap is ERC165, ReentrancyGuard {
     /// @notice lets the seller allow or disallow a certain buyer to fulfill the listing
     /// @param listingId The ID for the listing you want to purchase
     /// @param buyerAddress the address to change allowance for
-    /// @param isAllowed_ whether to allow or disallow `buyerAddress` to fulfill the listing
-    function changeBuyerAllowance(uint256 listingId, address buyerAddress, bool isAllowed_) public {
+    /// @param _isAllowed whether to allow or disallow `buyerAddress` to fulfill the listing
+    function changeBuyerAllowance(uint256 listingId, address buyerAddress, bool _isAllowed) public {
         Listing memory listing = listings[listingId];
 
         if (listing.creator == address(0)) revert ListingNotFound();
         if (listing.creator != msg.sender) revert Unauthorized();
         require(buyerAddress != address(0), "Can't add ZERO address to allowlist");
 
-        allowlist[listingId][buyerAddress] = isAllowed_;
+        allowlist[listingId][buyerAddress] = _isAllowed;
 
-        emit AllowlistUpdated(listingId, buyerAddress, isAllowed_);
+        emit AllowlistUpdated(listingId, buyerAddress, _isAllowed);
+    }
+
+    function changeBuyerAllowance(uint256 listingId, address[] calldata buyerAddresses, bool _isAllowed) external {
+        for (uint256 i = 0; i < buyerAddresses.length; i++) {
+            changeBuyerAllowance(listingId, buyerAddresses[i], _isAllowed);
+        }
     }
 
     function isAllowed(uint256 listingId, address buyerAddress) public view returns (bool) {
         return allowlist[listingId][buyerAddress];
     }
 
-    function supportsInterface(bytes4 interfaceId) public view virtual override (ERC165) returns (bool) {
+    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC165) returns (bool) {
         return super.supportsInterface(interfaceId);
     }
 }

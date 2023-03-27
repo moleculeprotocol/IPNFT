@@ -22,6 +22,7 @@ contract FractionalizerL2Dispatcher is UUPSUpgradeable, OwnableUpgradeable {
         IERC1155Supply collection;
         uint256 tokenId;
         address originalOwner;
+        address escrowAccount;
         uint256 fulfilledListingId;
     }
 
@@ -48,13 +49,17 @@ contract FractionalizerL2Dispatcher is UUPSUpgradeable, OwnableUpgradeable {
      *
      * @param collection      IERC1155  any erc1155 token collection that signals their token amount
      * @param tokenId          uint256  the token id on the origin collection
+     * @param escrowAccount    address  the L1 account that will hold the IPNFT as long as it's fractionalized
      * @param agreementHash    bytes32  a content hash that identifies the terms underlying the issued fractions
      * @param fractionsAmount  uint256  the initial amount of fractions issued
      */
-    function initializeFractionalization(IERC1155Supply collection, uint256 tokenId, bytes32 agreementHash, uint256 fractionsAmount)
-        external
-        returns (uint256)
-    {
+    function initializeFractionalization(
+        IERC1155Supply collection,
+        uint256 tokenId,
+        address escrowAccount,
+        bytes32 agreementHash,
+        uint256 fractionsAmount
+    ) external returns (uint256) {
         if (collection.totalSupply(tokenId) != 1) {
             revert("can only fractionalize ERC1155 tokens with a supply of 1");
         }
@@ -64,7 +69,7 @@ contract FractionalizerL2Dispatcher is UUPSUpgradeable, OwnableUpgradeable {
         }
 
         uint256 fractionId = uint256(keccak256(abi.encodePacked(_msgSender(), collection, tokenId)));
-        fractionalized[fractionId] = Fractionalized(collection, tokenId, _msgSender(), 0);
+        fractionalized[fractionId] = Fractionalized(collection, tokenId, _msgSender(), escrowAccount, 0);
 
         bytes memory message = abi.encodeWithSignature(
             "fractionalizeUniqueERC1155(uint256,address,uint256,address,bytes32,uint256)",
@@ -77,7 +82,7 @@ contract FractionalizerL2Dispatcher is UUPSUpgradeable, OwnableUpgradeable {
         );
 
         //alternatively: transfer the NFT to Fractionalizer so it can't be transferred while fractionalized
-        //collection.safeTransferFrom(_msgSender(), address(this), tokenId, 1, "");
+        collection.safeTransferFrom(_msgSender(), escrowAccount, tokenId, 1, "");
 
         address crossDomainMessengerAddr = registry.safeGet("CrossdomainMessenger");
         ICrossDomainMessenger(crossDomainMessengerAddr).sendMessage(registry.safeGet("FractionalizerL2"), message, MIN_GASLIMIT);
@@ -86,32 +91,47 @@ contract FractionalizerL2Dispatcher is UUPSUpgradeable, OwnableUpgradeable {
     }
 
     /**
-     * @notice initialize the sales phase manually
+     * todo: this is far too dangerous, as any escrow wallet could signal *any* price here, draining arbitrary funds
+     *       out of this contract.
+     *
+     * @notice When the sales beneficiary has *not* been set to this contract, but to the FAM wallet instead,
+     *         this method can be "manually" invoked by that wallet to start the claiming phase. This doesn't
+     *         depend on Schmackoswap and can also be used to start distribution of off record sales.
      *
      * @param   fractionId    uint256  the fraction id
      * @param   paymentToken  IERC20   the paymen token contract address
      * @param   price         uint256  the price the NFT has been sold for.
      */
-    function afterSale(uint256 fractionId, IERC20 paymentToken, uint256 price) external {
-        Fractionalized storage frac = fractionalized[fractionId];
-        if (_msgSender() != frac.originalOwner) {
-            revert("only the original owner may initialize the sale phase manually");
-        }
+    // function afterSale(uint256 fractionId, IERC20 paymentToken, uint256 price) external {
+    //     Fractionalized storage frac = fractionalized[fractionId];
+    //     if (_msgSender() != frac.escrowAccount) {
+    //         revert("only the escrow account may initialize the sale phase manually");
+    //     }
 
-        //simulate a schmackoswap listing id
-        frac.fulfilledListingId = uint256(
-            keccak256(
-                abi.encodePacked(
-                    frac.collection, frac.tokenId, paymentToken, uint256(1), price, msg.sender, address(this), ListingState.FULFILLED, block.number
-                )
-            )
-        );
-        paymentToken.transferFrom(_msgSender(), address(this), price);
-        _startSalesPhase(fractionId, paymentToken, price);
-    }
+    //     //create a fake (but valid) schmackoswap listing id
+    //     frac.fulfilledListingId = uint256(
+    //         keccak256(
+    //             abi.encodePacked(
+    //                 frac.collection,
+    //                 frac.tokenId,
+    //                 paymentToken,
+    //                 uint256(1),
+    //                 price,
+    //                 frac.escrowAccount,
+    //                 address(this),
+    //                 ListingState.FULFILLED,
+    //                 block.number
+    //             )
+    //         )
+    //     );
+    //     paymentToken.transferFrom(frac.escrowAccount, address(this), price);
+    //     _startSalesPhase(fractionId, paymentToken, price);
+    // }
 
     /**
-     * @notice Anyone can call this after having observed the sale to activate the share payout phase on L2
+     * @notice When the sales beneficiary has been set to this contract,
+     *         anyone can call this function after having observed the sale
+     *         to activate the share payout phase on L2
      *
      * @param fractionId    uint256     the unique fraction id
      * @param listingId     uint256     the listing id on Schmackoswap
@@ -152,6 +172,8 @@ contract FractionalizerL2Dispatcher is UUPSUpgradeable, OwnableUpgradeable {
         address bridgeAddr = registry.safeGet("StandardBridge");
         address crossDomainMessengerAddr = registry.safeGet("CrossdomainMessenger");
         address fractionalizerAddrL2 = registry.safeGet("FractionalizerL2");
+
+        //todo: check if we can make this translation safer by trusting a "generic" erc20 bridge
         address tokenL2Address = registry.safeGet(address(_paymentToken));
 
         //todo: the approval should be provided in general.
