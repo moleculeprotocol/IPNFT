@@ -28,3 +28,7 @@
 	path = lib/protocol
 	url = https://github.com/UMAprotocol/protocol
 	branch = v1.2.1
+[submodule "lib/zodiac"]
+	path = lib/zodiac
+	url = https://github.com/gnosis/zodiac
+	branch = v3.2.0
