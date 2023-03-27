@@ -24,3 +24,7 @@
 	path = lib/safe-contracts
 	url = https://github.com/safe-global/safe-contracts
 	branch = v1.3.0
+[submodule "lib/protocol"]
+	path = lib/protocol
+	url = https://github.com/UMAprotocol/protocol
+	branch = v1.2.1
