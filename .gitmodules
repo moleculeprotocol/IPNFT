@@ -16,3 +16,8 @@
 	path = lib/ERC721B
 	url = https://github.com/badbabybearbots/ERC721B
 	branch = 0.2.1
+[submodule "lib/safe-contracts"]
+	path = lib/safe-contracts
+	url = https://github.com/safe-global/safe-contracts
+	branch = v1.3.0
+
