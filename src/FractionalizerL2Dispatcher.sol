@@ -22,6 +22,7 @@ contract FractionalizerL2Dispatcher is UUPSUpgradeable, OwnableUpgradeable {
         IERC1155Supply collection;
         uint256 tokenId;
         address originalOwner;
+        address escrowAccount;
         uint256 fulfilledListingId;
     }
 
@@ -48,13 +49,17 @@ contract FractionalizerL2Dispatcher is UUPSUpgradeable, OwnableUpgradeable {
      *
      * @param collection      IERC1155  any erc1155 token collection that signals their token amount
      * @param tokenId          uint256  the token id on the origin collection
+     * @param escrowAccount    address  the L1 account that will hold the IPNFT as long as it's fractionalized
      * @param agreementHash    bytes32  a content hash that identifies the terms underlying the issued fractions
      * @param fractionsAmount  uint256  the initial amount of fractions issued
      */
-    function initializeFractionalization(IERC1155Supply collection, uint256 tokenId, bytes32 agreementHash, uint256 fractionsAmount)
-        external
-        returns (uint256)
-    {
+    function initializeFractionalization(
+        IERC1155Supply collection,
+        uint256 tokenId,
+        address escrowAccount,
+        bytes32 agreementHash,
+        uint256 fractionsAmount
+    ) external returns (uint256) {
         if (collection.totalSupply(tokenId) != 1) {
             revert("can only fractionalize ERC1155 tokens with a supply of 1");
         }
@@ -63,14 +68,14 @@ contract FractionalizerL2Dispatcher is UUPSUpgradeable, OwnableUpgradeable {
             revert("only owner can initialize fractions");
         }
 
-        uint256 fractionId = uint256(keccak256(abi.encodePacked(msg.sender, collection, tokenId)));
-        fractionalized[fractionId] = Fractionalized(collection, tokenId, msg.sender, 0);
+        uint256 fractionId = uint256(keccak256(abi.encodePacked(_msgSender(), collection, tokenId)));
+        fractionalized[fractionId] = Fractionalized(collection, tokenId, _msgSender(), escrowAccount, 0);
 
         bytes memory message =
             abi.encodeWithSignature("fractionalizeUniqueERC1155(uint256,bytes32,uint256)", fractionId, agreementHash, fractionsAmount);
 
         //alternatively: transfer the NFT to Fractionalizer so it can't be transferred while fractionalized
-        //collection.safeTransferFrom(_msgSender(), address(this), tokenId, 1, "");
+        collection.safeTransferFrom(_msgSender(), escrowAccount, tokenId, 1, "");
 
         address crossDomainMessengerAddr = registry.safeGet("CrossdomainMessenger");
         ICrossDomainMessenger(crossDomainMessengerAddr).sendMessage(registry.safeGet("FractionalizerL2"), message, MIN_GASLIMIT);
@@ -117,6 +122,8 @@ contract FractionalizerL2Dispatcher is UUPSUpgradeable, OwnableUpgradeable {
         address bridgeAddr = registry.safeGet("StandardBridge");
         address crossDomainMessengerAddr = registry.safeGet("CrossdomainMessenger");
         address fractionalizerAddrL2 = registry.safeGet("FractionalizerL2");
+
+        //todo: check if we can make this translation safer by trusting a "generic" erc20 bridge
         address tokenL2Address = registry.safeGet(address(_paymentToken));
 
         //todo: the approval should be provided in general.
