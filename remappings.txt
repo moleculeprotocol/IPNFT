@@ -5,3 +5,4 @@ forge-std/=lib/forge-std/src/
 @eth-optimism/contracts/=lib/optimism/packages/contracts/contracts/
 solmate/=lib/solmate/src/
 erc721b/=lib/ERC721B/contracts/
+safe-global/safe-contracts/=lib/safe-contracts/contracts/
