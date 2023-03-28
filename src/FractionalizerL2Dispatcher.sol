@@ -50,15 +50,17 @@ contract FractionalizerL2Dispatcher is UUPSUpgradeable, OwnableUpgradeable {
      * @param collection      IERC1155  any erc1155 token collection that signals their token amount
      * @param tokenId          uint256  the token id on the origin collection
      * @param escrowAccount    address  the L1 account that will hold the IPNFT as long as it's fractionalized
+     * @param recipient        address  an account that will receive all fractions on L2
      * @param agreementHash    bytes32  a content hash that identifies the terms underlying the issued fractions
-     * @param fractionsAmount  uint256  the initial amount of fractions issued
+     * @param initialAmount  uint256  the initial amount of fractions issued
      */
     function initializeFractionalization(
         IERC1155Supply collection,
         uint256 tokenId,
         address escrowAccount,
+        address recipient,
         bytes32 agreementHash,
-        uint256 fractionsAmount
+        uint256 initialAmount
     ) external returns (uint256) {
         if (collection.totalSupply(tokenId) != 1) {
             revert("can only fractionalize ERC1155 tokens with a supply of 1");
@@ -72,13 +74,14 @@ contract FractionalizerL2Dispatcher is UUPSUpgradeable, OwnableUpgradeable {
         fractionalized[fractionId] = Fractionalized(collection, tokenId, _msgSender(), escrowAccount, 0);
 
         bytes memory message = abi.encodeWithSignature(
-            "fractionalizeUniqueERC1155(uint256,address,uint256,address,bytes32,uint256)",
+            "fractionalizeUniqueERC1155(uint256,address,uint256,address,address,bytes32,uint256)",
             fractionId,
             collection,
             tokenId,
             _msgSender(),
+            recipient,
             agreementHash,
-            fractionsAmount
+            initialAmount
         );
 
         //alternatively: transfer the NFT to Fractionalizer so it can't be transferred while fractionalized

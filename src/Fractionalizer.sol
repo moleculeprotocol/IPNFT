@@ -98,11 +98,11 @@ contract Fractionalizer is ERC1155SupplyUpgradeable, UUPSUpgradeable, ERC2771Con
         fractionalizationPercentage = fractionalizationPercentage_;
     }
 
-    function _msgSender() internal view override(ContextUpgradeable, ERC2771ContextUpgradeable) returns (address sender) {
+    function _msgSender() internal view override (ContextUpgradeable, ERC2771ContextUpgradeable) returns (address sender) {
         return ERC2771ContextUpgradeable._msgSender();
     }
 
-    function _msgData() internal view override(ContextUpgradeable, ERC2771ContextUpgradeable) returns (bytes calldata) {
+    function _msgData() internal view override (ContextUpgradeable, ERC2771ContextUpgradeable) returns (bytes calldata) {
         return ERC2771ContextUpgradeable._msgData();
     }
 
@@ -114,6 +114,7 @@ contract Fractionalizer is ERC1155SupplyUpgradeable, UUPSUpgradeable, ERC2771Con
         address collection,
         uint256 tokenId,
         address originalOwner,
+        address recipient,
         bytes32 agreementHash,
         uint256 fractionsAmount
     ) public onlyXDomain onlyDispatcher {
@@ -128,7 +129,7 @@ contract Fractionalizer is ERC1155SupplyUpgradeable, UUPSUpgradeable, ERC2771Con
 
         fractionalized[fractionId] = Fractionalized(collection, tokenId, fractionsAmount, originalOwner, agreementHash, IERC20(address(0)), 0);
 
-        _mint(originalOwner, fractionId, fractionsAmount, "");
+        _mint(recipient, fractionId, fractionsAmount, "");
         //todo: if we want to take a protocol fee, this might be agood point of doing so.
         emit FractionsCreated(collection, tokenId, originalOwner, fractionId, agreementHash);
     }
