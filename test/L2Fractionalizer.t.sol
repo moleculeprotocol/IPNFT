@@ -69,8 +69,9 @@ contract L2FractionalizerTest is Test {
         fractionId = uint256(keccak256(abi.encodePacked(originalOwner, ipnftContract, uint256(1))));
 
         xDomainMessenger.setSender(FakeL1DispatcherContract);
-        bytes memory message =
-            abi.encodeCall(Fractionalizer.fractionalizeUniqueERC1155, (fractionId, ipnftContract, uint256(1), originalOwner, agreementHash, 100_000));
+        bytes memory message = abi.encodeCall(
+            Fractionalizer.fractionalizeUniqueERC1155, (fractionId, ipnftContract, uint256(1), originalOwner, originalOwner, agreementHash, 100_000)
+        );
 
         xDomainMessenger.sendMessage(address(fractionalizer), message, 1_900_000);
     }
@@ -117,7 +118,10 @@ contract L2FractionalizerTest is Test {
         vm.expectRevert("relay failed: token is already fractionalized");
         xDomainMessenger.sendMessage(
             address(fractionalizer),
-            abi.encodeCall(Fractionalizer.fractionalizeUniqueERC1155, (fractionId, ipnftContract, uint256(1), originalOwner, agreementHash, 200_000)),
+            abi.encodeCall(
+                Fractionalizer.fractionalizeUniqueERC1155,
+                (fractionId, ipnftContract, uint256(1), originalOwner, originalOwner, agreementHash, 200_000)
+            ),
             1_900_000
         );
     }

@@ -90,7 +90,7 @@ contract L1FractionalizerDispatcher is Test {
     function testInitiatingFractions() public {
         vm.startPrank(originalOwner);
         ipnft.setApprovalForAll(address(fractionalizer), true);
-        fractionalizer.initializeFractionalization(ipnft, 1, originalOwner, agreementHash, 100_000);
+        fractionalizer.initializeFractionalization(ipnft, 1, originalOwner, originalOwner, agreementHash, 100_000);
         vm.stopPrank();
     }
 
@@ -105,7 +105,7 @@ contract L1FractionalizerDispatcher is Test {
     function testCreateListingAndSell() public {
         vm.startPrank(originalOwner);
         ipnft.setApprovalForAll(address(fractionalizer), true);
-        fractionalizer.initializeFractionalization(ipnft, 1, originalOwner, agreementHash, 100_000);
+        fractionalizer.initializeFractionalization(ipnft, 1, originalOwner, originalOwner, agreementHash, 100_000);
         uint256 listingId = helpCreateListing(1_000_000 ether);
         vm.stopPrank();
 
@@ -129,7 +129,7 @@ contract L1FractionalizerDispatcher is Test {
     function testStartClaimingPhase() public {
         vm.startPrank(originalOwner);
         ipnft.setApprovalForAll(address(fractionalizer), true);
-        uint256 fractionId = fractionalizer.initializeFractionalization(ipnft, 1, originalOwner, agreementHash, 100_000);
+        uint256 fractionId = fractionalizer.initializeFractionalization(ipnft, 1, originalOwner, originalOwner, agreementHash, 100_000);
         uint256 listingId = helpCreateListing(1_000_000 ether);
         vm.stopPrank();
 
@@ -173,7 +173,7 @@ contract L1FractionalizerDispatcher is Test {
     function testEscrowedFractionalization() public {
         vm.startPrank(originalOwner);
         ipnft.setApprovalForAll(address(fractionalizer), true);
-        fractionalizer.initializeFractionalization(ipnft, 1, escrow, agreementHash, 100_000);
+        fractionalizer.initializeFractionalization(ipnft, 1, escrow, originalOwner, agreementHash, 100_000);
         vm.stopPrank();
 
         //here, the escrow contract initiates the listing
