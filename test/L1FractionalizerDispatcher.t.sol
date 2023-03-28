@@ -90,7 +90,7 @@ contract L1FractionalizerDispatcher is Test {
     function testInitiatingFractions() public {
         vm.startPrank(originalOwner);
         ipnft.setApprovalForAll(address(fractionalizer), true);
-        fractionalizer.initializeFractionalization(ipnft, 1, originalOwner, originalOwner, agreementHash, 100_000);
+        fractionalizer.initializeFractionalization(ipnft, 1, originalOwner, agreementHash, 100_000);
         vm.stopPrank();
     }
 
@@ -105,7 +105,7 @@ contract L1FractionalizerDispatcher is Test {
     function testCreateListingAndSell() public {
         vm.startPrank(originalOwner);
         ipnft.setApprovalForAll(address(fractionalizer), true);
-        fractionalizer.initializeFractionalization(ipnft, 1, originalOwner, originalOwner, agreementHash, 100_000);
+        fractionalizer.initializeFractionalization(ipnft, 1, originalOwner, agreementHash, 100_000);
         uint256 listingId = helpCreateListing(1_000_000 ether);
         vm.stopPrank();
 
@@ -129,7 +129,7 @@ contract L1FractionalizerDispatcher is Test {
     function testStartClaimingPhase() public {
         vm.startPrank(originalOwner);
         ipnft.setApprovalForAll(address(fractionalizer), true);
-        uint256 fractionId = fractionalizer.initializeFractionalization(ipnft, 1, originalOwner, originalOwner, agreementHash, 100_000);
+        uint256 fractionId = fractionalizer.initializeFractionalization(ipnft, 1, originalOwner, agreementHash, 100_000);
         uint256 listingId = helpCreateListing(1_000_000 ether);
         vm.stopPrank();
 
@@ -145,57 +145,29 @@ contract L1FractionalizerDispatcher is Test {
         vm.stopPrank();
 
         assertEq(erc20.balanceOf(address(fractionalizer)), 0);
-        (,,,, uint256 fulfilledListingId) = fractionalizer.fractionalized(fractionId);
+        (,,, uint256 fulfilledListingId) = fractionalizer.fractionalized(fractionId);
         assertEq(listingId, fulfilledListingId);
     }
 
-    // function testManuallyStartClaimingPhase() public {
-    //     vm.startPrank(originalOwner);
-    //     uint256 fractionId = fractionalizer.initializeFractionalization(ipnft, 1, originalOwner, agreementHash, 100_000);
-    //     erc20.approve(address(fractionalizer), 1_000_000 ether);
-    //     ipnft.safeTransferFrom(originalOwner, ipnftBuyer, 1, 1, "");
-    //     vm.stopPrank();
-
-    //     vm.startPrank(ipnftBuyer);
-    //     erc20.transfer(originalOwner, 1_000_000 ether);
-    //     vm.stopPrank();
-
-    //     // this is wanted: *anyone* (!) can call this. This is an oracle call.
-    //     vm.startPrank(originalOwner);
-    //     fractionalizer.afterSale(fractionId, erc20, 1_000_000 ether);
-    //     vm.stopPrank();
-
-    //     assertEq(erc20.balanceOf(address(originalOwner)), 0);
-    //     (,,,, uint256 fulfilledListingId) = fractionalizer.fractionalized(fractionId);
-    //     assertFalse(fulfilledListingId == 0);
-    // }
-
-    function testEscrowedFractionalization() public {
+    function testManuallyStartClaimingPhase() public {
         vm.startPrank(originalOwner);
-        ipnft.setApprovalForAll(address(fractionalizer), true);
-        fractionalizer.initializeFractionalization(ipnft, 1, escrow, originalOwner, agreementHash, 100_000);
+        uint256 fractionId = fractionalizer.initializeFractionalization(ipnft, 1, originalOwner, agreementHash, 100_000);
+        erc20.approve(address(fractionalizer), 1_000_000 ether);
+        ipnft.safeTransferFrom(originalOwner, ipnftBuyer, 1, 1, "");
         vm.stopPrank();
-
-        //here, the escrow contract initiates the listing
-        vm.startPrank(escrow);
-        uint256 listingId = helpCreateListing(1_000_000 ether);
-        vm.stopPrank();
-
-        (,,,,,,, ListingState listingState) = schmackoSwap.listings(listingId);
-        assertEq(uint256(listingState), uint256(ListingState.LISTED));
 
         vm.startPrank(ipnftBuyer);
-        erc20.approve(address(schmackoSwap), 1_000_000 ether);
-        schmackoSwap.fulfill(listingId);
+        erc20.transfer(originalOwner, 1_000_000 ether);
         vm.stopPrank();
 
-        assertEq(ipnft.balanceOf(ipnftBuyer, 1), 1);
-        assertEq(ipnft.balanceOf(escrow, 1), 0);
-        assertEq(erc20.balanceOf(escrow), 0);
-        assertEq(erc20.balanceOf(address(fractionalizer)), 1_000_000 ether);
+        // this is wanted: *anyone* (!) can call this. This is an oracle call.
+        vm.startPrank(originalOwner);
+        fractionalizer.afterSale(fractionId, erc20, 1_000_000 ether);
+        vm.stopPrank();
 
-        (,,,,,,, ListingState listingState2) = schmackoSwap.listings(listingId);
-        assertEq(uint256(listingState2), uint256(ListingState.FULFILLED));
+        assertEq(erc20.balanceOf(address(originalOwner)), 0);
+        (,,, uint256 fulfilledListingId) = fractionalizer.fractionalized(fractionId);
+        assertFalse(fulfilledListingId == 0);
     }
 
     function testCollectionBalanceMustBeOne() public {
