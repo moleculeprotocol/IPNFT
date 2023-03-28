@@ -36,9 +36,9 @@ sequenceDiagram
 
     par sell IPNFT
         Buyer->>SOS: pay amt
+        SOS->>FracL1: transfer amt
         SOS->>OO: initiate IPNFT transfer
         OO->>Buyer: transfer IPNFT
-        SOS->>FracL1: transfer amt
     end
 
     OO->>FracL1: start claim
@@ -48,6 +48,7 @@ sequenceDiagram
     FamHolder->>FX: sign agreement
     FamHolder->>FX: claim share on sales amount
     FX->>FamHolder: pay share
+
 
 
 

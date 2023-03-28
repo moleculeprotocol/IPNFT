@@ -128,7 +128,6 @@ contract SchmackoSwap is ERC165, ReentrancyGuard {
 
         emit Listed(listingId, listing);
 
-        //todo: this stays unmentioned in the emitted event!
         return listingId;
     }
 
@@ -198,7 +197,7 @@ contract SchmackoSwap is ERC165, ReentrancyGuard {
         return allowlist[listingId][buyerAddress];
     }
 
-    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC165) returns (bool) {
+    function supportsInterface(bytes4 interfaceId) public view virtual override (ERC165) returns (bool) {
         return super.supportsInterface(interfaceId);
     }
 }
