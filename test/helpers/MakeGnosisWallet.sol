@@ -13,7 +13,8 @@ import { DefaultCallbackHandler } from "safe-global/safe-contracts/handler/Defau
 library MakeGnosisWallet {
     function makeGnosisWallet(GnosisSafeProxyFactory factory, address[] memory owners) public returns (GnosisSafeL2) {
         GnosisSafeL2 singleton = new GnosisSafeL2();
-        GnosisSafeL2 wallet = GnosisSafeL2(payable(factory.createProxy(address(singleton), "")));
+
+        GnosisSafeL2 wallet = GnosisSafeL2(payable(factory.createProxyWithNonce(address(singleton), "", uint256(1680130687))));
         //DefaultCallbackHandler fallbackHandler = DefaultCallbackHandler(new CompatibilityFallbackHandler());
         DefaultCallbackHandler fallbackHandler = new DefaultCallbackHandler();
         wallet.setup(owners, 1, address(0x0), "", address(fallbackHandler), address(0x0), 0, payable(address(0x0)));
