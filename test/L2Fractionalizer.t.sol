@@ -4,11 +4,17 @@ pragma solidity ^0.8.17;
 import "forge-std/Test.sol";
 import { console } from "forge-std/console.sol";
 
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { ICrossDomainMessenger } from "@eth-optimism/contracts/libraries/bridge/ICrossDomainMessenger.sol";
-import { MockCrossDomainMessenger } from "./helpers/MockCrossDomainMessenger.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+
+import { GnosisSafeL2 } from "safe-global/safe-contracts/GnosisSafeL2.sol";
+import { GnosisSafeProxyFactory } from "safe-global/safe-contracts/proxies/GnosisSafeProxyFactory.sol";
+import { Enum } from "safe-global/safe-contracts/common/Enum.sol";
+
+import { MockCrossDomainMessenger } from "./helpers/MockCrossDomainMessenger.sol";
+import "./helpers/MakeGnosisWallet.sol";
 
 import { Fractionalizer } from "../src/Fractionalizer.sol";
 import { MyToken } from "../src/MyToken.sol";
@@ -215,10 +221,6 @@ contract L2FractionalizerTest is Test {
     //     //cant fractionalize 1155 tokens with a supply > 1
     // }
 
-    // function testThatContractSignaturesAreAccepted() public {
-    //     //craft an eip1271 signature
-    // }
-
     // function testMetaTxAreAcceptedForTransfers() public {
     //     //call the transfer methods with signed meta transactions
     // }
@@ -227,7 +229,7 @@ contract L2FractionalizerTest is Test {
         uint256 fractionId = helpInitializeFractions();
 
         string memory terms = fractionalizer.specificTermsV1(fractionId);
-        console.log(terms);
+        //console.log(terms);
         bytes32 termsHash = ECDSA.toEthSignedMessageHash(abi.encodePacked(terms));
 
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(alicePk, termsHash);
@@ -239,5 +241,73 @@ contract L2FractionalizerTest is Test {
         fractionalizer.acceptTerms(fractionId, xsignature);
         vm.stopPrank();
         assertTrue(fractionalizer.signedTerms(fractionId, alice));
+    }
+
+    // function testThatContractSignaturesAreAccepted() public {
+    //     //craft an eip1271 signature
+    // }
+
+    function testGnosisSafeCanInteractWithFractions() public {
+        vm.startPrank(deployer);
+        GnosisSafeProxyFactory fac = new GnosisSafeProxyFactory();
+        vm.stopPrank();
+
+        vm.startPrank(alice);
+
+        address[] memory owners = new address[](1);
+        owners[0] = alice;
+        GnosisSafeL2 wallet = MakeGnosisWallet.makeGnosisWallet(fac, owners);
+        vm.stopPrank();
+
+        uint256 fractionId = uint256(keccak256(abi.encodePacked(originalOwner, ipnftContract, uint256(1))));
+
+        xDomainMessenger.setSender(FakeL1DispatcherContract);
+        bytes memory message = abi.encodeCall(
+            fractionalizer.fractionalizeUniqueERC1155, (fractionId, ipnftContract, uint256(1), originalOwner, address(wallet), agreementHash, 100_000)
+        );
+
+        xDomainMessenger.sendMessage(address(fractionalizer), message, 2_900_000);
+        assertEq(fractionalizer.balanceOf(address(wallet), fractionId), 100_000);
+
+        //test the SAFE can send fractions to another account
+        bytes memory transferCall = abi.encodeCall(fractionalizer.safeTransferFrom, (address(wallet), bob, fractionId, 10_000, bytes("")));
+        bytes32 encodedTxDataHash = wallet.getTransactionHash(
+            address(fractionalizer), 0, transferCall, Enum.Operation.Call, 80_000, 1 gwei, 20 gwei, address(0x0), payable(0x0), 0
+        );
+
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(alicePk, encodedTxDataHash);
+        bytes memory xsignatures = abi.encodePacked(r, s, v);
+
+        vm.startPrank(alice);
+        wallet.execTransaction(
+            address(fractionalizer), 0, transferCall, Enum.Operation.Call, 80_000, 1 gwei, 20 gwei, address(0x0), payable(0x0), xsignatures
+        );
+        vm.stopPrank();
+
+        assertEq(fractionalizer.balanceOf(bob, fractionId), 10_000);
+
+        //signing terms with a multisig
+
+        assertFalse(fractionalizer.signedTerms(fractionId, address(wallet)));
+        //new SignMessageLib();
+
+        // string memory terms = fractionalizer.specificTermsV1(fractionId);
+        // //console.log(terms);
+        // bytes32 termsHash = ECDSA.toEthSignedMessageHash(abi.encodePacked(terms));
+
+        // (uint8 v, bytes32 r, bytes32 s) = vm.sign(alicePk, termsHash);
+        // bytes memory xsignature = abi.encodePacked(r, s, v);
+        // assertTrue(fractionalizer.isValidSignature(fractionId, alice, xsignature));
+
+        // vm.startPrank(alice);
+        // fractionalizer.acceptTerms(fractionId, xsignature);
+        // vm.stopPrank();
+        // assertTrue(fractionalizer.signedTerms(fractionId, alice));
+
+        //lets start aftersales phase
+        // vm.startPrank(PREDEPLOYED_XDOMAIN_MESSENGER);
+        // xDomainMessenger.setSender(FakeL1DispatcherContract);
+        // fractionalizer.afterSale(fractionId, address(erc20), 1_000_000 ether);
+        // vm.stopPrank();
     }
 }
