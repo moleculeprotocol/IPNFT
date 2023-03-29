@@ -2,17 +2,19 @@
 pragma solidity ^0.8.17;
 
 import "forge-std/Test.sol";
+import { console } from "forge-std/console.sol";
+
 import { ICrossDomainMessenger } from "@eth-optimism/contracts/libraries/bridge/ICrossDomainMessenger.sol";
 import { IL1ERC20Bridge } from "@eth-optimism/contracts/L1/messaging/IL1ERC20Bridge.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import { console } from "forge-std/console.sol";
 import { MockStandardBridge } from "./helpers/MockStandardBridge.sol";
 import { MockCrossDomainMessenger } from "./helpers/MockCrossDomainMessenger.sol";
 import { AuthorizeAll } from "./helpers/AuthorizeAll.sol";
 import { IPNFTMintHelper } from "./IPNFTMintHelper.sol";
+import { TestERC1155 } from "./helpers/TestERC1155.sol";
 
 import { IPNFT } from "../src/IPNFT.sol";
 import { Fractionalizer } from "../src/Fractionalizer.sol";
@@ -172,5 +174,14 @@ contract L1FractionalizerDispatcher is Test {
 
     function testCollectionBalanceMustBeOne() public {
         //cant fractionalize 1155 tokens with a supply > 1
+        vm.startPrank(originalOwner);
+        TestERC1155 erc1155 = new TestERC1155("");
+        erc1155.mint(alice, 314, 10);
+        vm.stopPrank();
+
+        vm.startPrank(originalOwner);
+        vm.expectRevert("can only fractionalize ERC1155 tokens with a supply of 1");
+        fractionalizer.initializeFractionalization(IERC1155Supply(address(erc1155)), 1, alice, "", 100_000);
+        vm.stopPrank();
     }
 }

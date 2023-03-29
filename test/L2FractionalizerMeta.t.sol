@@ -14,7 +14,7 @@ import { UnverifiedForwarder, ForwardRequest } from "./helpers/UnverifiedForward
 import { Fractionalizer } from "../src/Fractionalizer.sol";
 import { MyToken } from "../src/MyToken.sol";
 
-contract L2FractionalizerTest is Test {
+contract L2FractionalizerMetaTest is Test {
     string ipfsUri = "ipfs://bafkreiankqd3jvpzso6khstnaoxovtyezyatxdy7t2qzjoolqhltmasqki";
     bytes32 agreementHash = keccak256(bytes("the binary content of the fraction holder agreeemnt"));
 
