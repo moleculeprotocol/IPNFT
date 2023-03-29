@@ -20,7 +20,7 @@ contract GnosisSafeSetup is Test {
         vm.startPrank(deployer);
         GnosisSafeL2 singleton = new GnosisSafeL2();
         GnosisSafeProxyFactory fac = new GnosisSafeProxyFactory();
-        wallet = GnosisSafeL2(payable(fac.createProxy(address(singleton), "")));
+        wallet = GnosisSafeL2(payable(fac.createProxyWithNonce(address(singleton), "", uint256(1680130687))));
 
         address[] memory owners = new address[](1);
         owners[0] = alice;
@@ -36,7 +36,7 @@ contract GnosisSafeSetup is Test {
     function testSafeAcceptsMoney() public {
         vm.deal(bob, 10 ether);
         vm.startPrank(bob);
-        (bool sent,) = payable(address(wallet)).call{ value: 5 ether }("");
+        (bool sent,) = payable(address(wallet)).call{value: 5 ether}("");
         assertTrue(sent);
         vm.stopPrank();
 
