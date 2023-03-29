@@ -5,12 +5,18 @@ version: '3'
 services:
   graph-node:
     environment:
-      ethereum: 'mainnet:http://ganache:8545'
+      ethereum: 'mainnet:http://anvil:8545'
 
-  ganache:
-    image: trufflesuite/ganache
+  anvil: 
+    image: ghcr.io/foundry-rs/foundry:latest
+    command: 
+      - "anvil --host 0.0.0.0"
     ports:
-      - "8545:8545"
-    command:
-      - --wallet.mnemonic="test test test test test test test test test test test junk"
-      - --chain.chainId=31337
+      - '8545:8545'
+  # ganache:
+  #   image: trufflesuite/ganache
+  #   ports:
+  #     - "8545:8545"
+  #   command:
+  #     - --wallet.mnemonic="test test test test test test test test test test test junk"
+  #     - --chain.chainId=31337
