@@ -13,12 +13,13 @@ import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy
 contract DeployFractionalizerL2 is Script {
     function run() public {
         vm.startBroadcast();
+        //using the oGSN trusted forwarder for metatx here
+        Fractionalizer impl = new Fractionalizer(0xB2b5841DBeF766d4b521221732F9B618fCf34A87);
+
         Fractionalizer fractionalizer = Fractionalizer(
             address(
                 new ERC1967Proxy(
-                    address(
-                        new Fractionalizer(address(0))
-                    ), ""
+                    address(impl), ""
                 )
             )
         );

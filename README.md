@@ -32,12 +32,12 @@ IP-NFTs allow their users to tokenize intellectual property. This repo contains 
   https://goerli.etherscan.io/address/0x91d6984adecadeb13f8bef2db8c4cb896210fcb1#code
 
 - Fractionalizer Dispatcher L1: 0xB3bE2424FBc0A9cCb3FB5fFD5655235F21855526
-  (Impl no 6 0x2fe1cebB70Fc2aD853cc321B2e235410345178Ad)
+  (Impl no 7 0x305786450e56856fEd3A8764a24229AA9F8Adc4B)
   <https://goerli.etherscan.io/address/0xB3bE2424FBc0A9cCb3FB5fFD5655235F21855526>
 
-- Fractionalizer L2: 0x5DAbAF3C3F92F889394aD4304B1E2E90DBa57E3b
-  (Impl no 3 0xF4cE955D3b5E3A46ABeD75579fA5B7863E0DA064)
-  <https://goerli-optimism.etherscan.io/address/0x5DAbAF3C3F92F889394aD4304B1E2E90DBa57E3b>
+- Fractionalizer L2: 0x7DA77f8a834369dDc5e9e47407C9746Ed55C3b72
+  (Impl no 1 0xd188172cf0135efb415c4b5d3531495fa373c557)
+  <https://goerli-optimism.etherscan.io/address/0x7DA77f8a834369dDc5e9e47407C9746Ed55C3b72>
 
 ## Prerequisites
 
@@ -176,7 +176,7 @@ We also included helpers to quickly deploy updated versions of the contracts. Yo
   `ETHERSCAN_API_KEY=<görli api key> forge verify-contract --chain-id 5 <new impl addr> FractionalizerL2Dispatcher`
 
 - verify the L2 fractionalizer impl
-  `ETHERSCAN_API_KEY=<optimism-görli api key> forge verify-contract --chain-id 420 <new impl addr> Fractionalizer`
+  `ETHERSCAN_API_KEY=<optimism-görli api key> forge verify-contract --chain-id 420 <new_impl_addr> Fractionalizer --constructor-args $(cast abi-encode "constructor(address)" "0xB2b5841DBeF766d4b521221732F9B618fCf34A87")`
 
 - verify an EIP1967 proxy
   `ETHERSCAN_API_KEY=... forge verify-contract --chain-id 420 <proxy address> ERC1967Proxy --constructor-args $(cast abi-encode "constructor(address,bytes)" "<initial implementation address>" "")`
