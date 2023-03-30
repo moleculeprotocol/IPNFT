@@ -1,14 +1,4 @@
 INFO:Detectors:
-Fractionalizer.setFractionalizerDispatcherL1(address) (src/Fractionalizer.sol#92-94) should emit an event for: 
-        - fractionalizerDispatcherOnL1 = _fractionalizerDispatcherOnL1 (src/Fractionalizer.sol#93) 
-Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-access-control
-INFO:Detectors:
-Fractionalizer.setFractionalizerDispatcherL1(address)._fractionalizerDispatcherOnL1 (src/Fractionalizer.sol#92) lacks a zero-check on :
-                - fractionalizerDispatcherOnL1 = _fractionalizerDispatcherOnL1 (src/Fractionalizer.sol#93)
-Fractionalizer.setFeeReceiver(address)._feeReceiver (src/Fractionalizer.sol#96) lacks a zero-check on :
-                - feeReceiver = _feeReceiver (src/Fractionalizer.sol#97)
-Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
-INFO:Detectors:
 IPNFT.grantReadAccess(address,uint256,uint256) (src/IPNFT.sol#180-188) uses timestamp for comparisons
         Dangerous comparisons:
         - require(bool,string)(until > block.timestamp,until in the past) (src/IPNFT.sol#185)

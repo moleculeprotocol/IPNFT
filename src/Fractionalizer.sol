@@ -31,6 +31,8 @@ struct Fractionalized {
     uint256 paidPrice;
 }
 
+error ToZeroAddress();
+
 /// @title Fractionalizer
 /// @author molecule.to
 /// @notice only deployed on L2, controlled by xdomain messages
@@ -41,9 +43,10 @@ contract Fractionalizer is ERC1155SupplyUpgradeable, UUPSUpgradeable, ERC2771Con
     event SalesActivated(uint256 fractionId, address paymentToken, uint256 paidPrice);
     event TermsAccepted(uint256 indexed fractionId, address indexed signer);
     event SharesClaimed(uint256 indexed fractionId, address indexed claimer, uint256 amount);
+    event FractionalizerChanged(address fractionalizer);
+
     //listen for mints instead:
     //event FractionsEmitted(uint256 fractionId, uint256 amount);
-
     address feeReceiver;
     uint256 fractionalizationPercentage;
     ICrossDomainMessenger crossDomainMessenger;
@@ -90,10 +93,17 @@ contract Fractionalizer is ERC1155SupplyUpgradeable, UUPSUpgradeable, ERC2771Con
     }
 
     function setFractionalizerDispatcherL1(address _fractionalizerDispatcherOnL1) public onlyOwner {
+        if (_fractionalizerDispatcherOnL1 == address(0)) {
+            revert ToZeroAddress();
+        }
         fractionalizerDispatcherOnL1 = _fractionalizerDispatcherOnL1;
+        emit FractionalizerChanged(_fractionalizerDispatcherOnL1);
     }
 
     function setFeeReceiver(address _feeReceiver) public {
+        if (_feeReceiver == address(0)) {
+            revert ToZeroAddress();
+        }
         feeReceiver = _feeReceiver;
     }
 
