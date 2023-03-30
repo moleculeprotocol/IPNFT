@@ -83,9 +83,10 @@ contract L1FractionalizerDispatcher is Test {
 
         vm.stopPrank();
 
+        vm.deal(originalOwner, 0.001 ether);
         vm.startPrank(originalOwner);
         uint256 reservationId = _ipnft.reserve();
-        _ipnft.mintReservation(originalOwner, reservationId, 1, ipfsUri);
+        _ipnft.mintReservation{ value: 0.001 ether }(originalOwner, reservationId, 1, ipfsUri);
         vm.stopPrank();
     }
 

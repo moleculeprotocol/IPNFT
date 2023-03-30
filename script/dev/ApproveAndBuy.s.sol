@@ -27,7 +27,7 @@ contract ApproveAndBuy is Script {
     }
 
     function fulfillListing(uint256 listingId) internal {
-        (,,,,, uint256 price) = schmackoSwap.listings(listingId);
+        (,,,,, uint256 price,,) = schmackoSwap.listings(listingId);
 
         //console.log("amt %s", amt);
         vm.startBroadcast(bob);
