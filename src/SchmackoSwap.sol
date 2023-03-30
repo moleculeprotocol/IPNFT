@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.18;
 
 import { ERC20 as SolERC20 } from "solmate/tokens/ERC20.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -151,7 +151,7 @@ contract SchmackoSwap is ERC165, ReentrancyGuard {
     function fulfill(uint256 listingId) public nonReentrant {
         Listing memory listing = listings[listingId];
         if (listing.creator == address(0)) revert ListingNotFound();
-        if (allowlist[listingId][msg.sender] != true) revert NotOnAllowlist();
+        if (!allowlist[listingId][msg.sender]) revert NotOnAllowlist();
         if (listing.listingState != ListingState.LISTED) revert("listing not active anymore");
 
         IERC20 paymentToken = listing.paymentToken;
@@ -197,7 +197,7 @@ contract SchmackoSwap is ERC165, ReentrancyGuard {
         return allowlist[listingId][buyerAddress];
     }
 
-    function supportsInterface(bytes4 interfaceId) public view virtual override (ERC165) returns (bool) {
+    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC165) returns (bool) {
         return super.supportsInterface(interfaceId);
     }
 }

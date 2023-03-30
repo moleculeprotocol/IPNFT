@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.18;
 
 import "forge-std/Test.sol";
 import { GnosisSafeL2 } from "safe-global/safe-contracts/GnosisSafeL2.sol";
@@ -36,7 +36,7 @@ contract GnosisSafeSetup is Test {
     function testSafeAcceptsMoney() public {
         vm.deal(bob, 10 ether);
         vm.startPrank(bob);
-        (bool sent,) = payable(address(wallet)).call{value: 5 ether}("");
+        (bool sent,) = payable(address(wallet)).call{ value: 5 ether }("");
         assertTrue(sent);
         vm.stopPrank();
 

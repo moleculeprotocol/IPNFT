@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.18;
 
 import "forge-std/Test.sol";
 import { console } from "forge-std/console.sol";
@@ -91,7 +91,7 @@ contract IPNFTTest is IPNFTMintHelper {
 
         vm.expectEmit(true, true, false, true);
         emit IPNFTMinted(alice, 1, ipfsUri);
-        ipnft.mintReservation{value: MINTING_FEE}(alice, reservationId, reservationId, ipfsUri);
+        ipnft.mintReservation{ value: MINTING_FEE }(alice, reservationId, reservationId, ipfsUri);
 
         assertEq(ipnft.balanceOf(alice, 1), 1);
         assertEq(ipnft.uri(1), ipfsUri);

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.18;
 
 import "forge-std/Test.sol";
 import { console } from "forge-std/console.sol";
@@ -38,7 +38,7 @@ abstract contract IPNFTMintHelper is Test {
         vm.startPrank(to);
         uint256 reservationId = ipnft.reserve();
 
-        ipnft.mintReservation{value: MINTING_FEE}(to, reservationId, reservationId, arUri);
+        ipnft.mintReservation{ value: MINTING_FEE }(to, reservationId, reservationId, arUri);
         vm.stopPrank();
         return reservationId;
     }

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.18;
 
 import "erc721b/extensions/ERC721BBaseTokenURI.sol";
 import "erc721b/extensions/ERC721BBurnable.sol";
@@ -143,19 +143,19 @@ contract Mintpass is AccessControl, ERC721BBaseTokenURI, ERC721BBurnable, IAutho
         return "IPNFTMNTPSS";
     }
 
-    function supportsInterface(bytes4 interfaceId) public view virtual override (ERC721B, IERC165, AccessControl) returns (bool) {
+    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC721B, IERC165, AccessControl) returns (bool) {
         return interfaceId == type(IERC721Metadata).interfaceId || super.supportsInterface(interfaceId);
     }
 
-    function totalSupply() public view virtual override (ERC721B, ERC721BBurnable) returns (uint256) {
+    function totalSupply() public view virtual override(ERC721B, ERC721BBurnable) returns (uint256) {
         return super.totalSupply();
     }
 
-    function _exists(uint256 tokenId) internal view virtual override (ERC721B, ERC721BBurnable) returns (bool) {
+    function _exists(uint256 tokenId) internal view virtual override(ERC721B, ERC721BBurnable) returns (bool) {
         return super._exists(tokenId);
     }
 
-    function ownerOf(uint256 tokenId) public view virtual override (ERC721B, ERC721BBurnable, IERC721) returns (address) {
+    function ownerOf(uint256 tokenId) public view virtual override(ERC721B, ERC721BBurnable, IERC721) returns (address) {
         return super.ownerOf(tokenId);
     }
 

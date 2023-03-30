@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.18;
 
 import "forge-std/Test.sol";
 import { SchmackoSwap, ListingState } from "../src/SchmackoSwap.sol";
@@ -66,7 +66,7 @@ contract SchmackoSwapTest is Test {
         // Ensure marketplace can access sellers's tokens
         ipnft.setApprovalForAll(address(schmackoSwap), true);
         ipnft.reserve();
-        ipnft.mintReservation{value: 0.001 ether}(seller, 1, 1, arUri);
+        ipnft.mintReservation{ value: 0.001 ether }(seller, 1, 1, arUri);
         vm.stopPrank();
     }
 
