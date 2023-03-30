@@ -14,6 +14,7 @@ line_length = 150
 tab_width = 4
 quote_style = 'double'
 func_attrs_with_params_multiline = true
+override_spacing = false
 
 [rpc_endpoints]
 optimism = "https://optimism-goerli.infura.io/v3/${INFURA_KEY}"

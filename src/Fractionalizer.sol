@@ -32,6 +32,9 @@ struct Fractionalized {
 }
 
 error ToZeroAddress();
+error InsufficientBalance();
+error TermsNotAccepted();
+error InvalidSignature();
 
 /// @title Fractionalizer
 /// @author molecule.to
@@ -107,8 +110,8 @@ contract Fractionalizer is ERC1155SupplyUpgradeable, UUPSUpgradeable, ERC2771Con
         feeReceiver = _feeReceiver;
     }
 
-    function setReceiverPercentage(uint256 fractionalizationPercentage_) external {
-        fractionalizationPercentage = fractionalizationPercentage_;
+    function setReceiverPercentage(uint256 _fractionalizationPercentage) external {
+        fractionalizationPercentage = _fractionalizationPercentage;
     }
 
     function _msgSender() internal view override(ContextUpgradeable, ERC2771ContextUpgradeable) returns (address sender) {
@@ -193,15 +196,15 @@ contract Fractionalizer is ERC1155SupplyUpgradeable, UUPSUpgradeable, ERC2771Con
     function burnToWithdrawShare(uint256 fractionId) public {
         uint256 balance = balanceOf(_msgSender(), fractionId);
         if (balance == 0) {
-            revert("you dont own any fractions");
+            revert InsufficientBalance();
         }
         if (!signedTerms[fractionId][_msgSender()]) {
-            revert("you haven't accepted the terms");
+            revert TermsNotAccepted();
         }
 
         (IERC20 paymentToken, uint256 erc20shares) = claimableTokens(fractionId, _msgSender());
         if (erc20shares == 0) {
-            revert("shares are 0");
+            revert InsufficientBalance();
         }
 
         _burn(_msgSender(), fractionId, balance);
@@ -237,7 +240,7 @@ contract Fractionalizer is ERC1155SupplyUpgradeable, UUPSUpgradeable, ERC2771Con
      */
     function acceptTerms(uint256 fractionId, bytes memory signature) public {
         if (!isValidSignature(fractionId, _msgSender(), signature)) {
-            revert("signature not valid");
+            revert InvalidSignature();
         }
         signedTerms[fractionId][_msgSender()] = true;
         emit TermsAccepted(fractionId, _msgSender());
