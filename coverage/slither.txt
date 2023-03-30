@@ -1,24 +1,12 @@
 INFO:Detectors:
-Fractionalizer.burnToWithdrawShare(uint256) (src/Fractionalizer.sol#180-196) ignores return value by paymentToken.transfer(_msgSender(),erc20shares) (src/Fractionalizer.sol#195)
-FractionalizerL2Dispatcher.afterSale(uint256,IERC20,uint256) (src/FractionalizerL2Dispatcher.sol#101-117) ignores return value by paymentToken.transferFrom(_msgSender(),address(this),price) (src/FractionalizerL2Dispatcher.sol#114)
-Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unchecked-transfer
-
-
-INFO:Detectors:
-Fractionalizer.claimableTokens(uint256,address) (src/Fractionalizer.sol#163-173) performs a multiplication on the result of a division:
-        - (frac.paymentToken,balance * (frac.paidPrice / frac.totalIssued)) (src/Fractionalizer.sol#172)
-Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#divide-before-multiply
-
-
-INFO:Detectors:
-Fractionalizer.setFractionalizerDispatcherL1(address) (src/Fractionalizer.sol#89-91) should emit an event for: 
-        - fractionalizerDispatcherOnL1 = _fractionalizerDispatcherOnL1 (src/Fractionalizer.sol#90) 
+Fractionalizer.setFractionalizerDispatcherL1(address) (src/Fractionalizer.sol#92-94) should emit an event for: 
+        - fractionalizerDispatcherOnL1 = _fractionalizerDispatcherOnL1 (src/Fractionalizer.sol#93) 
 Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-events-access-control
 INFO:Detectors:
-Fractionalizer.setFractionalizerDispatcherL1(address)._fractionalizerDispatcherOnL1 (src/Fractionalizer.sol#89) lacks a zero-check on :
-                - fractionalizerDispatcherOnL1 = _fractionalizerDispatcherOnL1 (src/Fractionalizer.sol#90)
-Fractionalizer.setFeeReceiver(address)._feeReceiver (src/Fractionalizer.sol#93) lacks a zero-check on :
-                - feeReceiver = _feeReceiver (src/Fractionalizer.sol#94)
+Fractionalizer.setFractionalizerDispatcherL1(address)._fractionalizerDispatcherOnL1 (src/Fractionalizer.sol#92) lacks a zero-check on :
+                - fractionalizerDispatcherOnL1 = _fractionalizerDispatcherOnL1 (src/Fractionalizer.sol#93)
+Fractionalizer.setFeeReceiver(address)._feeReceiver (src/Fractionalizer.sol#96) lacks a zero-check on :
+                - feeReceiver = _feeReceiver (src/Fractionalizer.sol#97)
 Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#missing-zero-address-validation
 INFO:Detectors:
 IPNFT.grantReadAccess(address,uint256,uint256) (src/IPNFT.sol#180-188) uses timestamp for comparisons
@@ -39,7 +27,7 @@ SchmackoSwap.fulfill(uint256) (src/SchmackoSwap.sol#151-172) compares to a boole
         -allowlist[listingId][msg.sender] != true (src/SchmackoSwap.sol#154)
 Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#boolean-equality
 INFO:Detectors:
-Fractionalizer._msgData() (src/Fractionalizer.sol#105-107) is never used and should be removed
+Fractionalizer._msgData() (src/Fractionalizer.sol#108-110) is never used and should be removed
 Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dead-code
 INFO:Detectors:
 Pragma version^0.8.17 (src/ContractRegistry.sol#2) allows old versions
@@ -60,10 +48,10 @@ Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#incorre
 INFO:Detectors:
 Parameter ContractRegistry.register(bytes32,address)._contract (src/ContractRegistry.sol#21) is not in mixedCase
 Parameter ContractRegistry.register(address,address)._counterPart (src/ContractRegistry.sol#29) is not in mixedCase
-Parameter Fractionalizer.setFractionalizerDispatcherL1(address)._fractionalizerDispatcherOnL1 (src/Fractionalizer.sol#89) is not in mixedCase
-Parameter Fractionalizer.setFeeReceiver(address)._feeReceiver (src/Fractionalizer.sol#93) is not in mixedCase
-Parameter FractionalizerL2Dispatcher.initialize(SchmackoSwap,ContractRegistry)._schmackoSwap (src/FractionalizerL2Dispatcher.sol#39) is not in mixedCase
-Parameter FractionalizerL2Dispatcher.initialize(SchmackoSwap,ContractRegistry)._registry (src/FractionalizerL2Dispatcher.sol#39) is not in mixedCase
+Parameter Fractionalizer.setFractionalizerDispatcherL1(address)._fractionalizerDispatcherOnL1 (src/Fractionalizer.sol#92) is not in mixedCase
+Parameter Fractionalizer.setFeeReceiver(address)._feeReceiver (src/Fractionalizer.sol#96) is not in mixedCase
+Parameter FractionalizerL2Dispatcher.initialize(SchmackoSwap,ContractRegistry)._schmackoSwap (src/FractionalizerL2Dispatcher.sol#43) is not in mixedCase
+Parameter FractionalizerL2Dispatcher.initialize(SchmackoSwap,ContractRegistry)._registry (src/FractionalizerL2Dispatcher.sol#43) is not in mixedCase
 Variable IPNFT._version (src/IPNFT.sol#49) is not in mixedCase
 Variable IPNFTV22._version (src/IPNFTV22.sol#48) is not in mixedCase
 Parameter SchmackoSwap.changeBuyerAllowance(uint256,address,bool)._isAllowed (src/SchmackoSwap.sol#178) is not in mixedCase
@@ -82,4 +70,4 @@ Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-v
 INFO:Detectors:
 HeadlessDispenser._mintpass (src/HeadlessDispenser.sol#10) should be immutable 
 Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-immutable
-INFO:Slither:. analyzed (153 contracts with 85 detectors), 43 result(s) found
+INFO:Slither:. analyzed (155 contracts with 85 detectors), 41 result(s) found
