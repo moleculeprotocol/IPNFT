@@ -61,10 +61,6 @@ contract SchmackoSwap is ERC165, ReentrancyGuard {
     /// @param _isAllowed If address is added or removed from allowlist
     event AllowlistUpdated(uint256 listingId, address indexed buyer, bool _isAllowed);
 
-    /// @notice Used as a counter for the next sale index.
-    /// @dev Initialised at 1 because it makes the first transaction slightly cheaper.
-    uint256 internal saleCounter = 1;
-
     /// @dev Parameters for listings
     /// @param tokenContract The ERC1155 contract for the listed token
     /// @param tokenId The ID of the listed token

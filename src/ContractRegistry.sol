@@ -26,9 +26,9 @@ contract ContractRegistry is Ownable {
     //     register(bytes32(bytes(name)), _contract);
     // }
 
-    function register(address addr, address _counterPart) public onlyOwner {
+    function register(address addr, address counterPart) public onlyOwner {
         bytes32 key = bytes32(bytes20(addr));
-        register(key, _counterPart);
+        register(key, counterPart);
     }
 
     function get(address addr) public view returns (address) {
