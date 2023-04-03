@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.18;
 
 import "forge-std/console.sol";
 import { ICrossDomainMessenger } from "@eth-optimism/contracts/libraries/bridge/ICrossDomainMessenger.sol";
@@ -19,7 +19,7 @@ contract MockCrossDomainMessenger is ICrossDomainMessenger {
 
     function sendMessage(address _target, bytes calldata _message, uint32 _gasLimit) external {
         _nonce = _nonce + 1;
-        (bool success, bytes memory data) = _target.call{gas: _gasLimit}(_message);
+        (bool success, bytes memory data) = _target.call{ gas: _gasLimit }(_message);
         // console.logBool(success);
         // console.logBytes(data);
         if (!success) {

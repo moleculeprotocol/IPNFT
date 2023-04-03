@@ -1,0 +1,40 @@
+INFO:Detectors:
+IPNFT.grantReadAccess(address,uint256,uint256) (src/IPNFT.sol#180-188) uses timestamp for comparisons
+        Dangerous comparisons:
+        - require(bool,string)(until > block.timestamp,until in the past) (src/IPNFT.sol#185)
+IPNFT.canRead(address,uint256) (src/IPNFT.sol#196-201) uses timestamp for comparisons
+        Dangerous comparisons:
+        - readAllowances[tokenId][reader] > block.timestamp (src/IPNFT.sol#200)
+IPNFTV22.grantReadAccess(address,uint256,uint256) (src/IPNFTV22.sol#198-206) uses timestamp for comparisons
+        Dangerous comparisons:
+        - require(bool,string)(until > block.timestamp,until in the past) (src/IPNFTV22.sol#203)
+IPNFTV22.canRead(address,uint256) (src/IPNFTV22.sol#214-219) uses timestamp for comparisons
+        Dangerous comparisons:
+        - readAllowances[tokenId][reader] > block.timestamp (src/IPNFTV22.sol#218)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#block-timestamp
+INFO:Detectors:
+Fractionalizer._msgData() (src/Fractionalizer.sol#118-120) is never used and should be removed
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#dead-code
+INFO:Detectors:
+Parameter ContractRegistry.register(bytes32,address)._contract (src/ContractRegistry.sol#21) is not in mixedCase
+Parameter Fractionalizer.setFractionalizerDispatcherL1(address)._fractionalizerDispatcherOnL1 (src/Fractionalizer.sol#95) is not in mixedCase
+Parameter Fractionalizer.setFeeReceiver(address)._feeReceiver (src/Fractionalizer.sol#103) is not in mixedCase
+Parameter FractionalizerL2Dispatcher.initialize(SchmackoSwap,ContractRegistry)._schmackoSwap (src/FractionalizerL2Dispatcher.sol#43) is not in mixedCase
+Parameter FractionalizerL2Dispatcher.initialize(SchmackoSwap,ContractRegistry)._registry (src/FractionalizerL2Dispatcher.sol#43) is not in mixedCase
+Variable IPNFT._version (src/IPNFT.sol#49) is not in mixedCase
+Variable IPNFTV22._version (src/IPNFTV22.sol#47) is not in mixedCase
+Parameter SchmackoSwap.changeBuyerAllowance(uint256,address,bool)._isAllowed (src/SchmackoSwap.sol#174) is not in mixedCase
+Parameter SchmackoSwap.changeBuyerAllowance(uint256,address[],bool)._isAllowed (src/SchmackoSwap.sol#186) is not in mixedCase
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#conformance-to-solidity-naming-conventions
+INFO:Detectors:
+IPNFT._version (src/IPNFT.sol#49) is never used in IPNFT (src/IPNFT.sol#31-229)
+IPNFTV22._version (src/IPNFTV22.sol#47) is never used in IPNFTV22 (src/IPNFTV22.sol#29-247)
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#unused-state-variable
+INFO:Detectors:
+IPNFT._version (src/IPNFT.sol#49) should be constant 
+IPNFTV22._version (src/IPNFTV22.sol#47) should be constant 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-constant
+INFO:Detectors:
+HeadlessDispenser._mintpass (src/HeadlessDispenser.sol#10) should be immutable 
+Reference: https://github.com/crytic/slither/wiki/Detector-Documentation#state-variables-that-could-be-declared-immutable
+INFO:Slither:. analyzed (155 contracts with 85 detectors), 19 result(s) found

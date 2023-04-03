@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.18;
 
 import "forge-std/Test.sol";
 import { console } from "forge-std/console.sol";
@@ -16,7 +16,7 @@ import { Enum } from "safe-global/safe-contracts/common/Enum.sol";
 import { MockCrossDomainMessenger } from "./helpers/MockCrossDomainMessenger.sol";
 import "./helpers/MakeGnosisWallet.sol";
 
-import { Fractionalizer } from "../src/Fractionalizer.sol";
+import { Fractionalizer, ToZeroAddress, InsufficientBalance, TermsNotAccepted, InvalidSignature } from "../src/Fractionalizer.sol";
 import { MyToken } from "../src/MyToken.sol";
 
 contract L2FractionalizerTest is Test {
@@ -82,6 +82,16 @@ contract L2FractionalizerTest is Test {
         xDomainMessenger.sendMessage(address(fractionalizer), message, 1_900_000);
     }
 
+    function testCannotSetInfraToZero() public {
+        vm.startPrank(deployer);
+        vm.expectRevert(ToZeroAddress.selector);
+        fractionalizer.setFractionalizerDispatcherL1(address(0));
+
+        vm.expectRevert(ToZeroAddress.selector);
+        fractionalizer.setFeeReceiver(address(0));
+        vm.stopPrank();
+    }
+
     function testIssueFractions() public {
         uint256 fractionId = helpInitializeFractions();
 
@@ -101,6 +111,11 @@ contract L2FractionalizerTest is Test {
 
     function testIncreaseFractions() public {
         uint256 fractionId = helpInitializeFractions();
+
+        vm.startPrank(deployer);
+        vm.expectRevert("only the original owner can update the distribution scheme");
+        fractionalizer.increaseFractions(fractionId, 100_000);
+        vm.stopPrank();
 
         vm.startPrank(originalOwner);
         fractionalizer.safeTransferFrom(originalOwner, alice, fractionId, 25_000, "");
@@ -127,6 +142,20 @@ contract L2FractionalizerTest is Test {
             abi.encodeCall(
                 Fractionalizer.fractionalizeUniqueERC1155,
                 (fractionId, ipnftContract, uint256(1), originalOwner, originalOwner, agreementHash, 200_000)
+            ),
+            1_900_000
+        );
+    }
+
+    function testCannotFractionalizeWrongArgs() public {
+        uint256 fractionId = helpInitializeFractions();
+
+        vm.expectRevert("relay failed: only the owner may fractionalize on the collection");
+        xDomainMessenger.sendMessage(
+            address(fractionalizer),
+            abi.encodeCall(
+                Fractionalizer.fractionalizeUniqueERC1155,
+                (fractionId, ipnftContract, uint256(2), originalOwner, originalOwner, agreementHash, 200_000)
             ),
             1_900_000
         );
@@ -179,9 +208,18 @@ contract L2FractionalizerTest is Test {
         fractionalizer.afterSale(fractionId, address(erc20), 1_000_000 ether);
         vm.stopPrank();
 
+        vm.startPrank(ipnftBuyer);
+        vm.expectRevert(InsufficientBalance.selector);
+        fractionalizer.burnToWithdrawShare(fractionId);
+        vm.stopPrank();
+
         vm.startPrank(alice);
         (, uint256 amount) = fractionalizer.claimableTokens(fractionId, alice);
         assertEq(amount, 250_000 ether);
+
+        vm.expectRevert(TermsNotAccepted.selector);
+        fractionalizer.burnToWithdrawShare(fractionId);
+
         fractionalizer.burnToWithdrawShare(fractionId, abi.encodePacked(r, s, v));
         vm.stopPrank();
 
@@ -238,6 +276,9 @@ contract L2FractionalizerTest is Test {
 
         assertFalse(fractionalizer.signedTerms(fractionId, alice));
         vm.startPrank(alice);
+        vm.expectRevert(InvalidSignature.selector);
+        fractionalizer.acceptTerms(fractionId, bytes(""));
+
         fractionalizer.acceptTerms(fractionId, xsignature);
         vm.stopPrank();
         assertTrue(fractionalizer.signedTerms(fractionId, alice));

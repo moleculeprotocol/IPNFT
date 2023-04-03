@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.18;
 
 import { ERC1155SupplyUpgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC1155/extensions/ERC1155SupplyUpgradeable.sol";
 import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
@@ -15,6 +15,7 @@ import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { IERC1155Supply } from "./IERC1155Supply.sol";
 
 import { ICrossDomainMessenger } from "@eth-optimism/contracts/libraries/bridge/ICrossDomainMessenger.sol";
@@ -30,17 +31,25 @@ struct Fractionalized {
     uint256 paidPrice;
 }
 
+error ToZeroAddress();
+error InsufficientBalance();
+error TermsNotAccepted();
+error InvalidSignature();
+
 /// @title Fractionalizer
 /// @author molecule.to
 /// @notice only deployed on L2, controlled by xdomain messages
 contract Fractionalizer is ERC1155SupplyUpgradeable, UUPSUpgradeable, ERC2771ContextUpgradeable, OwnableUpgradeable {
+    using SafeERC20 for IERC20;
+
     event FractionsCreated(address indexed collection, uint256 indexed tokenId, address emitter, uint256 indexed fractionId, bytes32 agreementHash);
     event SalesActivated(uint256 fractionId, address paymentToken, uint256 paidPrice);
     event TermsAccepted(uint256 indexed fractionId, address indexed signer);
     event SharesClaimed(uint256 indexed fractionId, address indexed claimer, uint256 amount);
+    event FractionalizerChanged(address fractionalizer);
+
     //listen for mints instead:
     //event FractionsEmitted(uint256 fractionId, uint256 amount);
-
     address feeReceiver;
     uint256 fractionalizationPercentage;
     ICrossDomainMessenger crossDomainMessenger;
@@ -87,22 +96,29 @@ contract Fractionalizer is ERC1155SupplyUpgradeable, UUPSUpgradeable, ERC2771Con
     }
 
     function setFractionalizerDispatcherL1(address _fractionalizerDispatcherOnL1) public onlyOwner {
+        if (_fractionalizerDispatcherOnL1 == address(0)) {
+            revert ToZeroAddress();
+        }
         fractionalizerDispatcherOnL1 = _fractionalizerDispatcherOnL1;
+        emit FractionalizerChanged(_fractionalizerDispatcherOnL1);
     }
 
     function setFeeReceiver(address _feeReceiver) public {
+        if (_feeReceiver == address(0)) {
+            revert ToZeroAddress();
+        }
         feeReceiver = _feeReceiver;
     }
 
-    function setReceiverPercentage(uint256 fractionalizationPercentage_) external {
-        fractionalizationPercentage = fractionalizationPercentage_;
+    function setReceiverPercentage(uint256 _fractionalizationPercentage) external {
+        fractionalizationPercentage = _fractionalizationPercentage;
     }
 
-    function _msgSender() internal view override (ContextUpgradeable, ERC2771ContextUpgradeable) returns (address sender) {
+    function _msgSender() internal view override(ContextUpgradeable, ERC2771ContextUpgradeable) returns (address sender) {
         return ERC2771ContextUpgradeable._msgSender();
     }
 
-    function _msgData() internal view override (ContextUpgradeable, ERC2771ContextUpgradeable) returns (bytes calldata) {
+    function _msgData() internal view override(ContextUpgradeable, ERC2771ContextUpgradeable) returns (bytes calldata) {
         return ERC2771ContextUpgradeable._msgData();
     }
 
@@ -169,7 +185,7 @@ contract Fractionalizer is ERC1155SupplyUpgradeable, UUPSUpgradeable, ERC2771Con
 
         uint256 balance = balanceOf(tokenHolder, fractionId);
         //todo: check this 10 times:
-        return (frac.paymentToken, balance * (frac.paidPrice / frac.totalIssued));
+        return (frac.paymentToken, (balance * frac.paidPrice) / frac.totalIssued);
     }
 
     function burnToWithdrawShare(uint256 fractionId, bytes memory signature) public {
@@ -180,19 +196,19 @@ contract Fractionalizer is ERC1155SupplyUpgradeable, UUPSUpgradeable, ERC2771Con
     function burnToWithdrawShare(uint256 fractionId) public {
         uint256 balance = balanceOf(_msgSender(), fractionId);
         if (balance == 0) {
-            revert("you dont own any fractions");
+            revert InsufficientBalance();
         }
         if (!signedTerms[fractionId][_msgSender()]) {
-            revert("you haven't accepted the terms");
+            revert TermsNotAccepted();
         }
 
         (IERC20 paymentToken, uint256 erc20shares) = claimableTokens(fractionId, _msgSender());
         if (erc20shares == 0) {
-            revert("shares are 0");
+            revert InsufficientBalance();
         }
 
         _burn(_msgSender(), fractionId, balance);
-        paymentToken.transfer(_msgSender(), erc20shares);
+        paymentToken.safeTransfer(_msgSender(), erc20shares);
     }
 
     function specificTermsV1(uint256 fractionId) public view returns (string memory) {
@@ -224,7 +240,7 @@ contract Fractionalizer is ERC1155SupplyUpgradeable, UUPSUpgradeable, ERC2771Con
      */
     function acceptTerms(uint256 fractionId, bytes memory signature) public {
         if (!isValidSignature(fractionId, _msgSender(), signature)) {
-            revert("signature not valid");
+            revert InvalidSignature();
         }
         signedTerms[fractionId][_msgSender()] = true;
         emit TermsAccepted(fractionId, _msgSender());

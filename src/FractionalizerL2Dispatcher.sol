@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.18;
 
 import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+
 import { ICrossDomainMessenger } from "@eth-optimism/contracts/libraries/bridge/ICrossDomainMessenger.sol";
 import { IL1ERC20Bridge } from "@eth-optimism/contracts/L1/messaging/IL1ERC20Bridge.sol";
 
@@ -18,6 +20,8 @@ import { SchmackoSwap, ListingState } from "./SchmackoSwap.sol";
  * @notice controls fractionalizer contract on L2
  */
 contract FractionalizerL2Dispatcher is UUPSUpgradeable, OwnableUpgradeable {
+    using SafeERC20 for IERC20;
+
     struct Fractionalized {
         IERC1155Supply collection;
         uint256 tokenId;
@@ -111,7 +115,7 @@ contract FractionalizerL2Dispatcher is UUPSUpgradeable, OwnableUpgradeable {
             )
         );
 
-        paymentToken.transferFrom(_msgSender(), address(this), price);
+        paymentToken.safeTransferFrom(_msgSender(), address(this), price);
 
         _startSalesPhase(fractionId, paymentToken, price);
     }
