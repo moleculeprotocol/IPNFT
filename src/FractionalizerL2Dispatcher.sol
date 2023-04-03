@@ -150,7 +150,7 @@ contract FractionalizerL2Dispatcher is UUPSUpgradeable, OwnableUpgradeable {
             revert("listing didnt payout the fractionalizer");
         }
 
-        //todo: this is warning, we still could proceed, since it's too late here anyway ;)
+        //todo: this is a warning, we still could proceed, since it's too late here anyway ;)
         // if (paymentToken.balanceOf(address(this)) < askPrice) {
         //     revert("the fulfillment doesn't match the ask");
         // }
@@ -158,21 +158,25 @@ contract FractionalizerL2Dispatcher is UUPSUpgradeable, OwnableUpgradeable {
         _startSalesPhase(fractionId, _paymentToken, askPrice);
     }
 
-    function _startSalesPhase(uint256 fractionId, IERC20 _paymentToken, IL1ERC20Bridge bridge, address tokenL2Address, uint256 price) internal {
+    function _startSalesPhase(uint256 fractionId, IERC20 _paymentToken, uint256 price) internal {
         //bridge ERC20 to L2, right here
         //https://community.optimism.io/docs/developers/bridge/standard-bridge/#
-        //address bridgeAddr = registry.safeGet("StandardBridge");
         ICrossDomainMessenger crossDomainMessenger = ICrossDomainMessenger(registry.safeGet("CrossdomainMessenger"));
         address fractionalizerAddrL2 = registry.safeGet("FractionalizerL2");
 
+        address bridgeAddr = registry.safeGet(bytes32(keccak256(abi.encodePacked("bridge.", address(_paymentToken)))));
+        address tokenL2Address = registry.safeGet(bytes32(keccak256(abi.encodePacked("l2.", address(_paymentToken)))));
+
         //todo: the approval should be provided in general.
-        if (_paymentToken.allowance(address(this), address(bridge)) < price) {
-            if (!_paymentToken.approve(address(bridge), price)) {
+        if (_paymentToken.allowance(address(this), bridgeAddr) < price) {
+            if (!_paymentToken.approve(bridgeAddr, price)) {
                 revert("approval failed");
             }
         }
 
-        bridge.depositERC20To(address(_paymentToken), tokenL2Address, fractionalizerAddrL2, price, MIN_GASLIMIT, "");
+        // this can be really dangerous / lose tokens when bridge / token counterpart is chosen wrong
+        // https://community.optimism.io/docs/developers/bridge/standard-bridge/#deposits
+        IL1ERC20Bridge(bridgeAddr).depositERC20To(address(_paymentToken), tokenL2Address, fractionalizerAddrL2, price, MIN_GASLIMIT, "");
 
         //initiate sale on L2
         //todo: the bridged tokens should arrive at L2 first for this to work.
