@@ -158,24 +158,21 @@ contract FractionalizerL2Dispatcher is UUPSUpgradeable, OwnableUpgradeable {
         _startSalesPhase(fractionId, _paymentToken, askPrice);
     }
 
-    function _startSalesPhase(uint256 fractionId, IERC20 _paymentToken, uint256 price) internal {
+    function _startSalesPhase(uint256 fractionId, IERC20 _paymentToken, IL1ERC20Bridge bridge, address tokenL2Address, uint256 price) internal {
         //bridge ERC20 to L2, right here
         //https://community.optimism.io/docs/developers/bridge/standard-bridge/#
-        address bridgeAddr = registry.safeGet("StandardBridge");
-        address crossDomainMessengerAddr = registry.safeGet("CrossdomainMessenger");
+        //address bridgeAddr = registry.safeGet("StandardBridge");
+        ICrossDomainMessenger crossDomainMessenger = ICrossDomainMessenger(registry.safeGet("CrossdomainMessenger"));
         address fractionalizerAddrL2 = registry.safeGet("FractionalizerL2");
 
-        //todo: check if we can make this translation safer by trusting a "generic" erc20 bridge
-        address tokenL2Address = registry.safeGet(address(_paymentToken));
-
         //todo: the approval should be provided in general.
-        if (_paymentToken.allowance(address(this), bridgeAddr) < price) {
-            if (!_paymentToken.approve(bridgeAddr, price)) {
+        if (_paymentToken.allowance(address(this), address(bridge)) < price) {
+            if (!_paymentToken.approve(address(bridge), price)) {
                 revert("approval failed");
             }
         }
 
-        IL1ERC20Bridge(bridgeAddr).depositERC20To(address(_paymentToken), tokenL2Address, fractionalizerAddrL2, price, MIN_GASLIMIT, "");
+        bridge.depositERC20To(address(_paymentToken), tokenL2Address, fractionalizerAddrL2, price, MIN_GASLIMIT, "");
 
         //initiate sale on L2
         //todo: the bridged tokens should arrive at L2 first for this to work.
@@ -183,7 +180,7 @@ contract FractionalizerL2Dispatcher is UUPSUpgradeable, OwnableUpgradeable {
         //on L2 you cannot prove this!
         bytes memory message = abi.encodeWithSignature("afterSale(uint256,address,uint256)", fractionId, tokenL2Address, price);
 
-        ICrossDomainMessenger(crossDomainMessengerAddr).sendMessage(
+        crossDomainMessenger.sendMessage(
             fractionalizerAddrL2,
             message,
             MIN_GASLIMIT // within the free gas limit amount

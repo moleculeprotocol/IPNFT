@@ -71,7 +71,9 @@ contract ContractRegistryMainnet is ContractRegistry {
 
         //USDC todo: likely to work
         //https://etherscan.io/tx/0x3294b2578762bd3f32d17897ab79b02d4ec77dc3438c0692517bc3cb934adab7
-        registry[bytes32(bytes20(0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48))] = 0x7F5c764cBc14f9669B88837ca1490cCa17c31607;
+
+        //registry[bytes32(bytes20(0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48))] = 0x7F5c764cBc14f9669B88837ca1490cCa17c31607;
+
         //DAI todo: careful!!! dai seems not compatible to the standard token bridge,
         // if (tokenAddressL1 == 0x6B175474E89094C44Da98b954EedeAC495271d0F) {
         //     return 0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1; //DAI on Optimism
@@ -96,7 +98,8 @@ contract ContractRegistryGoerli is ContractRegistry {
         //https://goerli-optimism.etherscan.io/token/0x3e7ef8f50246f725885102e8238cbba33f276747
         //https://github.com/ethereum-optimism/optimism-tutorial/tree/main/cross-dom-bridge-erc20
         //https://community.optimism.io/docs/guides/testing/#
-        registry[bytes32(bytes20(0x32B3b2281717dA83463414af4E8CfB1970E56287))] = 0x3e7eF8f50246f725885102E8238CBba33F276747;
+
+        //registry[bytes32(bytes20(0x32B3b2281717dA83463414af4E8CfB1970E56287))] = 0x3e7eF8f50246f725885102E8238CBba33F276747;
     }
 }
 
