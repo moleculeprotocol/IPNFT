@@ -127,6 +127,7 @@ contract Fractionalizer is ERC1155SupplyUpgradeable, UUPSUpgradeable, ERC2771Con
     /**
      * @param fractionId the fractionalized token id as computed on the l1 network
      */
+    //todo: consider limiting the fractionsAmount to a certain value to avoid overflows on payouts
     function fractionalizeUniqueERC1155(
         uint256 fractionId,
         address collection,
