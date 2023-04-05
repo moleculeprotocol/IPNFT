@@ -26,3 +26,12 @@ contract UpgradeImplementation is Script {
         vm.stopBroadcast();
     }
 }
+
+contract DeployImplementation is Script {
+    function run() public {
+        vm.startBroadcast();
+        IPNFT newImpl = new IPNFT();
+        console.log("new impl %s", address(newImpl));
+        vm.stopBroadcast();
+    }
+}

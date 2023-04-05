@@ -26,6 +26,7 @@ IP-NFTs allow their users to tokenize intellectual property. This repo contains 
 
 - HeadlessDispenser <https://goerli.etherscan.io/address/0x0F1Bd197c5dCC6bC7E8025037a7780010E2Cd22A#code>
 - Subgraph: <https://api.thegraph.com/subgraphs/name/dorianwilhelm/ip-nft-subgraph-goerli/graphql>
+- Impl 2.2 0x026fa78c956ddf29fa84371460727bac0fd6204a
 
 ## Prerequisites
 
@@ -69,6 +70,12 @@ We also added a basic hardhat environment to this project. While foundry stays o
 - Set a moderator address that's going to be enabled to issue and revoke mintpasses (only needed for "real" deployments)
 
 You can place required env vars in your `.env` file and run `source .env` to get them into your current terminal session or provide them when invoking the command.
+
+### Deployment scripts
+
+- a fresh, proxied deployment can be created by `forge script script/IPNFT.sol`
+- to rollout a new upgrade on a live network without calling the proxy's upgrade function, you can use `forge script script/UpgradeImplementation.s.sol:DeployImplementation` and invoke the upgrade function manually (e.g. from your multisig)
+- for the "real" thing you'll need to add `--rpc-url` and `--private-key` and finally `--broadcast` params .
 
 ### Deploy for local development
 
