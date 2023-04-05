@@ -1,7 +1,7 @@
 const { expect } = require("chai");
 const hre = require("hardhat");
 
-describe("IPNFT fundamentals", function () {
+describe("IPNFT fundamentals and upgrades", function () {
 
   let ipnftContract;
   let mintpass;
@@ -21,7 +21,22 @@ describe("IPNFT fundamentals", function () {
     await (ipnftContract.connect(deployer)).setAuthorizer(mintpass.address);
   });
 
-  it("validates updates", async function () {
+  it("validates updates V21 -> V22", async function () {
+    const IPNFTV21 = await ethers.getContractFactory("IPNFTV21");
+    const ipnftContractV21 = await upgrades.deployProxy(IPNFTV21, { kind: "uups" });
+
+    const result = await upgrades.validateUpgrade(
+      ipnftContractV21.address,
+      await ethers.getContractFactory("IPNFT"),
+      {
+        kind: "uups"
+      }
+    )
+    //this didn't throw :)
+    expect(1).to.eq(1)
+  })
+
+  it("validates updates to V23", async function () {
     const result = await upgrades.validateUpgrade(
       ipnftContract.address,
       await ethers.getContractFactory("IPNFTV23"),
