@@ -42,7 +42,9 @@ error InvalidSignature();
 contract Fractionalizer is ERC1155SupplyUpgradeable, UUPSUpgradeable, ERC2771ContextUpgradeable, OwnableUpgradeable {
     using SafeERC20 for IERC20;
 
-    event FractionsCreated(address indexed collection, uint256 indexed tokenId, address emitter, uint256 indexed fractionId, bytes32 agreementHash);
+    event FractionsCreated(
+        address indexed collection, uint256 indexed tokenId, address emitter, uint256 indexed fractionId, uint256 amount, bytes32 agreementHash
+    );
     event SalesActivated(uint256 fractionId, address paymentToken, uint256 paidPrice);
     event TermsAccepted(uint256 indexed fractionId, address indexed signer);
     event SharesClaimed(uint256 indexed fractionId, address indexed claimer, uint256 amount);
@@ -147,7 +149,7 @@ contract Fractionalizer is ERC1155SupplyUpgradeable, UUPSUpgradeable, ERC2771Con
 
         _mint(recipient, fractionId, fractionsAmount, "");
         //todo: if we want to take a protocol fee, this might be agood point of doing so.
-        emit FractionsCreated(collection, tokenId, originalOwner, fractionId, agreementHash);
+        emit FractionsCreated(collection, tokenId, originalOwner, fractionId, fractionsAmount, agreementHash);
     }
 
     function increaseFractions(uint256 fractionId, uint256 fractionsAmount) external notClaiming(fractionId) {
@@ -209,6 +211,7 @@ contract Fractionalizer is ERC1155SupplyUpgradeable, UUPSUpgradeable, ERC2771Con
 
         _burn(_msgSender(), fractionId, balance);
         paymentToken.safeTransfer(_msgSender(), erc20shares);
+        emit SharesClaimed(fractionId, _msgSender(), balance);
     }
 
     function specificTermsV1(uint256 fractionId) public view returns (string memory) {
