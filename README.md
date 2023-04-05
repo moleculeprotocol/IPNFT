@@ -136,9 +136,9 @@ When having an RPC_URL in your local env, you e.g. can simply call view function
 
 Here are some helpful interaction examples with the contracts that you can execute from your command line. Ensure your local environment contains all contract addresses and is sourced to your terminal. We're using your local PRIVATE_KEY here
 
-Manually issue 2 mintpasses to anvil address #1
+Manually issue 2 mintpasses to anvil address #0
 
-`cast send -i $MINTPASS_ADDRESS --private-key $PRIVATE_KEY "batchMint(address,uint256)" 0x70997970C51812dc3A010C7d01b50e0d17dc79C8 2`
+`cast send -i $MINTPASS_ADDRESS --private-key $PRIVATE_KEY "batchMint(address,uint256)" 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266 2`
 
 Create a reservation
 
@@ -146,7 +146,7 @@ Create a reservation
 
 mint an IP-NFT to the first account
 
-`cast send -i $IPNFT_ADDRESS --private-key $PRIVATE_KEY "mintReservation(address, uint256)(uint256)" 0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266 0`
+`cast send --private-key $PRIVATE_KEY  -i $IPNFT_ADDRESS --value 0.001ether --broadcast  "mintReservation(address,uint256,uint256,string)(uint256)" 0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266 1 1 "ipfs://test"`
 
 approve SchmackoSwap to spend token 0
 
@@ -181,3 +181,7 @@ allow SOS to spend ERC20
 let account(1) fulfill the listing
 
 `cast send -i \$SOS_ADDRESS --private-key <account1 private key> "fulfill(uint256)()" <listingid>`
+
+grant read access to another party
+
+`cast send --private-key $PRIVATE_KEY  -i $IPNFT_ADDRESS "grantReadAccess(address,uint256,uint256)" 0x70997970C51812dc3A010C7d01b50e0d17dc79C8 1 1680265071`

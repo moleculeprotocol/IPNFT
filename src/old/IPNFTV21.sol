@@ -70,6 +70,7 @@ contract IPNFTV21 is
 
     event Reserved(address indexed reserver, uint256 indexed reservationId);
     event IPNFTMinted(address indexed owner, uint256 indexed tokenId, string tokenURI);
+    event ReadAccessGranted(uint256 indexed tokenId, address indexed reader, uint256 until);
 
     /*
      *
@@ -192,6 +193,7 @@ contract IPNFTV21 is
         require(until > block.timestamp, "until in the past");
 
         readAllowances[tokenId][reader] = until;
+        emit ReadAccessGranted(tokenId, reader, until);
     }
 
     /**
