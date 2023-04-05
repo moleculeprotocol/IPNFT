@@ -20,7 +20,7 @@ import { IPNFT } from "./IPNFT.sol";
 import { SchmackoSwap, ListingState } from "./SchmackoSwap.sol";
 
 struct Fractionalized {
-    address collection;
+    address collection; //IERC1155Supply collection;
     uint256 tokenId;
     //needed to remember an individual's share after others burn their tokens
     uint256 totalIssued;
@@ -34,17 +34,9 @@ struct Fractionalized {
 /// @author molecule.to
 /// @notice
 contract Fractionalizer is ERC1155SupplyUpgradeable, UUPSUpgradeable, OwnableUpgradeable {
-    struct Fractionalized {
-        IERC1155Supply collection;
-        uint256 tokenId;
-        //needed to remember an individual's share after others burn their tokens
-        uint256 totalIssued;
-        address originalOwner;
-        bytes32 agreementHash;
-        uint256 fulfilledListingId;
-    }
-
-    event FractionsCreated(address indexed collection, uint256 indexed tokenId, address emitter, uint256 indexed fractionId, bytes32 agreementHash);
+    event FractionsCreated(
+        address indexed collection, uint256 indexed tokenId, address emitter, uint256 indexed fractionId, uint256 amount, bytes32 agreementHash
+    );
     event SalesActivated(uint256 fractionId, address paymentToken, uint256 paidPrice);
     event TermsAccepted(uint256 indexed fractionId, address indexed signer);
     event SharesClaimed(uint256 indexed fractionId, address indexed claimer, uint256 amount);
@@ -107,10 +99,9 @@ contract Fractionalizer is ERC1155SupplyUpgradeable, UUPSUpgradeable, OwnableUpg
 
         _mint(_msgSender(), fractionId, fractionsAmount, "");
         //todo: if we want to take a protocol fee, this might be agood point of doing so.
-
         //alternatively: transfer the NFT to Fractionalizer so it can't be transferred while fractionalized
         //collection.safeTransferFrom(_msgSender(), address(this), tokenId, 1, "");
-        emit FractionsCreated(collection, tokenId, originalOwner, fractionId, agreementHash);
+        emit FractionsCreated(collection, tokenId, originalOwner, fractionId, fractionsAmount, agreementHash);
     }
 
     function increaseFractions(uint256 fractionId, uint256 fractionsAmount) external {
@@ -189,7 +180,8 @@ contract Fractionalizer is ERC1155SupplyUpgradeable, UUPSUpgradeable, OwnableUpg
         }
 
         _burn(_msgSender(), fractionId, balance);
-        paymentToken.transfer(_msgSender(), erc20shares);
+        paymentToken.safeTransfer(_msgSender(), erc20shares);
+        emit SharesClaimed(fractionId, _msgSender(), balance);
     }
 
     function specificTermsV1(uint256 fractionId) public view returns (string memory) {
