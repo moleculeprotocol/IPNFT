@@ -14,21 +14,20 @@ import { IAuthorizeMints } from "./IAuthorizeMints.sol";
 import { IReservable } from "./IReservable.sol";
 
 /*
- ______ _______         __    __ ________ ________
-|      \       \       |  \  |  \        \        \
- \▓▓▓▓▓▓ ▓▓▓▓▓▓▓\      | ▓▓\ | ▓▓ ▓▓▓▓▓▓▓▓\▓▓▓▓▓▓▓▓
-  | ▓▓ | ▓▓__/ ▓▓______| ▓▓▓\| ▓▓ ▓▓__      | ▓▓
-  | ▓▓ | ▓▓    ▓▓      \ ▓▓▓▓\ ▓▓ ▓▓  \     | ▓▓
-  | ▓▓ | ▓▓▓▓▓▓▓ \▓▓▓▓▓▓ ▓▓\▓▓ ▓▓ ▓▓▓▓▓     | ▓▓
- _| ▓▓_| ▓▓            | ▓▓ \▓▓▓▓ ▓▓        | ▓▓
-|   ▓▓ \ ▓▓            | ▓▓  \▓▓▓ ▓▓        | ▓▓
- \▓▓▓▓▓▓\▓▓             \▓▓   \▓▓\▓▓         \▓▓
- */
+.___ __________ _______  ______________________       ________    ________   
+|   |\______   \\      \ \_   _____/\__    ___/___  __\_____  \   \_____  \  
+|   | |     ___//   |   \ |    __)    |    |   \  \/ / /  ____/     _(__  <  
+|   | |    |   /    |    \|     \     |    |    \   / /       \    /       \ 
+|___| |____|   \____|__  /\___  /     |____|     \_/  \_______ \/\/______  / 
+                       \/     \/                              \/\/       \/  
+                                                                               
+                                                                               */
 
-/// @title IPNFT V2.2
+/// @title IPNFTV2.3 Demo for Testing Upgrades
 /// @author molecule.to
-/// @notice IP-NFTs capture intellectual property to be traded and fractionalized
-contract IPNFT is
+/// @notice Demo contract to test upgrades. Don't use like this
+/// @dev Don't use this.
+contract IPNFTV23 is
     IReservable,
     ERC1155Upgradeable,
     ERC1155BurnableUpgradeable,
@@ -57,6 +56,9 @@ contract IPNFT is
 
     /// @notice an IPNFT's base symbol, to be determined by the minter / owner. E.g. BIO-00001
     mapping(uint256 => string) public symbol;
+
+    /// @notice musnt't take the minting fee property gap
+    string public aNewProperty;
 
     /*
      *
@@ -112,6 +114,10 @@ contract IPNFT is
         _unpause();
     }
 
+    function reinit() public onlyOwner reinitializer(2) {
+        aNewProperty = "some property";
+    }
+
     /*
      *
      * PUBLIC
@@ -126,7 +132,7 @@ contract IPNFT is
     }
 
     /// @notice reserves a new token id. Checks that the caller is authorized, according to the current implementation of IAuthorizeMints.
-    function reserve() public whenNotPaused returns (uint256) {
+    function reserve() public returns (uint256) {
         if (!mintAuthorizer.authorizeReservation(_msgSender())) {
             revert NeedsMintpass();
         }

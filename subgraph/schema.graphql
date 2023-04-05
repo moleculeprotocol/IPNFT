@@ -4,6 +4,7 @@ type Ipnft @entity {
     createdAt: BigInt!
     tokenURI: String!
     listings: [Listing!] @derivedFrom(field: "ipnft")
+    symbol: String
 }
 
 type Listing @entity {

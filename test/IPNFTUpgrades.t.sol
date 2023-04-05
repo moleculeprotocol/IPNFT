@@ -4,7 +4,7 @@ pragma solidity ^0.8.17;
 import "forge-std/Test.sol";
 import { console } from "forge-std/console.sol";
 import { IPNFT } from "../src/IPNFT.sol";
-import { IPNFTV22 } from "../src/IPNFTV22.sol";
+import { IPNFTV23 } from "../src/IPNFTV23.sol";
 
 import { Mintpass } from "../src/Mintpass.sol";
 import { UUPSProxy } from "../src/UUPSProxy.sol";
@@ -16,7 +16,7 @@ contract IPNFTUpgrades is IPNFTMintHelper {
 
     UUPSProxy proxy;
     IPNFT internal ipnft;
-    IPNFTV22 internal ipnftV22;
+    IPNFTV23 internal ipnftV23;
 
     address alice = makeAddr("alice");
     address bob = makeAddr("bob");
@@ -37,23 +37,23 @@ contract IPNFTUpgrades is IPNFTMintHelper {
     }
 
     function doUpgrade() public {
-        IPNFTV22 implementationV22 = new IPNFTV22();
+        IPNFTV23 implementationV22 = new IPNFTV23();
         ipnft.upgradeTo(address(implementationV22));
 
-        ipnftV22 = IPNFTV22(address(proxy));
-        ipnftV22.reinit();
+        ipnftV23 = IPNFTV23(address(proxy));
+        ipnftV23.reinit();
     }
 
     function testUpgradeContract() public {
         vm.startPrank(deployer);
         doUpgrade();
-        assertEq(ipnftV22.totalSupply(0), 0);
+        assertEq(ipnftV23.totalSupply(0), 0);
 
         vm.expectRevert("Initializable: contract is already initialized");
-        ipnftV22.initialize();
+        ipnftV23.initialize();
 
         vm.stopPrank();
-        assertEq(ipnftV22.aNewProperty(), "some property");
+        assertEq(ipnftV23.aNewProperty(), "some property");
     }
 
     function testTokensSurviveUpgrade() public {
@@ -63,8 +63,9 @@ contract IPNFTUpgrades is IPNFTMintHelper {
         doUpgrade();
         vm.stopPrank();
 
-        assertEq(ipnftV22.totalSupply(1), 1);
-        assertEq(ipnftV22.balanceOf(alice, 1), 1);
+        assertEq(ipnftV23.totalSupply(1), 1);
+        assertEq(ipnftV23.balanceOf(alice, 1), 1);
+        assertEq(ipnftV23.symbol(1), DEFAULT_SYMBOL);
     }
 
     function testLosesPauseability() public {
@@ -79,7 +80,7 @@ contract IPNFTUpgrades is IPNFTMintHelper {
 
         vm.startPrank(bob);
         //can reserve even though it was supposed to fail when paused before
-        ipnftV22.reserve();
+        ipnftV23.reserve();
         vm.stopPrank();
     }
 }

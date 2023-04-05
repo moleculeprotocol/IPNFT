@@ -20,6 +20,7 @@ contract Kamikaze {
 contract IPNFTTest is IPNFTMintHelper {
     event Reserved(address indexed reserver, uint256 indexed reservationId);
     event IPNFTMinted(address indexed owner, uint256 indexed tokenId, string tokenURI);
+    event SymbolUpdated(uint256 indexed tokenId, string symbol);
 
     UUPSProxy proxy;
     IPNFT internal ipnft;
@@ -91,10 +92,13 @@ contract IPNFTTest is IPNFTMintHelper {
 
         vm.expectEmit(true, true, false, true);
         emit IPNFTMinted(alice, 1, ipfsUri);
-        ipnft.mintReservation{value: MINTING_FEE}(alice, reservationId, reservationId, ipfsUri);
+        vm.expectEmit(true, false, false, false);
+        emit SymbolUpdated(reservationId, DEFAULT_SYMBOL);
+        ipnft.mintReservation{value: MINTING_FEE}(alice, reservationId, reservationId, ipfsUri, DEFAULT_SYMBOL);
 
         assertEq(ipnft.balanceOf(alice, 1), 1);
         assertEq(ipnft.uri(1), ipfsUri);
+        assertEq(ipnft.symbol(reservationId), DEFAULT_SYMBOL);
 
         assertEq(ipnft.reservations(1), address(0));
 
@@ -179,7 +183,7 @@ contract IPNFTTest is IPNFTMintHelper {
         assertEq(deployer.balance, 0.001 ether);
     }
 
-    function testCantMintWhenPaused() public {
+    function testCannotMintWhenPaused() public {
         vm.startPrank(deployer);
         ipnft.pause();
         vm.expectRevert(bytes("Pausable: paused"));
@@ -209,5 +213,20 @@ contract IPNFTTest is IPNFTMintHelper {
 
         vm.warp(block.timestamp + 60);
         assertFalse(ipnft.canRead(bob, tokenId));
+    }
+
+    function testOwnerCanUpdateSymbol() public {
+        uint256 tokenId = mintAToken(ipnft, alice);
+        assertEq(ipnft.symbol(tokenId), DEFAULT_SYMBOL);
+
+        vm.startPrank(alice);
+        ipnft.updateSymbol(tokenId, "ALICE-123");
+        vm.stopPrank();
+
+        assertEq(ipnft.symbol(tokenId), "ALICE-123");
+        vm.startPrank(bob);
+        vm.expectRevert(IPNFT.InsufficientBalance.selector);
+        ipnft.updateSymbol(tokenId, "BOB-314");
+        vm.stopPrank();
     }
 }
