@@ -1,0 +1,35 @@
+{
+  "name": "@molecule/ipfnt-subgraph",
+  "license": "UNLICENSED",
+  "scripts": {
+    "getAbi:ipnft": "cat ../out/IPNFT.sol/IPNFT.json | jq .abi > ./layer1/abis/IPNFT.json",
+    "getAbi:mintpass": "cat ../out/Mintpass.sol/Mintpass.json | jq .abi > ./layer1/abis/Mintpass.json",
+    "getAbi:schmackoswap": "cat ../out/SchmackoSwap.sol/SchmackoSwap.json | jq .abi > ./layer1/abis/SchmackoSwap.json",
+    "getAbi:fractionalizer": "cat ../out/Fractionalizer.sol/Fractionalizer.json | jq .abi > ./layer2/abis/Fractionalizer.json",
+    "getAbi:all": "yarn getAbi:ipnft && yarn getAbi:schmackoswap && yarn getAbi:mintpass && yarn getAbi:fractionalizer",
+    "prepare:local": "mustache config/local.js layer1/subgraph.template.yaml > layer1/subgraphL1.yaml && mustache config/local.js layer2/subgraph.template.yaml > layer/2subgraph.yaml",
+    "prepare:goerli": "mustache config/goerli.js layer1/subgraph.template.yaml > layer1/subgraph.yaml && mustache config/goerli.js layer2/subgraph.template.yaml > layer2/subgraph.yaml",
+    "prepare:mainnet": "mustache config/mainnet.js subgraph.template.yaml > subgraph.yaml",
+    "codegen:layer1": "graph codegen -o ./layer1/generated/ layer1/subgraph.yaml",
+    "codegen:layer2": "graph codegen -o ./layer2/generated/ layer2/subgraph.yaml",
+    "build:layer1": "yarn codegen:layer1 && graph build layer1/subgraph.yaml",
+    "build:layer2": "yarn codegen:layer2 && graph build layer2/subgraph.yaml",
+    "build:all": "yarn build:layer1 && yarn build:layer2",
+    "create:local": "graph create --node http://localhost:8020/ moleculeprotocol/ipnft-subgraph",
+    "remove:local": "graph remove --node http://localhost:8020/ moleculeprotocol/ipnft-subgraph",
+    "deploy:local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 moleculeprotocol/ipnft-subgraph",
+    "deploy:goerli:layer1": "cd layer1 && graph deploy --node https://api.thegraph.com/deploy/ dorianwilhelm/ip-nft-subgraph-goerli",
+    "deploy:goerli:layer2": "cd layer2 && graph deploy --node https://api.thegraph.com/deploy/ dorianwilhelm/ip-nfts-frac-optimism-goerli",
+    "deploy:prod:layer1": "graph deploy --product hosted-service moleculeprotocol/ip-nft-mainnet",
+    "deploy:prod:layer2": "graph deploy --product hosted-service moleculeprotocol/ip-nft-frac-optimism",
+    "test": "graph test"
+  },
+  "devDependencies": {
+    "@graphprotocol/graph-cli": "0.44.0",
+    "@graphprotocol/graph-ts": "0.29.3",
+    "dotenv": "^16.0.3",
+    "matchstick-as": "0.5.2",
+    "mustache": "^4.2.0"
+  },
+  "dependencies": {}
+}

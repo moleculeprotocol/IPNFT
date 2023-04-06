@@ -2,15 +2,15 @@
 
 ## Prerequisites
 
--   you can deploy contracts locally (see [the main README](../README.md))
--   you'll need docker (and docker-compose) on your box
--   install jq (`apt i jq` / `brew install jq`)
+- you can deploy contracts locally (see [the main README](../README.md))
+- you'll need docker (and docker-compose) on your box
+- install jq (`apt i jq` / `brew install jq`)
 
 ### Running subgraph and contracts locally
 
 1. follow the [local development deployment instructions](../README.md) to create a local deployment by running the fixture or dev scripts.
 2. Ensure the resulting contract addresses match the ones in your .env file and are available in your local environment (`source .env`). When executed on a fresh node with the default mnemonic, the addresses in `.env.example` are the deterministic contract addresses.
-3. Startup docker containers
+3. Startup docker containers (TODO: Add docker container setup for layer2 subgraph)
 
 ```sh
 docker compose up
@@ -47,7 +47,7 @@ If your local dev node needs a little "push", this is how you manually can mine 
 curl -H "Content-Type: application/json" -X POST --data '{"jsonrpc":"2.0","method":"evm_mine","params":[],"id":1}' 127.0.0.1:8545
 ```
 
-### deploying on the hosted service:
+### deploying on the hosted service
 
 1. get an api key for using the hosted service
 2. `yarn graph auth --product hosted-service <your api key>`

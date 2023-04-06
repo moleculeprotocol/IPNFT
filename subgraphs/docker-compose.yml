@@ -43,6 +43,5 @@ services:
       POSTGRES_PASSWORD: let-me-in
       POSTGRES_DB: graph-node
       PGDATA: '/data/postgres'
-      POSTGRES_INITDB_ARGS: '-E UTF8 --locale=C'
     volumes:
       - ./data/postgres:/var/lib/postgresql/data
