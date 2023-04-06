@@ -7,10 +7,10 @@ services:
     environment:
       ethereum: 'mainnet:http://anvil:8545'
 
-  anvil: 
+  anvil:
     image: ghcr.io/foundry-rs/foundry:latest
-    command: 
-      - "anvil --host 0.0.0.0"
+    command:
+      - 'anvil --host 0.0.0.0'
     ports:
       - '8545:8545'
   # ganache:

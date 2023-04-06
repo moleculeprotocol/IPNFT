@@ -1,9 +1,3 @@
-const path = require('node:path');
-require('dotenv').config({
-  debug: true,
-  path: path.resolve(process.cwd(), '../.env')
-});
-
 module.exports = {
   networkL1: 'goerli',
   networkL2: 'optimism-goerli',

@@ -23,8 +23,13 @@ dataSources:
           handler: handleReservation
         - event: IPNFTMinted(indexed address,indexed uint256,string)
           handler: handleMint
+        - event: SymbolUpdated(indexed uint256,string)
+          handler: handleSymbolUpdated
         - event: TransferSingle(indexed address,indexed address,indexed address,uint256,uint256)
           handler: handleTransferSingle
+        - event: ReadAccessGranted(indexed uint256,indexed address,uint256)
+          handler: handleReadAccess
+          
       file: ./src/ipnftMapping.ts
   - kind: ethereum
     name: SchmackoSwap

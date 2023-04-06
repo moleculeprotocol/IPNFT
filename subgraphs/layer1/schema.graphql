@@ -4,6 +4,8 @@ type Ipnft @entity {
   createdAt: BigInt!
   tokenURI: String!
   listings: [Listing!] @derivedFrom(field: "ipnft")
+  symbol: String
+  readers: [CanRead!] @derivedFrom(field: "ipnft")
 }
 
 type Listing @entity {
@@ -18,6 +20,13 @@ type Listing @entity {
   purchasedAt: BigInt
   buyer: Bytes #address
   allowed: [Allowed!] @derivedFrom(field: "listing")
+}
+
+type CanRead @entity {
+  id: ID! #keccak(tokenId,address)
+  ipnft: Ipnft!
+  reader: Bytes! #address
+  until: BigInt
 }
 
 type Allowed @entity {
