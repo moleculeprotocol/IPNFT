@@ -61,7 +61,7 @@
       {
         "components": [
           {
-            "internalType": "contract ERC1155Supply",
+            "internalType": "contract IERC1155Supply",
             "name": "tokenContract",
             "type": "address"
           },
@@ -89,6 +89,16 @@
             "internalType": "uint256",
             "name": "askPrice",
             "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "beneficiary",
+            "type": "address"
+          },
+          {
+            "internalType": "enum ListingState",
+            "name": "listingState",
+            "type": "uint8"
           }
         ],
         "indexed": false,
@@ -118,7 +128,7 @@
       {
         "components": [
           {
-            "internalType": "contract ERC1155Supply",
+            "internalType": "contract IERC1155Supply",
             "name": "tokenContract",
             "type": "address"
           },
@@ -146,6 +156,16 @@
             "internalType": "uint256",
             "name": "askPrice",
             "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "beneficiary",
+            "type": "address"
+          },
+          {
+            "internalType": "enum ListingState",
+            "name": "listingState",
+            "type": "uint8"
           }
         ],
         "indexed": false,
@@ -169,7 +189,7 @@
       {
         "components": [
           {
-            "internalType": "contract ERC1155Supply",
+            "internalType": "contract IERC1155Supply",
             "name": "tokenContract",
             "type": "address"
           },
@@ -197,6 +217,16 @@
             "internalType": "uint256",
             "name": "askPrice",
             "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "beneficiary",
+            "type": "address"
+          },
+          {
+            "internalType": "enum ListingState",
+            "name": "listingState",
+            "type": "uint8"
           }
         ],
         "indexed": false,
@@ -235,7 +265,30 @@
       },
       {
         "internalType": "bool",
-        "name": "isAllowed_",
+        "name": "_isAllowed",
+        "type": "bool"
+      }
+    ],
+    "name": "changeBuyerAllowance",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "listingId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address[]",
+        "name": "buyerAddresses",
+        "type": "address[]"
+      },
+      {
+        "internalType": "bool",
+        "name": "_isAllowed",
         "type": "bool"
       }
     ],
@@ -284,7 +337,46 @@
   {
     "inputs": [
       {
-        "internalType": "contract ERC1155Supply",
+        "internalType": "contract IERC1155Supply",
+        "name": "tokenContract",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "tokenId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "contract IERC20",
+        "name": "paymentToken",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "askPrice",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "beneficiary",
+        "type": "address"
+      }
+    ],
+    "name": "list",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "contract IERC1155Supply",
         "name": "tokenContract",
         "type": "address"
       },
@@ -326,7 +418,7 @@
     "name": "listings",
     "outputs": [
       {
-        "internalType": "contract ERC1155Supply",
+        "internalType": "contract IERC1155Supply",
         "name": "tokenContract",
         "type": "address"
       },
@@ -354,6 +446,16 @@
         "internalType": "uint256",
         "name": "askPrice",
         "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "beneficiary",
+        "type": "address"
+      },
+      {
+        "internalType": "enum ListingState",
+        "name": "listingState",
+        "type": "uint8"
       }
     ],
     "stateMutability": "view",

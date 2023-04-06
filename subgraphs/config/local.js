@@ -1,11 +1,12 @@
-const path = require("node:path");
+const path = require('node:path');
 require('dotenv').config({
-    debug: true,
-    path: path.resolve(process.cwd(), '../.env')
-})
+  debug: true,
+  path: path.resolve(process.cwd(), '../.env')
+});
 
 module.exports = {
-    network: "mainnet",
+    networkL1: "mainnet",
+    networkL2: "optimism",
     ipnft: {
         address: process.env.IPNFT_ADDRESS,
         startBlock: 0
@@ -17,5 +18,10 @@ module.exports = {
     mintpass: {
         address: process.env.MINTPASS_ADDRESS,
         startBlock: 0
-    }
+    },
+    //   TODO: To be added once deployed
+    fractionalizer: {
+        address: process.env.FRACTIONALIZERL2_ADDRESS,
+        startBlock: 0,
+    },
 };

@@ -1,0 +1,30 @@
+{
+  "name": "@molecule/ipfnt-subgraph",
+  "license": "UNLICENSED",
+  "scripts": {
+    "abis": "./makeAbis.sh",
+    "prepare:local": "mustache config/local.js layer1/subgraph.template.yaml > layer1/subgraph.yaml && mustache config/local.js layer2/subgraph.template.yaml > layer2/subgraph.yaml",
+    "prepare:goerli": "mustache config/goerli.js layer1/subgraph.template.yaml > layer1/subgraph.yaml && mustache config/goerli.js layer2/subgraph.template.yaml > layer2/subgraph.yaml",
+    "prepare:mainnet": "mustache config/mainnet.js subgraph.template.yaml > subgraph.yaml",
+    "codegen": "graph codegen -o ./layer1/generated/ ./layer1/subgraph.yaml && graph codegen -o ./layer2/generated/ ./layer2/subgraph.yaml",
+    "build:l1": "cd layer1 && graph build subgraph.yaml",
+    "build:l2": "cd layer2 && graph build subgraph.yaml",
+    "build": "yarn codegen && yarn build:l1 && yarn build:l2",
+    "create:local": "graph create --node http://localhost:8020/ moleculeprotocol/ipnft-subgraph",
+    "remove:local": "graph remove --node http://localhost:8020/ moleculeprotocol/ipnft-subgraph",
+    "deploy:local": "cd layer1 && graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 moleculeprotocol/ipnft-subgraph",
+    "deploy:goerli:l1": "cd layer1 && graph deploy --node https://api.thegraph.com/deploy/ dorianwilhelm/ip-nft-subgraph-goerli",
+    "deploy:goerli:l2": "cd layer2 && graph deploy --node https://api.thegraph.com/deploy/ dorianwilhelm/ip-nfts-frac-optimism-goerli",
+    "deploy:prod:l1": "cd layer1 && graph deploy --product hosted-service moleculeprotocol/ip-nft-mainnet",
+    "deploy:prod:l2": "cd layer2 && graph deploy --product hosted-service moleculeprotocol/ip-nft-frac-optimism",
+    "test": "graph test"
+  },
+  "devDependencies": {
+    "@graphprotocol/graph-cli": "0.44.0",
+    "@graphprotocol/graph-ts": "0.29.3",
+    "dotenv": "^16.0.3",
+    "matchstick-as": "0.5.2",
+    "mustache": "^4.2.0"
+  },
+  "dependencies": {}
+}
