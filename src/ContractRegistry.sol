@@ -14,6 +14,12 @@ contract ContractRegistry is Ownable {
 
     constructor() Ownable() { }
 
+    /**
+     * @dev to use strings here manually, you can `cast --from-utf8 "yourkey"`
+     *
+     * @param name bytes32
+     * @param _contract address
+     */
     function register(bytes32 name, address _contract) public onlyOwner {
         registry[name] = _contract;
     }
@@ -68,15 +74,20 @@ contract ContractRegistryMainnet is ContractRegistry {
 
 contract ContractRegistryGoerli is ContractRegistry {
     constructor() ContractRegistry() {
+        //CrossdomainMessenger: 0x43726f7373646f6d61696e4d657373656e676572
         //https://community.optimism.io/docs/useful-tools/networks/#optimism-goerli
+        //todo: seems to have moved to 0xfa37a4b2D49E21De63fa2b13D6dB213081E020b3
         registry["CrossdomainMessenger"] = 0x5086d1eEF304eb5284A0f6720f79403b4e9bE294;
 
-        // here it's explicitly mentioned that the Porxy__OVM contracts are out of date:
+        // here it's explicitly mentioned that the Proxy__OVM contracts are out of date:
         // https://github.com/ethereum-optimism/optimism/tree/develop/packages/contracts/deployments/goerli#network-info
         // instead, the newer bedrock stack is used: https://github.com/ethereum-optimism/optimism/tree/develop/packages/contracts-bedrock
         // -> https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/deployments/goerli/L1StandardBridge.json at 0x2Fd98C3581b658643C18CCea9b9181ba3a7F7c54
         //but proxied by L1ChugSplashProxy:
         //https://goerli.etherscan.io/address/0x636af16bf2f682dd3109e60102b8e1a089fedaa8#code
+
+        //StandardBridge: 0x5374616e64617264427269646765
+        //todo: seems to have moved to 0x79179704077E3324CC745A24a5CcC2a80A9B6842
         registry["StandardBridge"] = 0x636Af16bf2f682dD3109e60102b8E1A089FedAa8;
 
         //OUTb on Görli
@@ -92,19 +103,30 @@ contract ContractRegistryGoerli is ContractRegistry {
         //0x3d1ff8fe761923407871aa7533d23fd79ac04beabcc94c6380d7d50891dbc809
         registry[bytes32(keccak256(abi.encodePacked("l2.", 0x32B3b2281717dA83463414af4E8CfB1970E56287)))] = 0x3e7eF8f50246f725885102E8238CBba33F276747;
 
-        //USDC on Görli
+        //USDC on Görli(0x07865c6E87B9F70255377e024ace6630C1Eaa37F)
         //0xd16bd7eca49da7b1846b3691b7e922f4f5781147c87220e515bb291ccaa7572b
         registry[bytes32(keccak256(abi.encodePacked("bridge.", 0x07865c6E87B9F70255377e024ace6630C1Eaa37F)))] =
             0x636Af16bf2f682dD3109e60102b8E1A089FedAa8;
         //0x5cd4cfe0c62685b232d3156f3223d7a1d21bf042a16fded465c8c7b76aaeab06
         registry[bytes32(keccak256(abi.encodePacked("l2.", 0x07865c6E87B9F70255377e024ace6630C1Eaa37F)))] = 0x7E07E15D2a87A24492740D16f5bdF58c16db0c4E;
 
-        //DAI on Görli
-        //0xe15b5f385938941efb63398e068187f4ba88d6aff64d6c7f544d27cdfbca5a44
+        //DAI on Görli: 0x11fE4B6AE13d2a6055C8D9cF65c55bac32B5d844
+        //DAI on OpGör: 0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1
+        //L1DAITokenBridge: 0x05a388Db09C2D44ec0b00Ee188cD42365c42Df23
+        //key: 0xe15b5f385938941efb63398e068187f4ba88d6aff64d6c7f544d27cdfbca5a44
         registry[bytes32(keccak256(abi.encodePacked("bridge.", 0x11fE4B6AE13d2a6055C8D9cF65c55bac32B5d844)))] =
             0x05a388Db09C2D44ec0b00Ee188cD42365c42Df23;
-
-        //0x4a7108bf7a9b3c6f140d376e92e6c9e5a1d137cf084270648a50ecf66716c815
+        //key: 0x4a7108bf7a9b3c6f140d376e92e6c9e5a1d137cf084270648a50ecf66716c815
         registry[bytes32(keccak256(abi.encodePacked("l2.", 0x11fE4B6AE13d2a6055C8D9cF65c55bac32B5d844)))] = 0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1;
+
+        //WETH is special as it is a precompiled contract on OP
+        //WETH on Görli: 0xb4fbf271143f4fbf7b91a5ded31805e42b2208d6
+        //WETH on OPGör: 0x4200000000000000000000000000000000000006
+        //has worked in the past on standard bridge: https://goerli.etherscan.io/tx/0x70d588656c6592c15f98d58012a71cc0f5d9480303e5aa971df80459b43fb9be
+        //TODO: doesn't seem to work anymore: https://goerli.etherscan.io/tx/0xbd34a2759b2929f75531a4296d57b227426c5f8b19f53aab0451ec6a97cb9a35
+        //TODO: L2 tx fails: https://dashboard.tenderly.co/tx/optimistic-goerli/0x27c642c91d68824489a2e2bf875dfd2476d07532406743a4000098478368d426
+        // registry[bytes32(keccak256(abi.encodePacked("bridge.", 0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6)))] =
+        //     0x636Af16bf2f682dD3109e60102b8E1A089FedAa8;
+        // registry[bytes32(keccak256(abi.encodePacked("l2.", 0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6)))] = 0x4200000000000000000000000000000000000006;
     }
 }
