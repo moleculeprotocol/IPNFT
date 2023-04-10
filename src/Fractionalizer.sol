@@ -10,13 +10,14 @@ import { ContextUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/Co
 import { ERC2771ContextUpgradeable } from "@openzeppelin/contracts-upgradeable/metatx/ERC2771ContextUpgradeable.sol";
 import { Base64 } from "@openzeppelin/contracts/utils/Base64.sol";
 import { SignatureChecker } from "@openzeppelin/contracts/utils/cryptography/SignatureChecker.sol";
-import { ListingState } from "./SchmackoSwap.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
-
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+
+import { ListingState } from "./SchmackoSwap.sol";
 import { IERC1155Supply } from "./IERC1155Supply.sol";
+import { Base32 } from "./Base32.sol";
 
 import { ICrossDomainMessenger } from "@eth-optimism/contracts/libraries/bridge/ICrossDomainMessenger.sol";
 
@@ -60,6 +61,9 @@ contract Fractionalizer is ERC1155SupplyUpgradeable, UUPSUpgradeable, ERC2771Con
     mapping(uint256 => mapping(address => bool)) public signedTerms;
 
     address fractionalizerDispatcherOnL1;
+
+    //b afkrei, the prefix that Web3 storage uses. Use `ipfs add --cid-version 1` to ensure these.
+    bytes constant CIDv1Prefix = hex"01551220";
 
     modifier onlyXDomain() {
         if (_msgSender() != address(crossDomainMessenger)) {
@@ -214,6 +218,10 @@ contract Fractionalizer is ERC1155SupplyUpgradeable, UUPSUpgradeable, ERC2771Con
         emit SharesClaimed(fractionId, _msgSender(), balance);
     }
 
+    function agreementIpfsCidV1(bytes32 contentHash) public pure returns (string memory) {
+        return string(abi.encodePacked("b", Base32.encode(abi.encodePacked(CIDv1Prefix, contentHash))));
+    }
+
     function specificTermsV1(uint256 fractionId) public view returns (string memory) {
         Fractionalized memory frac = fractionalized[fractionId];
 
@@ -221,8 +229,8 @@ contract Fractionalizer is ERC1155SupplyUpgradeable, UUPSUpgradeable, ERC2771Con
             abi.encodePacked(
                 "As a fraction holder of IPNFT #",
                 Strings.toString(frac.tokenId),
-                ", I accept all terms that I've read here: ",
-                Strings.toHexString(uint256(frac.agreementHash)),
+                ", I accept all terms that I've read here: ipfs://",
+                agreementIpfsCidV1(frac.agreementHash),
                 "\n\n",
                 "Chain Id: ",
                 Strings.toString(block.chainid),

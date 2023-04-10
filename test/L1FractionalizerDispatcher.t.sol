@@ -26,7 +26,9 @@ import { MyToken } from "../src/MyToken.sol";
 
 contract L1FractionalizerDispatcher is Test {
     string ipfsUri = "ipfs://bafkreiankqd3jvpzso6khstnaoxovtyezyatxdy7t2qzjoolqhltmasqki";
-    bytes32 agreementHash = keccak256(bytes("the binary content of the fraction holder agreeemnt"));
+
+    //stripped cidv1 pfx from bafkreihjtgxfjfz6kguaw5bhnnua766dqkygrpaemzazhz3aufvc6tmate:
+    bytes32 agreementHash = 0xe999ae54973e51a80b74276b680ffbc382b068bc04664193e760a16a2f4d8099;
 
     address deployer = makeAddr("chucknorris");
     address protocolOwner = makeAddr("protocolOwner");
