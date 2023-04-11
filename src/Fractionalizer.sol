@@ -252,6 +252,22 @@ contract Fractionalizer is ERC1155SupplyUpgradeable, UUPSUpgradeable, ERC2771Con
         signedTerms[fractionId][_msgSender()] = true;
         emit TermsAccepted(fractionId, _msgSender());
     }
+
+    /**
+     * todo: remove this again, once we can safely relay metatx
+     * @notice this can be called by anyone, e.g.
+     * @param fractionId uint256 fraction id
+     * @param onBehalf address that signed the terms message
+     * @param signature bytes the signature of `onBehalf`
+     */
+    function acceptTerms(uint256 fractionId, address onBehalf, bytes memory signature) external {
+        if (!isValidSignature(fractionId, onBehalf, signature)) {
+            revert InvalidSignature();
+        }
+        signedTerms[fractionId][onBehalf] = true;
+        emit TermsAccepted(fractionId, onBehalf);
+    }
+
     // function supportsInterface(bytes4 interfaceId) public view virtual override (ERC1155ReceiverUpgradeable, ERC1155Upgradeable) returns (bool) {
     //     return super.supportsInterface(interfaceId);
     // }
