@@ -4,44 +4,29 @@ pragma solidity ^0.8.18;
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
 /**
- * @title
- * @author
- * @notice
- *
- * https://community.optimism.io/docs/useful-tools/networks/#optimism-mainnet
- * https://github.com/ethereum-optimism/optimism/tree/develop/packages/contracts/deployments/mainnet#layer-1-contracts
- * görli (bedrock): https://github.com/ethereum-optimism/optimism/tree/develop/packages/contracts-bedrock/deployments/goerli
- * on mainnet we could also query common contracts by their name from here: https://etherscan.io/address/0xdE1FCfB0851916CA5101820A69b13a4E276bd81F#code
+ * @title Contract Registry
+ * @author stefan@molecule.to
+ * @notice used for simpler contract configuration. Can yield standard contract addresses & resolve token contract addresses
+ * @notice convention for multipart keys is to `keccak256(abi.encodePacked("key.",address))`
  */
 contract ContractRegistry is Ownable {
     mapping(bytes32 => address) registry;
 
     constructor() Ownable() { }
 
+    /**
+     * @dev to use strings here manually, you can `cast --from-utf8 "yourkey"`
+     *
+     * @param name bytes32
+     * @param _contract address
+     */
     function register(bytes32 name, address _contract) public onlyOwner {
         registry[name] = _contract;
-    }
-
-    // function register(string memory name, address _contract) public onlyOwner {
-    //     register(bytes32(bytes(name)), _contract);
-    // }
-
-    function register(address addr, address counterPart) public onlyOwner {
-        bytes32 key = bytes32(bytes20(addr));
-        register(key, counterPart);
-    }
-
-    function get(address addr) public view returns (address) {
-        return registry[bytes32(bytes20(addr))];
     }
 
     function get(bytes32 name) public view returns (address) {
         return registry[name];
     }
-
-    // function get(string memory name) public view returns (address) {
-    //     return get(bytes32(bytes(name)));
-    // }
 
     function safeGet(bytes32 name) public view returns (address) {
         address _address = get(name);
@@ -50,114 +35,98 @@ contract ContractRegistry is Ownable {
         }
         return _address;
     }
-
-    function safeGet(address addr) public view returns (address) {
-        return safeGet(bytes32(bytes20(addr)));
-    }
-
-    // function safeGet(string memory name) public view returns (address) {
-    //     return safeGet(bytes32(bytes(name)));
-    // }
 }
 
+//preconfigured registries, it *might* be safer to configure this manually!
+// token list as reference: https://static.optimism.io/optimism.tokenlist.json
+
+// https://community.optimism.io/docs/useful-tools/networks/#optimism-mainnet
+// https://github.com/ethereum-optimism/optimism/tree/develop/packages/contracts/deployments/mainnet#layer-1-contracts
+// on mainnet we could also query common contracts by their name from here: https://etherscan.io/address/0xdE1FCfB0851916CA5101820A69b13a4E276bd81F#code
 contract ContractRegistryMainnet is ContractRegistry {
     constructor() ContractRegistry() {
         //https://community.optimism.io/docs/useful-tools/networks/#optimism-mainnet
         registry["CrossdomainMessenger"] = 0x25ace71c97B33Cc4729CF772ae268934F7ab5fA1;
         //https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts/deployments/mainnet/Proxy__OVM_L1StandardBridge.json
-        //seems to be good (eof Feb 23): https://etherscan.io/txs?a=0x99C9fc46f92E8a1c0deC1b1747d010903E884bE1
         //todo WARNING: this imo is *not* bedrock compatible
+        //todo: test this first before allowing any real user to use it!
         registry["StandardBridge"] = 0x99C9fc46f92E8a1c0deC1b1747d010903E884bE1;
 
-        //USDC todo: likely to work
+        //USDC uses the standard bridge
         //https://etherscan.io/tx/0x3294b2578762bd3f32d17897ab79b02d4ec77dc3438c0692517bc3cb934adab7
-        registry[bytes32(bytes20(0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48))] = 0x7F5c764cBc14f9669B88837ca1490cCa17c31607;
-        //DAI todo: careful!!! dai seems not compatible to the standard token bridge,
-        // if (tokenAddressL1 == 0x6B175474E89094C44Da98b954EedeAC495271d0F) {
-        //     return 0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1; //DAI on Optimism
-        // }
+        registry[bytes32(keccak256(abi.encodePacked("bridge.", 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48)))] =
+            0x10E6593CDda8c58a1d0f14C5164B376352a55f2F;
+        registry[bytes32(keccak256(abi.encodePacked("l2.", 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48)))] = 0x7F5c764cBc14f9669B88837ca1490cCa17c31607;
+
+        //DAI on mainnet dai uses its own token bridge, 0x10E6593CDda8c58a1d0f14C5164B376352a55f2F
+        registry[bytes32(keccak256(abi.encodePacked("bridge.", 0x6B175474E89094C44Da98b954EedeAC495271d0F)))] =
+            0x10E6593CDda8c58a1d0f14C5164B376352a55f2F;
+        registry[bytes32(keccak256(abi.encodePacked("l2.", 0x6B175474E89094C44Da98b954EedeAC495271d0F)))] = 0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1;
+
+        //Tether USDT uses standard bridge on mainnet
+        registry[bytes32(keccak256(abi.encodePacked("bridge.", 0xdAC17F958D2ee523a2206206994597C13D831ec7)))] =
+            0x99C9fc46f92E8a1c0deC1b1747d010903E884bE1;
+        registry[bytes32(keccak256(abi.encodePacked("l2.", 0xdAC17F958D2ee523a2206206994597C13D831ec7)))] = 0x94b008aA00579c1307B0EF2c499aD98a8ce58e58;
     }
 }
 
+// * görli (bedrock): https://github.com/ethereum-optimism/optimism/tree/develop/packages/contracts-bedrock/deployments/goerli
+
 contract ContractRegistryGoerli is ContractRegistry {
     constructor() ContractRegistry() {
+        //CrossdomainMessenger: 0x43726f7373646f6d61696e4d657373656e676572
         //https://community.optimism.io/docs/useful-tools/networks/#optimism-goerli
+        //todo: seems to have moved to 0xfa37a4b2D49E21De63fa2b13D6dB213081E020b3
         registry["CrossdomainMessenger"] = 0x5086d1eEF304eb5284A0f6720f79403b4e9bE294;
 
-        // here it's explicitly mentioned that the Porxy__OVM contracts are out of date:
+        // here it's explicitly mentioned that the Proxy__OVM contracts are out of date:
         // https://github.com/ethereum-optimism/optimism/tree/develop/packages/contracts/deployments/goerli#network-info
         // instead, the newer bedrock stack is used: https://github.com/ethereum-optimism/optimism/tree/develop/packages/contracts-bedrock
         // -> https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/deployments/goerli/L1StandardBridge.json at 0x2Fd98C3581b658643C18CCea9b9181ba3a7F7c54
         //but proxied by L1ChugSplashProxy:
         //https://goerli.etherscan.io/address/0x636af16bf2f682dd3109e60102b8e1a089fedaa8#code
+
+        //StandardBridge: 0x5374616e64617264427269646765
+        //todo: seems to have moved to 0x79179704077E3324CC745A24a5CcC2a80A9B6842
         registry["StandardBridge"] = 0x636Af16bf2f682dD3109e60102b8E1A089FedAa8;
 
         //OUTb on Görli
+        //uses standard bridge
         //https://goerli-optimism.etherscan.io/token/0x3e7ef8f50246f725885102e8238cbba33f276747
         //https://github.com/ethereum-optimism/optimism-tutorial/tree/main/cross-dom-bridge-erc20
         //https://community.optimism.io/docs/guides/testing/#
-        registry[bytes32(bytes20(0x32B3b2281717dA83463414af4E8CfB1970E56287))] = 0x3e7eF8f50246f725885102E8238CBba33F276747;
+
+        //0x8237a1a7bac8d4da9b0ba16696cf5eae25ef4bbaad331664cbbc3b29cef450bb
+        registry[bytes32(keccak256(abi.encodePacked("bridge.", 0x32B3b2281717dA83463414af4E8CfB1970E56287)))] =
+            0x636Af16bf2f682dD3109e60102b8E1A089FedAa8;
+
+        //0x3d1ff8fe761923407871aa7533d23fd79ac04beabcc94c6380d7d50891dbc809
+        registry[bytes32(keccak256(abi.encodePacked("l2.", 0x32B3b2281717dA83463414af4E8CfB1970E56287)))] = 0x3e7eF8f50246f725885102E8238CBba33F276747;
+
+        //USDC on Görli(0x07865c6E87B9F70255377e024ace6630C1Eaa37F)
+        //0xd16bd7eca49da7b1846b3691b7e922f4f5781147c87220e515bb291ccaa7572b
+        registry[bytes32(keccak256(abi.encodePacked("bridge.", 0x07865c6E87B9F70255377e024ace6630C1Eaa37F)))] =
+            0x636Af16bf2f682dD3109e60102b8E1A089FedAa8;
+        //0x5cd4cfe0c62685b232d3156f3223d7a1d21bf042a16fded465c8c7b76aaeab06
+        registry[bytes32(keccak256(abi.encodePacked("l2.", 0x07865c6E87B9F70255377e024ace6630C1Eaa37F)))] = 0x7E07E15D2a87A24492740D16f5bdF58c16db0c4E;
+
+        //DAI on Görli: 0x11fE4B6AE13d2a6055C8D9cF65c55bac32B5d844
+        //DAI on OpGör: 0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1
+        //L1DAITokenBridge: 0x05a388Db09C2D44ec0b00Ee188cD42365c42Df23
+        //key: 0xe15b5f385938941efb63398e068187f4ba88d6aff64d6c7f544d27cdfbca5a44
+        registry[bytes32(keccak256(abi.encodePacked("bridge.", 0x11fE4B6AE13d2a6055C8D9cF65c55bac32B5d844)))] =
+            0x05a388Db09C2D44ec0b00Ee188cD42365c42Df23;
+        //key: 0x4a7108bf7a9b3c6f140d376e92e6c9e5a1d137cf084270648a50ecf66716c815
+        registry[bytes32(keccak256(abi.encodePacked("l2.", 0x11fE4B6AE13d2a6055C8D9cF65c55bac32B5d844)))] = 0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1;
+
+        //WETH is special as it is a precompiled contract on OP
+        //WETH on Görli: 0xb4fbf271143f4fbf7b91a5ded31805e42b2208d6
+        //WETH on OPGör: 0x4200000000000000000000000000000000000006
+        //has worked in the past on standard bridge: https://goerli.etherscan.io/tx/0x70d588656c6592c15f98d58012a71cc0f5d9480303e5aa971df80459b43fb9be
+        //TODO: doesn't seem to work anymore: https://goerli.etherscan.io/tx/0xbd34a2759b2929f75531a4296d57b227426c5f8b19f53aab0451ec6a97cb9a35
+        //TODO: L2 tx fails: https://dashboard.tenderly.co/tx/optimistic-goerli/0x27c642c91d68824489a2e2bf875dfd2476d07532406743a4000098478368d426
+        // registry[bytes32(keccak256(abi.encodePacked("bridge.", 0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6)))] =
+        //     0x636Af16bf2f682dD3109e60102b8E1A089FedAa8;
+        // registry[bytes32(keccak256(abi.encodePacked("l2.", 0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6)))] = 0x4200000000000000000000000000000000000006;
     }
 }
-
-// function getStandardBridgeAddress() public view returns (address) {
-//     // Mainnet
-//     //https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts/deployments/mainnet/Proxy__OVM_L1StandardBridge.json
-//     //seems to be good (eof Feb 23): https://etherscan.io/txs?a=0x99C9fc46f92E8a1c0deC1b1747d010903E884bE1
-//     //todo WARNING: this imo is *not* bedrock compatible
-//     if (block.chainid == 1) {
-//         return 0x99C9fc46f92E8a1c0deC1b1747d010903E884bE1;
-//     }
-
-//     // Goerli
-//     // here it's explicitly mentioned that the Porxy__OVM contracts are out of date:
-//     // https://github.com/ethereum-optimism/optimism/tree/develop/packages/contracts/deployments/goerli#network-info
-//     // instead, the newer bedrock stack is used: https://github.com/ethereum-optimism/optimism/tree/develop/packages/contracts-bedrock
-//     // -> https://github.com/ethereum-optimism/optimism/blob/develop/packages/contracts-bedrock/deployments/goerli/L1StandardBridge.json at 0x2Fd98C3581b658643C18CCea9b9181ba3a7F7c54
-//     //but proxied by L1ChugSplashProxy:
-//     //https://goerli.etherscan.io/address/0x636af16bf2f682dd3109e60102b8e1a089fedaa8#code
-
-//     if (block.chainid == 5) {
-//         return 0x636Af16bf2f682dD3109e60102b8E1A089FedAa8;
-//     }
-
-//     revert("bridge invalid");
-// }
-
-// //todo: only works for görli:
-// function getCrossdomainMessengerAddress() public view returns (address) {
-//     if (block.chainid == 1) {
-//         return 0x25ace71c97B33Cc4729CF772ae268934F7ab5fA1;
-//     }
-//     if (block.chainid == 5) {
-//         return 0x5086d1eEF304eb5284A0f6720f79403b4e9bE294;
-//     }
-
-//     revert("no cross domain messenger");
-// }
-
-// function getTokenAddressL2(address tokenAddressL1) public view returns (address) {
-//     if (block.chainid == 1) {
-//         //USDC todo: likely to work
-//         //https://etherscan.io/tx/0x3294b2578762bd3f32d17897ab79b02d4ec77dc3438c0692517bc3cb934adab7
-//         if (tokenAddressL1 == 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48) {
-//             return 0x7F5c764cBc14f9669B88837ca1490cCa17c31607; //USDC on Optimism
-//         }
-//         //DAI todo: careful!!! dai seems not compatible to the standard token bridge,
-//         // if (tokenAddressL1 == 0x6B175474E89094C44Da98b954EedeAC495271d0F) {
-//         //     return 0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1; //DAI on Optimism
-//         // }
-//     } else if (block.chainid == 5) {
-//         //https://community.optimism.io/docs/guides/testing/#
-//         //https://github.com/ethereum-optimism/optimism-tutorial/tree/main/cross-dom-bridge-erc20
-//         //OUTb
-//         if (tokenAddressL1 == 0x32B3b2281717dA83463414af4E8CfB1970E56287) {
-//             //OUTb on Görli
-//             //https://goerli-optimism.etherscan.io/token/0x3e7ef8f50246f725885102e8238cbba33f276747
-//             return 0x3e7eF8f50246f725885102E8238CBba33F276747; //OUTb on Optimism
-//         }
-
-//     } else if (block.chainid == 31337) { }
-
-//     revert("no token known on l2");
-// }

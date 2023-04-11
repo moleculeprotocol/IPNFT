@@ -64,11 +64,15 @@ contract L1FractionalizerDispatcher is Test {
 
         _ipnft.setAuthorizer(address(new AuthorizeAll()));
 
+        IL1ERC20Bridge bridge = new MockStandardBridge();
         ContractRegistry registry = new ContractRegistry();
+
         registry.register("CrossdomainMessenger", address(new MockCrossDomainMessenger()));
-        registry.register("StandardBridge", address(new MockStandardBridge()));
+        registry.register("StandardBridge", address(bridge));
         registry.register("FractionalizerL2", makeAddr("fractionalizerAddrL2"));
-        registry.register(address(myToken), makeAddr("myTokenOnL2"));
+
+        registry.register(bytes32(keccak256(abi.encodePacked("bridge.", address(erc20)))), address(bridge));
+        registry.register(bytes32(keccak256(abi.encodePacked("l2.", address(erc20)))), makeAddr("myTokenOnL2"));
 
         fractionalizer = FractionalizerL2Dispatcher(
             address(

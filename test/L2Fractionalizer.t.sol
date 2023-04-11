@@ -41,13 +41,14 @@ contract L2FractionalizerTest is Test {
     Fractionalizer internal fractionalizer;
     IERC20 internal erc20;
     MockCrossDomainMessenger internal xDomainMessenger;
+    MyToken internal myToken;
 
     function setUp() public {
         (alice, alicePk) = makeAddrAndKey("alice");
 
         vm.startPrank(deployer);
 
-        MyToken myToken = new MyToken();
+        myToken = new MyToken();
         myToken.mint(ipnftBuyer, 1_000_000 ether);
         erc20 = IERC20(address(myToken));
 
@@ -253,6 +254,33 @@ contract L2FractionalizerTest is Test {
 
         assertEq(erc20.balanceOf(charlie), 200_000 ether);
         assertEq(erc20.balanceOf(address(fractionalizer)), 550_000 ether);
+    }
+
+    function testStartClaimingAHighAmounts() public {
+        uint256 fractionId = uint256(keccak256(abi.encodePacked(originalOwner, ipnftContract, uint256(1))));
+        uint256 __wealth = 1_000_000_000_000_000_000_000 ether; //!!!
+
+        xDomainMessenger.setSender(FakeL1DispatcherContract);
+        bytes memory message = abi.encodeCall(
+            Fractionalizer.fractionalizeUniqueERC1155, (fractionId, ipnftContract, uint256(1), originalOwner, alice, agreementHash, __wealth)
+        );
+
+        xDomainMessenger.sendMessage(address(fractionalizer), message, 1_900_000);
+        assertEq(fractionalizer.balanceOf(alice, fractionId), __wealth);
+
+        myToken.mint(ipnftBuyer, __wealth);
+        vm.startPrank(ipnftBuyer);
+        erc20.transfer(address(fractionalizer), __wealth);
+        vm.stopPrank();
+
+        vm.startPrank(PREDEPLOYED_XDOMAIN_MESSENGER);
+        xDomainMessenger.setSender(FakeL1DispatcherContract);
+        fractionalizer.afterSale(fractionId, address(erc20), __wealth);
+        vm.stopPrank();
+
+        vm.expectRevert( /*Arithmetic over/underflow*/ );
+        (, uint256 amount) = fractionalizer.claimableTokens(fractionId, alice);
+        //assertEq(amount, __wealth);
     }
 
     // function testCollectionBalanceMustBeOne() public {

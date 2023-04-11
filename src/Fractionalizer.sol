@@ -127,6 +127,7 @@ contract Fractionalizer is ERC1155SupplyUpgradeable, UUPSUpgradeable, ERC2771Con
     /**
      * @param fractionId the fractionalized token id as computed on the l1 network
      */
+    //todo: consider limiting the fractionsAmount to a certain value to avoid overflows on payouts
     function fractionalizeUniqueERC1155(
         uint256 fractionId,
         address collection,
@@ -152,6 +153,8 @@ contract Fractionalizer is ERC1155SupplyUpgradeable, UUPSUpgradeable, ERC2771Con
         emit FractionsCreated(collection, tokenId, originalOwner, fractionId, fractionsAmount, agreementHash);
     }
 
+    //todo: the original owner (L1) might not have access to his own account on L2 (multisig)
+    //todo: either make this controlled by the beneficiary on L2  OR only allow this to be called by the xdm
     function increaseFractions(uint256 fractionId, uint256 fractionsAmount) external notClaiming(fractionId) {
         Fractionalized memory _fractionalized = fractionalized[fractionId];
 
@@ -187,6 +190,7 @@ contract Fractionalizer is ERC1155SupplyUpgradeable, UUPSUpgradeable, ERC2771Con
 
         uint256 balance = balanceOf(tokenHolder, fractionId);
         //todo: check this 10 times:
+        //todo: they tell you "Multiply before divide" is bad, but here.... it should be better, since balance & paidprice are both 10e18
         return (frac.paymentToken, (balance * frac.paidPrice) / frac.totalIssued);
     }
 

@@ -150,7 +150,7 @@ contract FractionalizerL2Dispatcher is UUPSUpgradeable, OwnableUpgradeable {
             revert("listing didnt payout the fractionalizer");
         }
 
-        //todo: this is warning, we still could proceed, since it's too late here anyway ;)
+        //todo: this is a warning, we still could proceed, since it's too late here anyway ;)
         // if (paymentToken.balanceOf(address(this)) < askPrice) {
         //     revert("the fulfillment doesn't match the ask");
         // }
@@ -161,12 +161,11 @@ contract FractionalizerL2Dispatcher is UUPSUpgradeable, OwnableUpgradeable {
     function _startSalesPhase(uint256 fractionId, IERC20 _paymentToken, uint256 price) internal {
         //bridge ERC20 to L2, right here
         //https://community.optimism.io/docs/developers/bridge/standard-bridge/#
-        address bridgeAddr = registry.safeGet("StandardBridge");
-        address crossDomainMessengerAddr = registry.safeGet("CrossdomainMessenger");
+        ICrossDomainMessenger crossDomainMessenger = ICrossDomainMessenger(registry.safeGet("CrossdomainMessenger"));
         address fractionalizerAddrL2 = registry.safeGet("FractionalizerL2");
 
-        //todo: check if we can make this translation safer by trusting a "generic" erc20 bridge
-        address tokenL2Address = registry.safeGet(address(_paymentToken));
+        address bridgeAddr = registry.safeGet(bytes32(keccak256(abi.encodePacked("bridge.", address(_paymentToken)))));
+        address tokenL2Address = registry.safeGet(bytes32(keccak256(abi.encodePacked("l2.", address(_paymentToken)))));
 
         //todo: the approval should be provided in general.
         if (_paymentToken.allowance(address(this), bridgeAddr) < price) {
@@ -175,6 +174,8 @@ contract FractionalizerL2Dispatcher is UUPSUpgradeable, OwnableUpgradeable {
             }
         }
 
+        // this can be really dangerous / lose tokens when bridge / token counterpart is chosen wrong
+        // https://community.optimism.io/docs/developers/bridge/standard-bridge/#deposits
         IL1ERC20Bridge(bridgeAddr).depositERC20To(address(_paymentToken), tokenL2Address, fractionalizerAddrL2, price, MIN_GASLIMIT, "");
 
         //initiate sale on L2
@@ -183,7 +184,7 @@ contract FractionalizerL2Dispatcher is UUPSUpgradeable, OwnableUpgradeable {
         //on L2 you cannot prove this!
         bytes memory message = abi.encodeWithSignature("afterSale(uint256,address,uint256)", fractionId, tokenL2Address, price);
 
-        ICrossDomainMessenger(crossDomainMessengerAddr).sendMessage(
+        crossDomainMessenger.sendMessage(
             fractionalizerAddrL2,
             message,
             MIN_GASLIMIT // within the free gas limit amount
