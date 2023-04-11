@@ -262,7 +262,7 @@ contract L2FractionalizerTest is Test {
 
         xDomainMessenger.setSender(FakeL1DispatcherContract);
         bytes memory message = abi.encodeCall(
-            Fractionalizer.fractionalizeUniqueERC1155, (fractionId, ipnftContract, uint256(1), originalOwner, alice, agreementHash, __wealth)
+            Fractionalizer.fractionalizeUniqueERC1155, (fractionId, ipnftContract, uint256(1), originalOwner, alice, agreementCid, __wealth)
         );
 
         xDomainMessenger.sendMessage(address(fractionalizer), message, 1_900_000);
