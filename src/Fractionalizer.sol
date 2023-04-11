@@ -105,14 +105,14 @@ contract Fractionalizer is ERC1155SupplyUpgradeable, UUPSUpgradeable, ERC2771Con
         emit FractionalizerChanged(_fractionalizerDispatcherOnL1);
     }
 
-    function setFeeReceiver(address _feeReceiver) public {
+    function setFeeReceiver(address _feeReceiver) public onlyOwner {
         if (_feeReceiver == address(0)) {
             revert ToZeroAddress();
         }
         feeReceiver = _feeReceiver;
     }
 
-    function setReceiverPercentage(uint256 _fractionalizationPercentage) external {
+    function setReceiverPercentage(uint256 _fractionalizationPercentage) external onlyOwner {
         fractionalizationPercentage = _fractionalizationPercentage;
     }
 
