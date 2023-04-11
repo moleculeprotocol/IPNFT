@@ -4,7 +4,6 @@ pragma solidity ^0.8.17;
 import "forge-std/Test.sol";
 import { console } from "forge-std/console.sol";
 
-import { ICrossDomainMessenger } from "@eth-optimism/contracts/libraries/bridge/ICrossDomainMessenger.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
@@ -13,7 +12,6 @@ import { GnosisSafeL2 } from "safe-global/safe-contracts/GnosisSafeL2.sol";
 import { GnosisSafeProxyFactory } from "safe-global/safe-contracts/proxies/GnosisSafeProxyFactory.sol";
 import { Enum } from "safe-global/safe-contracts/common/Enum.sol";
 
-import { MockCrossDomainMessenger } from "./helpers/MockCrossDomainMessenger.sol";
 import "./helpers/MakeGnosisWallet.sol";
 
 import { Fractionalizer } from "../src/Fractionalizer.sol";
@@ -21,9 +19,7 @@ import { MyToken } from "../src/MyToken.sol";
 
 contract L2FractionalizerTest is Test {
     string ipfsUri = "ipfs://bafkreiankqd3jvpzso6khstnaoxovtyezyatxdy7t2qzjoolqhltmasqki";
-    bytes32 agreementHash = keccak256(bytes("the binary content of the fraction holder agreeemnt"));
-
-    address PREDEPLOYED_XDOMAIN_MESSENGER = 0x4200000000000000000000000000000000000007;
+    string agreementCid = "bafkreigk5dvqblnkdniges6ft5kmuly47ebw4vho6siikzmkaovq6sjstq";
 
     address deployer = makeAddr("chucknorris");
     address protocolOwner = makeAddr("protocolOwner");
@@ -39,7 +35,6 @@ contract L2FractionalizerTest is Test {
 
     Fractionalizer internal fractionalizer;
     IERC20 internal erc20;
-    MockCrossDomainMessenger internal xDomainMessenger;
 
     function setUp() public {
         (alice, alicePk) = makeAddrAndKey("alice");
@@ -49,10 +44,6 @@ contract L2FractionalizerTest is Test {
         MyToken myToken = new MyToken();
         myToken.mint(ipnftBuyer, 1_000_000 ether);
         erc20 = IERC20(address(myToken));
-
-        xDomainMessenger = new MockCrossDomainMessenger();
-        vm.etch(PREDEPLOYED_XDOMAIN_MESSENGER, address(xDomainMessenger).code);
-        xDomainMessenger = MockCrossDomainMessenger(PREDEPLOYED_XDOMAIN_MESSENGER);
 
         fractionalizer = Fractionalizer(
             address(
@@ -73,9 +64,19 @@ contract L2FractionalizerTest is Test {
     function helpInitializeFractions() internal returns (uint256 fractionId) {
         fractionId = uint256(keccak256(abi.encodePacked(originalOwner, ipnftContract, uint256(1))));
 
-        vm.startPrank(PREDEPLOYED_XDOMAIN_MESSENGER);
-        xDomainMessenger.setSender(originalOwner);
         fractionalizer.fractionalizeUniqueERC1155(fractionId, ipnftContract, uint256(1), agreementHash, 100_000);
+        bytes memory message = abi.encodeCall(
+            Fractionalizer.fractionalizeUniqueERC1155, (fractionId, ipnftContract, uint256(1), originalOwner, originalOwner, agreementCid, 100_000)
+        );
+    }
+
+    function testCannotSetInfraToZero() public {
+        vm.startPrank(deployer);
+        vm.expectRevert(ToZeroAddress.selector);
+        fractionalizer.setFractionalizerDispatcherL1(address(0));
+
+        vm.expectRevert(ToZeroAddress.selector);
+        fractionalizer.setFeeReceiver(address(0));
         vm.stopPrank();
     }
 
@@ -118,12 +119,23 @@ contract L2FractionalizerTest is Test {
     function testCanBeFractionalizedOnlyOnce() public {
         uint256 fractionId = helpInitializeFractions();
 
-        vm.startPrank(PREDEPLOYED_XDOMAIN_MESSENGER);
-        xDomainMessenger.setSender(originalOwner);
-
         vm.expectRevert("token is already fractionalized");
         fractionalizer.fractionalizeUniqueERC1155(fractionId, ipnftContract, uint256(1), agreementHash, 100_000);
         vm.stopPrank();
+    }
+
+    function testCannotFractionalizeWrongArgs() public {
+        uint256 fractionId = helpInitializeFractions();
+
+        vm.expectRevert("relay failed: only the owner may fractionalize on the collection");
+        xDomainMessenger.sendMessage(
+            address(fractionalizer),
+            abi.encodeCall(
+                Fractionalizer.fractionalizeUniqueERC1155,
+                (fractionId, ipnftContract, uint256(2), originalOwner, originalOwner, agreementCid, 200_000)
+            ),
+            1_900_000
+        );
     }
 
     function testStartClaimingPhase() public {
@@ -211,6 +223,32 @@ contract L2FractionalizerTest is Test {
         assertEq(erc20.balanceOf(address(fractionalizer)), 550_000 ether);
     }
 
+    function testStartClaimingHighAmounts() public {
+        uint256 fractionId = uint256(keccak256(abi.encodePacked(originalOwner, ipnftContract, uint256(1))));
+        uint256 __wealth = 1_000_000_000_000_000_000_000 ether; //!!!
+
+        xDomainMessenger.setSender(FakeL1DispatcherContract);
+        bytes memory message = abi.encodeCall(
+            Fractionalizer.fractionalizeUniqueERC1155, (fractionId, ipnftContract, uint256(1), originalOwner, alice, agreementCid, __wealth)
+        );
+
+        assertEq(fractionalizer.balanceOf(alice, fractionId), __wealth);
+
+        myToken.mint(ipnftBuyer, __wealth);
+        vm.startPrank(ipnftBuyer);
+        erc20.transfer(address(fractionalizer), __wealth);
+        vm.stopPrank();
+
+        vm.startPrank(PREDEPLOYED_XDOMAIN_MESSENGER);
+        xDomainMessenger.setSender(FakeL1DispatcherContract);
+        fractionalizer.afterSale(fractionId, address(erc20), __wealth);
+        vm.stopPrank();
+
+        vm.expectRevert( /*Arithmetic over/underflow*/ );
+        (, uint256 amount) = fractionalizer.claimableTokens(fractionId, alice);
+        //assertEq(amount, __wealth);
+    }
+
     // function testCollectionBalanceMustBeOne() public {
     //     //cant fractionalize 1155 tokens with a supply > 1
     // }
@@ -257,7 +295,7 @@ contract L2FractionalizerTest is Test {
 
         xDomainMessenger.setSender(FakeL1DispatcherContract);
         bytes memory message = abi.encodeCall(
-            fractionalizer.fractionalizeUniqueERC1155, (fractionId, ipnftContract, uint256(1), originalOwner, address(wallet), agreementHash, 100_000)
+            fractionalizer.fractionalizeUniqueERC1155, (fractionId, ipnftContract, uint256(1), originalOwner, address(wallet), agreementCid, 100_000)
         );
 
         xDomainMessenger.sendMessage(address(fractionalizer), message, 2_900_000);

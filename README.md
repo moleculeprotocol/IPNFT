@@ -21,12 +21,26 @@ IP-NFTs allow their users to tokenize intellectual property. This repo contains 
 | Contract     | Address                                                                                                                            | Actions                                                                                                                                                                                                                                                                                               |
 | ------------ | ---------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | IP-NFT       | [0x36444254795ce6E748cf0317EEE4c4271325D92A](https://goerli.etherscan.io/address/0x36444254795ce6E748cf0317EEE4c4271325D92A#code>) | <a href="https://thirdweb.com/goerli/0x36444254795ce6E748cf0317EEE4c4271325D92A?utm_source=contract_badge" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0x36444254795ce6E748cf0317EEE4c4271325D92A&theme=dark&chainId=5" alt="View contract" /></a> |
-| SchmackoSwap | [0x2365BEDC04Fb449718D3143C88aF73ad83d7b9B6](https://goerli.etherscan.io/address/0x2365BEDC04Fb449718D3143C88aF73ad83d7b9B6#code)  | <a href="https://thirdweb.com/goerli/0x2365BEDC04Fb449718D3143C88aF73ad83d7b9B6?utm_source=contract_badge" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0x2365BEDC04Fb449718D3143C88aF73ad83d7b9B6&theme=dark&chainId=5" alt="View contract" /></a> |
+| SchmackoSwap | [0x2b3e3F64bEe5E184981836d0599d51935d669701](https://goerli.etherscan.io/address/0x2b3e3F64bEe5E184981836d0599d51935d669701#code)  | <a href="https://thirdweb.com/goerli/0x2b3e3F64bEe5E184981836d0599d51935d669701?utm_source=contract_badge" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0x2b3e3F64bEe5E184981836d0599d51935d669701&theme=dark&chainId=5" alt="View contract" /></a> |
 | Mintpass     | [0xaf0f99dcc64e8a6549d32013ac9f2c3fa7834688](https://goerli.etherscan.io/address/0xaf0f99dcc64e8a6549d32013ac9f2c3fa7834688#code)  | <a href="https://thirdweb.com/goerli/0xaf0f99dcc64e8a6549d32013ac9f2c3fa7834688?utm_source=contract_badge" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0xaf0f99dcc64e8a6549d32013ac9f2c3fa7834688&theme=dark&chainId=5" alt="View contract" /></a> |
 
 - HeadlessDispenser <https://goerli.etherscan.io/address/0x0F1Bd197c5dCC6bC7E8025037a7780010E2Cd22A#code>
 - Subgraph: <https://api.thegraph.com/subgraphs/name/dorianwilhelm/ip-nft-subgraph-goerli/graphql>
-- Impl 2.2 0x026fa78c956ddf29fa84371460727bac0fd6204a
+
+# <<<<<<< HEAD
+
+- Contract Registry 0x3e36ce70fA445B22a694F039f1656529cC9b3189
+  https://goerli.etherscan.io/address/0x3e36ce70fA445B22a694F039f1656529cC9b3189#code
+
+- Fractionalizer Dispatcher L1: 0x1765b6823BAFa0DfF99bA05077C2b3642695152d
+  (Impl no 1 0x83b10a0868fc9c355152D6c202f89ce789Eeacb5)
+  <https://goerli.etherscan.io/address/0x1765b6823BAFa0DfF99bA05077C2b3642695152d>
+
+- Fractionalizer L2: 0x0803599ef1e4A479f5B7862994Af94178a1f74e4
+  (Impl no 2 0x423c4BC600EC07A74133D7D3a759D58539AB4A40)
+  <https://goerli-optimism.etherscan.io/address/0x0803599ef1e4A479f5B7862994Af94178a1f74e4>
+
+> > > > > > > 2442701 (uses strings to store the fam agreement cid (#72))
 
 ## Prerequisites
 
