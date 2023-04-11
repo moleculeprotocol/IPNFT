@@ -25,7 +25,7 @@ struct Fractionalized {
     //needed to remember an individual's share after others burn their tokens
     uint256 totalIssued;
     address originalOwner;
-    bytes32 agreementHash;
+    string agreementCid;
     IERC20 paymentToken;
     uint256 paidPrice;
 }
@@ -35,7 +35,7 @@ struct Fractionalized {
 /// @notice
 contract Fractionalizer is ERC1155SupplyUpgradeable, UUPSUpgradeable, OwnableUpgradeable {
     event FractionsCreated(
-        address indexed collection, uint256 indexed tokenId, address emitter, uint256 indexed fractionId, uint256 amount, bytes32 agreementHash
+        address indexed collection, uint256 indexed tokenId, address emitter, uint256 indexed fractionId, uint256 amount, string agreementCid
     );
     event SalesActivated(uint256 fractionId, address paymentToken, uint256 paidPrice);
     event TermsAccepted(uint256 indexed fractionId, address indexed signer);
@@ -95,13 +95,13 @@ contract Fractionalizer is ERC1155SupplyUpgradeable, UUPSUpgradeable, OwnableUpg
             revert("token is already fractionalized");
         }
 
-        fractionalized[fractionId] = Fractionalized(collection, tokenId, fractionsAmount, _msgSender(), agreementHash, 0);
+        fractionalized[fractionId] = Fractionalized(collection, tokenId, fractionsAmount, originalOwner, agreementCid, IERC20(address(0)), 0);
 
         _mint(_msgSender(), fractionId, fractionsAmount, "");
         //todo: if we want to take a protocol fee, this might be agood point of doing so.
         //alternatively: transfer the NFT to Fractionalizer so it can't be transferred while fractionalized
         //collection.safeTransferFrom(_msgSender(), address(this), tokenId, 1, "");
-        emit FractionsCreated(collection, tokenId, originalOwner, fractionId, fractionsAmount, agreementHash);
+        emit FractionsCreated(collection, tokenId, originalOwner, fractionId, fractionsAmount, agreementCid);
     }
 
     function increaseFractions(uint256 fractionId, uint256 fractionsAmount) external {
@@ -191,8 +191,8 @@ contract Fractionalizer is ERC1155SupplyUpgradeable, UUPSUpgradeable, OwnableUpg
             abi.encodePacked(
                 "As a fraction holder of IPNFT #",
                 Strings.toString(frac.tokenId),
-                ", I accept all terms that I've read here: ",
-                Strings.toHexString(uint256(frac.agreementHash)),
+                ", I accept all terms that I've read here: ipfs://",
+                frac.agreementCid,
                 "\n\n",
                 "Chain Id: ",
                 Strings.toString(block.chainid),
@@ -257,8 +257,8 @@ contract Fractionalizer is ERC1155SupplyUpgradeable, UUPSUpgradeable, OwnableUpg
                 collection,
                 '","token_id": ',
                 tokenId,
-                ',"agreement_hash": "',
-                Strings.toHexString(uint256(frac.agreementHash)),
+                ',"agreement_content": "ipfs://',
+                frac.agreementCid,
                 '","original_owner": "',
                 Strings.toHexString(frac.originalOwner),
                 '","supply": ',

@@ -10,7 +10,9 @@ contract SchmackoSwapScript is Script {
 
     function run() public {
         vm.startBroadcast();
-        new SchmackoSwap();
+        SchmackoSwap sos = new SchmackoSwap();
+
         vm.stopBroadcast();
+        console.log("Schmackoswap %s", address(sos));
     }
 }

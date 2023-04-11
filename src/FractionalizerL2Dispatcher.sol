@@ -52,6 +52,7 @@ contract FractionalizerL2Dispatcher is UUPSUpgradeable, OwnableUpgradeable {
      * @param escrowAccount    address  the L1 account that will hold the IPNFT as long as it's fractionalized
      * @param agreementHash    bytes32  a content hash that identifies the terms underlying the issued fractions
      * @param fractionsAmount  uint256  the initial amount of fractions issued
+     * @param agreementCid    bytes32  a content hash that identifies the terms underlying the issued fractions
      */
     function initializeFractionalization(
         IERC1155Supply collection,
@@ -59,6 +60,7 @@ contract FractionalizerL2Dispatcher is UUPSUpgradeable, OwnableUpgradeable {
         address escrowAccount,
         bytes32 agreementHash,
         uint256 fractionsAmount
+        string calldata agreementCid,
     ) external returns (uint256) {
         if (collection.totalSupply(tokenId) != 1) {
             revert("can only fractionalize ERC1155 tokens with a supply of 1");

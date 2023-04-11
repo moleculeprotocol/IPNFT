@@ -1,0 +1,33 @@
+specVersion: 0.0.4
+schema:
+  file: ./schema.graphql
+dataSources:
+  - kind: ethereum
+    name: Fractionalizer
+    network: {{networkL2}}
+    source:
+      address: '{{fractionalizer.address}}'
+      abi: Fractionalizer
+      startBlock: {{fractionalizer.startBlock}}
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - FractionalizedIpnft
+        - FractionHolder
+      abis:
+        - name: Fractionalizer
+          file: ./abis/Fractionalizer.json
+      eventHandlers:
+        - event: FractionsCreated(indexed address,indexed uint256,address,indexed uint256,uint256,string)
+          handler: handleFractionsCreated
+        - event: TransferSingle(indexed address,indexed address,indexed address,uint256,uint256)
+          handler: handleTransferSingle
+        - event: SalesActivated(uint256,address,uint256)
+          handler: handleSalesActivated
+        - event: TermsAccepted(indexed uint256,indexed address)
+          handler: handleTermsAccepted
+        - event: SharesClaimed(indexed uint256,indexed address,uint256)
+          handler: handleSharesClaimed
+      file: ./src/fractionalizerMappings.ts
