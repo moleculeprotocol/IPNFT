@@ -135,9 +135,9 @@
       },
       {
         "indexed": false,
-        "internalType": "bytes32",
-        "name": "agreementHash",
-        "type": "bytes32"
+        "internalType": "string",
+        "name": "agreementCid",
+        "type": "string"
       }
     ],
     "name": "FractionsCreated",
@@ -546,9 +546,9 @@
         "type": "address"
       },
       {
-        "internalType": "bytes32",
-        "name": "agreementHash",
-        "type": "bytes32"
+        "internalType": "string",
+        "name": "agreementCid",
+        "type": "string"
       },
       {
         "internalType": "uint256",
@@ -592,9 +592,9 @@
         "type": "address"
       },
       {
-        "internalType": "bytes32",
-        "name": "agreementHash",
-        "type": "bytes32"
+        "internalType": "string",
+        "name": "agreementCid",
+        "type": "string"
       },
       {
         "internalType": "contract IERC20",
