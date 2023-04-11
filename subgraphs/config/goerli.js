@@ -7,7 +7,7 @@ module.exports = {
     startBlock: 8151797
   },
   schmackoSwap: {
-    address: '0x2365BEDC04Fb449718D3143C88aF73ad83d7b9B6',
+    address: '0x2b3e3F64bEe5E184981836d0599d51935d669701',
     startBlock: 8151797
   },
   mintpass: {
@@ -16,7 +16,7 @@ module.exports = {
   },
   // L2
   fractionalizer: {
-    address: '0x7DA77f8a834369dDc5e9e47407C9746Ed55C3b72',
-    startBlock: 7380525
+    address: '0x0803599ef1e4A479f5B7862994Af94178a1f74e4',
+    startBlock: 7889633
   }
 };

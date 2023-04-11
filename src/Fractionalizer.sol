@@ -26,7 +26,7 @@ struct Fractionalized {
     //needed to remember an individual's share after others burn their tokens
     uint256 totalIssued;
     address originalOwner;
-    bytes32 agreementHash;
+    string agreementCid;
     IERC20 paymentToken;
     uint256 paidPrice;
 }
@@ -43,7 +43,7 @@ contract Fractionalizer is ERC1155SupplyUpgradeable, UUPSUpgradeable, ERC2771Con
     using SafeERC20 for IERC20;
 
     event FractionsCreated(
-        address indexed collection, uint256 indexed tokenId, address emitter, uint256 indexed fractionId, uint256 amount, bytes32 agreementHash
+        address indexed collection, uint256 indexed tokenId, address emitter, uint256 indexed fractionId, uint256 amount, string agreementCid
     );
     event SalesActivated(uint256 fractionId, address paymentToken, uint256 paidPrice);
     event TermsAccepted(uint256 indexed fractionId, address indexed signer);
@@ -105,14 +105,14 @@ contract Fractionalizer is ERC1155SupplyUpgradeable, UUPSUpgradeable, ERC2771Con
         emit FractionalizerChanged(_fractionalizerDispatcherOnL1);
     }
 
-    function setFeeReceiver(address _feeReceiver) public {
+    function setFeeReceiver(address _feeReceiver) public onlyOwner {
         if (_feeReceiver == address(0)) {
             revert ToZeroAddress();
         }
         feeReceiver = _feeReceiver;
     }
 
-    function setReceiverPercentage(uint256 _fractionalizationPercentage) external {
+    function setReceiverPercentage(uint256 _fractionalizationPercentage) external onlyOwner {
         fractionalizationPercentage = _fractionalizationPercentage;
     }
 
@@ -134,7 +134,7 @@ contract Fractionalizer is ERC1155SupplyUpgradeable, UUPSUpgradeable, ERC2771Con
         uint256 tokenId,
         address originalOwner,
         address recipient,
-        bytes32 agreementHash,
+        string calldata agreementCid,
         uint256 fractionsAmount
     ) public onlyXDomain onlyDispatcher {
         if (uint256(keccak256(abi.encodePacked(originalOwner, collection, tokenId))) != fractionId) {
@@ -146,11 +146,11 @@ contract Fractionalizer is ERC1155SupplyUpgradeable, UUPSUpgradeable, ERC2771Con
             revert("token is already fractionalized");
         }
 
-        fractionalized[fractionId] = Fractionalized(collection, tokenId, fractionsAmount, originalOwner, agreementHash, IERC20(address(0)), 0);
+        fractionalized[fractionId] = Fractionalized(collection, tokenId, fractionsAmount, originalOwner, agreementCid, IERC20(address(0)), 0);
 
         _mint(recipient, fractionId, fractionsAmount, "");
         //todo: if we want to take a protocol fee, this might be agood point of doing so.
-        emit FractionsCreated(collection, tokenId, originalOwner, fractionId, fractionsAmount, agreementHash);
+        emit FractionsCreated(collection, tokenId, originalOwner, fractionId, fractionsAmount, agreementCid);
     }
 
     //todo: the original owner (L1) might not have access to his own account on L2 (multisig)
@@ -225,8 +225,8 @@ contract Fractionalizer is ERC1155SupplyUpgradeable, UUPSUpgradeable, ERC2771Con
             abi.encodePacked(
                 "As a fraction holder of IPNFT #",
                 Strings.toString(frac.tokenId),
-                ", I accept all terms that I've read here: ",
-                Strings.toHexString(uint256(frac.agreementHash)),
+                ", I accept all terms that I've read here: ipfs://",
+                frac.agreementCid,
                 "\n\n",
                 "Chain Id: ",
                 Strings.toString(block.chainid),
@@ -278,8 +278,8 @@ contract Fractionalizer is ERC1155SupplyUpgradeable, UUPSUpgradeable, ERC2771Con
                 collection,
                 '","token_id": ',
                 tokenId,
-                ',"agreement_hash": "',
-                Strings.toHexString(uint256(frac.agreementHash)),
+                ',"agreement_content": "ipfs://',
+                frac.agreementCid,
                 '","original_owner": "',
                 Strings.toHexString(frac.originalOwner),
                 '","supply": ',
