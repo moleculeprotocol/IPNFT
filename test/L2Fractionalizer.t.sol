@@ -21,7 +21,7 @@ import { MyToken } from "../src/MyToken.sol";
 
 contract L2FractionalizerTest is Test {
     string ipfsUri = "ipfs://bafkreiankqd3jvpzso6khstnaoxovtyezyatxdy7t2qzjoolqhltmasqki";
-    bytes32 agreementHash = keccak256(bytes("the binary content of the fraction holder agreeemnt"));
+    string agreementCid = "bafkreigk5dvqblnkdniges6ft5kmuly47ebw4vho6siikzmkaovq6sjstq";
 
     address PREDEPLOYED_XDOMAIN_MESSENGER = 0x4200000000000000000000000000000000000007;
 
@@ -77,7 +77,7 @@ contract L2FractionalizerTest is Test {
 
         xDomainMessenger.setSender(FakeL1DispatcherContract);
         bytes memory message = abi.encodeCall(
-            Fractionalizer.fractionalizeUniqueERC1155, (fractionId, ipnftContract, uint256(1), originalOwner, originalOwner, agreementHash, 100_000)
+            Fractionalizer.fractionalizeUniqueERC1155, (fractionId, ipnftContract, uint256(1), originalOwner, originalOwner, agreementCid, 100_000)
         );
 
         xDomainMessenger.sendMessage(address(fractionalizer), message, 1_900_000);
@@ -142,7 +142,7 @@ contract L2FractionalizerTest is Test {
             address(fractionalizer),
             abi.encodeCall(
                 Fractionalizer.fractionalizeUniqueERC1155,
-                (fractionId, ipnftContract, uint256(1), originalOwner, originalOwner, agreementHash, 200_000)
+                (fractionId, ipnftContract, uint256(1), originalOwner, originalOwner, agreementCid, 200_000)
             ),
             1_900_000
         );
@@ -156,7 +156,7 @@ contract L2FractionalizerTest is Test {
             address(fractionalizer),
             abi.encodeCall(
                 Fractionalizer.fractionalizeUniqueERC1155,
-                (fractionId, ipnftContract, uint256(2), originalOwner, originalOwner, agreementHash, 200_000)
+                (fractionId, ipnftContract, uint256(2), originalOwner, originalOwner, agreementCid, 200_000)
             ),
             1_900_000
         );
@@ -332,7 +332,7 @@ contract L2FractionalizerTest is Test {
 
         xDomainMessenger.setSender(FakeL1DispatcherContract);
         bytes memory message = abi.encodeCall(
-            fractionalizer.fractionalizeUniqueERC1155, (fractionId, ipnftContract, uint256(1), originalOwner, address(wallet), agreementHash, 100_000)
+            fractionalizer.fractionalizeUniqueERC1155, (fractionId, ipnftContract, uint256(1), originalOwner, address(wallet), agreementCid, 100_000)
         );
 
         xDomainMessenger.sendMessage(address(fractionalizer), message, 2_900_000);

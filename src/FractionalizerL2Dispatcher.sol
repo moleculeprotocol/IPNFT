@@ -53,13 +53,16 @@ contract FractionalizerL2Dispatcher is UUPSUpgradeable, OwnableUpgradeable {
      * @param collection      IERC1155  any erc1155 token collection that signals their token amount
      * @param tokenId          uint256  the token id on the origin collection
      * @param recipient        address  an account that will receive all fractions on L2
-     * @param agreementHash    bytes32  a content hash that identifies the terms underlying the issued fractions
+     * @param agreementCid    bytes32  a content hash that identifies the terms underlying the issued fractions
      * @param initialAmount  uint256  the initial amount of fractions issued
      */
-    function initializeFractionalization(IERC1155Supply collection, uint256 tokenId, address recipient, bytes32 agreementHash, uint256 initialAmount)
-        external
-        returns (uint256)
-    {
+    function initializeFractionalization(
+        IERC1155Supply collection,
+        uint256 tokenId,
+        address recipient,
+        string calldata agreementCid,
+        uint256 initialAmount
+    ) external returns (uint256) {
         if (collection.totalSupply(tokenId) != 1) {
             revert("can only fractionalize ERC1155 tokens with a supply of 1");
         }
@@ -72,13 +75,13 @@ contract FractionalizerL2Dispatcher is UUPSUpgradeable, OwnableUpgradeable {
         fractionalized[fractionId] = Fractionalized(collection, tokenId, _msgSender(), 0);
 
         bytes memory message = abi.encodeWithSignature(
-            "fractionalizeUniqueERC1155(uint256,address,uint256,address,address,bytes32,uint256)",
+            "fractionalizeUniqueERC1155(uint256,address,uint256,address,address,string,uint256)",
             fractionId,
             collection,
             tokenId,
             _msgSender(),
             recipient,
-            agreementHash,
+            agreementCid,
             initialAmount
         );
 

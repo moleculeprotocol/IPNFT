@@ -26,7 +26,7 @@ import { MyToken } from "../src/MyToken.sol";
 
 contract L1FractionalizerDispatcher is Test {
     string ipfsUri = "ipfs://bafkreiankqd3jvpzso6khstnaoxovtyezyatxdy7t2qzjoolqhltmasqki";
-    bytes32 agreementHash = keccak256(bytes("the binary content of the fraction holder agreeemnt"));
+    string agreementCid = "bafkreigk5dvqblnkdniges6ft5kmuly47ebw4vho6siikzmkaovq6sjstq";
 
     address deployer = makeAddr("chucknorris");
     address protocolOwner = makeAddr("protocolOwner");
@@ -97,7 +97,7 @@ contract L1FractionalizerDispatcher is Test {
     function testInitiatingFractions() public {
         vm.startPrank(originalOwner);
         ipnft.setApprovalForAll(address(fractionalizer), true);
-        fractionalizer.initializeFractionalization(ipnft, 1, originalOwner, agreementHash, 100_000);
+        fractionalizer.initializeFractionalization(ipnft, 1, originalOwner, agreementCid, 100_000);
         vm.stopPrank();
     }
 
@@ -112,7 +112,7 @@ contract L1FractionalizerDispatcher is Test {
     function testCreateListingAndSell() public {
         vm.startPrank(originalOwner);
         ipnft.setApprovalForAll(address(fractionalizer), true);
-        fractionalizer.initializeFractionalization(ipnft, 1, originalOwner, agreementHash, 100_000);
+        fractionalizer.initializeFractionalization(ipnft, 1, originalOwner, agreementCid, 100_000);
         uint256 listingId = helpCreateListing(1_000_000 ether);
         vm.stopPrank();
 
@@ -136,7 +136,7 @@ contract L1FractionalizerDispatcher is Test {
     function testStartClaimingPhase() public {
         vm.startPrank(originalOwner);
         ipnft.setApprovalForAll(address(fractionalizer), true);
-        uint256 fractionId = fractionalizer.initializeFractionalization(ipnft, 1, originalOwner, agreementHash, 100_000);
+        uint256 fractionId = fractionalizer.initializeFractionalization(ipnft, 1, originalOwner, agreementCid, 100_000);
         uint256 listingId = helpCreateListing(1_000_000 ether);
         vm.stopPrank();
 
@@ -158,7 +158,7 @@ contract L1FractionalizerDispatcher is Test {
 
     function testManuallyStartClaimingPhase() public {
         vm.startPrank(originalOwner);
-        uint256 fractionId = fractionalizer.initializeFractionalization(ipnft, 1, originalOwner, agreementHash, 100_000);
+        uint256 fractionId = fractionalizer.initializeFractionalization(ipnft, 1, originalOwner, agreementCid, 100_000);
         erc20.approve(address(fractionalizer), 1_000_000 ether);
         ipnft.safeTransferFrom(originalOwner, ipnftBuyer, 1, 1, "");
         vm.stopPrank();
