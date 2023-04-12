@@ -312,6 +312,23 @@ contract L2FractionalizerTest is Test {
         assertTrue(fractionalizer.signedTerms(fractionId, alice));
     }
 
+    //todo: we likely won't allow this on prod
+    //todo: remove this once metatx work as expected
+    function testSignaturesCanBeRelayedByThirdParties() public {
+        uint256 fractionId = helpInitializeFractions();
+
+        string memory terms = fractionalizer.specificTermsV1(fractionId);
+        bytes32 termsHash = ECDSA.toEthSignedMessageHash(abi.encodePacked(terms));
+
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(alicePk, termsHash);
+        bytes memory xsignature = abi.encodePacked(r, s, v);
+
+        vm.startPrank(ipnftBuyer);
+        fractionalizer.acceptTerms(fractionId, alice, xsignature);
+        vm.stopPrank();
+        assertTrue(fractionalizer.signedTerms(fractionId, alice));
+    }
+
     // function testThatContractSignaturesAreAccepted() public {
     //     //craft an eip1271 signature
     // }
