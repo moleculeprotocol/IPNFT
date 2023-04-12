@@ -40,22 +40,38 @@
     "anonymous": false,
     "inputs": [
       {
-        "indexed": true,
-        "internalType": "contract IERC1155Supply",
-        "name": "collection",
-        "type": "address"
+        "components": [
+          {
+            "internalType": "contract IERC1155Supply",
+            "name": "collection",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "tokenId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "originalOwner",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "fulfilledListingId",
+            "type": "uint256"
+          }
+        ],
+        "indexed": false,
+        "internalType": "struct FractionalizerL2Dispatcher.Fractionalized",
+        "name": "fractionalized",
+        "type": "tuple"
       },
       {
         "indexed": true,
         "internalType": "uint256",
-        "name": "tokenId",
+        "name": "fractionId",
         "type": "uint256"
-      },
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "initiator",
-        "type": "address"
       },
       {
         "indexed": false,

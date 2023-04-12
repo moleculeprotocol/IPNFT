@@ -91,12 +91,15 @@ dataSources:
       kind: ethereum/events
       apiVersion: 0.0.6
       language: wasm/assemblyscript
+      globals:
+        - name: CONTRACT_ADDRESS
+          value: {{ipnft.address}}
       entities:
         - IPNFT
       abis:
         - name: FractionalizerL2Dispatcher
           file: ./abis/FractionalizerL2Dispatcher.json
       eventHandlers:
-        - event: FractionalizationInitiated(indexed address,indexed uint256,indexed address,uint256)
+        - event: FractionalizationInitiated((address,uint256,address,uint256),indexed uint256,uint256)
           handler: handleFractionalizationInitiated
       file: ./src/dispatcherMapping.ts

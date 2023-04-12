@@ -7,16 +7,14 @@ type Ipnft @entity {
   listings: [Listing!] @derivedFrom(field: "ipnft")
   symbol: String
   readers: [CanRead!] @derivedFrom(field: "ipnft")
-  fracInit: FracInit @derivedFrom(field: "ipnft")
+  fractions: [Fractions!] @derivedFrom(field: "ipnft")
 }
 
-type FracInit @entity {
+type Fractions @entity {
   id: ID! # fractionId
   txHash: Bytes
-  emitter: Bytes! # address
   createdAt: BigInt!
   ipnft: Ipnft!
-  collection: Bytes! # address of collection
   initialAmount: BigInt! # initial amount of tokens
 }
 
