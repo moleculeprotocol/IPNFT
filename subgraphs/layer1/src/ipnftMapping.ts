@@ -73,6 +73,7 @@ export function handleMint(event: IPNFTMintedEvent): void {
   ipnft.owner = event.params.owner;
   ipnft.tokenURI = event.params.tokenURI;
   ipnft.createdAt = event.block.timestamp;
+  ipnft.originalOwner = event.params.owner;
   ipnft.save();
 
   store.remove('Reservation', event.params.tokenId.toString());

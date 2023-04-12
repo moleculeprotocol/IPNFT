@@ -377,6 +377,29 @@
       },
       {
         "internalType": "address",
+        "name": "onBehalf",
+        "type": "address"
+      },
+      {
+        "internalType": "bytes",
+        "name": "signature",
+        "type": "bytes"
+      }
+    ],
+    "name": "acceptTerms",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "fractionId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
         "name": "paymentToken",
         "type": "address"
       },

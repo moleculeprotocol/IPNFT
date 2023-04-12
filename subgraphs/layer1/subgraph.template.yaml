@@ -29,7 +29,6 @@ dataSources:
           handler: handleTransferSingle
         - event: ReadAccessGranted(indexed uint256,indexed address,uint256)
           handler: handleReadAccess
-          
       file: ./src/ipnftMapping.ts
   - kind: ethereum
     name: SchmackoSwap
@@ -81,3 +80,23 @@ dataSources:
         - event: Redeemed(indexed uint256)
           handler: handleRedeemed
       file: ./src/mintpassMapping.ts
+  - kind: ethereum
+    name: FractionalizerL2Dispatcher
+    network: {{networkL1}}
+    source:
+      address: '{{fractionalizerL2Dispatcher.address}}'
+      abi: FractionalizerL2Dispatcher
+      startBlock: {{fractionalizerL2Dispatcher.startBlock}}
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - IPNFT
+      abis:
+        - name: FractionalizerL2Dispatcher
+          file: ./abis/FractionalizerL2Dispatcher.json
+      eventHandlers:
+        - event: FractionalizationInitiated(indexed address,indexed uint256,indexed address,uint256)
+          handler: handleFractionalizationInitiated
+      file: ./src/dispatcherMapping.ts

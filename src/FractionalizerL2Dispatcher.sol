@@ -29,6 +29,8 @@ contract FractionalizerL2Dispatcher is UUPSUpgradeable, OwnableUpgradeable {
         uint256 fulfilledListingId;
     }
 
+    event FractionalizationInitiated(IERC1155Supply indexed collection, uint256 indexed tokenId, address indexed initiator, uint256 initialAmount);
+
     uint32 constant MIN_GASLIMIT = 1_000_000;
 
     ContractRegistry registry;
@@ -90,6 +92,8 @@ contract FractionalizerL2Dispatcher is UUPSUpgradeable, OwnableUpgradeable {
 
         address crossDomainMessengerAddr = registry.safeGet("CrossdomainMessenger");
         ICrossDomainMessenger(crossDomainMessengerAddr).sendMessage(registry.safeGet("FractionalizerL2"), message, MIN_GASLIMIT);
+
+        emit FractionalizationInitiated(collection, tokenId, _msgSender(), initialAmount);
 
         return fractionId;
     }

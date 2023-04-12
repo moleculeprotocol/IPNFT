@@ -1,11 +1,22 @@
 type Ipnft @entity {
   id: ID! #tokenId
   owner: Bytes! # address
+  originalOwner: Bytes! # address of original minter
   createdAt: BigInt!
   tokenURI: String!
   listings: [Listing!] @derivedFrom(field: "ipnft")
   symbol: String
   readers: [CanRead!] @derivedFrom(field: "ipnft")
+  fracTxHash: Bytes
+  fracInit: FracInit @derivedFrom(field: "ipnft")
+}
+
+type FracInit @entity {
+  id: ID! # fractionId
+  emitter: Bytes! # address
+  ipnft: Ipnft!
+  collection: Bytes! # address of collection
+  initialAmount: BigInt! # initial amount of tokens
 }
 
 type Listing @entity {

@@ -14,6 +14,10 @@ module.exports = {
     address: '0xAf0f99dcC64E8a6549d32013AC9f2C3FA7834688',
     startBlock: 8151797
   },
+  fractionalizerL2Dispatcher: {
+    address: '0x1765b6823BAFa0DfF99bA05077C2b3642695152d',
+    startBlock: 8811342
+  },
   // L2
   fractionalizer: {
     address: '0x0803599ef1e4A479f5B7862994Af94178a1f74e4',
