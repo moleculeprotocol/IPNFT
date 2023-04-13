@@ -6,6 +6,16 @@ type Ipnft @entity {
   listings: [Listing!] @derivedFrom(field: "ipnft")
   symbol: String
   readers: [CanRead!] @derivedFrom(field: "ipnft")
+  fractions: [Fractions!] @derivedFrom(field: "ipnft")
+}
+
+type Fractions @entity {
+  id: ID! # fractionId
+  ipnft: Ipnft!
+  txHash: Bytes
+  originalOwner: Bytes! # address of the issuer
+  initialAmount: BigInt! # initial amount of tokens
+  createdAt: BigInt!
 }
 
 type Listing @entity {

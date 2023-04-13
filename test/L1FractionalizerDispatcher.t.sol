@@ -47,6 +47,8 @@ contract L1FractionalizerDispatcher is Test {
 
     IERC20 internal erc20;
 
+    event FractionalizationInitiated(uint256 indexed fractionId, FractionalizerL2Dispatcher.Fractionalized fractionalized, uint256 initialAmount);
+
     function setUp() public {
         (alice, alicePk) = makeAddrAndKey("alice");
 
@@ -97,6 +99,14 @@ contract L1FractionalizerDispatcher is Test {
     function testInitiatingFractions() public {
         vm.startPrank(originalOwner);
         ipnft.setApprovalForAll(address(fractionalizer), true);
+        uint256 fractionId = uint256(keccak256(abi.encodePacked(originalOwner, ipnft, uint256(1))));
+
+        vm.expectEmit(true, true, false, true);
+        emit FractionalizationInitiated(
+            fractionId,
+            FractionalizerL2Dispatcher.Fractionalized({ collection: ipnft, tokenId: 1, originalOwner: originalOwner, fulfilledListingId: 0 }),
+            100_000
+        );
         fractionalizer.initializeFractionalization(ipnft, 1, originalOwner, agreementCid, 100_000);
         vm.stopPrank();
     }
