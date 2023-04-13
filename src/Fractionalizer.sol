@@ -29,6 +29,7 @@ struct Fractionalized {
     string agreementCid;
     IERC20 paymentToken;
     uint256 paidPrice;
+    string symbol;
 }
 
 error ToZeroAddress();
@@ -43,7 +44,13 @@ contract Fractionalizer is ERC1155SupplyUpgradeable, UUPSUpgradeable, ERC2771Con
     using SafeERC20 for IERC20;
 
     event FractionsCreated(
-        address indexed collection, uint256 indexed tokenId, address emitter, uint256 indexed fractionId, uint256 amount, string agreementCid
+        address indexed collection,
+        uint256 indexed tokenId,
+        address emitter,
+        uint256 indexed fractionId,
+        uint256 amount,
+        string agreementCid,
+        string symbol
     );
     event SalesActivated(uint256 fractionId, address paymentToken, uint256 paidPrice);
     event TermsAccepted(uint256 indexed fractionId, address indexed signer);
@@ -124,18 +131,28 @@ contract Fractionalizer is ERC1155SupplyUpgradeable, UUPSUpgradeable, ERC2771Con
         return ERC2771ContextUpgradeable._msgData();
     }
 
+    //
     /**
      * @param fractionId the fractionalized token id as computed on the l1 network
+     * @param collection address the collection contract on L1
+     * @param tokenId uint256 the token id on L1
+     * @param originalOwner address the account that currently holds the original token on L1
+     * @param recipient address the address that will receive all the fractions
+     * @param fractionsAmount uint256 how many fractions to issue
+     * @param agreementCid string an IPFS Content Identitifer that points to the fractionalization legal agreement
+     * @param _symbol the token symbol on L1. Will be suffixed with -FAM
+     * todo: consider limiting the fractionsAmount to a certain value to avoid overflows on payouts
      */
-    //todo: consider limiting the fractionsAmount to a certain value to avoid overflows on payouts
     function fractionalizeUniqueERC1155(
         uint256 fractionId,
         address collection,
         uint256 tokenId,
+        //todo: check whether we can use _msgSender() instead
         address originalOwner,
         address recipient,
+        uint256 fractionsAmount,
         string calldata agreementCid,
-        uint256 fractionsAmount
+        string calldata _symbol
     ) public onlyXDomain onlyDispatcher {
         if (uint256(keccak256(abi.encodePacked(originalOwner, collection, tokenId))) != fractionId) {
             revert("only the owner may fractionalize on the collection");
@@ -146,11 +163,11 @@ contract Fractionalizer is ERC1155SupplyUpgradeable, UUPSUpgradeable, ERC2771Con
             revert("token is already fractionalized");
         }
 
-        fractionalized[fractionId] = Fractionalized(collection, tokenId, fractionsAmount, originalOwner, agreementCid, IERC20(address(0)), 0);
+        fractionalized[fractionId] = Fractionalized(collection, tokenId, fractionsAmount, originalOwner, agreementCid, IERC20(address(0)), 0, _symbol);
 
         _mint(recipient, fractionId, fractionsAmount, "");
         //todo: if we want to take a protocol fee, this might be agood point of doing so.
-        emit FractionsCreated(collection, tokenId, originalOwner, fractionId, fractionsAmount, agreementCid);
+        emit FractionsCreated(collection, tokenId, originalOwner, fractionId, fractionsAmount, agreementCid, _symbol);
     }
 
     //todo: the original owner (L1) might not have access to his own account on L2 (multisig)
@@ -281,6 +298,14 @@ contract Fractionalizer is ERC1155SupplyUpgradeable, UUPSUpgradeable, ERC2771Con
         //empty block
     }
 
+    /**
+     * @notice each fraction id carries its own symbol that's set when the token is minted. It's unique to one fractionalization event and cannot be updated
+     * @param fractionId uint256 fraction id
+     */
+    function symbol(uint256 fractionId) external view returns (string memory) {
+        return fractionalized[fractionId].symbol;
+    }
+
     function uri(uint256 id) public view virtual override returns (string memory) {
         Fractionalized memory frac = fractionalized[id];
 
@@ -294,7 +319,9 @@ contract Fractionalizer is ERC1155SupplyUpgradeable, UUPSUpgradeable, ERC2771Con
                 collection,
                 '","token_id": ',
                 tokenId,
-                ',"agreement_content": "ipfs://',
+                '","symbol": "',
+                frac.symbol,
+                '","agreement_content": "ipfs://',
                 frac.agreementCid,
                 '","original_owner": "',
                 Strings.toHexString(frac.originalOwner),
@@ -309,11 +336,15 @@ contract Fractionalizer is ERC1155SupplyUpgradeable, UUPSUpgradeable, ERC2771Con
                 "data:application/json;base64,",
                 Base64.encode(
                     abi.encodePacked(
-                        '{"name": "Fractions of ',
-                        collection,
-                        " / ",
+                        '{"name": "',
+                        frac.symbol,
+                        '","description": "this token represents fractions of token id #',
                         tokenId,
-                        '","description": "this token represents fractions of the underlying asset","decimals": 0,"external_url": "https://molecule.to","image": "",',
+                        " of the L1 contract ",
+                        collection,
+                        '","decimals": 0,"external_url": "https://mint.molecule.to/ipnft/',
+                        tokenId,
+                        '","image": "",',
                         props,
                         "}"
                     )

@@ -52,18 +52,20 @@ contract FractionalizerL2Dispatcher is UUPSUpgradeable, OwnableUpgradeable {
     /**
      * @notice call this as the owner of a singular token on an IERC1155 collection to issue fractions for it on L2
      *
-     * @param collection      IERC1155  any erc1155 token collection that signals their token amount
-     * @param tokenId          uint256  the token id on the origin collection
-     * @param recipient        address  an account that will receive all fractions on L2
-     * @param agreementCid    bytes32  a content hash that identifies the terms underlying the issued fractions
+     * @param collection     IERC1155 any erc1155 token collection that signals their token amount
+     * @param tokenId        uint256  the token id on the origin collection
+     * @param recipient      address  an account that will receive all fractions on L2
      * @param initialAmount  uint256  the initial amount of fractions issued
+     * @param agreementCid   string   a content identifier that points to a document that defines the terms underlying the issued fractions
+     * @param symbol         string   the symbol that identifies the original NFT and will identify the fractions. Will be auto-suffixed with -FAM
      */
     function initializeFractionalization(
         IERC1155Supply collection,
         uint256 tokenId,
         address recipient,
+        uint256 initialAmount,
         string calldata agreementCid,
-        uint256 initialAmount
+        string calldata symbol
     ) external returns (uint256) {
         if (collection.totalSupply(tokenId) != 1) {
             revert("can only fractionalize ERC1155 tokens with a supply of 1");
@@ -73,18 +75,23 @@ contract FractionalizerL2Dispatcher is UUPSUpgradeable, OwnableUpgradeable {
             revert("only owner can initialize fractions");
         }
 
+        if (bytes(symbol).length < 3) {
+            revert("symbol too short");
+        }
+
         uint256 fractionId = uint256(keccak256(abi.encodePacked(_msgSender(), collection, tokenId)));
         fractionalized[fractionId] = Fractionalized(collection, tokenId, _msgSender(), 0);
 
         bytes memory message = abi.encodeWithSignature(
-            "fractionalizeUniqueERC1155(uint256,address,uint256,address,address,string,uint256)",
+            "fractionalizeUniqueERC1155(uint256,address,uint256,address,address,uint256,string,string)",
             fractionId,
             collection,
             tokenId,
             _msgSender(),
             recipient,
+            initialAmount,
             agreementCid,
-            initialAmount
+            string(abi.encode(symbol, "-FAM"))
         );
 
         //iteration 2: transfer the NFT to an escrow account so it can't be transferred while fractionalized

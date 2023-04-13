@@ -27,6 +27,7 @@ import { MyToken } from "../src/MyToken.sol";
 contract L1FractionalizerDispatcher is Test {
     string ipfsUri = "ipfs://bafkreiankqd3jvpzso6khstnaoxovtyezyatxdy7t2qzjoolqhltmasqki";
     string agreementCid = "bafkreigk5dvqblnkdniges6ft5kmuly47ebw4vho6siikzmkaovq6sjstq";
+    string ipnftSymbol = "MOL-0001";
 
     address deployer = makeAddr("chucknorris");
     address protocolOwner = makeAddr("protocolOwner");
@@ -92,7 +93,7 @@ contract L1FractionalizerDispatcher is Test {
         vm.deal(originalOwner, 0.001 ether);
         vm.startPrank(originalOwner);
         uint256 reservationId = _ipnft.reserve();
-        _ipnft.mintReservation{ value: 0.001 ether }(originalOwner, reservationId, 1, ipfsUri);
+        _ipnft.mintReservation{ value: 0.001 ether }(originalOwner, reservationId, 1, ipfsUri, ipnftSymbol);
         vm.stopPrank();
     }
 
@@ -107,7 +108,7 @@ contract L1FractionalizerDispatcher is Test {
             FractionalizerL2Dispatcher.Fractionalized({ collection: ipnft, tokenId: 1, originalOwner: originalOwner, fulfilledListingId: 0 }),
             100_000
         );
-        fractionalizer.initializeFractionalization(ipnft, 1, originalOwner, agreementCid, 100_000);
+        fractionalizer.initializeFractionalization(ipnft, 1, originalOwner, 100_000, agreementCid, ipnftSymbol);
         vm.stopPrank();
     }
 
@@ -122,7 +123,7 @@ contract L1FractionalizerDispatcher is Test {
     function testCreateListingAndSell() public {
         vm.startPrank(originalOwner);
         ipnft.setApprovalForAll(address(fractionalizer), true);
-        fractionalizer.initializeFractionalization(ipnft, 1, originalOwner, agreementCid, 100_000);
+        fractionalizer.initializeFractionalization(ipnft, 1, originalOwner, 100_000, agreementCid, ipnftSymbol);
         uint256 listingId = helpCreateListing(1_000_000 ether);
         vm.stopPrank();
 
@@ -146,7 +147,7 @@ contract L1FractionalizerDispatcher is Test {
     function testStartClaimingPhase() public {
         vm.startPrank(originalOwner);
         ipnft.setApprovalForAll(address(fractionalizer), true);
-        uint256 fractionId = fractionalizer.initializeFractionalization(ipnft, 1, originalOwner, agreementCid, 100_000);
+        uint256 fractionId = fractionalizer.initializeFractionalization(ipnft, 1, originalOwner, 100_000, agreementCid, ipnftSymbol);
         uint256 listingId = helpCreateListing(1_000_000 ether);
         vm.stopPrank();
 
@@ -168,7 +169,7 @@ contract L1FractionalizerDispatcher is Test {
 
     function testManuallyStartClaimingPhase() public {
         vm.startPrank(originalOwner);
-        uint256 fractionId = fractionalizer.initializeFractionalization(ipnft, 1, originalOwner, agreementCid, 100_000);
+        uint256 fractionId = fractionalizer.initializeFractionalization(ipnft, 1, originalOwner, 100_000, agreementCid, ipnftSymbol);
         erc20.approve(address(fractionalizer), 1_000_000 ether);
         ipnft.safeTransferFrom(originalOwner, ipnftBuyer, 1, 1, "");
         vm.stopPrank();
@@ -196,7 +197,7 @@ contract L1FractionalizerDispatcher is Test {
 
         vm.startPrank(originalOwner);
         vm.expectRevert("can only fractionalize ERC1155 tokens with a supply of 1");
-        fractionalizer.initializeFractionalization(IERC1155Supply(address(erc1155)), 1, alice, "", 100_000);
+        fractionalizer.initializeFractionalization(IERC1155Supply(address(erc1155)), 1, alice, 100_000, "", ipnftSymbol);
         vm.stopPrank();
     }
 }

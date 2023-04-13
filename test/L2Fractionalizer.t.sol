@@ -22,6 +22,7 @@ import { MyToken } from "../src/MyToken.sol";
 contract L2FractionalizerTest is Test {
     string ipfsUri = "ipfs://bafkreiankqd3jvpzso6khstnaoxovtyezyatxdy7t2qzjoolqhltmasqki";
     string agreementCid = "bafkreigk5dvqblnkdniges6ft5kmuly47ebw4vho6siikzmkaovq6sjstq";
+    string ipnftSymbol = "MOL-0001-FAM";
 
     address PREDEPLOYED_XDOMAIN_MESSENGER = 0x4200000000000000000000000000000000000007;
 
@@ -77,7 +78,8 @@ contract L2FractionalizerTest is Test {
 
         xDomainMessenger.setSender(FakeL1DispatcherContract);
         bytes memory message = abi.encodeCall(
-            Fractionalizer.fractionalizeUniqueERC1155, (fractionId, ipnftContract, uint256(1), originalOwner, originalOwner, agreementCid, 100_000)
+            Fractionalizer.fractionalizeUniqueERC1155,
+            (fractionId, ipnftContract, uint256(1), originalOwner, originalOwner, 100_000, agreementCid, ipnftSymbol)
         );
 
         xDomainMessenger.sendMessage(address(fractionalizer), message, 1_900_000);
@@ -98,7 +100,7 @@ contract L2FractionalizerTest is Test {
 
         assertEq(fractionalizer.balanceOf(originalOwner, fractionId), 100_000);
 
-        (,, uint256 totalIssued,,,,) = fractionalizer.fractionalized(fractionId);
+        (,, uint256 totalIssued,,,,,) = fractionalizer.fractionalized(fractionId);
         assertEq(totalIssued, 100_000);
 
         vm.startPrank(originalOwner);
@@ -108,6 +110,7 @@ contract L2FractionalizerTest is Test {
         assertEq(fractionalizer.balanceOf(alice, fractionId), 10_000);
         assertEq(fractionalizer.balanceOf(originalOwner, fractionId), 90_000);
         assertEq(fractionalizer.totalSupply(fractionId), 100_000);
+        assertEq(fractionalizer.symbol(fractionId), ipnftSymbol);
     }
 
     function testIncreaseFractions() public {
@@ -130,7 +133,7 @@ contract L2FractionalizerTest is Test {
         assertEq(fractionalizer.balanceOf(originalOwner, fractionId), 150_000);
         assertEq(fractionalizer.totalSupply(fractionId), 200_000);
 
-        (,, uint256 totalIssued,,,,) = fractionalizer.fractionalized(fractionId);
+        (,, uint256 totalIssued,,,,,) = fractionalizer.fractionalized(fractionId);
         assertEq(totalIssued, 200_000);
     }
 
@@ -142,7 +145,7 @@ contract L2FractionalizerTest is Test {
             address(fractionalizer),
             abi.encodeCall(
                 Fractionalizer.fractionalizeUniqueERC1155,
-                (fractionId, ipnftContract, uint256(1), originalOwner, originalOwner, agreementCid, 200_000)
+                (fractionId, ipnftContract, uint256(1), originalOwner, originalOwner, 200_000, agreementCid, ipnftSymbol)
             ),
             1_900_000
         );
@@ -156,7 +159,7 @@ contract L2FractionalizerTest is Test {
             address(fractionalizer),
             abi.encodeCall(
                 Fractionalizer.fractionalizeUniqueERC1155,
-                (fractionId, ipnftContract, uint256(2), originalOwner, originalOwner, agreementCid, 200_000)
+                (fractionId, ipnftContract, uint256(2), originalOwner, originalOwner, 200_000, agreementCid, ipnftSymbol)
             ),
             1_900_000
         );
@@ -262,7 +265,8 @@ contract L2FractionalizerTest is Test {
 
         xDomainMessenger.setSender(FakeL1DispatcherContract);
         bytes memory message = abi.encodeCall(
-            Fractionalizer.fractionalizeUniqueERC1155, (fractionId, ipnftContract, uint256(1), originalOwner, alice, agreementCid, __wealth)
+            Fractionalizer.fractionalizeUniqueERC1155,
+            (fractionId, ipnftContract, uint256(1), originalOwner, alice, __wealth, agreementCid, ipnftSymbol)
         );
 
         xDomainMessenger.sendMessage(address(fractionalizer), message, 1_900_000);
@@ -349,7 +353,8 @@ contract L2FractionalizerTest is Test {
 
         xDomainMessenger.setSender(FakeL1DispatcherContract);
         bytes memory message = abi.encodeCall(
-            fractionalizer.fractionalizeUniqueERC1155, (fractionId, ipnftContract, uint256(1), originalOwner, address(wallet), agreementCid, 100_000)
+            fractionalizer.fractionalizeUniqueERC1155,
+            (fractionId, ipnftContract, uint256(1), originalOwner, address(wallet), 100_000, agreementCid, ipnftSymbol)
         );
 
         xDomainMessenger.sendMessage(address(fractionalizer), message, 2_900_000);
