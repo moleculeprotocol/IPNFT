@@ -1,7 +1,6 @@
 type Ipnft @entity {
   id: ID! #tokenId
   owner: Bytes! # address
-  originalOwner: Bytes! # address of original minter
   createdAt: BigInt!
   tokenURI: String!
   listings: [Listing!] @derivedFrom(field: "ipnft")
@@ -12,10 +11,11 @@ type Ipnft @entity {
 
 type Fractions @entity {
   id: ID! # fractionId
-  txHash: Bytes
-  createdAt: BigInt!
   ipnft: Ipnft!
+  txHash: Bytes
+  originalOwner: Bytes! # address of the issuer
   initialAmount: BigInt! # initial amount of tokens
+  createdAt: BigInt!
 }
 
 type Listing @entity {

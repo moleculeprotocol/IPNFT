@@ -2,33 +2,42 @@ import { FractionalizationInitiated as FractionalizationInitiatedEvent } from '.
 import { Fractions, Ipnft } from '../generated/schema';
 import { Address, dataSource } from '@graphprotocol/graph-ts';
 
-function lookUpCollectionAddress(network: string): string {
+function shouldIndex(collection: Address): boolean {
+  const network: string = dataSource.network();
+  //this only works with u32:
   switch (network) {
-    case 'mainnet':
-      return '0x0dCcD55Fc2F116D0f0B82942CD39F4f6a5d88F65';
     case 'goerli':
-      return '0x36444254795ce6E748cf0317EEE4c4271325D92A';
+      return collection.equals(
+        Address.fromHexString('0x36444254795ce6E748cf0317EEE4c4271325D92A')
+      );
+    //todo: ideally find a way to inject the supported remote contract address via global here
+    // case 'foundry': case 'localhost'
+    //   return '0x0';
+    case 'mainnet':
     default:
-      return '0x0dCcD55Fc2F116D0f0B82942CD39F4f6a5d88F65';
+      return collection.equals(
+        Address.fromHexString('0x0dCcD55Fc2F116D0f0B82942CD39F4f6a5d88F65')
+      );
   }
 }
 
 export function handleFractionalizationInitiated(
   event: FractionalizationInitiatedEvent
 ): void {
-  if (
-    event.params.fractionalized.collection !=
-    Address.fromHexString(lookUpCollectionAddress(dataSource.network()))
-  )
+  if (!shouldIndex(event.params.fractionalized.collection)) {
     return;
+  }
+
   let ipnft = Ipnft.load(event.params.fractionalized.tokenId.toString());
   if (!ipnft) {
     return;
   }
 
-  let fracInit = new Fractions(event.params.fractionId.toString());
-  fracInit.txHash = event.transaction.hash;
-  fracInit.initialAmount = event.params.initialAmount;
-  fracInit.createdAt = event.block.timestamp;
-  fracInit.ipnft = ipnft.id;
+  let fractions = new Fractions(event.params.fractionId.toString());
+  fractions.ipnft = ipnft.id;
+  fractions.txHash = event.transaction.hash;
+  fractions.originalOwner = event.params.fractionalized.originalOwner;
+  fractions.initialAmount = event.params.initialAmount;
+  fractions.createdAt = event.block.timestamp;
+  fractions.save();
 }

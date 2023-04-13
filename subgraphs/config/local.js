@@ -20,7 +20,7 @@ module.exports = {
     startBlock: 0
   },
   fractionalizerL2Dispatcher: {
-    address: process.env.FRACIONALIZERL2DISPATCHER_ADDRESS,
+    address: process.env.FRACTIONALIZERL2_DISPATCHER_ADDRESS,
     startBlock: 0
   },
   //   TODO: To be added once deployed

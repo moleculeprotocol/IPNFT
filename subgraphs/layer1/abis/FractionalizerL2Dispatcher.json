@@ -40,6 +40,12 @@
     "anonymous": false,
     "inputs": [
       {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "fractionId",
+        "type": "uint256"
+      },
+      {
         "components": [
           {
             "internalType": "contract IERC1155Supply",
@@ -66,12 +72,6 @@
         "internalType": "struct FractionalizerL2Dispatcher.Fractionalized",
         "name": "fractionalized",
         "type": "tuple"
-      },
-      {
-        "indexed": true,
-        "internalType": "uint256",
-        "name": "fractionId",
-        "type": "uint256"
       },
       {
         "indexed": false,

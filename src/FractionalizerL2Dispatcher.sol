@@ -29,7 +29,7 @@ contract FractionalizerL2Dispatcher is UUPSUpgradeable, OwnableUpgradeable {
         uint256 fulfilledListingId;
     }
 
-    event FractionalizationInitiated(Fractionalized fractionalized, uint256 indexed fractionId, uint256 initialAmount);
+    event FractionalizationInitiated(uint256 indexed fractionId, Fractionalized fractionalized, uint256 initialAmount);
 
     uint32 constant MIN_GASLIMIT = 1_000_000;
 
@@ -93,7 +93,8 @@ contract FractionalizerL2Dispatcher is UUPSUpgradeable, OwnableUpgradeable {
         address crossDomainMessengerAddr = registry.safeGet("CrossdomainMessenger");
         ICrossDomainMessenger(crossDomainMessengerAddr).sendMessage(registry.safeGet("FractionalizerL2"), message, MIN_GASLIMIT);
 
-        emit FractionalizationInitiated(fractionalized[fractionId], fractionId, initialAmount);
+        //todo: check the gas implications of reading a large storage tuple here again
+        emit FractionalizationInitiated(fractionId, fractionalized[fractionId], initialAmount);
 
         return fractionId;
     }
