@@ -4,21 +4,21 @@ import { Address, dataSource } from '@graphprotocol/graph-ts';
 
 function shouldIndex(collection: Address): boolean {
   const network: string = dataSource.network();
-  //this only works with u32:
-  switch (network) {
-    case 'goerli':
-      return collection.equals(
-        Address.fromHexString('0x36444254795ce6E748cf0317EEE4c4271325D92A')
-      );
-    //todo: ideally find a way to inject the supported remote contract address via global here
-    // case 'foundry': case 'localhost'
-    //   return '0x0';
-    case 'mainnet':
-    default:
-      return collection.equals(
-        Address.fromHexString('0x0dCcD55Fc2F116D0f0B82942CD39F4f6a5d88F65')
-      );
+  let ipnftAddress: Address;
+
+  if (network == 'goerli') {
+    ipnftAddress = Address.fromString(
+      '0x36444254795ce6E748cf0317EEE4c4271325D92A'
+    );
   }
+
+  if (network == 'mainnet') {
+    //todo: this could also be called homestead
+    ipnftAddress = Address.fromString(
+      '0x0dCcD55Fc2F116D0f0B82942CD39F4f6a5d88F65'
+    );
+  }
+  return collection.equals(ipnftAddress);
 }
 
 export function handleFractionalizationInitiated(
