@@ -2,33 +2,42 @@ import { FractionalizationInitiated as FractionalizationInitiatedEvent } from '.
 import { Fractions, Ipnft } from '../generated/schema';
 import { Address, dataSource } from '@graphprotocol/graph-ts';
 
-function lookUpCollectionAddress(network: string): string {
-  switch (network) {
-    case 'mainnet':
-      return '0x0dCcD55Fc2F116D0f0B82942CD39F4f6a5d88F65';
-    case 'goerli':
-      return '0x36444254795ce6E748cf0317EEE4c4271325D92A';
-    default:
-      return '0x0dCcD55Fc2F116D0f0B82942CD39F4f6a5d88F65';
+function shouldIndex(collection: Address): boolean {
+  const network: string = dataSource.network();
+  let ipnftAddress: Address;
+
+  if (network == 'goerli') {
+    ipnftAddress = Address.fromString(
+      '0x36444254795ce6E748cf0317EEE4c4271325D92A'
+    );
   }
+
+  if (network == 'mainnet') {
+    //todo: this could also be called homestead
+    ipnftAddress = Address.fromString(
+      '0x0dCcD55Fc2F116D0f0B82942CD39F4f6a5d88F65'
+    );
+  }
+  return collection.equals(ipnftAddress);
 }
 
 export function handleFractionalizationInitiated(
   event: FractionalizationInitiatedEvent
 ): void {
-  if (
-    event.params.fractionalized.collection !=
-    Address.fromHexString(lookUpCollectionAddress(dataSource.network()))
-  )
+  if (!shouldIndex(event.params.fractionalized.collection)) {
     return;
+  }
+
   let ipnft = Ipnft.load(event.params.fractionalized.tokenId.toString());
   if (!ipnft) {
     return;
   }
 
-  let fracInit = new Fractions(event.params.fractionId.toString());
-  fracInit.txHash = event.transaction.hash;
-  fracInit.initialAmount = event.params.initialAmount;
-  fracInit.createdAt = event.block.timestamp;
-  fracInit.ipnft = ipnft.id;
+  let fractions = new Fractions(event.params.fractionId.toString());
+  fractions.ipnft = ipnft.id;
+  fractions.txHash = event.transaction.hash;
+  fractions.originalOwner = event.params.fractionalized.originalOwner;
+  fractions.initialAmount = event.params.initialAmount;
+  fractions.createdAt = event.block.timestamp;
+  fractions.save();
 }
