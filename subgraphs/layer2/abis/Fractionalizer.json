@@ -138,6 +138,12 @@
         "internalType": "string",
         "name": "agreementCid",
         "type": "string"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "symbol",
+        "type": "string"
       }
     ],
     "name": "FractionsCreated",
@@ -569,14 +575,19 @@
         "type": "address"
       },
       {
+        "internalType": "uint256",
+        "name": "fractionsAmount",
+        "type": "uint256"
+      },
+      {
         "internalType": "string",
         "name": "agreementCid",
         "type": "string"
       },
       {
-        "internalType": "uint256",
-        "name": "fractionsAmount",
-        "type": "uint256"
+        "internalType": "string",
+        "name": "_symbol",
+        "type": "string"
       }
     ],
     "name": "fractionalizeUniqueERC1155",
@@ -628,6 +639,11 @@
         "internalType": "uint256",
         "name": "paidPrice",
         "type": "uint256"
+      },
+      {
+        "internalType": "string",
+        "name": "symbol",
+        "type": "string"
       }
     ],
     "stateMutability": "view",
@@ -943,6 +959,25 @@
         "internalType": "bool",
         "name": "",
         "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "fractionId",
+        "type": "uint256"
+      }
+    ],
+    "name": "symbol",
+    "outputs": [
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
       }
     ],
     "stateMutability": "view",

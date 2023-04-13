@@ -20,7 +20,7 @@ dataSources:
         - name: Fractionalizer
           file: ./abis/Fractionalizer.json
       eventHandlers:
-        - event: FractionsCreated(indexed address,indexed uint256,address,indexed uint256,uint256,string)
+        - event: FractionsCreated(indexed address,indexed uint256,address,indexed uint256,uint256,string,string)
           handler: handleFractionsCreated
         - event: TransferSingle(indexed address,indexed address,indexed address,uint256,uint256)
           handler: handleTransferSingle

@@ -239,14 +239,19 @@
         "type": "address"
       },
       {
+        "internalType": "uint256",
+        "name": "initialAmount",
+        "type": "uint256"
+      },
+      {
         "internalType": "string",
         "name": "agreementCid",
         "type": "string"
       },
       {
-        "internalType": "uint256",
-        "name": "initialAmount",
-        "type": "uint256"
+        "internalType": "string",
+        "name": "symbol",
+        "type": "string"
       }
     ],
     "name": "initializeFractionalization",

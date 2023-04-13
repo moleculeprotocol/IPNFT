@@ -23,6 +23,7 @@ export function handleFractionsCreated(event: FractionsCreatedEvent): void {
   frac.originalOwner = event.params.emitter;
   frac.ipnftId = event.params.tokenId.toString();
   frac.agreementCid = event.params.agreementCid;
+  frac.symbol = event.params.symbol;
 
   createOrUpdateFracBasket(
     event.params.emitter,

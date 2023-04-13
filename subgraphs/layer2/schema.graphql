@@ -5,6 +5,7 @@ type FracIpnft @entity {
   ipnftCollection: Bytes #address of the collection
   ipnftId: ID # tokenID of original Ipnft
   agreementCid: String #IPFS CID string of FAM Agreement
+  symbol: String #the FAM symbol (IPNFT symbol + -FAM)
   totalIssued: BigInt! #the amount of fractions issued; can be increased later
   circulatingSupply: BigInt! #the amount of fractions that are in circulation
   claimedShares: BigInt! # the amount of shares that have already been claimed. This needs to have a fulfilledListingId to be set
