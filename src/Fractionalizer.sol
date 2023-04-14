@@ -240,7 +240,9 @@ contract Fractionalizer is ERC1155SupplyUpgradeable, UUPSUpgradeable, ERC2771Con
 
         return string(
             abi.encodePacked(
-                "As a fraction holder of IPNFT #",
+                "As a fraction holder (",
+                frac.symbol,
+                ") of IPNFT #",
                 Strings.toString(frac.tokenId),
                 ", I accept all terms that I've read here: ipfs://",
                 frac.agreementCid,
