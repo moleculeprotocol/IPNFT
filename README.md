@@ -260,7 +260,7 @@ Create a reservation
 
 mint an IP-NFT to the first account
 
-`cast send --private-key $PRIVATE_KEY  -i $IPNFT_ADDRESS --value 0.001ether --broadcast  "mintReservation(address,uint256,uint256,string)(uint256)" 0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266 1 1 "ipfs://test"`
+`cast send --private-key $PRIVATE_KEY  -i $IPNFT_ADDRESS --value 0.001ether "mintReservation(address,uint256,uint256,string)(uint256)" 0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266 1 1 "ipfs://test"`
 
 approve SchmackoSwap to spend token 0
 
