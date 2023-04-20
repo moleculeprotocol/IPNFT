@@ -17,5 +17,9 @@ module.exports = {
     mintpass: {
         address: process.env.MINTPASS_ADDRESS,
         startBlock: 0
+    },
+    fractionalizer: {
+        address: process.env.FRACTIONALIZER_ADDRESS,
+        startBlock: 0
     }
 };
