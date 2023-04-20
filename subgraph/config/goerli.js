@@ -17,6 +17,10 @@ module.exports = {
     mintpass: {
         address: "0xAf0f99dcC64E8a6549d32013AC9f2C3FA7834688",
         startBlock: 8151797
+    },
+    fractionalizer: {
+        address: '0x0803599ef1e4A479f5B7862994Af94178a1f74e4',
+        startBlock: 7889633
     }
 };
 
