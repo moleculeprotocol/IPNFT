@@ -1,24 +1,20 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.18;
 
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import { ERC20Burnable } from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
-import { ERC20Capped } from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Capped.sol";
-import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
-
-// import { SignatureChecker } from "@openzeppelin/contracts/utils/cryptography/SignatureChecker.sol";
-// import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
-// import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
-
-// import { IPNFT } from "./IPNFT.sol";
+import { IERC20Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
+import { ERC20Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
+import { ERC20BurnableUpgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20BurnableUpgradeable.sol";
+import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 /// @title FractionalizedToken
 /// @author molecule.to
 /// @notice this is a template contract that's spawned by the fractionalizer
 
-contract FractionalizedToken is IERC20, ERC20Burnable, Ownable {
-    constructor(string memory name_, string memory symbol_) ERC20(name_, symbol_) Ownable() { }
+contract FractionalizedTokenUpgradable is IERC20Upgradeable, ERC20Upgradeable, ERC20BurnableUpgradeable, OwnableUpgradeable {
+    function initialize(string memory name, string memory symbol) public initializer {
+        __Ownable_init();
+        __ERC20_init(name, symbol);
+    }
 
     function issue(address receiver, uint256 amount) public onlyOwner {
         _mint(receiver, amount);
