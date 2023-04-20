@@ -3,10 +3,11 @@ pragma solidity ^0.8.17;
 
 import "forge-std/Test.sol";
 
+//import { IERC20Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
-import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import { SafeERC20Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 
 import { console } from "forge-std/console.sol";
 import { IPNFT } from "../src/IPNFT.sol";
@@ -14,13 +15,13 @@ import { Mintpass } from "../src/Mintpass.sol";
 
 import { IPNFTMintHelper } from "./IPNFTMintHelper.sol";
 import { Fractionalizer, Fractionalized, ToZeroAddress } from "../src/Fractionalizer.sol";
-import { FractionalizedToken } from "../src/FractionalizedToken.sol";
+import { FractionalizedTokenUpgradable as FractionalizedToken } from "../src/FractionalizedToken.sol";
 import { IERC1155Supply } from "../src/IERC1155Supply.sol";
 import { SchmackoSwap, ListingState } from "../src/SchmackoSwap.sol";
 import { MyToken } from "../src/MyToken.sol";
 
 contract FractionalizerSalesTest is Test {
-    using SafeERC20 for FractionalizedToken;
+    using SafeERC20Upgradeable for FractionalizedToken;
 
     string ipfsUri = "ipfs://bafkreiankqd3jvpzso6khstnaoxovtyezyatxdy7t2qzjoolqhltmasqki";
     string agreementCid = "bafkreigk5dvqblnkdniges6ft5kmuly47ebw4vho6siikzmkaovq6sjstq";

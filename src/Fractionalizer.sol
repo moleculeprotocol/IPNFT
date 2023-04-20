@@ -7,13 +7,14 @@ import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/O
 import { Base64 } from "@openzeppelin/contracts/utils/Base64.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { Clones } from "@openzeppelin/contracts/proxy/Clones.sol";
 
 import { SignatureChecker } from "@openzeppelin/contracts/utils/cryptography/SignatureChecker.sol";
 
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
-import { FractionalizedToken } from "./FractionalizedToken.sol";
+import { FractionalizedTokenUpgradable } from "./FractionalizedToken.sol";
 
 import { SchmackoSwap, ListingState } from "./SchmackoSwap.sol";
 import { IPNFT } from "./IPNFT.sol";
@@ -24,7 +25,7 @@ struct Fractionalized {
     uint256 totalIssued;
     address originalOwner;
     string agreementCid;
-    FractionalizedToken tokenContract; //the erc20 token contract representing the fractions
+    FractionalizedTokenUpgradable tokenContract; //the erc20 token contract representing the fractions
     uint256 fulfilledListingId;
     IERC20 paymentToken;
     uint256 paidPrice;
@@ -58,6 +59,8 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable {
     mapping(uint256 => Fractionalized) public fractionalized;
     mapping(address => mapping(uint256 => uint256)) claimAllowance;
 
+    address immutable tokenImplementation;
+
     function initialize(IPNFT _ipnft, SchmackoSwap _schmackoSwap) public initializer {
         __UUPSUpgradeable_init();
         __Ownable_init();
@@ -74,6 +77,7 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable {
     }
 
     constructor() {
+        tokenImplementation = address(new FractionalizedTokenUpgradable());
         _disableInitializers();
     }
 
@@ -118,10 +122,10 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable {
             revert("token is already fractionalized");
         }
 
-        //todo: use import "@openzeppelin/contracts/proxy/Clones.sol"; here!
-        FractionalizedToken fractionalizedToken = new FractionalizedToken(
-            string(abi.encode("Fractions of IPNFT #",Strings.toString(ipnftId))),
-            string(abi.encode(ipnft.symbol(ipnftId), "-FAM"))
+        // https://github.com/OpenZeppelin/workshops/tree/master/02-contracts-clone
+        FractionalizedTokenUpgradable fractionalizedToken = FractionalizedTokenUpgradable(Clones.clone(tokenImplementation));
+        (fractionalizedToken).initialize(
+            string(abi.encode("Fractions of IPNFT #", Strings.toString(ipnftId))), string(abi.encode(ipnft.symbol(ipnftId), "-FAM"))
         );
 
         fractionalized[fractionId] =
