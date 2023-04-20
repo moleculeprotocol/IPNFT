@@ -132,7 +132,7 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable {
         //alternatively: transfer the NFT to Fractionalizer so it can't be transferred while fractionalized
         //collection.safeTransferFrom(_msgSender(), address(this), tokenId, 1, "");
 
-        fractionalizedToken.issue(fractionsAmount);
+        fractionalizedToken.issue(_msgSender(), fractionsAmount);
         emit FractionsCreated(fractionId, ipnftId, address(fractionalizedToken), _msgSender(), fractionsAmount, agreementCid);
     }
 
@@ -146,7 +146,7 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable {
             revert("can't increase fraction shares of an item that's already been sold");
         }
         fractionalized[fractionId].totalIssued += fractionsAmount;
-        _fractionalized.tokenContract.issue(fractionsAmount);
+        _fractionalized.tokenContract.issue(_msgSender(), fractionsAmount);
     }
 
     /**
