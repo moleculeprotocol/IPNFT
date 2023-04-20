@@ -13,6 +13,8 @@ import { SignatureChecker } from "@openzeppelin/contracts/utils/cryptography/Sig
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
+import { FractionalizedToken } from "./FractionalizedToken.sol";
+
 import { SchmackoSwap, ListingState } from "./SchmackoSwap.sol";
 import { IPNFT } from "./IPNFT.sol";
 
@@ -22,10 +24,16 @@ struct Fractionalized {
     uint256 totalIssued;
     address originalOwner;
     string agreementCid;
+    FractionalizedToken tokenContract; //the erc20 token contract representing the fractions
     uint256 fulfilledListingId;
     IERC20 paymentToken;
     uint256 paidPrice;
 }
+
+error ToZeroAddress();
+error InsufficientBalance();
+error TermsNotAccepted();
+error InvalidSignature();
 
 /// @title Fractionalizer
 /// @author molecule.to
@@ -33,7 +41,9 @@ struct Fractionalized {
 contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable {
     using SafeERC20 for IERC20;
 
-    event FractionsCreated(uint256 indexed fractionId, uint256 indexed tokenId, address emitter, uint256 amount, string agreementCid);
+    event FractionsCreated(
+        uint256 indexed fractionId, uint256 indexed tokenId, address indexed tokenContract, address emitter, uint256 amount, string agreementCid
+    );
     event SalesActivated(uint256 fractionId, address paymentToken, uint256 paidPrice);
     event TermsAccepted(uint256 indexed fractionId, address indexed signer);
     event SharesClaimed(uint256 indexed fractionId, address indexed claimer, uint256 amount);
@@ -68,11 +78,22 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable {
     }
 
     function setFeeReceiver(address _feeReceiver) public onlyOwner {
+        if (_feeReceiver == address(0)) {
+            revert ToZeroAddress();
+        }
         feeReceiver = _feeReceiver;
     }
 
     function setReceiverPercentage(uint256 fractionalizationPercentage_) external onlyOwner {
         fractionalizationPercentage = fractionalizationPercentage_;
+    }
+
+    function balanceOf(address owner, uint256 fractionId) public view returns (uint256) {
+        return fractionalized[fractionId].tokenContract.balanceOf(owner);
+    }
+
+    function totalSupply(uint256 fractionId) public view returns (uint256) {
+        return fractionalized[fractionId].tokenContract.totalSupply();
     }
 
     /**
@@ -90,20 +111,29 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable {
             revert("only owner can initialize fractions");
         }
 
-        fractionId = uint256(keccak256(abi.encodePacked(_msgSender(), address(ipnft), ipnftId)));
+        fractionId = uint256(keccak256(abi.encodePacked(_msgSender(), ipnftId)));
 
         // ensure we can only call this once per sales cycle
         if (address(fractionalized[fractionId].originalOwner) != address(0)) {
             revert("token is already fractionalized");
         }
 
-        fractionalized[fractionId] = Fractionalized(ipnftId, fractionsAmount, _msgSender(), agreementCid, IERC20(address(0)), 0);
+        //todo: use import "@openzeppelin/contracts/proxy/Clones.sol"; here!
+        FractionalizedToken fractionalizedToken = new FractionalizedToken(
+            string(abi.encode("Fractions of IPNFT #",Strings.toString(ipnftId))),
+            string(abi.encode(ipnft.symbol(ipnftId), "-FAM"))
+        );
 
-        _mint(_msgSender(), fractionId, fractionsAmount, "");
+        fractionalized[fractionId] =
+            Fractionalized(ipnftId, fractionsAmount, _msgSender(), agreementCid, fractionalizedToken, 0, IERC20(address(0)), 0);
+
         //todo: if we want to take a protocol fee, this might be agood point of doing so.
+
         //alternatively: transfer the NFT to Fractionalizer so it can't be transferred while fractionalized
         //collection.safeTransferFrom(_msgSender(), address(this), tokenId, 1, "");
-        emit FractionsCreated(fractionId, ipnftId, _msgSender(), fractionsAmount, agreementCid);
+
+        fractionalizedToken.issue(fractionsAmount);
+        emit FractionsCreated(fractionId, ipnftId, address(fractionalizedToken), _msgSender(), fractionsAmount, agreementCid);
     }
 
     function increaseFractions(uint256 fractionId, uint256 fractionsAmount) external {
@@ -116,7 +146,7 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable {
             revert("can't increase fraction shares of an item that's already been sold");
         }
         fractionalized[fractionId].totalIssued += fractionsAmount;
-        _mint(_fractionalized.originalOwner, fractionId, fractionsAmount, "");
+        _fractionalized.tokenContract.issue(fractionsAmount);
     }
 
     /**
@@ -144,7 +174,6 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable {
         );
 
         paymentToken.safeTransferFrom(_msgSender(), address(this), price);
-
         _startSalesPhase(fractionId, paymentToken, price);
     }
 
@@ -165,7 +194,7 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable {
         //todo: this is a deep dependency on our own sales contract
         //we alternatively could have the token owner transfer the proceeds and announce the claims to be withdrawable
         //but they oc could do that on L2 directly...
-        (address tokenContract, uint256 tokenId,,, IERC20 _paymentToken, uint256 askPrice, address beneficiary, ListingState listingState) =
+        (, uint256 tokenId,,, IERC20 _paymentToken, uint256 askPrice, address beneficiary, ListingState listingState) =
             schmackoSwap.listings(listingId);
 
         if (listingState != ListingState.FULFILLED) {
@@ -194,29 +223,27 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable {
         // }
         frac.paymentToken = _paymentToken;
         frac.paidPrice = price;
-        emit SalesActivated(fractionId, _paymentToken, price);
+        emit SalesActivated(fractionId, address(_paymentToken), price);
     }
 
     function claimableTokens(uint256 fractionId, address tokenHolder) public view returns (IERC20 paymentToken, uint256 amount) {
-        uint256 balance = balanceOf(tokenHolder, fractionId);
+        Fractionalized memory frac = fractionalized[fractionId];
 
         if (fractionalized[fractionId].fulfilledListingId == 0) {
             revert("claiming not available (yet)");
         }
 
-        (,,,, IERC20 _paymentToken, uint256 askPrice,,) = schmackoSwap.listings(fractionalized[fractionId].fulfilledListingId);
+        uint256 balance = frac.tokenContract.balanceOf(tokenHolder);
 
         //todo: check this 10 times:
-        return (_paymentToken, balance * (askPrice / fractionalized[fractionId].totalIssued));
+        return (frac.paymentToken, balance * (frac.paidPrice / frac.totalIssued));
     }
 
     function burnToWithdrawShare(uint256 fractionId, bytes memory signature) public {
         acceptTerms(fractionId, signature);
-        burnToWithdrawShare(fractionId);
-    }
+        Fractionalized memory frac = fractionalized[fractionId];
 
-    function burnToWithdrawShare(uint256 fractionId) public {
-        uint256 balance = balanceOf(_msgSender(), fractionId);
+        uint256 balance = frac.tokenContract.balanceOf(_msgSender());
         if (balance == 0) {
             revert("you dont own any fractions");
         }
@@ -226,7 +253,7 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable {
             revert("shares are 0");
         }
 
-        _burn(_msgSender(), fractionId, balance);
+        frac.tokenContract.burnFrom(_msgSender(), balance);
         paymentToken.safeTransfer(_msgSender(), erc20shares);
         emit SharesClaimed(fractionId, _msgSender(), balance);
     }
@@ -269,18 +296,6 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable {
     //     return super.supportsInterface(interfaceId);
     // }
 
-    // function onERC1155Received(address operator, address from, uint256 id, uint256 value, bytes calldata data) external pure returns (bytes4) {
-    //     return bytes4(keccak256("onERC1155Received(address,address,uint256,uint256,bytes)"));
-    // }
-
-    // function onERC1155BatchReceived(address operator, address from, uint256[] calldata ids, uint256[] calldata values, bytes calldata data)
-    //     external
-    //     pure
-    //     returns (bytes4)
-    // {
-    //     return bytes4(keccak256("onERC1155BatchReceived(address,address,uint256[],uint256[],bytes)"));
-    // }
-
     /// @notice upgrade authorization logic
 
     function _authorizeUpgrade(address /*newImplementation*/ )
@@ -291,18 +306,14 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable {
         //empty block
     }
 
-    function uri(uint256 id) public view virtual override returns (string memory) {
+    function uri(uint256 id) public view returns (string memory) {
         Fractionalized memory frac = fractionalized[id];
-
-        string memory collection = Strings.toHexString(frac.collection);
         string memory tokenId = Strings.toString(frac.tokenId);
 
         string memory props = string(
             abi.encodePacked(
                 '"properties": {',
-                '"collection": "',
-                collection,
-                '","token_id": ',
+                '"ipnft_id": ',
                 tokenId,
                 ',"agreement_content": "ipfs://',
                 frac.agreementCid,
@@ -319,11 +330,9 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable {
                 "data:application/json;base64,",
                 Base64.encode(
                     abi.encodePacked(
-                        '{"name": "Fractions of ',
-                        collection,
-                        " / ",
+                        '{"name": "Fractions of IPNFT #',
                         tokenId,
-                        '","description": "this token represents fractions of the underlying asset","decimals": 0,"external_url": "https://molecule.to","image": "",',
+                        '","description": "this token represents fractions of the underlying asset","decimals": 18,"external_url": "https://molecule.to","image": "",',
                         props,
                         "}"
                     )

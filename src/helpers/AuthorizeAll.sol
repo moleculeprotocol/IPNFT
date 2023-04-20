@@ -5,11 +5,15 @@ import { IAuthorizeMints } from "../IAuthorizeMints.sol";
 
 contract AuthorizeAll is IAuthorizeMints {
     function authorizeMint(address minter, address to, bytes memory data) external view returns (bool) {
+        minter;
+        to;
+        data;
         return true;
     }
 
     /// @notice checks whether `reserver` is allowed to reserve a token id on the target contract
     function authorizeReservation(address reserver) external view returns (bool) {
+        reserver;
         return true;
     }
 

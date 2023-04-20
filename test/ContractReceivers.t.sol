@@ -42,11 +42,11 @@ contract CleverContractWallet is BoringContractWallet, ERC165 {
     {
         if (msg.sender != owner) revert("not owner");
         ipnft.call(abi.encodeWithSignature("setApprovalForAll(address,bool)", schmackoswap, true));
-        (bool success, bytes memory listResult_) =
+        (, bytes memory listResult_) =
             schmackoswap.call(abi.encodeWithSignature("list(address,uint256,address,uint256)", ipnft, tokenId, paymentToken, 1 ether));
         listingId = abi.decode(listResult_, (uint256));
 
-        (bool apprRes,) = schmackoswap.call(abi.encodeWithSignature("changeBuyerAllowance(uint256,address,bool)", listingId, allowedBuyer, true));
+        schmackoswap.call(abi.encodeWithSignature("changeBuyerAllowance(uint256,address,bool)", listingId, allowedBuyer, true));
     }
 
     function buy(SchmackoSwap schmackoswap, address paymentToken, uint256 listingId) public returns (bool) {
@@ -118,9 +118,9 @@ contract ContractReceiverTest is IPNFTMintHelper {
         uint256 reservationId = ipnft.reserve();
         BoringContractWallet boringWallet = new BoringContractWallet();
         vm.expectRevert(bytes("ERC1155: transfer to non-ERC1155Receiver implementer"));
-        ipnft.mintReservation{value: MINTING_FEE}(address(boringWallet), reservationId, 1, arUri);
+        ipnft.mintReservation{ value: MINTING_FEE }(address(boringWallet), reservationId, 1, arUri);
         CleverContractWallet wallet = new CleverContractWallet();
-        ipnft.mintReservation{value: MINTING_FEE}(address(wallet), reservationId, 1, arUri);
+        ipnft.mintReservation{ value: MINTING_FEE }(address(wallet), reservationId, 1, arUri);
         vm.stopPrank();
 
         assertEq(ipnft.balanceOf(address(wallet), 1), 1);
@@ -137,7 +137,7 @@ contract ContractReceiverTest is IPNFTMintHelper {
         vm.startPrank(owner);
         CleverContractWallet wallet = new CleverContractWallet();
         uint256 reservationId = ipnft.reserve();
-        ipnft.mintReservation{value: MINTING_FEE}(address(wallet), reservationId, 1, arUri);
+        ipnft.mintReservation{ value: MINTING_FEE }(address(wallet), reservationId, 1, arUri);
 
         uint256 listingId = wallet.startSelling(address(schmackoSwap), address(ipnft), address(testToken), 1, address(buyerWallet));
         vm.stopPrank();
