@@ -91,8 +91,8 @@ dataSources:
       apiVersion: 0.0.6
       language: wasm/assemblyscript
       entities:
-        - FractionalizedIpnft
-        - FractionHolder
+        - Fractionalized
+        - Fraction
       abis:
         - name: Fractionalizer
           file: ./abis/Fractionalizer.json
@@ -107,4 +107,23 @@ dataSources:
           handler: handleTermsAccepted
         - event: SharesClaimed(indexed uint256,indexed address,uint256)
           handler: handleSharesClaimed
-      file: ./src/fractionalizerMappings.ts
+      file: ./src/fractionalizerMapping.ts
+templates:
+  - name: FractionalizedToken
+    kind: ethereum/contract
+    network: {{network}}
+    source:
+      abi: FractionalizedToken
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      file: ./src/fractionalizedTokenMapping.ts
+      entities:
+        - Fraction
+      abis:
+        - name: FractionalizedToken
+          file: ./abis/FractionalizedToken.json
+      eventHandlers:
+        - event: Transfer(indexed address,indexed address,uint256)
+          handler: handleTransfer
