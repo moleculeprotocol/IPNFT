@@ -2,29 +2,28 @@ import { Address, BigInt, log } from '@graphprotocol/graph-ts';
 import {
   FractionsCreated as FractionsCreatedEvent,
   SalesActivated as SalesActivatedEvent,
-  TransferSingle as TransferSingleEvent,
   TermsAccepted as TermsAcceptedEvent,
   SharesClaimed as SharesClaimedEvent
 } from '../generated/Fractionalizer/Fractionalizer';
-import { FracBasket, FracIpnft } from '../generated/schema';
+import { Fractionalized, Fraction, Ipnft } from '../generated/schema';
 
-function createBasketId(fracId: BigInt, owner: Address): string {
+function createFractionId(fracId: BigInt, owner: Address): string {
   return fracId.toString() + '-' + owner.toHexString();
 }
 
 export function handleFractionsCreated(event: FractionsCreatedEvent): void {
-  let frac = new FracIpnft(event.params.fractionId.toString());
+  let frac = new Fractionalized(event.params.fractionId.toString());
 
+  frac.ipnft = event.params.tokenId.toString();
   frac.createdAt = event.block.timestamp;
-  frac.circulatingSupply = event.params.amount;
-  frac.totalIssued = event.params.amount;
-  frac.claimedShares = BigInt.fromI32(0);
-  frac.ipnftCollection = event.params.collection;
-  frac.originalOwner = event.params.emitter;
-  frac.ipnftId = event.params.tokenId.toString();
   frac.agreementCid = event.params.agreementCid;
+  frac.originalOwner = event.params.emitter;
+  frac.totalIssued = event.params.amount;
+  frac.circulatingSupply = event.params.amount;
+  frac.erc20address = event.params.tokenContract;
+  frac.claimedShares = BigInt.fromI32(0);
 
-  createOrUpdateFracBasket(
+  createOrUpdateFractions(
     event.params.emitter,
     event.params.fractionId,
     event.params.amount
@@ -33,23 +32,23 @@ export function handleFractionsCreated(event: FractionsCreatedEvent): void {
   frac.save();
 }
 
-function createOrUpdateFracBasket(
+function createOrUpdateFractions(
   owner: Address,
-  fracId: BigInt,
+  fractionalizedId: BigInt,
   value: BigInt
 ): void {
-  let basketId = createBasketId(fracId, owner);
-  let basket = FracBasket.load(basketId);
-  if (!basket) {
-    basket = new FracBasket(basketId);
-    basket.balance = value;
-    basket.owner = owner;
-    basket.agreementSigned = false;
-    basket.fracIpnft = fracId.toString();
+  let fractionId = createFractionId(fractionalizedId, owner);
+  let fraction = Fraction.load(fractionId);
+  if (!fraction) {
+    fraction = new Fraction(fractionId);
+    fraction.fractionalizedIpfnt = fractionalizedId.toString();
+    fraction.balance = value;
+    fraction.owner = owner;
+    fraction.agreementSigned = false;
   } else {
-    basket.balance = basket.balance.plus(value);
+    fraction.balance = fraction.balance.plus(value);
   }
-  basket.save();
+  fraction.save();
 }
 
 /**
@@ -77,77 +76,82 @@ function createOrUpdateFracBasket(
  * @param event
  * @returns
  */
-export function handleTransferSingle(event: TransferSingleEvent): void {
-  // Assignments
-  let id = event.params.id;
-  let value = event.params.value;
-  let sender = event.params.from;
-  let receiver = event.params.to;
+// export function handleTransferSingle(event: TransferSingleEvent): void {
+//   // Assignments
+//   let id = event.params.id;
+//   let value = event.params.value;
+//   let sender = event.params.from;
+//   let receiver = event.params.to;
 
-  let frac = FracIpnft.load(id.toString());
+//   let frac = FracIpnft.load(id.toString());
 
-  if (!frac) {
-    log.error('FracIpnft not found for id: {}', [id.toString()]);
+//   if (!frac) {
+//     log.error('FracIpnft not found for id: {}', [id.toString()]);
+//     return;
+//   }
+
+//   // REFRACTIONALIZATION EVENT
+//   // Normal Mint Event is handled by handleFractionsCreated
+//   if (sender == Address.zero()) {
+//     frac.totalIssued = frac.totalIssued.plus(value);
+//     frac.circulatingSupply = frac.circulatingSupply.plus(value);
+//     frac.save();
+//     createOrUpdateFracBasket(receiver, id, value);
+//     return;
+//   }
+
+//   // BURN EVENT
+//   if (receiver == Address.zero()) {
+//     createOrUpdateFracBasket(sender, id, value.neg());
+
+//     frac.circulatingSupply = frac.circulatingSupply.minus(value);
+//     frac.save();
+//     return;
+//   }
+
+//   // NORMAL TRANSFER EVENT
+//   createOrUpdateFracBasket(sender, id, value.neg());
+//   createOrUpdateFracBasket(receiver, id, value);
+// }
+
+export function handleSalesActivated(event: SalesActivatedEvent): void {
+  let fractionalized = Fractionalized.load(event.params.fractionId.toString());
+  if (!fractionalized) {
+    log.error('FracIpnft not found for id: {}', [
+      event.params.fractionId.toString()
+    ]);
     return;
   }
-
-  // REFRACTIONALIZATION EVENT
-  // Normal Mint Event is handled by handleFractionsCreated
-  if (sender == Address.zero()) {
-    frac.totalIssued = frac.totalIssued.plus(value);
-    frac.circulatingSupply = frac.circulatingSupply.plus(value);
-    frac.save();
-    createOrUpdateFracBasket(receiver, id, value);
-    return;
-  }
-
-  // BURN EVENT
-  if (receiver == Address.zero()) {
-    createOrUpdateFracBasket(sender, id, value.neg());
-
-    frac.circulatingSupply = frac.circulatingSupply.minus(value);
-    frac.save();
-    return;
-  }
-
-  // NORMAL TRANSFER EVENT
-  createOrUpdateFracBasket(sender, id, value.neg());
-  createOrUpdateFracBasket(receiver, id, value);
+  fractionalized.paymentToken = event.params.paymentToken;
+  fractionalized.paidPrice = event.params.paidPrice;
+  fractionalized.claimedShares = BigInt.fromI32(0);
+  fractionalized.save();
 }
 
 export function handleSharesClaimed(event: SharesClaimedEvent): void {
-  let frac = FracIpnft.load(event.params.fractionId.toString());
-  if (!frac) {
-    log.error('FracIpnft not found for id: {}', [
+  let fractionalized = Fractionalized.load(event.params.fractionId.toString());
+  if (!fractionalized) {
+    log.error('Fractionalized ipnft not found for id: {}', [
       event.params.fractionId.toString()
     ]);
     return;
   }
-  frac.claimedShares = frac.claimedShares.plus(event.params.amount);
-  frac.save();
-}
-
-export function handleSalesActivated(event: SalesActivatedEvent): void {
-  let frac = FracIpnft.load(event.params.fractionId.toString());
-  if (!frac) {
-    log.error('FracIpnft not found for id: {}', [
-      event.params.fractionId.toString()
-    ]);
-    return;
-  }
-  frac.paymentToken = event.params.paymentToken;
-  frac.paidPrice = event.params.paidPrice;
-  frac.claimedShares = BigInt.fromI32(0);
-  frac.save();
+  fractionalized.claimedShares = fractionalized.claimedShares.plus(
+    event.params.amount
+  );
+  fractionalized.save();
 }
 
 export function handleTermsAccepted(event: TermsAcceptedEvent): void {
-  let basketId = createBasketId(event.params.fractionId, event.params.signer);
-  let basket = FracBasket.load(basketId);
-  if (!basket) {
-    log.error('Basket not found for id: {}', [basketId]);
+  let fractionId = createFractionId(
+    event.params.fractionId,
+    event.params.signer
+  );
+  let fraction = Fraction.load(fractionId);
+  if (!fraction) {
+    log.error('No fractions held by: {}', [fractionId]);
     return;
   }
-  basket.agreementSigned = true;
-  basket.save();
+  fraction.agreementSigned = true;
+  fraction.save();
 }

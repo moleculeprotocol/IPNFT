@@ -42,6 +42,7 @@ error InvalidSignature();
 contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable {
     using SafeERC20 for IERC20;
 
+    //todo: rename tokenId to ipnftId
     event FractionsCreated(
         uint256 indexed fractionId, uint256 indexed tokenId, address indexed tokenContract, address emitter, uint256 amount, string agreementCid
     );

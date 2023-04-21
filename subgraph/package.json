@@ -1,6 +1,6 @@
 {
   "name": "@molecule/ipfnt-subgraph",
-  "license": "UNLICENSED",
+  "license": "MIT",
   "scripts": {
     "abis": "./makeAbis.sh",
     "codegen": "graph codegen",
@@ -15,12 +15,7 @@
     "deploy:local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 moleculeprotocol/ipnft-subgraph",
     "test": "graph test"
   },
-  "dependencies": {
-    "@graphprotocol/graph-cli": "0.38.0",
-    "@graphprotocol/graph-ts": "0.29.3",
-    "dotenv": "^16.0.3",
-    "mustache": "^4.2.0"
-  },
+  "dependencies": {},
   "devDependencies": {
     "@graphprotocol/graph-cli": "0.44.0",
     "@graphprotocol/graph-ts": "0.29.3",
