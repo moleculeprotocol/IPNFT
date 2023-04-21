@@ -27,20 +27,9 @@ IP-NFTs allow their users to tokenize intellectual property. This repo contains 
 - HeadlessDispenser <https://goerli.etherscan.io/address/0x0F1Bd197c5dCC6bC7E8025037a7780010E2Cd22A#code>
 - Subgraph: <https://api.thegraph.com/subgraphs/name/dorianwilhelm/ip-nft-subgraph-goerli/graphql>
 
-# <<<<<<< HEAD
-
-- Contract Registry 0x3e36ce70fA445B22a694F039f1656529cC9b3189
-  https://goerli.etherscan.io/address/0x3e36ce70fA445B22a694F039f1656529cC9b3189#code
-
-- Fractionalizer Dispatcher L1: 0x1765b6823BAFa0DfF99bA05077C2b3642695152d
-  (Impl no 1 0x83b10a0868fc9c355152D6c202f89ce789Eeacb5)
-  <https://goerli.etherscan.io/address/0x1765b6823BAFa0DfF99bA05077C2b3642695152d>
-
-- Fractionalizer L2: 0x0803599ef1e4A479f5B7862994Af94178a1f74e4
-  (Impl no 2 0x423c4BC600EC07A74133D7D3a759D58539AB4A40)
-  <https://goerli-optimism.etherscan.io/address/0x0803599ef1e4A479f5B7862994Af94178a1f74e4>
-
-> > > > > > > 2442701 (uses strings to store the fam agreement cid (#72))
+- Fractionalizer : 0x
+  (Impl no 1 0x)
+  <https://goerli.etherscan.io/address/0x>
 
 ## Prerequisites
 
@@ -87,56 +76,57 @@ You can place required env vars in your `.env` file and run `source .env` to get
 
 ### Deployment scripts
 
-- a fresh, proxied deployment can be created by `forge script script/IPNFT.sol`
+- a fresh, proxied IPNFT deployment can be created by `forge script script/IPNFT.sol`
 - to rollout a new upgrade on a live network without calling the proxy's upgrade function, you can use `forge script script/UpgradeImplementation.s.sol:DeployImplementation` and invoke the upgrade function manually (e.g. from your multisig)
-- for the "real" thing you'll need to add `--rpc-url` and `--private-key` and finally `--broadcast` params .
+- for the "real" thing you'll need to add `-f` and `--private-key` and finally `--broadcast` params .
 
 ### Deploy for local development
 
-- Anvil is a local testnet node shipped with Foundry. You can use it for testing your contracts from frontends or for interacting over RPC. You can also use the ganache node from docker, see the [accompanying README in the `subgraph` folder](./subgraph/README.md).
+- the dev scripts are supposed to run on your _local_ environment and depend on contract addresses on your local environment. Use `source .env` to pull deterministic local contract addresses to your local session.
+
+- Anvil is a local testnet node shipped with Foundry. You can use it for testing your contracts from frontends or for interacting over RPC. You can also use the anvil node from docker, see the [accompanying README in the `subgraph` folder](./subgraph/README.md).
 - Run `anvil -h 0.0.0.0` in a terminal window and keep it running
 
-To just deploy all contracts using the default mnemonic's first account, run `forge script script/dev/Dev.s.sol:DevScript --fork-url $ANVIL_RPC_URL --broadcast -vvvv`
+To just deploy all contracts using the default mnemonic's first account, run `forge script script/dev/Dev.s.sol:DevScript -f $RPC_URL --broadcast`
 
-Alternatively, `dev/Fixture.s.sol` deploys all contracts to a local node and also creates a base state for frontend devs. It uses the 3 first accounts from the default mnemonic. Run `forge script script/dev/Fixture.s.sol --fork-url $ANVIL_RPC_URL --broadcast` to setup all contracts and start a a listing and finalize the listing with `forge script script/dev/ApproveAndBuy.s.sol --fork-url $ANVIL_RPC_URL --broadcast`. See the inline comment on why these are 2 scripts.
+To issue a mintpass, reserve and mint a test IPNFT for the 1st user, run `forge script script/dev/Fixture.s.sol -f $RPC_URL --broadcast`. This requires you to have executed Dev.s.sol before. This also creates a listing on Schmackoswap but doesn't accept it.
 
-- Deploy all contracts as #0
-- Issue one Mintpass by #0 to #1
-- Mint an IP-NFT to #1
-- Let #1 sell that IP-NFT to #2
+To fractionalize the test IPNFT, run `forge script script/dev/Fractionalize.s.sol -f $RPC_URL --broadcast`
+
+To approve and finalize the sales listing, run `forge script script/dev/ApproveAndBuy.s.sol -f $RPC_URL --broadcast`. See the inline comment on why this is a separate script.
 
 ### Deploy to a live network
 
-The easiest way to deploy contracts without exposing a local private key is the thirdweb. Here's how you initialize the process from the root folder: `npx thirdweb@latest deploy`
+> The easiest way to deploy contracts without exposing a local private key is the thirdweb. Here's how you initialize the process from the root folder: `npx thirdweb@latest deploy`
 
 To manually broadcast a bundle of deploy transactions, you can use `Deploy.s.sol`. It deploys all three relevant contracts (IPNFT, Schmackoswap and Mintpass) and sets up a first moderator (defined by the `MODERATOR_ADDRESS` env var). Make sure that you're using the correct moderator address for the network you're deploying to.
 
 1. Make sure you have the private key for your deployer account at hand and that it has ETH on the target network on it.
-2. Run `forge script script/Deploy.s.sol:DeployScript --rpc-url $RPC_URL --interactives 1 --sender <deployer address> --broadcast -vvvv`
+2. Run `forge script script/Deploy.s.sol:DeployScript -f $RPC_URL --interactives 1 --sender <deployer address> --broadcast -vvvv`
 3. Paste the private key for the deployer account
 4. to verify the contract during deployment, get an Etherscan API key and add `--verify --etherscan-api-key $ETHERSCAN_API_KEY` to the command.
 
 > This is _not_ possible at the moment, but stay tuned:  
 > Alternatively, start Truffle Dashboard suite and use its RPC URL to sign off transactions with Metamask:
-> `npx truffle dashboard` > `MODERATOR_ADDRESS=<first moderator> forge script script/Deploy.s.sol:DeployScript --rpc-url http://localhost:24012/rpc --sender <deployer address> --froms <deployer address> --broadcast -vvvv`
+> `npx truffle dashboard` > `MODERATOR_ADDRESS=<first moderator> forge script script/Deploy.s.sol:DeployScript -f http://localhost:24012/rpc --sender <deployer address> --froms <deployer address> --broadcast -vvvv`
 
 ### Testing a manual upgrade
 
 deploy the old version
 
 ```
-forge script script/IPNFT.s.sol --rpc-url $ANVIL_RPC_URL -vvvv --broadcast --private-key ...
+forge script script/IPNFT.s.sol -f $RPC_URL -vvvv --broadcast --private-key ...
 ```
 
 switch your branch or get the new contract impl at hand
 
 ```
-PROXY_ADDRESS=<the proxy address> forge script script/UpgradeImplementation.s.sol --rpc-url $ANVIL_RPC_URL --sender <proxy-owner-address>
+PROXY_ADDRESS=<the proxy address> forge script script/UpgradeImplementation.s.sol -f $RPC_URL --sender <proxy-owner-address>
 ```
 
 (or use your pk and --broadcast to submit it)
 
-### Manually Verify contracts on Etherscan
+### Manually verify contracts on Etherscan
 
 full docs: https://book.getfoundry.sh/reference/forge/forge-verify-contract
 

@@ -15,7 +15,7 @@ import { Mintpass } from "../src/Mintpass.sol";
 
 import { IPNFTMintHelper } from "./IPNFTMintHelper.sol";
 import { Fractionalizer, Fractionalized, ToZeroAddress } from "../src/Fractionalizer.sol";
-import { FractionalizedTokenUpgradable as FractionalizedToken } from "../src/FractionalizedToken.sol";
+import { FractionalizedTokenUpgradeable as FractionalizedToken } from "../src/FractionalizedToken.sol";
 import { IERC1155Supply } from "../src/IERC1155Supply.sol";
 import { SchmackoSwap, ListingState } from "../src/SchmackoSwap.sol";
 import { MyToken } from "../src/MyToken.sol";
