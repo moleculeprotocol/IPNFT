@@ -79,6 +79,18 @@
         "internalType": "string",
         "name": "agreementCid",
         "type": "string"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "name",
+        "type": "string"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "symbol",
+        "type": "string"
       }
     ],
     "name": "FractionsCreated",
