@@ -13,6 +13,11 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import { DevScript } from "./Dev.s.sol";
 
+/**
+ * @title Fixtures
+ * @author
+ * @notice execute Dev.s.sol first
+ */
 contract FixtureScript is Script {
     string mnemonic = "test test test test test test test test test test test junk";
 
@@ -62,25 +67,10 @@ contract FixtureScript is Script {
     function run() public {
         prepareAddresses();
 
-        vm.startBroadcast(deployer);
-        IPNFT implementationV2 = new IPNFT();
-        UUPSProxy proxy = new UUPSProxy(address(implementationV2), "");
-        ipnft = IPNFT(address(proxy));
-        ipnft.initialize();
-
-        schmackoSwap = new SchmackoSwap();
-        myToken = new MyToken();
-        mintpass = new Mintpass(address(ipnft));
-        mintpass.grantRole(mintpass.MODERATOR(), deployer);
-
-        ipnft.setAuthorizer(address(mintpass));
-
-        console.log("ipnftv2 %s", address(ipnft));
-        console.log("swap %s", address(schmackoSwap));
-        console.log("token %s", address(myToken));
-        console.log("pass %s", address(mintpass));
-
-        vm.stopBroadcast();
+        ipnft = IPNFT(vm.envAddress("IPNFT_ADDRESS"));
+        schmackoSwap = SchmackoSwap(vm.envAddress("SOS_ADDRESS"));
+        myToken = MyToken(vm.envAddress("ERC20_ADDRESS"));
+        mintpass = Mintpass(vm.envAddress("MINTPASS_ADDRESS"));
 
         mintMintPass(bob);
 
@@ -90,6 +80,8 @@ contract FixtureScript is Script {
         dealERC20(alice, 1000 ether);
 
         uint256 listingId = createListing(bob, tokenId, 1 ether);
+        //we're *NOT* accepting the listing here because of inconsistent listing ids on anvil
+        //execute ApproveAndBuy.s.sol if you want to do that.
         console.log("listing id %s", listingId);
     }
 }

@@ -12,7 +12,7 @@ import { UUPSProxy } from "../src/UUPSProxy.sol";
 contract UpgradeImplementation is Script {
     function run() public {
         vm.startBroadcast();
-        address proxyAddr = vm.envAddress("PROXY_ADDRESS");
+        address proxyAddr = vm.envAddress("IPNFT_ADDRESS");
 
         //this is not exactly true, it's the old implementation that we don't know here anymore
         //see IPNFTUpgrades.t.sol:testUpgradeContract
