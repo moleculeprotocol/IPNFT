@@ -44,7 +44,14 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable {
 
     //todo: rename tokenId to ipnftId
     event FractionsCreated(
-        uint256 indexed fractionId, uint256 indexed tokenId, address indexed tokenContract, address emitter, uint256 amount, string agreementCid
+        uint256 indexed fractionId,
+        uint256 indexed tokenId,
+        address indexed tokenContract,
+        address emitter,
+        uint256 amount,
+        string agreementCid,
+        string name,
+        string symbol
     );
     event SalesActivated(uint256 fractionId, address paymentToken, uint256 paidPrice);
     event TermsAccepted(uint256 indexed fractionId, address indexed signer);
@@ -125,9 +132,9 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable {
 
         // https://github.com/OpenZeppelin/workshops/tree/master/02-contracts-clone
         FractionalizedTokenUpgradeable fractionalizedToken = FractionalizedTokenUpgradeable(Clones.clone(tokenImplementation));
-        (fractionalizedToken).initialize(
-            string(abi.encode("Fractions of IPNFT #", Strings.toString(ipnftId))), string(abi.encode(ipnft.symbol(ipnftId), "-FAM"))
-        );
+        string memory name = string(abi.encodePacked("Fractions of IPNFT #", Strings.toString(ipnftId)));
+        string memory symbol = string(string(abi.encodePacked(ipnft.symbol(ipnftId), "-FAM")));
+        (fractionalizedToken).initialize(name, symbol);
 
         fractionalized[fractionId] =
             Fractionalized(ipnftId, fractionsAmount, _msgSender(), agreementCid, fractionalizedToken, 0, IERC20(address(0)), 0);
@@ -138,7 +145,7 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable {
         //collection.safeTransferFrom(_msgSender(), address(this), tokenId, 1, "");
 
         fractionalizedToken.issue(_msgSender(), fractionsAmount);
-        emit FractionsCreated(fractionId, ipnftId, address(fractionalizedToken), _msgSender(), fractionsAmount, agreementCid);
+        emit FractionsCreated(fractionId, ipnftId, address(fractionalizedToken), _msgSender(), fractionsAmount, agreementCid, name, symbol);
     }
 
     function increaseFractions(uint256 fractionId, uint256 fractionsAmount) external {

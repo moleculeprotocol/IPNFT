@@ -31,7 +31,8 @@ export function handleFractionsCreated(event: FractionsCreatedEvent): void {
   frac.totalIssued = BigInt.fromU32(0);
   frac.circulatingSupply = BigInt.fromU32(0);
   frac.claimedShares = BigInt.fromU32(0);
-
+  frac.symbol = event.params.symbol;
+  frac.tokenName = event.params.name;
   let context = new DataSourceContext();
   context.setBigInt('fractionalizedId', event.params.fractionId);
   FractionalizedToken.createWithContext(event.params.tokenContract, context);
