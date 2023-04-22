@@ -107,10 +107,10 @@ contract FractionalizerTest is Test {
 
         (, uint256 totalIssued,,, FractionalizedToken tokenContract,,,) = fractionalizer.fractionalized(fractionId);
         assertEq(totalIssued, 100_000);
+        assertEq(tokenContract.symbol(), "MOL-0001-FAM");
 
         vm.startPrank(originalOwner);
         tokenContract.transfer(alice, 10_000);
-
         vm.stopPrank();
 
         assertEq(fractionalizer.balanceOf(alice, fractionId), 10_000);

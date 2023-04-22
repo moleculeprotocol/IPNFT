@@ -9,7 +9,7 @@ import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/O
 /// @title FractionalizedToken
 /// @author molecule.to
 /// @notice this is a template contract that's spawned by the fractionalizer
-
+/// @notice the owner of this contract is always the fractionalizer contract
 contract FractionalizedTokenUpgradeable is IERC20Upgradeable, ERC20Upgradeable, ERC20BurnableUpgradeable, OwnableUpgradeable {
     function initialize(string memory name, string memory symbol) public initializer {
         __Ownable_init();
