@@ -122,6 +122,10 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable {
         if (ipnft.balanceOf(_msgSender(), ipnftId) != 1) {
             revert("only owner can initialize fractions");
         }
+        string memory ipnftSymbol = ipnft.symbol(ipnftId);
+        if (bytes(ipnftSymbol).length == 0) {
+            revert("ipnft needs a symbol to fractionalize");
+        }
 
         fractionId = uint256(keccak256(abi.encodePacked(_msgSender(), ipnftId)));
 
@@ -133,7 +137,7 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable {
         // https://github.com/OpenZeppelin/workshops/tree/master/02-contracts-clone
         FractionalizedTokenUpgradeable fractionalizedToken = FractionalizedTokenUpgradeable(Clones.clone(tokenImplementation));
         string memory name = string(abi.encodePacked("Fractions of IPNFT #", Strings.toString(ipnftId)));
-        string memory symbol = string(string(abi.encodePacked(ipnft.symbol(ipnftId), "-FAM")));
+        string memory symbol = string(string(abi.encodePacked(ipnftSymbol, "-FAM")));
         (fractionalizedToken).initialize(name, symbol);
 
         fractionalized[fractionId] =
@@ -301,12 +305,8 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable {
         if (!isValidSignature(fractionId, _msgSender(), signature)) {
             revert("signature not valid");
         }
-        //signedTerms[fractionId][_msgSender()] = true;
         emit TermsAccepted(fractionId, _msgSender());
     }
-    // function supportsInterface(bytes4 interfaceId) public view virtual override (ERC1155ReceiverUpgradeable, ERC1155Upgradeable) returns (bool) {
-    //     return super.supportsInterface(interfaceId);
-    // }
 
     /// @notice upgrade authorization logic
 
@@ -331,6 +331,8 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable {
                 frac.agreementCid,
                 '","original_owner": "',
                 Strings.toHexString(frac.originalOwner),
+                '","erc20_contract": "',
+                frac.tokenContract,
                 '","supply": ',
                 Strings.toString(frac.totalIssued),
                 "}"
