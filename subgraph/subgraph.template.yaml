@@ -83,7 +83,7 @@ dataSources:
     name: Fractionalizer
     network: {{network}}
     source:
-      address: '{{fractionalizer.address}}'
+      address: "{{fractionalizer.address}}"
       abi: Fractionalizer
       startBlock: {{fractionalizer.startBlock}}
     mapping:

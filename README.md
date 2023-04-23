@@ -27,9 +27,9 @@ IP-NFTs allow their users to tokenize intellectual property. This repo contains 
 - HeadlessDispenser <https://goerli.etherscan.io/address/0x0F1Bd197c5dCC6bC7E8025037a7780010E2Cd22A#code>
 - Subgraph: <https://api.thegraph.com/subgraphs/name/dorianwilhelm/ip-nft-subgraph-goerli/graphql>
 
-- Fractionalizer : 0x
-  (Impl no 1 0x)
-  <https://goerli.etherscan.io/address/0x>
+- Fractionalizer: 0x9a6288bAD6765cF91388349BFBAB1bFB7813ff5a
+  (Impl no 1 0xf66bb61c0b67d584f02ab271f8d93ba72732fdb0)
+  <https://goerli.etherscan.io/address/0x8b980848353B364C7949ae8193A365b3bE4929dB>
 
 ## Prerequisites
 
@@ -135,6 +135,10 @@ full docs: https://book.getfoundry.sh/reference/forge/forge-verify-contract
 or, if you need to verify with constructor arguments:
 
 `forge verify-contract --chain-id 5 <address> Mintpass --constructor-args $(cast abi-encode "constructor(address)" "0xabcdef")`
+
+ERC1967 Proxies are verified using their implementation contstructor call
+
+`forge verify-contract --chain-id 5 <proxyaddress> ERC1967Proxy --constructor-args $(cast abi-encode "constructor(address,bytes)" "<impladdress>" "")`
 
 ## Interacting with cast
 

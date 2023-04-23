@@ -28,6 +28,6 @@ contract DeployFractionalizer is Script {
         fractionalizer.initialize(IPNFT(ipnftAddress), SchmackoSwap(sosAddress));
         vm.stopBroadcast();
 
-        console.log("fractionalizer L2 %s", address(fractionalizer));
+        console.log("fractionalizer %s", address(fractionalizer));
     }
 }
