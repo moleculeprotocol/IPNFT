@@ -79,5 +79,6 @@ export function handleTermsAccepted(event: TermsAcceptedEvent): void {
     return;
   }
   fraction.agreementSigned = true;
+  fraction.agreementSignature = event.params.signature;
   fraction.save();
 }
