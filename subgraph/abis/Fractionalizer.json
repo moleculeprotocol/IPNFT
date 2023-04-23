@@ -192,6 +192,12 @@
         "internalType": "address",
         "name": "signer",
         "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "bytes",
+        "name": "signature",
+        "type": "bytes"
       }
     ],
     "name": "TermsAccepted",

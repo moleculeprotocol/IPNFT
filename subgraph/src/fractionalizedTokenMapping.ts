@@ -15,6 +15,7 @@ function createOrUpdateFractions(
     fraction.balance = value;
     fraction.owner = owner;
     fraction.agreementSigned = false;
+    fraction.agreementSignature = null;
   } else {
     fraction.balance = fraction.balance.plus(value);
   }

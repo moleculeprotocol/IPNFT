@@ -105,7 +105,7 @@ dataSources:
         #   handler: handleTransferSingle
         - event: SalesActivated(uint256,address,uint256)
           handler: handleSalesActivated
-        - event: TermsAccepted(indexed uint256,indexed address)
+        - event: TermsAccepted(indexed uint256,indexed address,bytes)
           handler: handleTermsAccepted
         - event: SharesClaimed(indexed uint256,indexed address,uint256)
           handler: handleSharesClaimed

@@ -34,6 +34,7 @@ type Fraction @entity {
   balance: BigInt! # Token balance of the owner
   owner: Bytes! #Address of the token owner
   agreementSigned: Boolean! #if the owner has signed the agreement
+  agreementSignature: Bytes #the agreement signature, to be reused for other operations
 }
 
 type Listing @entity {

@@ -54,7 +54,7 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable {
         string symbol
     );
     event SalesActivated(uint256 fractionId, address paymentToken, uint256 paidPrice);
-    event TermsAccepted(uint256 indexed fractionId, address indexed signer);
+    event TermsAccepted(uint256 indexed fractionId, address indexed signer, bytes signature);
     event SharesClaimed(uint256 indexed fractionId, address indexed claimer, uint256 amount);
     //listen for mints instead:
     //event FractionsEmitted(uint256 fractionId, uint256 amount);
@@ -255,7 +255,7 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable {
         return (frac.paymentToken, balance * (frac.paidPrice / frac.totalIssued));
     }
 
-    function burnToWithdrawShare(uint256 fractionId, bytes memory signature) public {
+    function burnToWithdrawShare(uint256 fractionId, bytes memory signature) external {
         acceptTerms(fractionId, signature);
         Fractionalized memory frac = fractionalized[fractionId];
 
@@ -305,7 +305,7 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable {
         if (!isValidSignature(fractionId, _msgSender(), signature)) {
             revert("signature not valid");
         }
-        emit TermsAccepted(fractionId, _msgSender());
+        emit TermsAccepted(fractionId, _msgSender(), signature);
     }
 
     /// @notice upgrade authorization logic
