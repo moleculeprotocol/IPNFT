@@ -332,10 +332,10 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable {
                 '","original_owner": "',
                 Strings.toHexString(frac.originalOwner),
                 '","erc20_contract": "',
-                frac.tokenContract,
-                '","supply": ',
+                Strings.toHexString(address(frac.tokenContract)),
+                '","supply": "',
                 Strings.toString(frac.totalIssued),
-                "}"
+                '"}'
             )
         );
 
