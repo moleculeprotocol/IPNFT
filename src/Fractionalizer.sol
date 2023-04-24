@@ -36,6 +36,16 @@ error InsufficientBalance();
 error TermsNotAccepted();
 error InvalidSignature();
 
+error BadSupply();
+error MustOwnIpnft();
+error NoSymbol();
+error AlreadyFractionalized();
+
+error AlreadyClaiming();
+error NotClaimingYet();
+error ListingNotFulfilled();
+error ListingMismatch();
+
 /// @title Fractionalizer
 /// @author molecule.to
 /// @notice
@@ -80,7 +90,7 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable {
 
     modifier notClaiming(uint256 fractionId) {
         if (address(fractionalized[fractionId].paymentToken) != address(0)) {
-            revert("already in claiming phase");
+            revert AlreadyClaiming();
         }
         _;
     }
@@ -119,27 +129,27 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable {
 
     function fractionalizeIpnft(uint256 ipnftId, uint256 fractionsAmount, string calldata agreementCid) external returns (uint256 fractionId) {
         if (ipnft.totalSupply(ipnftId) != 1) {
-            revert("IPNFT supply must be 1");
+            revert BadSupply();
         }
         if (ipnft.balanceOf(_msgSender(), ipnftId) != 1) {
-            revert("only owner can initialize fractions");
+            revert MustOwnIpnft();
         }
         string memory ipnftSymbol = ipnft.symbol(ipnftId);
         if (bytes(ipnftSymbol).length == 0) {
-            revert("ipnft needs a symbol to fractionalize");
+            revert NoSymbol();
         }
 
         fractionId = uint256(keccak256(abi.encodePacked(_msgSender(), ipnftId)));
 
         // ensure we can only call this once per sales cycle
         if (address(fractionalized[fractionId].originalOwner) != address(0)) {
-            revert("token is already fractionalized");
+            revert AlreadyFractionalized();
         }
 
         // https://github.com/OpenZeppelin/workshops/tree/master/02-contracts-clone
         FractionalizedTokenUpgradeable fractionalizedToken = FractionalizedTokenUpgradeable(Clones.clone(tokenImplementation));
         string memory name = string(abi.encodePacked("Fractions of IPNFT #", Strings.toString(ipnftId)));
-        string memory symbol = string(string(abi.encodePacked(ipnftSymbol, "-FAM")));
+        string memory symbol = string(string(abi.encodePacked(ipnftSymbol, "-MOL")));
         (fractionalizedToken).initialize(name, symbol);
 
         fractionalized[fractionId] =
@@ -154,15 +164,13 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable {
         emit FractionsCreated(fractionId, ipnftId, address(fractionalizedToken), _msgSender(), fractionsAmount, agreementCid, name, symbol);
     }
 
-    function increaseFractions(uint256 fractionId, uint256 fractionsAmount) external {
+    function increaseFractions(uint256 fractionId, uint256 fractionsAmount) external notClaiming(fractionId) {
         Fractionalized memory _fractionalized = fractionalized[fractionId];
 
         if (_msgSender() != _fractionalized.originalOwner) {
-            revert("only the original owner can update the distribution scheme");
+            revert MustOwnIpnft();
         }
-        if (_fractionalized.fulfilledListingId != 0) {
-            revert("can't increase fraction shares of an item that's already been sold");
-        }
+
         fractionalized[fractionId].totalIssued += fractionsAmount;
         _fractionalized.tokenContract.issue(_msgSender(), fractionsAmount);
     }
@@ -178,10 +186,10 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable {
      * @param   paymentToken  IERC20   the paymen token contract address
      * @param   price         uint256  the price the NFT has been sold for.
      */
-    function afterSale(uint256 fractionId, IERC20 paymentToken, uint256 price) external {
+    function afterSale(uint256 fractionId, IERC20 paymentToken, uint256 price) external notClaiming(fractionId) {
         Fractionalized storage frac = fractionalized[fractionId];
         if (_msgSender() != frac.originalOwner) {
-            revert("only the original owner may initialize the sale phase manually");
+            revert MustOwnIpnft();
         }
 
         //create a fake (but valid) schmackoswap listing id
@@ -203,11 +211,8 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable {
      * @param fractionId    uint256     the unique fraction id
      * @param listingId     uint256     the listing id on Schmackoswap
      */
-    function afterSale(uint256 fractionId, uint256 listingId) external {
+    function afterSale(uint256 fractionId, uint256 listingId) external notClaiming(fractionId) {
         Fractionalized storage frac = fractionalized[fractionId];
-        if (frac.fulfilledListingId != 0) {
-            revert("Withdrawal phase already initiated");
-        }
 
         //todo: this is a deep dependency on our own sales contract
         //we alternatively could have the token owner transfer the proceeds and announce the claims to be withdrawable
@@ -216,13 +221,13 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable {
             schmackoSwap.listings(listingId);
 
         if (listingState != ListingState.FULFILLED) {
-            revert("listing is not fulfilled");
+            revert ListingNotFulfilled();
         }
         if (tokenId != frac.tokenId) {
-            revert("listing doesnt refer to the fractionalized nft");
+            revert ListingMismatch();
         }
         if (beneficiary != address(this)) {
-            revert("listing didnt payout the fractionalizer");
+            revert InsufficientBalance();
         }
 
         //todo: this is a warning, we still could proceed, since it's too late here anyway ;)
@@ -247,8 +252,8 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable {
     function claimableTokens(uint256 fractionId, address tokenHolder) public view returns (IERC20 paymentToken, uint256 amount) {
         Fractionalized memory frac = fractionalized[fractionId];
 
-        if (fractionalized[fractionId].fulfilledListingId == 0) {
-            revert("claiming not available (yet)");
+        if (address(fractionalized[fractionId].paymentToken) == address(0)) {
+            revert NotClaimingYet();
         }
 
         uint256 balance = frac.tokenContract.balanceOf(tokenHolder);
@@ -263,12 +268,13 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable {
 
         uint256 balance = frac.tokenContract.balanceOf(_msgSender());
         if (balance == 0) {
-            revert("you dont own any fractions");
+            revert InsufficientBalance();
         }
 
         (IERC20 paymentToken, uint256 erc20shares) = claimableTokens(fractionId, _msgSender());
         if (erc20shares == 0) {
-            revert("shares are 0");
+            //todo: this is very hard to simulate because the condition above will already yield 0
+            revert InsufficientBalance();
         }
 
         frac.tokenContract.burnFrom(_msgSender(), balance);
@@ -305,7 +311,7 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable {
      */
     function acceptTerms(uint256 fractionId, bytes memory signature) public {
         if (!isValidSignature(fractionId, _msgSender(), signature)) {
-            revert("signature not valid");
+            revert InvalidSignature();
         }
         emit TermsAccepted(fractionId, _msgSender(), signature);
     }
