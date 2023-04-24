@@ -18,6 +18,8 @@ import { Mintpass } from "../src/Mintpass.sol";
 import { UUPSProxy } from "../src/UUPSProxy.sol";
 import { Fractionalizer, Fractionalized, ToZeroAddress } from "../src/Fractionalizer.sol";
 import { FractionalizedTokenUpgradeable as FractionalizedToken } from "../src/FractionalizedToken.sol";
+import { FractionalizerNext, FractionalizedTokenUpgradeableNext } from "../src/helpers/upgrades/FractionalizerNext.sol";
+
 import { IERC1155Supply } from "../src/IERC1155Supply.sol";
 import { SchmackoSwap, ListingState } from "../src/SchmackoSwap.sol";
 import { MyToken } from "../src/MyToken.sol";
@@ -46,6 +48,7 @@ contract FractionalizerTest is Test {
     IPNFT internal ipnft;
     Fractionalizer internal fractionalizer;
     SchmackoSwap internal schmackoSwap;
+    Mintpass internal mintpass;
 
     IERC20 internal erc20;
 
@@ -62,7 +65,7 @@ contract FractionalizerTest is Test {
         myToken.mint(ipnftBuyer, 1_000_000 ether);
         erc20 = IERC20(address(myToken));
 
-        Mintpass mintpass = new Mintpass(address(ipnft));
+        mintpass = new Mintpass(address(ipnft));
         mintpass.grantRole(mintpass.MODERATOR(), deployer);
         ipnft.setAuthorizer(address(mintpass));
         mintpass.batchMint(originalOwner, 1);
@@ -230,5 +233,44 @@ contract FractionalizerTest is Test {
         // xDomainMessenger.setSender(FakeL1DispatcherContract);
         // fractionalizer.afterSale(fractionId, address(erc20), 1_000_000 ether);
         // vm.stopPrank();
+    }
+
+    function testCanUpgradeErc20TokenImplementation() public {
+        vm.startPrank(deployer);
+        mintpass.batchMint(originalOwner, 1);
+        vm.stopPrank();
+
+        vm.startPrank(originalOwner);
+        uint256 fractionId = fractionalizer.fractionalizeIpnft(1, 100_000, agreementCid);
+        vm.stopPrank();
+
+        vm.startPrank(deployer);
+        FractionalizerNext fracNext = new FractionalizerNext();
+        fractionalizer.upgradeTo(address(fracNext));
+        vm.stopPrank();
+
+        assertEq(fractionalizer.balanceOf(originalOwner, fractionId), 100_000);
+        (,,,, FractionalizedToken tokenContractOld,,,) = fractionalizer.fractionalized(fractionId);
+        assertEq(tokenContractOld.balanceOf(originalOwner), 100_000);
+
+        vm.deal(originalOwner, MINTING_FEE);
+        vm.startPrank(originalOwner);
+        uint256 reservationId = ipnft.reserve();
+        ipnft.mintReservation{ value: MINTING_FEE }(originalOwner, reservationId, 2, ipfsUri, DEFAULT_SYMBOL);
+        fractionId = fractionalizer.fractionalizeIpnft(2, 70_000, agreementCid);
+        vm.stopPrank();
+
+        (,,,, FractionalizedToken tokenContractNew,,,) = fractionalizer.fractionalized(fractionId);
+        FractionalizedTokenUpgradeableNext newTokenImpl = FractionalizedTokenUpgradeableNext(address(tokenContractNew));
+
+        assertEq(fractionalizer.balanceOf(originalOwner, fractionId), 70_000);
+        assertEq(tokenContractNew.balanceOf(originalOwner), 70_000);
+
+        newTokenImpl.setAStateVar(42);
+        assertEq(newTokenImpl.aNewStateVar(), 42);
+
+        FractionalizedTokenUpgradeableNext oldTokenImplWrapped = FractionalizedTokenUpgradeableNext(address(tokenContractOld));
+        vm.expectRevert();
+        oldTokenImplWrapped.setAStateVar(42);
     }
 }

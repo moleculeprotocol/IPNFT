@@ -42,10 +42,9 @@ error InvalidSignature();
 contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable {
     using SafeERC20 for IERC20;
 
-    //todo: rename tokenId to ipnftId
     event FractionsCreated(
         uint256 indexed fractionId,
-        uint256 indexed tokenId,
+        uint256 indexed ipnftId,
         address indexed tokenContract,
         address emitter,
         uint256 amount,
@@ -56,17 +55,19 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable {
     event SalesActivated(uint256 fractionId, address paymentToken, uint256 paidPrice);
     event TermsAccepted(uint256 indexed fractionId, address indexed signer, bytes signature);
     event SharesClaimed(uint256 indexed fractionId, address indexed claimer, uint256 amount);
-    //listen for mints instead:
-    //event FractionsEmitted(uint256 fractionId, uint256 amount);
 
     IPNFT ipnft;
     SchmackoSwap schmackoSwap;
 
     address feeReceiver;
     uint256 fractionalizationPercentage;
+
     mapping(uint256 => Fractionalized) public fractionalized;
+
+    //unused
     mapping(address => mapping(uint256 => uint256)) claimAllowance;
 
+    /// @custom:oz-upgrades-unsafe-allow state-variable-immutable
     address immutable tokenImplementation;
 
     function initialize(IPNFT _ipnft, SchmackoSwap _schmackoSwap) public initializer {
@@ -84,6 +85,7 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable {
         _;
     }
 
+    /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
         tokenImplementation = address(new FractionalizedTokenUpgradeable());
         _disableInitializers();
