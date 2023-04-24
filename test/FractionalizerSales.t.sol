@@ -14,7 +14,17 @@ import { IPNFT } from "../src/IPNFT.sol";
 import { Mintpass } from "../src/Mintpass.sol";
 
 import { IPNFTMintHelper } from "./IPNFTMintHelper.sol";
-import { Fractionalizer, Fractionalized, ToZeroAddress } from "../src/Fractionalizer.sol";
+import {
+    Fractionalizer,
+    Fractionalized,
+    ToZeroAddress,
+    AlreadyClaiming,
+    MustOwnIpnft,
+    ListingNotFulfilled,
+    ListingMismatch,
+    InsufficientBalance,
+    NotClaimingYet
+} from "../src/Fractionalizer.sol";
 import { FractionalizedTokenUpgradeable as FractionalizedToken } from "../src/FractionalizedToken.sol";
 import { IERC1155Supply } from "../src/IERC1155Supply.sol";
 import { SchmackoSwap, ListingState } from "../src/SchmackoSwap.sol";
@@ -44,7 +54,7 @@ contract FractionalizerSalesTest is Test {
     Fractionalizer internal fractionalizer;
     SchmackoSwap internal schmackoSwap;
     MyToken internal myToken;
-
+    Mintpass internal mintpass;
     IERC20 internal erc20;
 
     function setUp() public {
@@ -60,7 +70,7 @@ contract FractionalizerSalesTest is Test {
         myToken.mint(ipnftBuyer, 1_000_000 ether);
         erc20 = IERC20(address(myToken));
 
-        Mintpass mintpass = new Mintpass(address(ipnft));
+        mintpass = new Mintpass(address(ipnft));
         mintpass.grantRole(mintpass.MODERATOR(), deployer);
         ipnft.setAuthorizer(address(mintpass));
         mintpass.batchMint(originalOwner, 1);
@@ -127,10 +137,16 @@ contract FractionalizerSalesTest is Test {
         uint256 listingId = helpCreateListing(1_000_000 ether);
         vm.stopPrank();
 
+        vm.startPrank(bob);
+        vm.expectRevert(ListingNotFulfilled.selector);
+        fractionalizer.afterSale(fractionId, listingId);
+        vm.stopPrank();
+
         vm.startPrank(ipnftBuyer);
         erc20.approve(address(schmackoSwap), 1_000_000 ether);
         schmackoSwap.fulfill(listingId);
         vm.stopPrank();
+
         assertEq(erc20.balanceOf(address(fractionalizer)), 1_000_000 ether);
 
         // this is wanted: *anyone* (!) can call this. This is an oracle call.
@@ -141,6 +157,16 @@ contract FractionalizerSalesTest is Test {
         assertEq(erc20.balanceOf(address(fractionalizer)), 1_000_000 ether);
         (,,,,, uint256 fulfilledListingId,,) = fractionalizer.fractionalized(fractionId);
         assertEq(listingId, fulfilledListingId);
+
+        vm.startPrank(bob);
+        vm.expectRevert(AlreadyClaiming.selector);
+        fractionalizer.afterSale(fractionId, listingId);
+        vm.stopPrank();
+
+        vm.startPrank(originalOwner);
+        vm.expectRevert(AlreadyClaiming.selector);
+        fractionalizer.increaseFractions(fractionId, 100_000);
+        vm.stopPrank();
     }
 
     function testManuallyStartClaimingPhase() public {
@@ -154,8 +180,12 @@ contract FractionalizerSalesTest is Test {
         erc20.transfer(originalOwner, 1_000_000 ether);
         vm.stopPrank();
 
-        // this is wanted: *anyone* (!) can call this. This is an oracle call.
+        vm.startPrank(bob);
+        vm.expectRevert(MustOwnIpnft.selector);
+        fractionalizer.afterSale(fractionId, erc20, 1_000_000 ether);
+        vm.stopPrank();
         vm.startPrank(originalOwner);
+        // only the owner can manually start the claiming phase.
         fractionalizer.afterSale(fractionId, erc20, 1_000_000 ether);
         vm.stopPrank();
 
@@ -186,7 +216,7 @@ contract FractionalizerSalesTest is Test {
 
         vm.startPrank(alice);
         //someone must start the claiming phase first
-        vm.expectRevert("claiming not available (yet)");
+        vm.expectRevert(NotClaimingYet.selector);
         fractionalizer.burnToWithdrawShare(fractionId, abi.encodePacked(r, s, v));
         vm.stopPrank();
 
@@ -294,5 +324,49 @@ contract FractionalizerSalesTest is Test {
         //vm.expectRevert( /*Arithmetic over/underflow*/ );
         (, uint256 amount) = fractionalizer.claimableTokens(fractionId, alice);
         assertEq(amount, __wealth);
+    }
+
+    function testClaimingFraud() public {
+        vm.startPrank(originalOwner);
+        uint256 fractionId1 = fractionalizer.fractionalizeIpnft(1, 100_000, agreementCid);
+        ipnft.setApprovalForAll(address(schmackoSwap), true);
+        uint256 listingId1 = schmackoSwap.list(IERC1155Supply(address(ipnft)), 1, erc20, 1000 ether, address(fractionalizer));
+        schmackoSwap.changeBuyerAllowance(listingId1, ipnftBuyer, true);
+        vm.stopPrank();
+
+        vm.deal(bob, MINTING_FEE);
+        vm.startPrank(deployer);
+        mintpass.batchMint(bob, 1);
+        vm.stopPrank();
+
+        vm.startPrank(bob);
+        uint256 reservationId = ipnft.reserve();
+        ipnft.mintReservation{ value: MINTING_FEE }(bob, reservationId, 2, ipfsUri, DEFAULT_SYMBOL);
+        uint256 fractionId2 = fractionalizer.fractionalizeIpnft(2, 70_000, agreementCid);
+        ipnft.setApprovalForAll(address(schmackoSwap), true);
+        uint256 listingId2 = schmackoSwap.list(IERC1155Supply(address(ipnft)), 2, erc20, 700 ether, address(originalOwner));
+        schmackoSwap.changeBuyerAllowance(listingId2, ipnftBuyer, true);
+        vm.stopPrank();
+
+        vm.startPrank(ipnftBuyer);
+        erc20.approve(address(schmackoSwap), 1_000_000 ether);
+        schmackoSwap.fulfill(listingId1);
+        schmackoSwap.fulfill(listingId2);
+        vm.stopPrank();
+
+        vm.startPrank(alice);
+        vm.expectRevert(ListingMismatch.selector);
+        fractionalizer.afterSale(fractionId1, listingId2);
+
+        vm.expectRevert(InsufficientBalance.selector);
+        fractionalizer.afterSale(fractionId2, listingId2);
+
+        fractionalizer.afterSale(fractionId1, listingId1);
+        (uint8 v, bytes32 r, bytes32 s) =
+            vm.sign(alicePk, ECDSA.toEthSignedMessageHash(abi.encodePacked(fractionalizer.specificTermsV1(fractionId1))));
+
+        vm.expectRevert(InsufficientBalance.selector);
+        fractionalizer.burnToWithdrawShare(fractionId1, abi.encodePacked(r, s, v));
+        vm.stopPrank();
     }
 }

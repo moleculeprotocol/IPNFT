@@ -16,7 +16,10 @@ import "./helpers/MakeGnosisWallet.sol";
 import { IPNFT } from "../src/IPNFT.sol";
 import { Mintpass } from "../src/Mintpass.sol";
 import { UUPSProxy } from "../src/UUPSProxy.sol";
+
 import { Fractionalizer, Fractionalized, ToZeroAddress } from "../src/Fractionalizer.sol";
+import { BadSupply, MustOwnIpnft, NoSymbol, AlreadyFractionalized, InvalidSignature } from "../src/Fractionalizer.sol";
+
 import { FractionalizedTokenUpgradeable as FractionalizedToken } from "../src/FractionalizedToken.sol";
 import { FractionalizerNext, FractionalizedTokenUpgradeableNext } from "../src/helpers/upgrades/FractionalizerNext.sol";
 
@@ -110,7 +113,7 @@ contract FractionalizerTest is Test {
 
         (, uint256 totalIssued,,, FractionalizedToken tokenContract,,,) = fractionalizer.fractionalized(fractionId);
         assertEq(totalIssued, 100_000);
-        assertEq(tokenContract.symbol(), "MOL-0001-FAM");
+        assertEq(tokenContract.symbol(), "MOL-0001-MOL");
 
         vm.startPrank(originalOwner);
         tokenContract.transfer(alice, 10_000);
@@ -132,6 +135,11 @@ contract FractionalizerTest is Test {
         fractionalizer.increaseFractions(fractionId, 100_000);
         vm.stopPrank();
 
+        vm.startPrank(bob);
+        vm.expectRevert(MustOwnIpnft.selector);
+        fractionalizer.increaseFractions(fractionId, 12345);
+        vm.stopPrank();
+
         assertEq(fractionalizer.balanceOf(alice, fractionId), 25_000);
         assertEq(fractionalizer.balanceOf(bob, fractionId), 25_000);
         assertEq(fractionalizer.balanceOf(originalOwner, fractionId), 150_000);
@@ -147,7 +155,7 @@ contract FractionalizerTest is Test {
         vm.startPrank(originalOwner);
         uint256 fractionId = fractionalizer.fractionalizeIpnft(1, 100_000, agreementCid);
 
-        vm.expectRevert("token is already fractionalized");
+        vm.expectRevert(AlreadyFractionalized.selector);
         fractionId = fractionalizer.fractionalizeIpnft(1, 100_000, agreementCid);
         vm.stopPrank();
     }
@@ -155,7 +163,7 @@ contract FractionalizerTest is Test {
     function testCannotFractionalizeIfNotOwner() public {
         vm.startPrank(alice);
 
-        vm.expectRevert("only owner can initialize fractions");
+        vm.expectRevert(MustOwnIpnft.selector);
         fractionalizer.fractionalizeIpnft(1, 100_000, agreementCid);
         vm.stopPrank();
     }
@@ -169,6 +177,14 @@ contract FractionalizerTest is Test {
 
         bytes memory xsignature = abi.encodePacked(r, s, v);
         assertTrue(fractionalizer.isValidSignature(fractionId, alice, xsignature));
+
+        vm.expectRevert(InvalidSignature.selector);
+        fractionalizer.acceptTerms(fractionId, xsignature);
+        vm.stopPrank();
+
+        vm.startPrank(alice);
+        fractionalizer.acceptTerms(fractionId, xsignature);
+        vm.stopPrank();
     }
 
     function testGnosisSafeCanInteractWithFractions() public {
