@@ -31,3 +31,13 @@ contract DeployFractionalizer is Script {
         console.log("fractionalizer %s", address(fractionalizer));
     }
 }
+
+contract DeployFracImplementation is Script {
+    function run() public {
+        vm.startBroadcast();
+        Fractionalizer impl = new Fractionalizer();
+        vm.stopBroadcast();
+
+        console.log("fractionalizer impl %s", address(impl));
+    }
+}
