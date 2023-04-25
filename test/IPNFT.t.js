@@ -48,4 +48,20 @@ describe("IPNFT fundamentals and upgrades", function () {
     expect(1).to.eq(1)
   })
 
+  it("validates frax upgrade", async function () {
+    const Frac0 = await ethers.getContractFactory("Fractionalizer");
+    const frac0 = await upgrades.deployProxy(Frac0, [hre.ethers.constants.AddressZero,hre.ethers.constants.AddressZero], { kind: "uups" });
+
+    const result = await upgrades.validateUpgrade(
+      frac0.address,
+      await ethers.getContractFactory("FractionalizerNext"),
+      {
+        kind: "uups"
+      }
+    )
+    //this didn't throw :)
+    expect(1).to.eq(1)
+  })
+
+
 });
