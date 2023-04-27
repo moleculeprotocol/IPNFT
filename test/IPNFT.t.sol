@@ -131,7 +131,7 @@ contract IPNFTTest is IPNFTMintHelper {
     function testCannotSendPlainEtherToIPNFT() public {
         vm.deal(address(bob), 10 ether);
 
-        vm.prank(bob);
+        vm.startPrank(bob);
         (bool transferWorked,) = address(ipnft).call{ value: 10 ether }("");
         assertFalse(transferWorked);
         assertEq(address(ipnft).balance, 0);
@@ -148,7 +148,7 @@ contract IPNFTTest is IPNFTMintHelper {
 
     function testOwnerCanWithdrawEthFunds() public {
         vm.deal(address(bob), 10 ether);
-        vm.prank(bob);
+        vm.startPrank(bob);
         Kamikaze kamikaze = new Kamikaze();
         (bool transferWorked,) = address(kamikaze).call{ value: 10 ether }("");
         assertTrue(transferWorked);
