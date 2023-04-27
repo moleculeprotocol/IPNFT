@@ -198,7 +198,7 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardU
             )
         );
 
-        _startSalesPhase(fractionId, paymentToken, price);
+        _startClaimingPhase(fractionId, paymentToken, price);
         paymentToken.safeTransferFrom(_msgSender(), address(this), price);
     }
 
@@ -226,10 +226,10 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardU
         }
 
         frac.fulfilledListingId = listingId;
-        _startSalesPhase(fractionId, _paymentToken, askPrice);
+        _startClaimingPhase(fractionId, _paymentToken, askPrice);
     }
 
-    function _startSalesPhase(uint256 fractionId, IERC20 _paymentToken, uint256 price) internal {
+    function _startClaimingPhase(uint256 fractionId, IERC20 _paymentToken, uint256 price) internal {
         Fractionalized storage frac = fractionalized[fractionId];
         // if (paymentToken.balanceOf(address(this)) < askPrice) {
         //     //todo: this is warning, we still could proceed, since it's too late here anyway ;)
