@@ -3,6 +3,8 @@ pragma solidity ^0.8.18;
 
 import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import { ReentrancyGuardUpgradeable } from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
+
 import { IERC20Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import { ERC20Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 import { ERC20BurnableUpgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20BurnableUpgradeable.sol";
@@ -32,6 +34,11 @@ struct Fractionalized {
     uint256 paidPrice;
 }
 
+error BadSupply();
+error MustOwnIpnft();
+error NoSymbol();
+error AlreadyFractionalized();
+
 /// @title FractionalizedToken
 /// @author molecule.to
 /// @notice this is a template contract that's spawned by the fractionalizer
@@ -55,8 +62,8 @@ contract FractionalizedTokenUpgradeableNext is IERC20Upgradeable, ERC20Upgradeab
 
 /// @title Fractionalizer
 /// @author molecule.to
-/// @notice
-contract FractionalizerNext is UUPSUpgradeable, OwnableUpgradeable {
+/// @notice this is used to test upgrade safety
+contract FractionalizerNext is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     using SafeERC20 for IERC20;
 
     event FractionsCreated(
@@ -85,6 +92,7 @@ contract FractionalizerNext is UUPSUpgradeable, OwnableUpgradeable {
     function initialize(IPNFT _ipnft, SchmackoSwap _schmackoSwap) public initializer {
         __UUPSUpgradeable_init();
         __Ownable_init();
+        __ReentrancyGuard_init();
 
         ipnft = _ipnft;
         schmackoSwap = _schmackoSwap;
@@ -102,31 +110,30 @@ contract FractionalizerNext is UUPSUpgradeable, OwnableUpgradeable {
 
     function fractionalizeIpnft(uint256 ipnftId, uint256 fractionsAmount, string calldata agreementCid) external returns (uint256 fractionId) {
         if (ipnft.totalSupply(ipnftId) != 1) {
-            revert("IPNFT supply must be 1");
+            revert BadSupply();
         }
         if (ipnft.balanceOf(_msgSender(), ipnftId) != 1) {
-            revert("only owner can initialize fractions");
+            revert MustOwnIpnft();
         }
         string memory ipnftSymbol = ipnft.symbol(ipnftId);
         if (bytes(ipnftSymbol).length == 0) {
-            revert("ipnft needs a symbol to fractionalize");
+            revert NoSymbol();
         }
 
         fractionId = uint256(keccak256(abi.encodePacked(_msgSender(), ipnftId)));
 
         if (address(fractionalized[fractionId].originalOwner) != address(0)) {
-            revert("token is already fractionalized");
+            revert AlreadyFractionalized();
         }
 
         FractionalizedTokenUpgradeableNext fractionalizedToken = FractionalizedTokenUpgradeableNext(Clones.clone(tokenImplementation));
         string memory name = string(abi.encodePacked("Fractions of IPNFT #", Strings.toString(ipnftId)));
-        string memory symbol = string(string(abi.encodePacked(ipnftSymbol, "-MOL")));
-        (fractionalizedToken).initialize(name, symbol);
-
         fractionalized[fractionId] =
             Fractionalized(ipnftId, fractionsAmount, _msgSender(), agreementCid, fractionalizedToken, 0, IERC20(address(0)), 0);
+        emit FractionsCreated(fractionId, ipnftId, address(fractionalizedToken), _msgSender(), fractionsAmount, agreementCid, name, ipnftSymbol);
+
+        fractionalizedToken.initialize(name, ipnftSymbol);
         fractionalizedToken.issue(_msgSender(), fractionsAmount);
-        emit FractionsCreated(fractionId, ipnftId, address(fractionalizedToken), _msgSender(), fractionsAmount, agreementCid, name, symbol);
     }
 
     function _authorizeUpgrade(address /*newImplementation*/ )

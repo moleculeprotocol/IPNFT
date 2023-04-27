@@ -3,14 +3,13 @@ pragma solidity ^0.8.18;
 
 import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import { ReentrancyGuardUpgradeable } from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 
 import { Base64 } from "@openzeppelin/contracts/utils/Base64.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { Clones } from "@openzeppelin/contracts/proxy/Clones.sol";
-
 import { SignatureChecker } from "@openzeppelin/contracts/utils/cryptography/SignatureChecker.sol";
-
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
@@ -48,8 +47,9 @@ error ListingMismatch();
 
 /// @title Fractionalizer
 /// @author molecule.to
-/// @notice
-contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable {
+/// @notice fractionalizes an IPNFT to an ERC20 token and controls its supply.
+///         Allows fraction holders to withdraw sales shares when the IPNFT is sold
+contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     using SafeERC20 for IERC20;
 
     event FractionsCreated(
@@ -74,15 +74,13 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable {
 
     mapping(uint256 => Fractionalized) public fractionalized;
 
-    //unused
-    mapping(address => mapping(uint256 => uint256)) claimAllowance;
-
     /// @custom:oz-upgrades-unsafe-allow state-variable-immutable
     address immutable tokenImplementation;
 
     function initialize(IPNFT _ipnft, SchmackoSwap _schmackoSwap) public initializer {
         __UUPSUpgradeable_init();
         __Ownable_init();
+        __ReentrancyGuard_init();
 
         ipnft = _ipnft;
         schmackoSwap = _schmackoSwap;
@@ -101,6 +99,9 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable {
         _disableInitializers();
     }
 
+    /**
+     * @notice we're not taking any fees. If we once decided to do so, this can be used to update the fee receiver
+     */
     function setFeeReceiver(address _feeReceiver) public onlyOwner {
         if (_feeReceiver == address(0)) {
             revert ToZeroAddress();
@@ -124,9 +125,8 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable {
      * @notice
      * @param ipnftId          uint256  the token id on the origin collection
      * @param fractionsAmount  uint256  the initial amount of fractions issued
-     * @param agreementCid    bytes32  a content hash that identifies the terms underlying the issued fractions
+     * @param agreementCid     bytes32  a content hash that identifies the terms underlying the issued fractions
      */
-
     function fractionalizeIpnft(uint256 ipnftId, uint256 fractionsAmount, string calldata agreementCid) external returns (uint256 fractionId) {
         if (ipnft.totalSupply(ipnftId) != 1) {
             revert BadSupply();
@@ -149,21 +149,20 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable {
         // https://github.com/OpenZeppelin/workshops/tree/master/02-contracts-clone
         FractionalizedTokenUpgradeable fractionalizedToken = FractionalizedTokenUpgradeable(Clones.clone(tokenImplementation));
         string memory name = string(abi.encodePacked("Fractions of IPNFT #", Strings.toString(ipnftId)));
-        string memory symbol = string(string(abi.encodePacked(ipnftSymbol, "-MOL")));
-        (fractionalizedToken).initialize(name, symbol);
 
         fractionalized[fractionId] =
             Fractionalized(ipnftId, fractionsAmount, _msgSender(), agreementCid, fractionalizedToken, 0, IERC20(address(0)), 0);
+        emit FractionsCreated(fractionId, ipnftId, address(fractionalizedToken), _msgSender(), fractionsAmount, agreementCid, name, ipnftSymbol);
 
+        fractionalizedToken.initialize(name, ipnftSymbol);
         //todo: if we want to take a protocol fee, this might be agood point of doing so.
-
-        //alternatively: transfer the NFT to Fractionalizer so it can't be transferred while fractionalized
-        //collection.safeTransferFrom(_msgSender(), address(this), tokenId, 1, "");
-
         fractionalizedToken.issue(_msgSender(), fractionsAmount);
-        emit FractionsCreated(fractionId, ipnftId, address(fractionalizedToken), _msgSender(), fractionsAmount, agreementCid, name, symbol);
     }
 
+    /**
+     * @notice we deliberately allow the fraction intializer to increase the fraction supply at will
+     *         as long as the underlying asset has not been sold yet
+     */
     function increaseFractions(uint256 fractionId, uint256 fractionsAmount) external notClaiming(fractionId) {
         Fractionalized memory _fractionalized = fractionalized[fractionId];
 
@@ -186,7 +185,7 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable {
      * @param   paymentToken  IERC20   the paymen token contract address
      * @param   price         uint256  the price the NFT has been sold for.
      */
-    function afterSale(uint256 fractionId, IERC20 paymentToken, uint256 price) external notClaiming(fractionId) {
+    function afterSale(uint256 fractionId, IERC20 paymentToken, uint256 price) external notClaiming(fractionId) nonReentrant {
         Fractionalized storage frac = fractionalized[fractionId];
         if (_msgSender() != frac.originalOwner) {
             revert MustOwnIpnft();
@@ -199,24 +198,20 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable {
             )
         );
 
-        paymentToken.safeTransferFrom(_msgSender(), address(this), price);
         _startSalesPhase(fractionId, paymentToken, price);
+        paymentToken.safeTransferFrom(_msgSender(), address(this), price);
     }
 
     /**
      * @notice When the sales beneficiary has been set to this contract,
      *         anyone can call this function after having observed the sale
-     *         to activate the share payout phase on L2
-     *
+     *         this is a deep dependency on our own sales contract
      * @param fractionId    uint256     the unique fraction id
      * @param listingId     uint256     the listing id on Schmackoswap
      */
     function afterSale(uint256 fractionId, uint256 listingId) external notClaiming(fractionId) {
         Fractionalized storage frac = fractionalized[fractionId];
 
-        //todo: this is a deep dependency on our own sales contract
-        //we alternatively could have the token owner transfer the proceeds and announce the claims to be withdrawable
-        //but they oc could do that on L2 directly...
         (, uint256 tokenId,,, IERC20 _paymentToken, uint256 askPrice, address beneficiary, ListingState listingState) =
             schmackoSwap.listings(listingId);
 
@@ -230,10 +225,6 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable {
             revert InsufficientBalance();
         }
 
-        //todo: this is a warning, we still could proceed, since it's too late here anyway ;)
-        // if (paymentToken.balanceOf(address(this)) < askPrice) {
-        //     revert("the fulfillment doesn't match the ask");
-        // }
         frac.fulfilledListingId = listingId;
         _startSalesPhase(fractionId, _paymentToken, askPrice);
     }
@@ -258,8 +249,7 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable {
 
         uint256 balance = frac.tokenContract.balanceOf(tokenHolder);
 
-        //todo: check this 10 times:
-        return (frac.paymentToken, balance * (frac.paidPrice / frac.totalIssued));
+        return (frac.paymentToken, (balance * frac.paidPrice) / frac.totalIssued);
     }
 
     function burnToWithdrawShare(uint256 fractionId, bytes memory signature) external {
@@ -277,9 +267,10 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable {
             revert InsufficientBalance();
         }
 
+        emit SharesClaimed(fractionId, _msgSender(), balance);
+
         frac.tokenContract.burnFrom(_msgSender(), balance);
         paymentToken.safeTransfer(_msgSender(), erc20shares);
-        emit SharesClaimed(fractionId, _msgSender(), balance);
     }
 
     function specificTermsV1(uint256 fractionId) public view returns (string memory) {

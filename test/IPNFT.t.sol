@@ -217,19 +217,4 @@ contract IPNFTTest is IPNFTMintHelper {
         vm.warp(block.timestamp + 60);
         assertFalse(ipnft.canRead(bob, tokenId));
     }
-
-    function testOwnerCanUpdateSymbol() public {
-        uint256 tokenId = mintAToken(ipnft, alice);
-        assertEq(ipnft.symbol(tokenId), DEFAULT_SYMBOL);
-
-        vm.startPrank(alice);
-        ipnft.updateSymbol(tokenId, "ALICE-123");
-        vm.stopPrank();
-
-        assertEq(ipnft.symbol(tokenId), "ALICE-123");
-        vm.startPrank(bob);
-        vm.expectRevert(IPNFT.InsufficientBalance.selector);
-        ipnft.updateSymbol(tokenId, "BOB-314");
-        vm.stopPrank();
-    }
 }

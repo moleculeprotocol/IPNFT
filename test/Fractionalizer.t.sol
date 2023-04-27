@@ -17,8 +17,8 @@ import { IPNFT } from "../src/IPNFT.sol";
 import { Mintpass } from "../src/Mintpass.sol";
 import { UUPSProxy } from "../src/UUPSProxy.sol";
 
-import { Fractionalizer, Fractionalized, ToZeroAddress } from "../src/Fractionalizer.sol";
-import { BadSupply, MustOwnIpnft, NoSymbol, AlreadyFractionalized, InvalidSignature } from "../src/Fractionalizer.sol";
+import { Fractionalizer, Fractionalized } from "../src/Fractionalizer.sol";
+import { ToZeroAddress, BadSupply, MustOwnIpnft, NoSymbol, AlreadyFractionalized, InvalidSignature } from "../src/Fractionalizer.sol";
 
 import { FractionalizedTokenUpgradeable as FractionalizedToken } from "../src/FractionalizedToken.sol";
 import { FractionalizerNext, FractionalizedTokenUpgradeableNext } from "../src/helpers/upgrades/FractionalizerNext.sol";
@@ -113,7 +113,7 @@ contract FractionalizerTest is Test {
 
         (, uint256 totalIssued,,, FractionalizedToken tokenContract,,,) = fractionalizer.fractionalized(fractionId);
         assertEq(totalIssued, 100_000);
-        assertEq(tokenContract.symbol(), "MOL-0001-MOL");
+        assertEq(tokenContract.symbol(), "MOL-0001");
 
         vm.startPrank(originalOwner);
         tokenContract.transfer(alice, 10_000);

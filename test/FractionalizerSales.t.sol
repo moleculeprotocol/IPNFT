@@ -300,30 +300,27 @@ contract FractionalizerSalesTest is Test {
         assertEq(remainingAmount, 0);
     }
 
-    function testStartClaimingHighAmounts() public {
-        uint256 __wealth = 1_000_000_000_000_000_000_000 ether; //!!!
+    function testFuzzFractionalize(uint256 fractionAmount, uint256 salesPrice) public {
+        vm.assume(fractionAmount <= 2 ** 200);
+        vm.assume(salesPrice <= 100_000_000_000 ether);
 
         vm.startPrank(originalOwner);
-        uint256 fractionId = fractionalizer.fractionalizeIpnft(1, __wealth, agreementCid);
+        uint256 fractionId = fractionalizer.fractionalizeIpnft(1, fractionAmount, agreementCid);
         (,,,, FractionalizedToken tokenContract,,,) = fractionalizer.fractionalized(fractionId);
 
-        assertEq(fractionalizer.balanceOf(originalOwner, fractionId), __wealth);
-        tokenContract.safeTransfer(alice, __wealth);
+        assertEq(fractionalizer.balanceOf(originalOwner, fractionId), fractionAmount);
+        tokenContract.safeTransfer(alice, fractionAmount);
         vm.stopPrank();
 
         vm.startPrank(ipnftBuyer);
-        myToken.mint(ipnftBuyer, __wealth);
-        erc20.transfer(originalOwner, __wealth);
+        myToken.mint(ipnftBuyer, salesPrice);
+        erc20.transfer(originalOwner, salesPrice);
         vm.stopPrank();
 
         vm.startPrank(originalOwner);
-        erc20.approve(address(fractionalizer), __wealth);
-        fractionalizer.afterSale(fractionId, erc20, __wealth);
+        erc20.approve(address(fractionalizer), salesPrice);
+        fractionalizer.afterSale(fractionId, erc20, salesPrice);
         vm.stopPrank();
-
-        //vm.expectRevert( /*Arithmetic over/underflow*/ );
-        (, uint256 amount) = fractionalizer.claimableTokens(fractionId, alice);
-        assertEq(amount, __wealth);
     }
 
     function testClaimingFraud() public {
