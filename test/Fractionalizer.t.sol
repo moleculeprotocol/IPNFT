@@ -179,11 +179,11 @@ contract FractionalizerTest is Test {
         assertTrue(fractionalizer.isValidSignature(fractionId, alice, xsignature));
 
         vm.expectRevert(InvalidSignature.selector);
-        fractionalizer.acceptTerms(fractionId, xsignature);
+        fractionalizer.acceptTerms(fractionId, originalOwner, xsignature);
         vm.stopPrank();
 
         vm.startPrank(alice);
-        fractionalizer.acceptTerms(fractionId, xsignature);
+        fractionalizer.acceptTerms(fractionId, alice, xsignature);
         vm.stopPrank();
     }
 
