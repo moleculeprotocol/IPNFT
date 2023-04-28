@@ -14,6 +14,10 @@ The original owner of an IPNFT can tell the `Fractionalizer` to `increaseShares`
 
 An IPNFT can be fractionalized several times but only once per "original owner". That's not a perfect solution and doesn't cover the constructed case that someone fractionalizes, sells to someone else, who fractionalizes it again, and sells it back to the first owner - this one would not be able to fractionalize it another time.
 
+### ERC20 fraction tokens are not (will never be) upgradeable
+
+ERC20 contracts are spawned when the IPNFT is fractionalized. Their bytecode is fixed and unproxied. Their template code is stored on the Fractionalizer contract so we can update the template itself but that only affects token contracts deployed on new fractionalization actions. The old tokens will stay at the code level they have been created with.
+
 ## Schmackoswap as Sales Helper
 
 ### IPNFT Transferability
