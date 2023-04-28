@@ -1,6 +1,6 @@
 # Architecture
 
-see ([SEQUENCE.md](https://github.com/moleculeprotocol/IPNFT/blob/benjileibo-patch-1/audit/SEQUENCE.md)) for a sequence diagram of the following flow
+see [SEQUENCE.md](https://github.com/moleculeprotocol/IPNFT/blob/benjileibo-patch-1/audit/SEQUENCE.md) for a sequence diagram of the following flow
 
 ## IPNFTs
 
