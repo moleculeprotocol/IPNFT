@@ -7,8 +7,7 @@ import {
 import {
   FractionsCreated as FractionsCreatedEvent,
   SalesActivated as SalesActivatedEvent,
-  TermsAccepted as TermsAcceptedEvent,
-  SharesClaimed as SharesClaimedEvent
+  TermsAccepted as TermsAcceptedEvent
 } from '../generated/Fractionalizer/Fractionalizer';
 
 import { FractionalizedToken } from '../generated/templates';
@@ -22,7 +21,7 @@ function createFractionId(fracId: BigInt, owner: Address): string {
 export function handleFractionsCreated(event: FractionsCreatedEvent): void {
   let frac = new Fractionalized(event.params.fractionId.toString());
 
-  frac.ipnft = event.params.tokenId.toString();
+  frac.ipnft = event.params.ipnftId.toString();
   frac.createdAt = event.block.timestamp;
   frac.agreementCid = event.params.agreementCid;
   frac.originalOwner = event.params.emitter;
@@ -51,20 +50,6 @@ export function handleSalesActivated(event: SalesActivatedEvent): void {
   fractionalized.paymentToken = event.params.paymentToken;
   fractionalized.paidPrice = event.params.paidPrice;
   fractionalized.claimedShares = BigInt.fromI32(0);
-  fractionalized.save();
-}
-
-export function handleSharesClaimed(event: SharesClaimedEvent): void {
-  let fractionalized = Fractionalized.load(event.params.fractionId.toString());
-  if (!fractionalized) {
-    log.error('Fractionalized ipnft not found for id: {}', [
-      event.params.fractionId.toString()
-    ]);
-    return;
-  }
-  fractionalized.claimedShares = fractionalized.claimedShares.plus(
-    event.params.amount
-  );
   fractionalized.save();
 }
 

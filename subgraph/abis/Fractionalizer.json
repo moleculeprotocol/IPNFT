@@ -6,6 +6,56 @@
   },
   {
     "inputs": [],
+    "name": "AlreadyClaiming",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "AlreadyFractionalized",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "BadSupply",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InsufficientBalance",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidSignature",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "ListingMismatch",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "ListingNotFulfilled",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "MustOwnIpnft",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "NoSymbol",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "NotClaimingYet",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "ToZeroAddress",
     "type": "error"
   },
@@ -53,7 +103,7 @@
       {
         "indexed": true,
         "internalType": "uint256",
-        "name": "tokenId",
+        "name": "ipnftId",
         "type": "uint256"
       },
       {
@@ -165,31 +215,6 @@
       {
         "indexed": true,
         "internalType": "address",
-        "name": "claimer",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
-      }
-    ],
-    "name": "SharesClaimed",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "uint256",
-        "name": "fractionId",
-        "type": "uint256"
-      },
-      {
-        "indexed": true,
-        "internalType": "address",
         "name": "signer",
         "type": "address"
       },
@@ -222,6 +247,11 @@
         "internalType": "uint256",
         "name": "fractionId",
         "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "_for",
+        "type": "address"
       },
       {
         "internalType": "bytes",
@@ -297,24 +327,6 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "fractionId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "bytes",
-        "name": "signature",
-        "type": "bytes"
-      }
-    ],
-    "name": "burnToWithdrawShare",
-    "outputs": [],
-    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -406,7 +418,7 @@
         "type": "string"
       },
       {
-        "internalType": "contract FractionalizedTokenUpgradeable",
+        "internalType": "contract FractionalizedToken",
         "name": "tokenContract",
         "type": "address"
       },
@@ -639,7 +651,7 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "id",
+        "name": "fractionId",
         "type": "uint256"
       }
     ],

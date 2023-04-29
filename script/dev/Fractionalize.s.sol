@@ -5,7 +5,7 @@ import "forge-std/Script.sol";
 import "forge-std/console.sol";
 import { IPNFT } from "../../src/IPNFT.sol";
 import { Fractionalizer } from "../../src/Fractionalizer.sol";
-import { FractionalizedTokenUpgradeable as FractionalizedToken } from "../../src/FractionalizedToken.sol";
+import { FractionalizedToken } from "../../src/FractionalizedToken.sol";
 
 import { DevScript } from "./Dev.s.sol";
 

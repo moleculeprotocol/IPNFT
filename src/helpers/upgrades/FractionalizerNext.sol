@@ -28,7 +28,7 @@ struct Fractionalized {
     uint256 totalIssued;
     address originalOwner;
     string agreementCid;
-    FractionalizedTokenUpgradeableNext tokenContract; //the erc20 token contract representing the fractions
+    FractionalizedTokenNext tokenContract; //the erc20 token contract representing the fractions
     uint256 fulfilledListingId;
     IERC20 paymentToken;
     uint256 paidPrice;
@@ -43,7 +43,7 @@ error AlreadyFractionalized();
 /// @author molecule.to
 /// @notice this is a template contract that's spawned by the fractionalizer
 /// @notice the owner of this contract is always the fractionalizer contract
-contract FractionalizedTokenUpgradeableNext is IERC20Upgradeable, ERC20Upgradeable, ERC20BurnableUpgradeable, OwnableUpgradeable {
+contract FractionalizedTokenNext is IERC20Upgradeable, ERC20Upgradeable, ERC20BurnableUpgradeable, OwnableUpgradeable {
     uint256 public aNewStateVar;
 
     function initialize(string memory name, string memory symbol) public initializer {
@@ -100,7 +100,7 @@ contract FractionalizerNext is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGu
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
-        tokenImplementation = address(new FractionalizedTokenUpgradeableNext());
+        tokenImplementation = address(new FractionalizedTokenNext());
         _disableInitializers();
     }
 
@@ -126,7 +126,7 @@ contract FractionalizerNext is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGu
             revert AlreadyFractionalized();
         }
 
-        FractionalizedTokenUpgradeableNext fractionalizedToken = FractionalizedTokenUpgradeableNext(Clones.clone(tokenImplementation));
+        FractionalizedTokenNext fractionalizedToken = FractionalizedTokenNext(Clones.clone(tokenImplementation));
         string memory name = string(abi.encodePacked("Fractions of IPNFT #", Strings.toString(ipnftId)));
         fractionalized[fractionId] =
             Fractionalized(ipnftId, fractionsAmount, _msgSender(), agreementCid, fractionalizedToken, 0, IERC20(address(0)), 0);

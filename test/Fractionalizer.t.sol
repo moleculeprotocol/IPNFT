@@ -20,8 +20,8 @@ import { UUPSProxy } from "../src/UUPSProxy.sol";
 import { Fractionalizer, Fractionalized } from "../src/Fractionalizer.sol";
 import { ToZeroAddress, BadSupply, MustOwnIpnft, NoSymbol, AlreadyFractionalized, InvalidSignature } from "../src/Fractionalizer.sol";
 
-import { FractionalizedTokenUpgradeable as FractionalizedToken } from "../src/FractionalizedToken.sol";
-import { FractionalizerNext, FractionalizedTokenUpgradeableNext } from "../src/helpers/upgrades/FractionalizerNext.sol";
+import { FractionalizedToken } from "../src/FractionalizedToken.sol";
+import { FractionalizerNext, FractionalizedTokenNext } from "../src/helpers/upgrades/FractionalizerNext.sol";
 
 import { IERC1155Supply } from "../src/IERC1155Supply.sol";
 import { SchmackoSwap, ListingState } from "../src/SchmackoSwap.sol";
@@ -277,7 +277,7 @@ contract FractionalizerTest is Test {
         vm.stopPrank();
 
         (,,,, FractionalizedToken tokenContractNew,,,) = fractionalizer.fractionalized(fractionId);
-        FractionalizedTokenUpgradeableNext newTokenImpl = FractionalizedTokenUpgradeableNext(address(tokenContractNew));
+        FractionalizedTokenNext newTokenImpl = FractionalizedTokenNext(address(tokenContractNew));
 
         assertEq(fractionalizer.balanceOf(originalOwner, fractionId), 70_000);
         assertEq(tokenContractNew.balanceOf(originalOwner), 70_000);
@@ -285,7 +285,7 @@ contract FractionalizerTest is Test {
         newTokenImpl.setAStateVar(42);
         assertEq(newTokenImpl.aNewStateVar(), 42);
 
-        FractionalizedTokenUpgradeableNext oldTokenImplWrapped = FractionalizedTokenUpgradeableNext(address(tokenContractOld));
+        FractionalizedTokenNext oldTokenImplWrapped = FractionalizedTokenNext(address(tokenContractOld));
         vm.expectRevert();
         oldTokenImplWrapped.setAStateVar(42);
     }

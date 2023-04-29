@@ -14,7 +14,7 @@ import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
 import { IERC1155Supply } from "./IERC1155Supply.sol";
-import { FractionalizedTokenUpgradeable } from "./FractionalizedToken.sol";
+import { FractionalizedToken } from "./FractionalizedToken.sol";
 import { SchmackoSwap, ListingState } from "./SchmackoSwap.sol";
 import { IPNFT } from "./IPNFT.sol";
 
@@ -24,7 +24,7 @@ struct Fractionalized {
     uint256 totalIssued;
     address originalOwner;
     string agreementCid;
-    FractionalizedTokenUpgradeable tokenContract; //the erc20 token contract representing the fractions
+    FractionalizedToken tokenContract; //the erc20 token contract representing the fractions
     uint256 fulfilledListingId;
     IERC20 paymentToken;
     uint256 paidPrice;
@@ -64,7 +64,6 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardU
     );
     event SalesActivated(uint256 fractionId, address paymentToken, uint256 paidPrice);
     event TermsAccepted(uint256 indexed fractionId, address indexed signer, bytes signature);
-    event SharesClaimed(uint256 indexed fractionId, address indexed claimer, uint256 amount);
 
     IPNFT ipnft;
     SchmackoSwap schmackoSwap;
@@ -95,7 +94,7 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardU
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
-        tokenImplementation = address(new FractionalizedTokenUpgradeable());
+        tokenImplementation = address(new FractionalizedToken());
         _disableInitializers();
     }
 
@@ -153,7 +152,7 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardU
         }
 
         // https://github.com/OpenZeppelin/workshops/tree/master/02-contracts-clone
-        FractionalizedTokenUpgradeable fractionalizedToken = FractionalizedTokenUpgradeable(Clones.clone(tokenImplementation));
+        FractionalizedToken fractionalizedToken = FractionalizedToken(Clones.clone(tokenImplementation));
         string memory name = string(abi.encodePacked("Fractions of IPNFT #", Strings.toString(ipnftId)));
 
         fractionalized[fractionId] =
