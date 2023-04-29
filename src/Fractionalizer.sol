@@ -113,10 +113,16 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardU
         fractionalizationPercentage = fractionalizationPercentage_;
     }
 
+    /**
+     * @dev calls the fraction's underlying tokenContract balance function
+     */
     function balanceOf(address owner, uint256 fractionId) public view returns (uint256) {
         return fractionalized[fractionId].tokenContract.balanceOf(owner);
     }
 
+    /**
+     * @dev calls the fraction's underlying tokenContract supply function
+     */
     function totalSupply(uint256 fractionId) public view returns (uint256) {
         return fractionalized[fractionId].tokenContract.totalSupply();
     }
@@ -160,8 +166,11 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardU
     }
 
     /**
-     * @notice we deliberately allow the fraction intializer to increase the fraction supply at will
+     * @notice we deliberately allow the fraction initializer to increase the fraction supply at will
      *         as long as the underlying asset has not been sold yet
+     *
+     * @param fractionId uint256
+     * @param fractionsAmount uint256
      */
     function increaseFractions(uint256 fractionId, uint256 fractionsAmount) external notClaiming(fractionId) {
         Fractionalized memory _fractionalized = fractionalized[fractionId];
@@ -182,8 +191,8 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardU
      *         Requires the caller to have approved `price` of `paymentToken` to this contract
      *
      * @param   fractionId    uint256  the fraction id
-     * @param   paymentToken  IERC20   the paymen token contract address
-     * @param   price         uint256  the price the NFT has been sold for.
+     * @param   paymentToken  IERC20   the payment token contract address
+     * @param   price         uint256  the price the NFT has been sold for
      */
     function afterSale(uint256 fractionId, IERC20 paymentToken, uint256 price) external notClaiming(fractionId) nonReentrant {
         Fractionalized storage frac = fractionalized[fractionId];
@@ -218,6 +227,7 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardU
      * @notice When the sales beneficiary has been set to this contract,
      *         anyone can call this function after having observed the sale
      *         this is a deep dependency on our own sales contract
+     *
      * @param fractionId    uint256     the unique fraction id
      * @param listingId     uint256     the listing id on Schmackoswap
      */
@@ -243,8 +253,8 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardU
 
     function _startClaimingPhase(uint256 fractionId, IERC20 _paymentToken, uint256 price) internal {
         Fractionalized storage frac = fractionalized[fractionId];
+        //todo: this is warning, we still could proceed, since it's too late here anyway ;)
         // if (paymentToken.balanceOf(address(this)) < askPrice) {
-        //     //todo: this is warning, we still could proceed, since it's too late here anyway ;)
         //     revert("the fulfillment doesn't match the ask");
         // }
         frac.paymentToken = _paymentToken;
@@ -252,6 +262,12 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardU
         emit SalesActivated(fractionId, address(_paymentToken), price);
     }
 
+    /**
+     * @notice returns the `amount` of `paymentToken` that `tokenHolder` can claim by burning their fractions
+     *
+     * @param fractionId uin256
+     * @param tokenHolder address
+     */
     function claimableTokens(uint256 fractionId, address tokenHolder) public view returns (IERC20 paymentToken, uint256 amount) {
         Fractionalized memory frac = fractionalized[fractionId];
 
@@ -264,6 +280,11 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardU
         return (frac.paymentToken, (balance * frac.paidPrice) / frac.totalIssued);
     }
 
+    /**
+     * @notice this yields the message text that claimers must present as signed message to burn their fractions and claim shares
+     *
+     * @param fractionId uin256
+     */
     function specificTermsV1(uint256 fractionId) public view returns (string memory) {
         Fractionalized memory frac = fractionalized[fractionId];
 
@@ -282,13 +303,21 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardU
         );
     }
 
+    /**
+     * @notice checks whether `signer`'s `signature` of `specificTermsV1` on `fractionId` is valid
+     *
+     * @param fractionId uint256
+     */
     function isValidSignature(uint256 fractionId, address signer, bytes memory signature) public view returns (bool) {
         bytes32 termsHash = ECDSA.toEthSignedMessageHash(abi.encodePacked(specificTermsV1(fractionId)));
         return SignatureChecker.isValidSignatureNow(signer, termsHash, signature);
     }
 
     /**
-     * @param fractionId fraction id
+     * @notice checks validity signer`'s `signature` of `specificTermsV1` on `fractionId` and emits an event
+     * @dev the signature itself or whether it has already been presented is not stored on chain
+     *
+     * @param fractionId fraction id `
      * @param signature bytes encoded signature, for eip155: abi.encodePacked(r, s, v)
      */
     function acceptTerms(uint256 fractionId, address _for, bytes memory signature) public {
@@ -299,7 +328,6 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardU
     }
 
     /// @notice upgrade authorization logic
-
     function _authorizeUpgrade(address /*newImplementation*/ )
         internal
         override
@@ -308,8 +336,12 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardU
         //empty block
     }
 
-    function uri(uint256 id) public view returns (string memory) {
-        Fractionalized memory frac = fractionalized[id];
+    /**
+     * @notice contract metadata, compatible to ERC1155
+     * @param fractionId uint256
+     */
+    function uri(uint256 fractionId) public view returns (string memory) {
+        Fractionalized memory frac = fractionalized[fractionId];
         string memory tokenId = Strings.toString(frac.tokenId);
 
         string memory props = string(

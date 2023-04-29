@@ -28,6 +28,11 @@ contract FractionalizedTokenUpgradeable is IERC20Upgradeable, ERC20Upgradeable, 
         fractionId = _fractionId;
     }
 
+    /**
+     * @dev this can only be called by the contract owner which is the `Fractionalizer` who creates it
+     * @param receiver address
+     * @param amount uint256
+     */
     function issue(address receiver, uint256 amount) public onlyOwner {
         _mint(receiver, amount);
     }
