@@ -1,5 +1,8 @@
 import { Address, BigInt, dataSource, log } from '@graphprotocol/graph-ts';
-import { Transfer as TransferEvent } from '../generated/templates/FractionalizedToken/FractionalizedToken';
+import {
+  Transfer as TransferEvent,
+  SharesClaimed as SharesClaimedEvent
+} from '../generated/templates/FractionalizedToken/FractionalizedToken';
 import { Fractionalized, Fraction, Ipnft } from '../generated/schema';
 
 function createOrUpdateFractions(
@@ -62,4 +65,18 @@ export function handleTransfer(event: TransferEvent): void {
   //transfer
   createOrUpdateFractions(from, fractionalizedId, value.neg());
   createOrUpdateFractions(to, fractionalizedId, value);
+}
+
+export function handleSharesClaimed(event: SharesClaimedEvent): void {
+  let fractionalized = Fractionalized.load(event.params.fractionId.toString());
+  if (!fractionalized) {
+    log.error('Fractionalized ipnft not found for id: {}', [
+      event.params.fractionId.toString()
+    ]);
+    return;
+  }
+  fractionalized.claimedShares = fractionalized.claimedShares.plus(
+    event.params.amount
+  );
+  fractionalized.save();
 }

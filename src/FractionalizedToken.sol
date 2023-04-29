@@ -15,7 +15,7 @@ import { Fractionalizer, InsufficientBalance } from "./Fractionalizer.sol";
 /// @author molecule.to
 /// @notice this is a template contract that's spawned by the fractionalizer
 /// @notice the owner of this contract is always the fractionalizer contract
-contract FractionalizedTokenUpgradeable is IERC20Upgradeable, ERC20Upgradeable, ERC20BurnableUpgradeable, OwnableUpgradeable {
+contract FractionalizedToken is IERC20Upgradeable, ERC20Upgradeable, ERC20BurnableUpgradeable, OwnableUpgradeable {
     using SafeERC20 for IERC20;
 
     uint256 fractionId;

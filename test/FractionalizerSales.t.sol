@@ -25,7 +25,7 @@ import {
     InsufficientBalance,
     NotClaimingYet
 } from "../src/Fractionalizer.sol";
-import { FractionalizedTokenUpgradeable as FractionalizedToken } from "../src/FractionalizedToken.sol";
+import { FractionalizedToken } from "../src/FractionalizedToken.sol";
 import { IERC1155Supply } from "../src/IERC1155Supply.sol";
 import { SchmackoSwap, ListingState } from "../src/SchmackoSwap.sol";
 import { MyToken } from "../src/MyToken.sol";
