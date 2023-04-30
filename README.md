@@ -27,9 +27,9 @@ IP-NFTs allow their users to tokenize intellectual property. This repo contains 
 - HeadlessDispenser <https://goerli.etherscan.io/address/0x0F1Bd197c5dCC6bC7E8025037a7780010E2Cd22A#code>
 - Subgraph: <https://api.thegraph.com/subgraphs/name/dorianwilhelm/ip-nft-subgraph-goerli/graphql>
 
-- Fractionalizer: 0x9a6288bAD6765cF91388349BFBAB1bFB7813ff5a
-  (Impl no 2 0x656641Ed0e87A202a05B20eF5D14a8d65024c898)
-  <https://goerli.etherscan.io/address/0x9a6288bAD6765cF91388349BFBAB1bFB7813ff5a>
+- Fractionalizer: 0xAa3a8758214fe7d90557310cFB42A7f69755aCbf
+  (Impl no 1 0xb5205fd0dd99eed373f447abd223a085472c4027)
+  <https://goerli.etherscan.io/address/0xAa3a8758214fe7d90557310cFB42A7f69755aCbf>
 
 ## Prerequisites
 
