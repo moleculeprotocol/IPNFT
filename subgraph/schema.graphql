@@ -43,6 +43,7 @@ type Listing @entity {
   creator: Bytes! #address
   tokenAmount: BigInt! #the amount of this token to sell, usually 1
   paymentToken: Bytes! #address ERC20 Token
+  beneficiary: Bytes! #address of the account that'll receive the payment
   askPrice: BigInt!
   createdAt: BigInt!
   unlistedAt: BigInt

@@ -11,8 +11,8 @@ module.exports = {
         startBlock: 8151797
     },
     schmackoSwap: {
-        address: "0x2365BEDC04Fb449718D3143C88aF73ad83d7b9B6",
-        startBlock: 8151797
+        address: "0x2b3e3F64bEe5E184981836d0599d51935d669701",
+        startBlock: 8811319
     },
     mintpass: {
         address: "0xAf0f99dcC64E8a6549d32013AC9f2C3FA7834688",

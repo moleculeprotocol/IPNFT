@@ -17,11 +17,11 @@ sequenceDiagram
     Fractionalizer->>FamToken: mints new tokens
     FamToken->>OO: sends new FamTokens to OO
 
-    par sell IPNFT with Fractionalizer as beneficiary
+    par sell IPNFT with FractionalizedToken as beneficiary
         OO->>SOS: approve all IPNFTs
         OO->>SOS: list IPNFT for amt/USDC for FractionalizerContract
         Buyer->>SOS: pay list price amt
-        SOS->>Fractionalizer: transfers payment funds
+        SOS->>FamToken: transfers payment funds
         OO->>Buyer: transfers IPNFT
     end
 
@@ -31,17 +31,17 @@ sequenceDiagram
         Fractionalizer->>SOS: check sales occurred with  Fractionalizer as beneficiary
     else custom sale
         OO->>Fractionalizer: afterSale(fractionId, paymentToken, amount)
+        OO->>FamToken: transfers payment funds
         Note left of Fractionalizer: can only be called by the seller
     end
 
     Fractionalizer->>Fractionalizer: start claiming phase
 
-    FamHolder->>Fractionalizer: burnToWithdrawShare(signature)
-    activate Fractionalizer
-    Fractionalizer->>Fractionalizer: proves signature
-    Fractionalizer->>Fractionalizer: checks FamHolder share amt
-    Fractionalizer->>FamToken: burns all FamHolder shares
-    Fractionalizer->>FamHolder: transfers share of payment token
-    deactivate Fractionalizer
+    FamHolder->>FamToken: burn(signature)
+    FamToken->>Fractionalizer: verifies signature
+    FamToken->>Fractionalizer: checks FamHolder share amt
+    FamToken->>FamToken: burns all FamHolder shares
+    FamToken->>FamHolder: transfers share of payment token
+
 
 ```
