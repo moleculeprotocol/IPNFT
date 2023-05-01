@@ -25,7 +25,7 @@ see [SEQUENCE.md](../SEQUENCE.md) for a sequence diagram of the following flow
 - Owners of fractionalized tokens may gain access or usage rights to certain documents, secret data or may claim shares from other sources. This functionality is not immediately covered by the IPNFT contracts.
 - The IPNFT owner creates a new `FractionalizedToken` by calling `fractionalizeIpnft(uint256 ipnftId, uint256 fractionsAmount, string calldata agreementCid) external returns (uint256 fractionId)`
   - this instantiates a new minimal clone of the currently defined ERC20 implementation...
-  - ...and initializes with the `Fractionalizer` contract as its owner
+  - ...and initializes it with the `Fractionalizer` contract as its owner
   - the `Fractionalizer` contract can mint arbitrary amounts of tokens
   - the original owner of an IPNFT can tell the `Fractionalizer` at any time to mint an arbitrary amount of fractionalized tokens by calling `increaseShares`. Token holders must be aware that they can be diluted at the discretion of the IPNFT holder. New emissions are supposed to be controlled by the governance layer that controls the multisig (contract) that still holds the IPNFT.
 - the initial emission of `FractionalizedTokens` to other accounts will usually be supported by an auction mechanism that's out of scope of the IPNFT protocol.
@@ -37,8 +37,8 @@ see [SEQUENCE.md](../SEQUENCE.md) for a sequence diagram of the following flow
 
 A major use case for fractionalized tokens is the pro rata distribution of sales proceeds to fraction holders. Once an IPNFT is sold, the proceeds are captured by the `Fractionalizer` contract and fraction holders can claim their share by presenting their legal agreement signature. The claiming phase initiation differs from how the IPNFT has been sold:
 
-- When the IPNFT is sold using a `Schmackoswap` listing, the sale _must_ be initialized with the `Fractionalizer` as beneficiary
-- When the listing is fulfilled, `Schmackoswap` will transfer the funds directly to the beneficiary, `Fractionalizer`.
+- When the IPNFT is sold using a `Schmackoswap` listing, the sale _must_ be initialized with the respective `Fractionalizedtoken` as beneficiary
+- When the listing is fulfilled, `Schmackoswap` will transfer the funds directly to the beneficiary, `FractionalizerToken`.
 - _Anyone_ who wants to start the claiming phase and observes the fulfill transaction can call `afterSale` with the respective listing id.
 - `Fractionalizer` will check whether the trade has been successful and transitions the fraction id into the claiming phase
 
@@ -46,7 +46,7 @@ A major use case for fractionalized tokens is the pro rata distribution of sales
 - The `owner` calls `afterSale` using the ERC20 token that was used during the external sale and the amount the IPNFT has being sold for
 - This of course implies trust that the `owner` isn't cheating (unlikely since it's a doxxed multisig)
 
-When the claiming phase is initiated, any fraction holder can claim their share of the IPNFT sales funds by calling `burnToWithdrawShare`.
+When the claiming phase is initiated, any fraction holder can claim their share of the IPNFT sales funds by calling `FractionalizedToken:burn(signature)`.
 
 - Callers have to provide a valid legal agreement signature
 - All fractionalized tokens of the caller are burned during the claiming process

@@ -22,8 +22,8 @@ ERC20 contracts are spawned when the IPNFT is fractionalized. Their bytecode is 
 
 ### IPNFT Transferability
 
-Currently, the owner of an IPNFT can transfer or sell the IPNFT at their own discretion, potentially without the consent of fraction token holders. In the future we will ensure the IPNFT is locked during the `fractionalizeIpnft` function to ensure all IPNFT transfers and sales can be governed and enforced on chain. We are aware of this trust tradeoff and hope to mitigate it in the future.
+Currently, the owner of an IPNFT can transfer or sell the IPNFT at their own discretion, potentially without the consent of fraction token holders. In the future we will ensure the IPNFT is locked during the `fractionalizeIpnft` function to ensure all IPNFT transfers and sales can be governed and enforced on chain. This trust tradeoff can be responded to by checking that the IPNFT is held by a sufficiently trusted multisig at the moment.
 
 ### IPNFT Sale Share Claiming
 
-Currently, the owner of an IPNFT can sell the IPNFT without the use of `Schmackoswap`, and claim all of the proceeds from the sale without distributing them to fraction holders, obviously against their will. In the future we will ensure the IPNFT is locked after the `fractionalizeIpnft` function has been called to ensure all sales are governed and enforced on chain, and enforce the IPNFT holder to call `Schmackoswap` with the `Fractionalizer` as the beneficiary, ensuring fraction token holders receive their share. We are aware of this vulnerability and hope to mitigate it in the future.
+Currently, the owner of an IPNFT can sell the IPNFT without the use of `Schmackoswap`, and claim all of the proceeds from the sale without distributing them to fraction holders, obviously against their will. In the future we will ensure the IPNFT is locked after the `fractionalizeIpnft` function has been called to ensure all sales are governed and enforced on chain, and enforce the IPNFT holder to call `Schmackoswap` with the `Fractionalizer` as the beneficiary, ensuring fraction token holders receive their share.
