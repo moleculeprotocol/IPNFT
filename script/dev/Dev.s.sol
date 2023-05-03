@@ -37,7 +37,7 @@ contract DevScript is Script {
                 )
             )
         );
-        fractionalizer.initialize(ipnft, swap);
+        fractionalizer.initialize(ipnft);
 
         console.log("ipnftv2 %s", address(ipnft));
         console.log("swap %s", address(swap));

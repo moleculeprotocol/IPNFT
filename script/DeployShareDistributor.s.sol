@@ -7,37 +7,36 @@ import { IPNFT } from "../src/IPNFT.sol";
 import { SchmackoSwap } from "../src/SchmackoSwap.sol";
 import { Mintpass } from "../src/Mintpass.sol";
 import { UUPSProxy } from "../src/UUPSProxy.sol";
-import { Fractionalizer } from "../src/Fractionalizer.sol";
+import { SalesShareDistributor } from "../src/SalesShareDistributor.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
-contract DeployFractionalizer is Script {
+contract DeployShareDistributor is Script {
     function run() public {
         vm.startBroadcast();
-        address ipnftAddress = vm.envAddress("IPNFT_ADDRESS");
-        //address sosAddress = vm.envAddress("SOS_ADDRESS");
+        address sosAddress = vm.envAddress("SOS_ADDRESS");
 
-        Fractionalizer impl = new Fractionalizer();
+        SalesShareDistributor impl = new SalesShareDistributor();
 
-        Fractionalizer fractionalizer = Fractionalizer(
+        SalesShareDistributor salesShareDistributor = SalesShareDistributor(
             address(
                 new ERC1967Proxy(
                     address(impl), ""
                 )
             )
         );
-        fractionalizer.initialize(IPNFT(ipnftAddress));
+        salesShareDistributor.initialize(SchmackoSwap(sosAddress));
         vm.stopBroadcast();
 
-        console.log("fractionalizer %s", address(fractionalizer));
+        console.log("SalesShareDistributor %s", address(salesShareDistributor));
     }
 }
 
-contract DeployFractionalizerImplementation is Script {
+contract DeploySalesShareDistributorImplementation is Script {
     function run() public {
         vm.startBroadcast();
-        Fractionalizer impl = new Fractionalizer();
+        SalesShareDistributor impl = new SalesShareDistributor();
         vm.stopBroadcast();
 
-        console.log("fractionalizer impl %s", address(impl));
+        console.log("SalesShareDistributor impl %s", address(impl));
     }
 }

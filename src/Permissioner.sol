@@ -8,8 +8,31 @@ import { SignatureChecker } from "@openzeppelin/contracts/utils/cryptography/Sig
 import { FractionalizedToken } from "./FractionalizedToken.sol";
 
 error InvalidSignature();
+error Denied();
 
-contract TermsAcceptedPermissioner {
+interface IPermissioner {
+    /**
+     * @notice reverts when `_for` may not interact with `tokenContract`
+     * @param tokenContract FractionalizedToken
+     * @param _for address
+     * @param data bytes
+     */
+    function accept(FractionalizedToken tokenContract, address _for, bytes memory data) external;
+}
+
+contract BlindPermissioner is IPermissioner {
+    function accept(FractionalizedToken tokenContract, address _for, bytes memory data) external {
+        //empty
+    }
+}
+
+contract ForbidAllPermissioner is IPermissioner {
+    function accept(FractionalizedToken tokenContract, address _for, bytes memory data) external {
+        revert Denied();
+    }
+}
+
+contract TermsAcceptedPermissioner is IPermissioner {
     event TermsAccepted(address indexed tokenContract, address indexed signer, bytes signature);
 
     /**
@@ -53,7 +76,7 @@ contract TermsAcceptedPermissioner {
      * @param _for address the account that has created `signature`
      * @param signature bytes encoded signature, for eip155: `abi.encodePacked(r, s, v)`
      */
-    function accept(FractionalizedToken tokenContract, address _for, bytes memory signature) public {
+    function accept(FractionalizedToken tokenContract, address _for, bytes memory signature) external {
         if (!isValidSignature(tokenContract, _for, signature)) {
             revert InvalidSignature();
         }

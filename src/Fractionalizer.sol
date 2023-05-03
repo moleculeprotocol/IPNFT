@@ -82,6 +82,9 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardU
      * @notice we're not taking any fees. If we once decided to do so, this can be used to update the fee receiver
      */
     function setFeeReceiver(address _feeReceiver) public onlyOwner {
+        if (_feeReceiver == address(0)) {
+            revert ToZeroAddress();
+        }
         feeReceiver = _feeReceiver;
     }
 
@@ -103,13 +106,17 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardU
      */
     function fractionalizeIpnft(uint256 ipnftId, uint256 fractionsAmount, string calldata agreementCid) external returns (uint256 fractionId) {
         if (ipnft.totalSupply(ipnftId) != 1) {
-            revert("IPNFT supply must be 1");
+            revert BadSupply();
         }
         if (ipnft.balanceOf(_msgSender(), ipnftId) != 1) {
-            revert("only owner can initialize fractions");
+            revert MustOwnIpnft();
+        }
+        string memory ipnftSymbol = ipnft.symbol(ipnftId);
+        if (bytes(ipnftSymbol).length == 0) {
+            revert NoSymbol();
         }
 
-        fractionId = uint256(keccak256(abi.encodePacked(_msgSender(), address(ipnft), ipnftId)));
+        fractionId = uint256(keccak256(abi.encodePacked(_msgSender(), ipnftId)));
 
         // ensure we can only call this once per sales cycle
         if (address(fractionalized[fractionId].tokenContract) != address(0)) {
@@ -130,8 +137,11 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardU
     }
 
     /**
-     * @notice we deliberately allow the fraction intializer to increase the fraction supply at will
+     * @notice we deliberately allow the fraction initializer to increase the fraction supply at will
      *         as long as the underlying asset has not been sold yet
+     *
+     * @param fractionId uint256
+     * @param fractionsAmount uint256
      */
     function increaseFractions(uint256 fractionId, uint256 fractionsAmount) external {
         Fractionalized memory _fractionalized = fractionalized[fractionId];

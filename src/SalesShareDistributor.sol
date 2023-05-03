@@ -11,12 +11,13 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IERC1155Supply } from "./IERC1155Supply.sol";
 import { FractionalizedToken } from "./FractionalizedToken.sol";
 import { SchmackoSwap, ListingState } from "./SchmackoSwap.sol";
-import { TermsAcceptedPermissioner } from "./Permissioner.sol";
+import { IPermissioner, TermsAcceptedPermissioner } from "./Permissioner.sol";
 
 struct Sales {
     uint256 fulfilledListingId;
     IERC20 paymentToken;
     uint256 paidPrice;
+    IPermissioner permissioner;
 }
 
 error ListingNotFulfilled();
@@ -29,16 +30,14 @@ contract SalesShareDistributor is UUPSUpgradeable, OwnableUpgradeable, Reentranc
     using SafeERC20 for IERC20;
 
     SchmackoSwap private schmackoSwap;
-    TermsAcceptedPermissioner private permissioner;
 
     mapping(address => Sales) sales;
 
     event SalesActivated(address indexed fractionToken, address paymentToken, uint256 paidPrice);
     event SharesClaimed(address indexed fractionToken, address indexed claimer, uint256 amount);
 
-    function initialize(SchmackoSwap _schmackoSwap, TermsAcceptedPermissioner _permissioner) public {
+    function initialize(SchmackoSwap _schmackoSwap) public {
         schmackoSwap = _schmackoSwap;
-        permissioner = _permissioner;
     }
 
     /**
@@ -70,7 +69,7 @@ contract SalesShareDistributor is UUPSUpgradeable, OwnableUpgradeable, Reentranc
             revert InsufficientBalance();
         }
 
-        permissioner.accept(tokenContract, _msgSender(), permissions);
+        sales[address(tokenContract)].permissioner.accept(tokenContract, _msgSender(), permissions);
 
         (IERC20 paymentToken, uint256 erc20shares) = claimableTokens(tokenContract, _msgSender());
         if (erc20shares == 0) {
@@ -149,8 +148,20 @@ contract SalesShareDistributor is UUPSUpgradeable, OwnableUpgradeable, Reentranc
         paymentToken.safeTransferFrom(_msgSender(), address(this), price);
     }
 
+    /// todo: generally, it's not the "original owner" who has admin rights on the fractionalization rules
+    ///       but rather an entity that's denominated by the fraction stakeholders, eg by a governance vote
+    ///       In the long term the permissioner should be initially chosen when the fractions are created
+    function setPermissioner(FractionalizedToken tokenContract, IPermissioner _permissioner) public {
+        (, address originalOwner,) = tokenContract.metadata();
+        if (_msgSender() != originalOwner) {
+            revert MustOwnIpnft();
+        }
+        sales[address(tokenContract)].permissioner = _permissioner;
+    }
+
     function _startClaimingPhase(FractionalizedToken tokenContract, uint256 fulfilledListingId, IERC20 _paymentToken, uint256 price) internal {
-        sales[address(tokenContract)] = Sales(fulfilledListingId, _paymentToken, price);
+        //todo: consider using some default null permissioner that rejects everyone at first
+        sales[address(tokenContract)] = Sales(fulfilledListingId, _paymentToken, price, IPermissioner(address(0)));
         emit SalesActivated(address(tokenContract), address(_paymentToken), price);
     }
 

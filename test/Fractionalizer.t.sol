@@ -18,7 +18,7 @@ import { Mintpass } from "../src/Mintpass.sol";
 import { UUPSProxy } from "../src/UUPSProxy.sol";
 
 import { Fractionalizer, Fractionalized } from "../src/Fractionalizer.sol";
-import { ToZeroAddress, BadSupply, MustOwnIpnft, NoSymbol, AlreadyFractionalized, InvalidSignature } from "../src/Fractionalizer.sol";
+import { ToZeroAddress, BadSupply, MustOwnIpnft, NoSymbol, AlreadyFractionalized } from "../src/Fractionalizer.sol";
 
 import { FractionalizedToken } from "../src/FractionalizedToken.sol";
 import { FractionalizerNext, FractionalizedTokenNext } from "../src/helpers/upgrades/FractionalizerNext.sol";

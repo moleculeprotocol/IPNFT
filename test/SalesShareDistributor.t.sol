@@ -20,11 +20,11 @@ import {
     ToZeroAddress,
     AlreadyClaiming,
     MustOwnIpnft,
-    ListingNotFulfilled,
-    ListingMismatch,
     InsufficientBalance,
     NotClaimingYet
 } from "../src/Fractionalizer.sol";
+import { SalesShareDistributor } from "../src/SalesShareDistributor.sol";
+
 import { FractionalizedToken } from "../src/FractionalizedToken.sol";
 import { IERC1155Supply } from "../src/IERC1155Supply.sol";
 import { SchmackoSwap, ListingState } from "../src/SchmackoSwap.sol";
@@ -52,6 +52,7 @@ contract FractionalizerSalesTest is Test {
 
     IPNFT internal ipnft;
     Fractionalizer internal fractionalizer;
+    SalesShareDistributor internal distributor;
     SchmackoSwap internal schmackoSwap;
     MyToken internal myToken;
     Mintpass internal mintpass;
@@ -87,6 +88,18 @@ contract FractionalizerSalesTest is Test {
         );
         fractionalizer.initialize(ipnft, schmackoSwap);
         fractionalizer.setFeeReceiver(protocolOwner);
+
+        distributor = SalesShareDistributor(
+            address(
+                new ERC1967Proxy(
+                    address(
+                        new SalesShareDistributor()
+                    ), 
+                    ""
+                )
+            )
+        );
+        distributor.initialize(schmackoSwap);
         vm.stopPrank();
 
         vm.deal(originalOwner, MINTING_FEE);
