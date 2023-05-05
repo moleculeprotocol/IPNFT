@@ -2,8 +2,8 @@
 pragma solidity ^0.8.17;
 
 import "forge-std/Test.sol";
-import { GnosisSafeL2 } from "safe-global/safe-contracts/GnosisSafeL2.sol";
-import { GnosisSafeProxyFactory } from "safe-global/safe-contracts/proxies/GnosisSafeProxyFactory.sol";
+import { SafeL2 } from "safe-global/safe-contracts/SafeL2.sol";
+import { SafeProxyFactory } from "safe-global/safe-contracts/proxies/SafeProxyFactory.sol";
 import { Enum } from "safe-global/safe-contracts/common/Enum.sol";
 
 contract GnosisSafeSetup is Test {
@@ -12,15 +12,15 @@ contract GnosisSafeSetup is Test {
     address alice;
     uint256 alicePk;
 
-    GnosisSafeL2 wallet;
+    SafeL2 wallet;
 
     function setUp() public {
         (alice, alicePk) = makeAddrAndKey("alice");
 
         vm.startPrank(deployer);
-        GnosisSafeL2 singleton = new GnosisSafeL2();
-        GnosisSafeProxyFactory fac = new GnosisSafeProxyFactory();
-        wallet = GnosisSafeL2(payable(fac.createProxyWithNonce(address(singleton), "", uint256(1680130687))));
+        SafeL2 singleton = new SafeL2();
+        SafeProxyFactory fac = new SafeProxyFactory();
+        wallet = SafeL2(payable(fac.createProxyWithNonce(address(singleton), "", uint256(1680130687))));
 
         address[] memory owners = new address[](1);
         owners[0] = alice;
@@ -36,7 +36,7 @@ contract GnosisSafeSetup is Test {
     function testSafeAcceptsMoney() public {
         vm.deal(bob, 10 ether);
         vm.startPrank(bob);
-        (bool sent,) = payable(address(wallet)).call{value: 5 ether}("");
+        (bool sent,) = payable(address(wallet)).call{ value: 5 ether }("");
         assertTrue(sent);
         vm.stopPrank();
 

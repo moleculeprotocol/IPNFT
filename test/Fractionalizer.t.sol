@@ -9,8 +9,8 @@ import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy
 import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import { SafeERC20Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 
-import { GnosisSafeL2 } from "safe-global/safe-contracts/GnosisSafeL2.sol";
-import { GnosisSafeProxyFactory } from "safe-global/safe-contracts/proxies/GnosisSafeProxyFactory.sol";
+import { Safe } from "safe-global/safe-contracts/Safe.sol";
+import { SafeProxyFactory } from "safe-global/safe-contracts/proxies/SafeProxyFactory.sol";
 import { Enum } from "safe-global/safe-contracts/common/Enum.sol";
 import "./helpers/MakeGnosisWallet.sol";
 import { IPNFT } from "../src/IPNFT.sol";
@@ -45,6 +45,7 @@ contract FractionalizerTest is Test {
     uint256 alicePk;
 
     address bob = makeAddr("bob");
+    uint256 bobPk;
     address charlie = makeAddr("charlie");
     address escrow = makeAddr("escrow");
 
@@ -57,6 +58,7 @@ contract FractionalizerTest is Test {
 
     function setUp() public {
         (alice, alicePk) = makeAddrAndKey("alice");
+        (bob, bobPk) = makeAddrAndKey("bob");
         vm.startPrank(deployer);
         IPNFT implementationV2 = new IPNFT();
         ERC1967Proxy proxy = new ERC1967Proxy(address(implementationV2), "");
@@ -189,13 +191,13 @@ contract FractionalizerTest is Test {
 
     function testGnosisSafeCanInteractWithFractions() public {
         vm.startPrank(deployer);
-        GnosisSafeProxyFactory fac = new GnosisSafeProxyFactory();
+        SafeProxyFactory fac = new SafeProxyFactory();
         vm.stopPrank();
 
         vm.startPrank(alice);
         address[] memory owners = new address[](1);
         owners[0] = alice;
-        GnosisSafeL2 wallet = MakeGnosisWallet.makeGnosisWallet(fac, owners);
+        Safe wallet = MakeGnosisWallet.makeGnosisWallet(fac, owners);
         vm.stopPrank();
 
         vm.startPrank(originalOwner);
@@ -224,31 +226,39 @@ contract FractionalizerTest is Test {
         assertEq(fractionalizer.balanceOf(bob, fractionId), 10_000);
     }
 
-    //todo: good luck.
     function testThatContractSignaturesAreAccepted() public {
-        // //signing terms with a multisig
+        vm.startPrank(deployer);
+        SafeProxyFactory fac = new SafeProxyFactory();
+        vm.stopPrank();
 
-        // assertFalse(fractionalizer.signedTerms(fractionId, address(wallet)));
-        //new SignMessageLib();
+        vm.startPrank(alice);
+        address[] memory owners = new address[](2);
+        owners[0] = alice;
+        owners[1] = bob;
+        Safe wallet = MakeGnosisWallet.makeGnosisWallet(fac, owners);
+        vm.stopPrank();
 
-        // string memory terms = fractionalizer.specificTermsV1(fractionId);
-        // //console.log(terms);
-        // bytes32 termsHash = ECDSA.toEthSignedMessageHash(abi.encodePacked(terms));
+        vm.startPrank(originalOwner);
+        uint256 fractionId = fractionalizer.fractionalizeIpnft(1, 100_000, agreementCid);
+        (,,,, FractionalizedToken tokenContract,,,) = fractionalizer.fractionalized(fractionId);
+        tokenContract.safeTransfer(address(wallet), 100_000);
+        vm.stopPrank();
 
-        // (uint8 v, bytes32 r, bytes32 s) = vm.sign(alicePk, termsHash);
-        // bytes memory xsignature = abi.encodePacked(r, s, v);
-        // assertTrue(fractionalizer.isValidSignature(fractionId, alice, xsignature));
+        CompatibilityFallbackHandler fallbackHandler = new CompatibilityFallbackHandler();
+        bytes32 messagehash = fallbackHandler.getMessageHashForSafe(
+            wallet, abi.encodePacked(ECDSA.toEthSignedMessageHash(abi.encodePacked(fractionalizer.specificTermsV1(fractionId))))
+        );
 
-        // vm.startPrank(alice);
-        // fractionalizer.acceptTerms(fractionId, xsignature);
-        // vm.stopPrank();
-        // assertTrue(fractionalizer.signedTerms(fractionId, alice));
+        (uint8 v1, bytes32 r1, bytes32 s1) = vm.sign(alicePk, messagehash);
+        (uint8 v2, bytes32 r2, bytes32 s2) = vm.sign(bobPk, messagehash);
 
-        //lets start aftersales phase
-        // vm.startPrank(PREDEPLOYED_XDOMAIN_MESSENGER);
-        // xDomainMessenger.setSender(FakeL1DispatcherContract);
-        // fractionalizer.afterSale(fractionId, address(erc20), 1_000_000 ether);
-        // vm.stopPrank();
+        bytes memory signature = bytes.concat(abi.encodePacked(r1, s1, v1), abi.encodePacked(r2, s2, v2));
+
+        assertTrue(fractionalizer.isValidSignature(fractionId, address(wallet), signature));
+
+        vm.startPrank(alice);
+        fractionalizer.acceptTerms(fractionId, address(wallet), signature);
+        vm.stopPrank();
     }
 
     function testCanUpgradeErc20TokenImplementation() public {
