@@ -19,5 +19,5 @@
 [submodule "lib/safe-contracts"]
 	path = lib/safe-contracts
 	url = https://github.com/safe-global/safe-contracts
-	branch = main
+	branch = v1.4.0
 
