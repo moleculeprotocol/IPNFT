@@ -21,10 +21,8 @@ dataSources:
       eventHandlers:
         - event: Reserved(indexed address,indexed uint256)
           handler: handleReservation
-        - event: IPNFTMinted(indexed address,indexed uint256,string)
+        - event: IPNFTMinted(indexed address,indexed uint256,string,string)
           handler: handleMint
-        - event: SymbolUpdated(indexed uint256,string)
-          handler: handleSymbolUpdated
         - event: TransferSingle(indexed address,indexed address,indexed address,uint256,uint256)
           handler: handleTransferSingle
         - event: ReadAccessGranted(indexed uint256,indexed address,uint256)

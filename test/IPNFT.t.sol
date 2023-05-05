@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
 import "forge-std/Test.sol";
@@ -19,7 +19,7 @@ contract Kamikaze {
 
 contract IPNFTTest is IPNFTMintHelper {
     event Reserved(address indexed reserver, uint256 indexed reservationId);
-    event IPNFTMinted(address indexed owner, uint256 indexed tokenId, string tokenURI);
+    event IPNFTMinted(address indexed owner, uint256 indexed tokenId, string tokenURI, string symbol);
     event SymbolUpdated(uint256 indexed tokenId, string symbol);
     event ReadAccessGranted(uint256 indexed tokenId, address indexed reader, uint256 until);
 
@@ -92,9 +92,8 @@ contract IPNFTTest is IPNFTMintHelper {
         ipnft.mintReservation(alice, reservationId, 1, ipfsUri);
 
         vm.expectEmit(true, true, false, true);
-        emit IPNFTMinted(alice, 1, ipfsUri);
-        vm.expectEmit(true, false, false, false);
-        emit SymbolUpdated(reservationId, DEFAULT_SYMBOL);
+        emit IPNFTMinted(alice, 1, ipfsUri, DEFAULT_SYMBOL);
+
         ipnft.mintReservation{ value: MINTING_FEE }(alice, reservationId, reservationId, ipfsUri, DEFAULT_SYMBOL);
 
         assertEq(ipnft.balanceOf(alice, 1), 1);
@@ -131,7 +130,7 @@ contract IPNFTTest is IPNFTMintHelper {
     function testCannotSendPlainEtherToIPNFT() public {
         vm.deal(address(bob), 10 ether);
 
-        vm.prank(bob);
+        vm.startPrank(bob);
         (bool transferWorked,) = address(ipnft).call{ value: 10 ether }("");
         assertFalse(transferWorked);
         assertEq(address(ipnft).balance, 0);
@@ -148,7 +147,7 @@ contract IPNFTTest is IPNFTMintHelper {
 
     function testOwnerCanWithdrawEthFunds() public {
         vm.deal(address(bob), 10 ether);
-        vm.prank(bob);
+        vm.startPrank(bob);
         Kamikaze kamikaze = new Kamikaze();
         (bool transferWorked,) = address(kamikaze).call{ value: 10 ether }("");
         assertTrue(transferWorked);
@@ -216,20 +215,5 @@ contract IPNFTTest is IPNFTMintHelper {
 
         vm.warp(block.timestamp + 60);
         assertFalse(ipnft.canRead(bob, tokenId));
-    }
-
-    function testOwnerCanUpdateSymbol() public {
-        uint256 tokenId = mintAToken(ipnft, alice);
-        assertEq(ipnft.symbol(tokenId), DEFAULT_SYMBOL);
-
-        vm.startPrank(alice);
-        ipnft.updateSymbol(tokenId, "ALICE-123");
-        vm.stopPrank();
-
-        assertEq(ipnft.symbol(tokenId), "ALICE-123");
-        vm.startPrank(bob);
-        vm.expectRevert(IPNFT.InsufficientBalance.selector);
-        ipnft.updateSymbol(tokenId, "BOB-314");
-        vm.stopPrank();
     }
 }
