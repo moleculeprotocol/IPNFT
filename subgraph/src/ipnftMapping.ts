@@ -9,7 +9,6 @@ import {
 import {
   IPNFTMinted as IPNFTMintedEvent,
   Reserved as ReservedEvent,
-  SymbolUpdated as SymbolUpdatedEvent,
   ReadAccessGranted as ReadAccessGrantedEvent,
   TransferSingle as TransferSingleEvent
 } from '../generated/IPNFT/IPNFT'
@@ -72,16 +71,9 @@ export function handleMint(event: IPNFTMintedEvent): void {
   let ipnft = new Ipnft(event.params.tokenId.toString())
   ipnft.owner = event.params.owner
   ipnft.tokenURI = event.params.tokenURI
+  ipnft.symbol = event.params.symbol
   ipnft.createdAt = event.block.timestamp
   ipnft.save()
 
   store.remove('Reservation', event.params.tokenId.toString())
-}
-
-export function handleSymbolUpdated(event: SymbolUpdatedEvent): void {
-  let ipnft = Ipnft.load(event.params.tokenId.toString())
-  if (ipnft) {
-    ipnft.symbol = event.params.symbol
-    ipnft.save()
-  }
 }

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.18;
 
 import { ERC1155Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
 import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
@@ -65,8 +65,7 @@ contract IPNFT is
      */
 
     event Reserved(address indexed reserver, uint256 indexed reservationId);
-    event IPNFTMinted(address indexed owner, uint256 indexed tokenId, string tokenURI);
-    event SymbolUpdated(uint256 indexed tokenId, string symbol);
+    event IPNFTMinted(address indexed owner, uint256 indexed tokenId, string tokenURI, string symbol);
     event ReadAccessGranted(uint256 indexed tokenId, address indexed reader, uint256 until);
 
     /*
@@ -181,13 +180,13 @@ contract IPNFT is
         }
 
         delete reservations[reservationId];
+        symbol[reservationId] = _symbol;
         mintAuthorizer.redeem(abi.encode(mintPassId));
 
         _mint(to, reservationId, 1, "");
         _setURI(reservationId, tokenURI);
-        emit IPNFTMinted(to, reservationId, tokenURI);
+        emit IPNFTMinted(to, reservationId, tokenURI, _symbol);
 
-        _updateSymbol(reservationId, _symbol);
         return reservationId;
     }
 
@@ -219,22 +218,6 @@ contract IPNFT is
             return true;
         }
         return readAllowances[tokenId][reader] > block.timestamp;
-    }
-
-    /**
-     * @param tokenId ipnft token id
-     * @param newSymbol the new symbol for this ipnft
-     */
-    function updateSymbol(uint256 tokenId, string memory newSymbol) external {
-        if (balanceOf(_msgSender(), tokenId) == 0) {
-            revert InsufficientBalance();
-        }
-        _updateSymbol(tokenId, newSymbol);
-    }
-
-    function _updateSymbol(uint256 tokenId, string memory newSymbol) internal {
-        symbol[tokenId] = newSymbol;
-        emit SymbolUpdated(tokenId, newSymbol);
     }
 
     /// @notice in case someone sends Eth to this contract, this function gets it out again
