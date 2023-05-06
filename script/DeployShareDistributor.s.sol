@@ -15,7 +15,6 @@ import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy
 contract DeployShareDistributor is Script {
     function run() public {
         vm.startBroadcast();
-        address fractionalizerAddress = vm.envAddress("FRACTIONALIZER_ADDRESS");
         address sosAddress = vm.envAddress("SOS_ADDRESS");
 
         SalesShareDistributor impl = new SalesShareDistributor();
@@ -27,7 +26,7 @@ contract DeployShareDistributor is Script {
                 )
             )
         );
-        salesShareDistributor.initialize(Fractionalizer(fractionalizerAddress), SchmackoSwap(sosAddress));
+        salesShareDistributor.initialize(SchmackoSwap(sosAddress));
         vm.stopBroadcast();
 
         console.log("SalesShareDistributor %s", address(salesShareDistributor));

@@ -9,7 +9,6 @@ import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.s
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import { IERC1155Supply } from "./IERC1155Supply.sol";
-import { Fractionalizer, MustOwnIpnft } from "./Fractionalizer.sol";
 
 import { FractionalizedToken, Metadata } from "./FractionalizedToken.sol";
 
@@ -26,6 +25,8 @@ struct Sales {
 error ListingNotFulfilled();
 error ListingMismatch();
 error InsufficientBalance();
+error UncappedToken();
+error OnlyIssuer();
 
 error NotClaimingYet();
 
@@ -33,16 +34,14 @@ contract SalesShareDistributor is UUPSUpgradeable, OwnableUpgradeable, Reentranc
     using SafeERC20 for IERC20;
 
     SchmackoSwap private schmackoSwap;
-    Fractionalizer private fractionalizer;
 
     mapping(address => Sales) public sales;
 
     event SalesActivated(address indexed fractionToken, address paymentToken, uint256 paidPrice);
     event SharesClaimed(address indexed fractionToken, address indexed claimer, uint256 amount);
 
-    function initialize(Fractionalizer _fractionalizer, SchmackoSwap _schmackoSwap) public {
+    function initialize(SchmackoSwap _schmackoSwap) public {
         schmackoSwap = _schmackoSwap;
-        fractionalizer = _fractionalizer;
     }
 
     /**
@@ -99,7 +98,7 @@ contract SalesShareDistributor is UUPSUpgradeable, OwnableUpgradeable, Reentranc
      */
     function afterSale(FractionalizedToken tokenContract, uint256 listingId, IPermissioner permissioner) external {
         if (_msgSender() != tokenContract.issuer()) {
-            revert MustOwnIpnft();
+            revert OnlyIssuer();
         }
 
         Metadata memory metadata = tokenContract.metadata();
@@ -136,7 +135,7 @@ contract SalesShareDistributor is UUPSUpgradeable, OwnableUpgradeable, Reentranc
      */
     function afterSale(FractionalizedToken tokenContract, IERC20 paymentToken, uint256 paidPrice, IPermissioner permissioner) external nonReentrant {
         if (_msgSender() != tokenContract.issuer()) {
-            revert MustOwnIpnft();
+            revert OnlyIssuer();
         }
 
         Metadata memory metadata = tokenContract.metadata();
@@ -170,8 +169,9 @@ contract SalesShareDistributor is UUPSUpgradeable, OwnableUpgradeable, Reentranc
         uint256 price,
         IPermissioner permissioner
     ) internal {
-        fractionalizer.startClamingPhase(tokenContract.fractionId());
-
+        if (!tokenContract.capped()) {
+            revert UncappedToken();
+        }
         sales[address(tokenContract)] = Sales(fulfilledListingId, _paymentToken, price, permissioner);
         emit SalesActivated(address(tokenContract), address(_paymentToken), price);
     }

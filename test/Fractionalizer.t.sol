@@ -17,10 +17,10 @@ import { IPNFT } from "../src/IPNFT.sol";
 import { Mintpass } from "../src/Mintpass.sol";
 import { UUPSProxy } from "../src/UUPSProxy.sol";
 
-import { Fractionalizer, Fractionalized } from "../src/Fractionalizer.sol";
+import { Fractionalizer } from "../src/Fractionalizer.sol";
 import { ToZeroAddress, BadSupply, MustOwnIpnft, NoSymbol, AlreadyFractionalized } from "../src/Fractionalizer.sol";
 
-import { FractionalizedToken } from "../src/FractionalizedToken.sol";
+import { FractionalizedToken, OnlyIssuerOrOwner, TokenCapped } from "../src/FractionalizedToken.sol";
 import { FractionalizerNext, FractionalizedTokenNext } from "../src/helpers/upgrades/FractionalizerNext.sol";
 
 import { IERC1155Supply } from "../src/IERC1155Supply.sol";
@@ -112,7 +112,7 @@ contract FractionalizerTest is Test {
         //the original nft *stays* at the owner
         assertEq(ipnft.balanceOf(originalOwner, 1), 1);
 
-        (FractionalizedToken tokenContract,) = fractionalizer.fractionalized(fractionId);
+        FractionalizedToken tokenContract = fractionalizer.fractionalized(fractionId);
         assertEq(tokenContract.totalIssued(), 100_000);
         assertEq(tokenContract.symbol(), "MOL-0001");
 
@@ -128,17 +128,17 @@ contract FractionalizerTest is Test {
     function testIncreaseFractions() public {
         vm.startPrank(originalOwner);
         uint256 fractionId = fractionalizer.fractionalizeIpnft(1, 100_000, agreementCid);
-        (FractionalizedToken tokenContract,) = fractionalizer.fractionalized(fractionId);
+        FractionalizedToken tokenContract = fractionalizer.fractionalized(fractionId);
 
         tokenContract.transfer(alice, 25_000);
         tokenContract.transfer(bob, 25_000);
 
-        fractionalizer.increaseFractions(fractionId, 100_000);
+        tokenContract.issue(originalOwner, 100_000);
         vm.stopPrank();
 
         vm.startPrank(bob);
-        vm.expectRevert(MustOwnIpnft.selector);
-        fractionalizer.increaseFractions(fractionId, 12345);
+        vm.expectRevert(OnlyIssuerOrOwner.selector);
+        tokenContract.issue(bob, 12345);
         vm.stopPrank();
 
         assertEq(fractionalizer.balanceOf(alice, fractionId), 25_000);
@@ -147,6 +147,17 @@ contract FractionalizerTest is Test {
         assertEq(fractionalizer.totalSupply(fractionId), 200_000);
 
         assertEq(tokenContract.totalIssued(), 200_000);
+
+        vm.startPrank(bob);
+        vm.expectRevert(OnlyIssuerOrOwner.selector);
+        tokenContract.cap();
+        vm.stopPrank();
+
+        vm.startPrank(originalOwner);
+        tokenContract.cap();
+        vm.expectRevert(TokenCapped.selector);
+        tokenContract.issue(bob, 12345);
+        vm.stopPrank();
     }
 
     function testCanBeFractionalizedOnlyOnce() public {
@@ -179,7 +190,7 @@ contract FractionalizerTest is Test {
 
         vm.startPrank(originalOwner);
         uint256 fractionId = fractionalizer.fractionalizeIpnft(1, 100_000, agreementCid);
-        (FractionalizedToken tokenContract,) = fractionalizer.fractionalized(fractionId);
+        FractionalizedToken tokenContract = fractionalizer.fractionalized(fractionId);
         tokenContract.safeTransfer(address(wallet), 100_000);
         vm.stopPrank();
 
@@ -218,7 +229,7 @@ contract FractionalizerTest is Test {
         vm.stopPrank();
 
         assertEq(fractionalizer.balanceOf(originalOwner, fractionId), 100_000);
-        (FractionalizedToken tokenContractOld,) = fractionalizer.fractionalized(fractionId);
+        FractionalizedToken tokenContractOld = fractionalizer.fractionalized(fractionId);
         assertEq(tokenContractOld.balanceOf(originalOwner), 100_000);
 
         vm.deal(originalOwner, MINTING_FEE);
@@ -228,7 +239,7 @@ contract FractionalizerTest is Test {
         fractionId = fractionalizer.fractionalizeIpnft(2, 70_000, agreementCid);
         vm.stopPrank();
 
-        (FractionalizedToken tokenContractNew,) = fractionalizer.fractionalized(fractionId);
+        FractionalizedToken tokenContractNew = fractionalizer.fractionalized(fractionId);
         FractionalizedTokenNext newTokenImpl = FractionalizedTokenNext(address(tokenContractNew));
 
         assertEq(fractionalizer.balanceOf(originalOwner, fractionId), 70_000);

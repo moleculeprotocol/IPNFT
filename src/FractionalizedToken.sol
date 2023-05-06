@@ -17,16 +17,20 @@ struct Metadata {
     string agreementCid;
 }
 
+error TokenCapped();
+error OnlyIssuerOrOwner();
+
 /// @title FractionalizedToken
 /// @author molecule.to
 /// @notice this is a template contract that's spawned by the fractionalizer
 /// @notice the owner of this contract is always the fractionalizer contract
+
 contract FractionalizedToken is IERC20Upgradeable, ERC20BurnableUpgradeable, OwnableUpgradeable {
     using SafeERC20 for IERC20;
 
     //this will only go up.
     uint256 internal _totalIssued;
-
+    bool internal _capped;
     Metadata internal _metadata;
 
     function initialize(string memory name, string memory symbol, Metadata calldata metadata_) public initializer {
@@ -34,6 +38,14 @@ contract FractionalizedToken is IERC20Upgradeable, ERC20BurnableUpgradeable, Own
         __ERC20_init(name, symbol);
         _metadata = metadata_;
         _totalIssued = 0;
+        _capped = false;
+    }
+
+    modifier onlyIssuerOrOwner() {
+        if (msg.sender != issuer() && msg.sender != owner()) {
+            revert OnlyIssuerOrOwner();
+        }
+        _;
     }
 
     function totalIssued() public view returns (uint256) {
@@ -48,17 +60,28 @@ contract FractionalizedToken is IERC20Upgradeable, ERC20BurnableUpgradeable, Own
         return _metadata.originalOwner;
     }
 
+    function capped() public view returns (bool) {
+        return _capped;
+    }
+
     function fractionId() public view returns (uint256) {
         return uint256(keccak256(abi.encodePacked(_metadata.originalOwner, _metadata.ipnftId)));
     }
 
     /**
-     * @dev this can only be called by the contract owner which is the `Fractionalizer` who creates it
+     * @notice we deliberately allow the fraction initializer to increase the fraction supply at will
+     *         as long as the underlying asset has not been sold yet
+     *
      * @param receiver address
      * @param amount uint256
      */
-    function issue(address receiver, uint256 amount) public onlyOwner {
+    function issue(address receiver, uint256 amount) public onlyIssuerOrOwner {
+        if (_capped) revert TokenCapped();
         _totalIssued += amount;
         _mint(receiver, amount);
+    }
+
+    function cap() public onlyIssuerOrOwner {
+        _capped = true;
     }
 }
