@@ -64,7 +64,7 @@ contract FractionalizedToken is IERC20Upgradeable, ERC20BurnableUpgradeable, Own
         return _capped;
     }
 
-    function fractionId() public view returns (uint256) {
+    function hash() public view returns (uint256) {
         return uint256(keccak256(abi.encodePacked(_metadata.originalOwner, _metadata.ipnftId)));
     }
 

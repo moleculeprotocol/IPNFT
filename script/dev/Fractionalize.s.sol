@@ -38,11 +38,11 @@ contract FractionalizeScript is Script {
         fractionalizer = Fractionalizer(vm.envAddress("FRACTIONALIZER_ADDRESS"));
 
         vm.startBroadcast(bob);
-        uint256 fractionId = fractionalizer.fractionalizeIpnft(1, 1_000_000 ether, "bafkreigk5dvqblnkdniges6ft5kmuly47ebw4vho6siikzmkaovq6sjstq");
+        FractionalizedToken tokenContract =
+            fractionalizer.fractionalizeIpnft(1, 1_000_000 ether, "bafkreigk5dvqblnkdniges6ft5kmuly47ebw4vho6siikzmkaovq6sjstq");
         vm.stopBroadcast();
-        FractionalizedToken tokenContract = fractionalizer.fractionalized(fractionId);
 
-        console.log("fraction id: %s", fractionId);
         console.log("fraction fam erc20 address: %s", address(tokenContract));
+        console.log("fraction hash: %s", tokenContract.hash());
     }
 }

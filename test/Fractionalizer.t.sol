@@ -105,14 +105,13 @@ contract FractionalizerTest is Test {
     function testIssueFractions() public {
         vm.startPrank(originalOwner);
         //ipnft.setApprovalForAll(address(fractionalizer), true);
-        uint256 fractionId = fractionalizer.fractionalizeIpnft(1, 100_000, agreementCid);
+        FractionalizedToken tokenContract = fractionalizer.fractionalizeIpnft(1, 100_000, agreementCid);
         vm.stopPrank();
 
-        assertEq(fractionalizer.balanceOf(originalOwner, fractionId), 100_000);
+        assertEq(tokenContract.balanceOf(originalOwner), 100_000);
         //the original nft *stays* at the owner
         assertEq(ipnft.balanceOf(originalOwner, 1), 1);
 
-        FractionalizedToken tokenContract = fractionalizer.fractionalized(fractionId);
         assertEq(tokenContract.totalIssued(), 100_000);
         assertEq(tokenContract.symbol(), "MOL-0001");
 
@@ -120,15 +119,14 @@ contract FractionalizerTest is Test {
         tokenContract.transfer(alice, 10_000);
         vm.stopPrank();
 
-        assertEq(fractionalizer.balanceOf(alice, fractionId), 10_000);
-        assertEq(fractionalizer.balanceOf(originalOwner, fractionId), 90_000);
-        assertEq(fractionalizer.totalSupply(fractionId), 100_000);
+        assertEq(tokenContract.balanceOf(alice), 10_000);
+        assertEq(tokenContract.balanceOf(originalOwner), 90_000);
+        assertEq(tokenContract.totalSupply(), 100_000);
     }
 
     function testIncreaseFractions() public {
         vm.startPrank(originalOwner);
-        uint256 fractionId = fractionalizer.fractionalizeIpnft(1, 100_000, agreementCid);
-        FractionalizedToken tokenContract = fractionalizer.fractionalized(fractionId);
+        FractionalizedToken tokenContract = fractionalizer.fractionalizeIpnft(1, 100_000, agreementCid);
 
         tokenContract.transfer(alice, 25_000);
         tokenContract.transfer(bob, 25_000);
@@ -141,11 +139,10 @@ contract FractionalizerTest is Test {
         tokenContract.issue(bob, 12345);
         vm.stopPrank();
 
-        assertEq(fractionalizer.balanceOf(alice, fractionId), 25_000);
-        assertEq(fractionalizer.balanceOf(bob, fractionId), 25_000);
-        assertEq(fractionalizer.balanceOf(originalOwner, fractionId), 150_000);
-        assertEq(fractionalizer.totalSupply(fractionId), 200_000);
-
+        assertEq(tokenContract.balanceOf(alice), 25_000);
+        assertEq(tokenContract.balanceOf(bob), 25_000);
+        assertEq(tokenContract.balanceOf(originalOwner), 150_000);
+        assertEq(tokenContract.totalSupply(), 200_000);
         assertEq(tokenContract.totalIssued(), 200_000);
 
         vm.startPrank(bob);
@@ -162,10 +159,10 @@ contract FractionalizerTest is Test {
 
     function testCanBeFractionalizedOnlyOnce() public {
         vm.startPrank(originalOwner);
-        uint256 fractionId = fractionalizer.fractionalizeIpnft(1, 100_000, agreementCid);
+        FractionalizedToken tokenContract = fractionalizer.fractionalizeIpnft(1, 100_000, agreementCid);
 
         vm.expectRevert(AlreadyFractionalized.selector);
-        fractionId = fractionalizer.fractionalizeIpnft(1, 100_000, agreementCid);
+        fractionalizer.fractionalizeIpnft(1, 100_000, agreementCid);
         vm.stopPrank();
     }
 
@@ -189,12 +186,11 @@ contract FractionalizerTest is Test {
         vm.stopPrank();
 
         vm.startPrank(originalOwner);
-        uint256 fractionId = fractionalizer.fractionalizeIpnft(1, 100_000, agreementCid);
-        FractionalizedToken tokenContract = fractionalizer.fractionalized(fractionId);
+        FractionalizedToken tokenContract = fractionalizer.fractionalizeIpnft(1, 100_000, agreementCid);
         tokenContract.safeTransfer(address(wallet), 100_000);
         vm.stopPrank();
 
-        assertEq(fractionalizer.balanceOf(address(wallet), fractionId), 100_000);
+        assertEq(tokenContract.balanceOf(address(wallet)), 100_000);
 
         //test the SAFE can send fractions to another account
         bytes memory transferCall = abi.encodeCall(tokenContract.transfer, (bob, 10_000));
@@ -211,7 +207,7 @@ contract FractionalizerTest is Test {
         );
         vm.stopPrank();
 
-        assertEq(fractionalizer.balanceOf(bob, fractionId), 10_000);
+        assertEq(tokenContract.balanceOf(bob), 10_000);
     }
 
     function testCanUpgradeErc20TokenImplementation() public {
@@ -220,7 +216,7 @@ contract FractionalizerTest is Test {
         vm.stopPrank();
 
         vm.startPrank(originalOwner);
-        uint256 fractionId = fractionalizer.fractionalizeIpnft(1, 100_000, agreementCid);
+        FractionalizedToken tokenContractOld = fractionalizer.fractionalizeIpnft(1, 100_000, agreementCid);
         vm.stopPrank();
 
         vm.startPrank(deployer);
@@ -228,22 +224,18 @@ contract FractionalizerTest is Test {
         fractionalizer.upgradeTo(address(fracNext));
         vm.stopPrank();
 
-        assertEq(fractionalizer.balanceOf(originalOwner, fractionId), 100_000);
-        FractionalizedToken tokenContractOld = fractionalizer.fractionalized(fractionId);
         assertEq(tokenContractOld.balanceOf(originalOwner), 100_000);
 
         vm.deal(originalOwner, MINTING_FEE);
         vm.startPrank(originalOwner);
         uint256 reservationId = ipnft.reserve();
         ipnft.mintReservation{ value: MINTING_FEE }(originalOwner, reservationId, 2, ipfsUri, DEFAULT_SYMBOL);
-        fractionId = fractionalizer.fractionalizeIpnft(2, 70_000, agreementCid);
+        FractionalizedToken tokenContractNew = fractionalizer.fractionalizeIpnft(2, 70_000, agreementCid);
         vm.stopPrank();
 
-        FractionalizedToken tokenContractNew = fractionalizer.fractionalized(fractionId);
-        FractionalizedTokenNext newTokenImpl = FractionalizedTokenNext(address(tokenContractNew));
-
-        assertEq(fractionalizer.balanceOf(originalOwner, fractionId), 70_000);
         assertEq(tokenContractNew.balanceOf(originalOwner), 70_000);
+
+        FractionalizedTokenNext newTokenImpl = FractionalizedTokenNext(address(tokenContractNew));
 
         newTokenImpl.setAStateVar(42);
         assertEq(newTokenImpl.aNewStateVar(), 42);
