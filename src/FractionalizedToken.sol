@@ -21,19 +21,27 @@ struct Metadata {
 /// @author molecule.to
 /// @notice this is a template contract that's spawned by the fractionalizer
 /// @notice the owner of this contract is always the fractionalizer contract
-contract FractionalizedToken is IERC20Upgradeable, ERC20Upgradeable, ERC20BurnableUpgradeable, OwnableUpgradeable {
+contract FractionalizedToken is IERC20Upgradeable, ERC20BurnableUpgradeable, OwnableUpgradeable {
     using SafeERC20 for IERC20;
 
     //this will only go up.
-    uint256 public totalIssued;
+    uint256 internal _totalIssued;
 
-    Metadata public metadata;
+    Metadata internal _metadata;
 
-    function initialize(string memory name, string memory symbol, Metadata calldata _metadata) public initializer {
+    function initialize(string memory name, string memory symbol, Metadata calldata metadata_) public initializer {
         __Ownable_init();
         __ERC20_init(name, symbol);
-        metadata = _metadata;
-        totalIssued = 0;
+        _metadata = metadata_;
+        _totalIssued = 0;
+    }
+
+    function totalIssued() public view returns (uint256) {
+        return _totalIssued;
+    }
+
+    function metadata() public view returns (Metadata memory) {
+        return _metadata;
     }
 
     /**
@@ -42,7 +50,7 @@ contract FractionalizedToken is IERC20Upgradeable, ERC20Upgradeable, ERC20Burnab
      * @param amount uint256
      */
     function issue(address receiver, uint256 amount) public onlyOwner {
-        totalIssued += amount;
+        _totalIssued += amount;
         _mint(receiver, amount);
     }
 }

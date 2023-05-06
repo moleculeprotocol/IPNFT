@@ -98,6 +98,7 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardU
         emit PhaseTransitioned(fractionId, FractionalizationPhase.CLAIMING);
     }
 
+    //todo might make sense to return (tokenContract,fractionId)
     /**
      * @notice
      * @param ipnftId          uint256  the token id on the origin collection
@@ -148,12 +149,21 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardU
         if (_fractionalized.phase == FractionalizationPhase.CLAIMING) {
             revert AlreadyClaiming();
         }
-        (, address originalOwner,) = _fractionalized.tokenContract.metadata();
-        if (_msgSender() != originalOwner) {
+
+        FractionalizedTokenMetadata memory md = _fractionalized.tokenContract.metadata();
+        if (_msgSender() != md.originalOwner) {
             revert MustOwnIpnft();
         }
 
         _fractionalized.tokenContract.issue(_msgSender(), fractionsAmount);
+    }
+
+    function balanceOf(address holder, uint256 fractionId) public view returns (uint256) {
+        return fractionalized[fractionId].tokenContract.balanceOf(holder);
+    }
+
+    function totalSupply(uint256 fractionId) public view returns (uint256) {
+        return fractionalized[fractionId].tokenContract.totalSupply();
     }
 
     /// @notice upgrade authorization logic
@@ -172,8 +182,8 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardU
     function uri(uint256 fractionId) public view returns (string memory) {
         Fractionalized memory frac = fractionalized[fractionId];
         FractionalizedToken tokenContract = frac.tokenContract;
-        (uint256 ipnftId, address originalOwner, string memory agreementCid) = tokenContract.metadata();
-        string memory tokenId = Strings.toString(ipnftId);
+        FractionalizedTokenMetadata memory metadata = tokenContract.metadata();
+        string memory tokenId = Strings.toString(metadata.ipnftId);
 
         string memory props = string(
             abi.encodePacked(
@@ -181,9 +191,9 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardU
                 '"ipnft_id": ',
                 tokenId,
                 ',"agreement_content": "ipfs://',
-                agreementCid,
+                metadata.agreementCid,
                 '","original_owner": "',
-                Strings.toHexString(originalOwner),
+                Strings.toHexString(metadata.originalOwner),
                 '","erc20_contract": "',
                 Strings.toHexString(address(tokenContract)),
                 '","supply": "',

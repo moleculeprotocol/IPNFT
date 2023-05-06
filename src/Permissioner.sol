@@ -5,7 +5,7 @@ import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import { SignatureChecker } from "@openzeppelin/contracts/utils/cryptography/SignatureChecker.sol";
 
-import { FractionalizedToken } from "./FractionalizedToken.sol";
+import { FractionalizedToken, Metadata } from "./FractionalizedToken.sol";
 
 error InvalidSignature();
 error Denied();
@@ -13,7 +13,7 @@ error Denied();
 interface IPermissioner {
     /**
      * @notice reverts when `_for` may not interact with `tokenContract`
-     * @param tokenContract FractionalizedToken
+     * @param tokenContract IFractionalizedToken
      * @param _for address
      * @param data bytes
      */
@@ -38,17 +38,17 @@ contract TermsAcceptedPermissioner is IPermissioner {
     /**
      * @notice this yields the message text that claimers must present as signed message to burn their fractions and claim shares
      *
-     * @param tokenContract FractionalizedToken
+     * @param tokenContract IFractionalizedToken
      */
     function specificTermsV1(FractionalizedToken tokenContract) public view returns (string memory) {
-        (uint256 ipnftId,, string memory agreementCid) = tokenContract.metadata();
+        Metadata memory metadata = tokenContract.metadata();
 
         return string(
             abi.encodePacked(
                 "As a fraction holder of IPNFT #",
-                Strings.toString(ipnftId),
+                Strings.toString(metadata.ipnftId),
                 ", I accept all terms that I've read here: ipfs://",
-                agreementCid,
+                metadata.agreementCid,
                 "\n\n",
                 "Chain Id: ",
                 Strings.toString(block.chainid),
