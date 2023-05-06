@@ -5,6 +5,7 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 import { Counters } from "@openzeppelin/contracts/utils/Counters.sol";
+import "forge-std/console.sol";
 
 struct Sale {
     IERC20 auctionToken;
@@ -15,9 +16,9 @@ struct Sale {
     uint256 salesAmount;
     //$auction/$bidding
     uint256 fixedPrice;
-    uint256 openingTime;
-    uint256 closingTime;
 }
+// uint256 openingTime;
+// uint256 closingTime;
 
 struct SaleInfo {
     address beneficiary;
@@ -43,12 +44,16 @@ contract CrowdSale {
         _saleCounter.increment(); //start at 1
     }
 
-    function startSale(Sale memory sale) external {
-        _sales[_saleCounter.current()] = sale;
-        _saleInfo[_saleCounter.current()] = SaleInfo(msg.sender, false, 0, 0);
+    function startSale(Sale memory sale) external returns (uint256 saleId) {
+        if (sale.auctionToken.balanceOf(msg.sender) < sale.salesAmount) {
+            revert("you dont have sufficient auction tokens");
+        }
+        saleId = _saleCounter.current();
+        _sales[saleId] = sale;
+        _saleInfo[saleId] = SaleInfo(msg.sender, false, 0, 0);
         _saleCounter.increment();
 
-        sale.auctionToken.safeTransferFrom(msg.sender, address(this), sale.fundingGoal);
+        sale.auctionToken.safeTransferFrom(msg.sender, address(this), sale.salesAmount);
         emit SaleStarted(sale, msg.sender);
     }
 
@@ -60,7 +65,7 @@ contract CrowdSale {
         biddingToken.safeTransferFrom(msg.sender, address(this), biddingTokenAmount);
     }
 
-    function settleSale(uint256 saleId) external {
+    function settle(uint256 saleId) external {
         //todo anyone can call this for the beneficiary
         //todo time
         //todo check wether goal has been met
@@ -68,17 +73,36 @@ contract CrowdSale {
         _saleInfo[saleId].surplus = _saleInfo[saleId].total - _sales[saleId].fundingGoal;
 
         //transfer funds to issuer / beneficiary
-        _sales[saleId].biddingToken.safeTransfer(_saleInfo[saleId].beneficiary, _sales[saleId].salesAmount);
+        _sales[saleId].biddingToken.safeTransfer(_saleInfo[saleId].beneficiary, _sales[saleId].fundingGoal);
     }
 
     function claim(uint256 saleId) external {
         uint256 biddingShare = (_contributions[saleId][msg.sender] * _sales[saleId].fundingGoal) / _saleInfo[saleId].total;
+        //        console.log(biddingShare);
 
-        uint256 auctionTokens = biddingShare * _sales[saleId].fixedPrice;
-        uint256 refunds = _contributions[saleId][msg.sender] - biddingShare;
+        uint256 biddingRatio = (1000 * biddingShare) / _sales[saleId].fundingGoal;
+        console.log(biddingRatio);
 
+        uint256 auctionTokens = biddingRatio * (_sales[saleId].salesAmount / 1000);
+        //       console.log(auctionTokens);
+
+        if (_saleInfo[saleId].surplus > 0) {
+            uint256 refunds = biddingRatio * (_saleInfo[saleId].surplus / 1000); //_contributions[saleId][msg.sender] - biddingShare;
+            console.log(refunds);
+
+            if (refunds > 0) {
+                _sales[saleId].biddingToken.safeTransfer(msg.sender, refunds);
+            }
+        }
         _sales[saleId].auctionToken.safeTransfer(msg.sender, auctionTokens);
-        _sales[saleId].biddingToken.safeTransfer(msg.sender, refunds);
+    }
+
+    function saleInfo(uint256 saleId) public view returns (SaleInfo memory) {
+        return _saleInfo[saleId];
+    }
+
+    function contribution(uint256 saleId, address contributor) public view returns (uint256) {
+        return _contributions[saleId][contributor];
     }
 }
 
