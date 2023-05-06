@@ -5,14 +5,17 @@ import "forge-std/Script.sol";
 import "forge-std/console.sol";
 import { IPNFT } from "../src/IPNFT.sol";
 import { SchmackoSwap } from "../src/SchmackoSwap.sol";
+import { Fractionalizer } from "../src/Fractionalizer.sol";
 import { Mintpass } from "../src/Mintpass.sol";
 import { UUPSProxy } from "../src/UUPSProxy.sol";
 import { SalesShareDistributor } from "../src/SalesShareDistributor.sol";
+
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
 contract DeployShareDistributor is Script {
     function run() public {
         vm.startBroadcast();
+        address fractionalizerAddress = vm.envAddress("FRACTIONALIZER_ADDRESS");
         address sosAddress = vm.envAddress("SOS_ADDRESS");
 
         SalesShareDistributor impl = new SalesShareDistributor();
@@ -24,7 +27,7 @@ contract DeployShareDistributor is Script {
                 )
             )
         );
-        salesShareDistributor.initialize(SchmackoSwap(sosAddress));
+        salesShareDistributor.initialize(Fractionalizer(fractionalizerAddress), SchmackoSwap(sosAddress));
         vm.stopBroadcast();
 
         console.log("SalesShareDistributor %s", address(salesShareDistributor));

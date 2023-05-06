@@ -31,9 +31,7 @@ error BadSupply();
 error MustOwnIpnft();
 error NoSymbol();
 error AlreadyFractionalized();
-
 error AlreadyClaiming();
-error NotClaimingYet();
 
 /// @title Fractionalizer
 /// @author molecule.to
@@ -68,7 +66,6 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardU
         __UUPSUpgradeable_init();
         __Ownable_init();
         __ReentrancyGuard_init();
-
         ipnft = _ipnft;
     }
 
@@ -78,9 +75,16 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardU
         _disableInitializers();
     }
 
+    modifier notClaimingYet(uint256 fractionId) {
+        if (fractionalized[fractionId].phase == FractionalizationPhase.CLAIMING) {
+            revert AlreadyClaiming();
+        }
+        _;
+    }
     /**
      * @notice we're not taking any fees. If we once decided to do so, this can be used to update the fee receiver
      */
+
     function setFeeReceiver(address _feeReceiver) public onlyOwner {
         if (_feeReceiver == address(0)) {
             revert ToZeroAddress();
@@ -92,8 +96,11 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardU
         fractionalizationPercentage = fractionalizationPercentage_;
     }
 
-    //todo: only SalesShareDistributor and his frens can call this
-    function startClamingPhase(uint256 fractionId) public onlyRole(STATE_MANAGER_ROLE) {
+    function grantDistributionRole(address distributor) public onlyOwner {
+        _grantRole(STATE_MANAGER_ROLE, distributor);
+    }
+
+    function startClamingPhase(uint256 fractionId) public onlyRole(STATE_MANAGER_ROLE) notClaimingYet(fractionId) {
         fractionalized[fractionId].phase = FractionalizationPhase.CLAIMING;
         emit PhaseTransitioned(fractionId, FractionalizationPhase.CLAIMING);
     }
@@ -144,18 +151,14 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardU
      * @param fractionId uint256
      * @param fractionsAmount uint256
      */
-    function increaseFractions(uint256 fractionId, uint256 fractionsAmount) external {
-        Fractionalized memory _fractionalized = fractionalized[fractionId];
-        if (_fractionalized.phase == FractionalizationPhase.CLAIMING) {
-            revert AlreadyClaiming();
-        }
+    function increaseFractions(uint256 fractionId, uint256 fractionsAmount) external notClaimingYet(fractionId) {
+        FractionalizedToken tokenContract = fractionalized[fractionId].tokenContract;
 
-        FractionalizedTokenMetadata memory md = _fractionalized.tokenContract.metadata();
-        if (_msgSender() != md.originalOwner) {
+        if (_msgSender() != tokenContract.issuer()) {
             revert MustOwnIpnft();
         }
 
-        _fractionalized.tokenContract.issue(_msgSender(), fractionsAmount);
+        tokenContract.issue(_msgSender(), fractionsAmount);
     }
 
     function balanceOf(address holder, uint256 fractionId) public view returns (uint256) {

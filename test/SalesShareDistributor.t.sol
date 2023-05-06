@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.18;
 
 import "forge-std/Test.sol";
 
@@ -12,25 +12,19 @@ import { SafeERC20Upgradeable } from "@openzeppelin/contracts-upgradeable/token/
 import { console } from "forge-std/console.sol";
 import { IPNFT } from "../src/IPNFT.sol";
 import { Mintpass } from "../src/Mintpass.sol";
+import { IPermissioner, TermsAcceptedPermissioner, BlindPermissioner, InvalidSignature } from "../src/Permissioner.sol";
 
 import { IPNFTMintHelper } from "./IPNFTMintHelper.sol";
-import {
-    Fractionalizer,
-    Fractionalized,
-    ToZeroAddress,
-    AlreadyClaiming,
-    MustOwnIpnft,
-    InsufficientBalance,
-    NotClaimingYet
-} from "../src/Fractionalizer.sol";
-import { SalesShareDistributor } from "../src/SalesShareDistributor.sol";
+import { Fractionalizer, Fractionalized, MustOwnIpnft, ToZeroAddress, InsufficientBalance, AlreadyClaiming } from "../src/Fractionalizer.sol";
+
+import { SalesShareDistributor, ListingNotFulfilled, ListingMismatch, NotClaimingYet } from "../src/SalesShareDistributor.sol";
 
 import { FractionalizedToken } from "../src/FractionalizedToken.sol";
 import { IERC1155Supply } from "../src/IERC1155Supply.sol";
 import { SchmackoSwap, ListingState } from "../src/SchmackoSwap.sol";
 import { MyToken } from "../src/MyToken.sol";
 
-contract FractionalizerSalesTest is Test {
+contract SalesShareDistributorTest is Test {
     using SafeERC20Upgradeable for FractionalizedToken;
 
     string ipfsUri = "ipfs://bafkreiankqd3jvpzso6khstnaoxovtyezyatxdy7t2qzjoolqhltmasqki";
@@ -48,6 +42,7 @@ contract FractionalizerSalesTest is Test {
     uint256 alicePk;
 
     address bob = makeAddr("bob");
+    uint256 bobPk;
     address escrow = makeAddr("escrow");
 
     IPNFT internal ipnft;
@@ -57,20 +52,20 @@ contract FractionalizerSalesTest is Test {
     MyToken internal myToken;
     Mintpass internal mintpass;
     IERC20 internal erc20;
+    IPermissioner internal blindPermissioner;
 
     function setUp() public {
         (alice, alicePk) = makeAddrAndKey("alice");
+        (bob, bobPk) = makeAddrAndKey("bob");
         vm.startPrank(deployer);
-        IPNFT implementationV2 = new IPNFT();
-        ERC1967Proxy proxy = new ERC1967Proxy(address(implementationV2), "");
-        ipnft = IPNFT(address(proxy));
+        ipnft = IPNFT(address(new ERC1967Proxy(address(new IPNFT()), "")));
         ipnft.initialize();
 
         schmackoSwap = new SchmackoSwap();
         myToken = new MyToken();
         myToken.mint(ipnftBuyer, 1_000_000 ether);
         erc20 = IERC20(address(myToken));
-
+        blindPermissioner = new BlindPermissioner();
         mintpass = new Mintpass(address(ipnft));
         mintpass.grantRole(mintpass.MODERATOR(), deployer);
         ipnft.setAuthorizer(address(mintpass));
@@ -86,7 +81,7 @@ contract FractionalizerSalesTest is Test {
                 )
             )
         );
-        fractionalizer.initialize(ipnft, schmackoSwap);
+        fractionalizer.initialize(ipnft);
         fractionalizer.setFeeReceiver(protocolOwner);
 
         distributor = SalesShareDistributor(
@@ -99,7 +94,8 @@ contract FractionalizerSalesTest is Test {
                 )
             )
         );
-        distributor.initialize(schmackoSwap);
+        distributor.initialize(fractionalizer, schmackoSwap);
+        fractionalizer.grantDistributionRole(address(distributor));
         vm.stopPrank();
 
         vm.deal(originalOwner, MINTING_FEE);
@@ -121,7 +117,7 @@ contract FractionalizerSalesTest is Test {
         vm.startPrank(originalOwner);
         //ipnft.setApprovalForAll(address(fractionalizer), true);
         uint256 fractionId = fractionalizer.fractionalizeIpnft(1, 100_000, agreementCid);
-        (,,,, FractionalizedToken tokenContract,,,) = fractionalizer.fractionalized(fractionId);
+        (FractionalizedToken tokenContract,) = fractionalizer.fractionalized(fractionId);
         uint256 listingId = helpCreateListing(1_000_000 ether, address(tokenContract));
         vm.stopPrank();
 
@@ -147,14 +143,15 @@ contract FractionalizerSalesTest is Test {
         vm.startPrank(originalOwner);
         // ipnft.setApprovalForAll(address(fractionalizer), true);
         uint256 fractionId = fractionalizer.fractionalizeIpnft(1, 100_000, agreementCid);
-        (,,,, FractionalizedToken tokenContract,,,) = fractionalizer.fractionalized(fractionId);
+        (FractionalizedToken tokenContract,) = fractionalizer.fractionalized(fractionId);
 
-        uint256 listingId = helpCreateListing(1_000_000 ether, address(tokenContract));
+        uint256 listingId = helpCreateListing(1_000_000 ether, address(distributor));
         vm.stopPrank();
 
-        vm.startPrank(bob);
+        assertEq(tokenContract.issuer(), originalOwner);
+        vm.startPrank(originalOwner);
         vm.expectRevert(ListingNotFulfilled.selector);
-        fractionalizer.afterSale(fractionId, listingId);
+        distributor.afterSale(tokenContract, listingId, blindPermissioner);
         vm.stopPrank();
 
         vm.startPrank(ipnftBuyer);
@@ -162,32 +159,30 @@ contract FractionalizerSalesTest is Test {
         schmackoSwap.fulfill(listingId);
         vm.stopPrank();
 
-        assertEq(erc20.balanceOf(address(tokenContract)), 1_000_000 ether);
-
-        // this is wanted: *anyone* (!) can call this. This is an oracle call.
-        vm.startPrank(bob);
-        fractionalizer.afterSale(fractionId, listingId);
-        vm.stopPrank();
-
-        assertEq(erc20.balanceOf(address(tokenContract)), 1_000_000 ether);
-        (,,,,, uint256 fulfilledListingId,,) = fractionalizer.fractionalized(fractionId);
-        assertEq(listingId, fulfilledListingId);
-
-        vm.startPrank(bob);
-        vm.expectRevert(AlreadyClaiming.selector);
-        fractionalizer.afterSale(fractionId, listingId);
-        vm.stopPrank();
+        assertEq(erc20.balanceOf(address(distributor)), 1_000_000 ether);
 
         vm.startPrank(originalOwner);
+        distributor.afterSale(tokenContract, listingId, blindPermissioner);
+        vm.stopPrank();
+
+        (uint256 fulfilledListingId,,,) = distributor.sales(address(tokenContract));
+        assertEq(listingId, fulfilledListingId);
+
+        vm.startPrank(originalOwner);
+        vm.expectRevert(AlreadyClaiming.selector);
+        distributor.afterSale(tokenContract, listingId, blindPermissioner);
+
         vm.expectRevert(AlreadyClaiming.selector);
         fractionalizer.increaseFractions(fractionId, 100_000);
         vm.stopPrank();
     }
 
+    //todo: ensure that no one can withdraw arbitrary amounts here
+    //by simply creating a new fractionalization and claim an arbitrary value
+
     function testManuallyStartClaimingPhase() public {
         vm.startPrank(originalOwner);
         uint256 fractionId = fractionalizer.fractionalizeIpnft(1, 100_000, agreementCid);
-        erc20.approve(address(fractionalizer), 1_000_000 ether);
         ipnft.safeTransferFrom(originalOwner, ipnftBuyer, 1, 1, "");
         vm.stopPrank();
 
@@ -195,25 +190,35 @@ contract FractionalizerSalesTest is Test {
         erc20.transfer(originalOwner, 1_000_000 ether);
         vm.stopPrank();
 
+        (FractionalizedToken tokenContract,) = fractionalizer.fractionalized(fractionId);
+
+        assertEq(tokenContract.issuer(), originalOwner);
+
+        // only the owner can manually start the claiming phase.
         vm.startPrank(bob);
         vm.expectRevert(MustOwnIpnft.selector);
-        fractionalizer.afterSale(fractionId, erc20, 1_000_000 ether);
+        distributor.afterSale(tokenContract, erc20, 1_000_000 ether, blindPermissioner);
         vm.stopPrank();
+
         vm.startPrank(originalOwner);
-        // only the owner can manually start the claiming phase.
-        fractionalizer.afterSale(fractionId, erc20, 1_000_000 ether);
+        vm.expectRevert(); // not approved
+        distributor.afterSale(tokenContract, erc20, 1_000_000 ether, blindPermissioner);
+
+        erc20.approve(address(distributor), 1_000_000 ether);
+        distributor.afterSale(tokenContract, erc20, 1_000_000 ether, blindPermissioner);
         vm.stopPrank();
 
         assertEq(erc20.balanceOf(address(originalOwner)), 0);
-        (,,,,, uint256 fulfilledListingId,,) = fractionalizer.fractionalized(fractionId);
-
-        assertFalse(fulfilledListingId == 0);
+        (uint256 fulfilledListingId,,,) = distributor.sales(address(tokenContract));
+        assertTrue(fulfilledListingId != 0);
     }
 
     function testClaimBuyoutShares() public {
         vm.startPrank(originalOwner);
         uint256 fractionId = fractionalizer.fractionalizeIpnft(1, 100_000, agreementCid);
-        (,,,, FractionalizedToken tokenContract,,,) = fractionalizer.fractionalized(fractionId);
+        (FractionalizedToken tokenContract,) = fractionalizer.fractionalized(fractionId);
+
+        TermsAcceptedPermissioner permissioner = new TermsAcceptedPermissioner();
 
         tokenContract.safeTransfer(alice, 25_000);
         tokenContract.safeTransfer(bob, 25_000);
@@ -227,31 +232,33 @@ contract FractionalizerSalesTest is Test {
         ipnft.safeTransferFrom(originalOwner, ipnftBuyer, 1, 1, "");
         vm.stopPrank();
 
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(alicePk, ECDSA.toEthSignedMessageHash(abi.encodePacked(fractionalizer.specificTermsV1(fractionId))));
+        (uint8 v, bytes32 r, bytes32 s) =
+            vm.sign(alicePk, ECDSA.toEthSignedMessageHash(abi.encodePacked(permissioner.specificTermsV1(tokenContract))));
 
         vm.startPrank(alice);
         //someone must start the claiming phase first
         vm.expectRevert(NotClaimingYet.selector);
-        tokenContract.burn(abi.encodePacked(r, s, v));
+        distributor.claim(tokenContract, abi.encodePacked(r, s, v));
         vm.stopPrank();
 
         vm.startPrank(originalOwner);
-        erc20.approve(address(fractionalizer), 1_000_000 ether);
-        fractionalizer.afterSale(fractionId, erc20, 1_000_000 ether);
+        erc20.approve(address(distributor), 1_000_000 ether);
+        distributor.afterSale(tokenContract, erc20, 1_000_000 ether, permissioner);
         vm.stopPrank();
 
         vm.startPrank(alice);
-        (, uint256 amount) = fractionalizer.claimableTokens(fractionId, alice);
+        (, uint256 amount) = distributor.claimableTokens(tokenContract, alice);
         assertEq(amount, 250_000 ether);
-        tokenContract.burn(abi.encodePacked(r, s, v));
+        tokenContract.approve(address(distributor), 25_000 ether);
+        distributor.claim(tokenContract, abi.encodePacked(r, s, v));
         vm.stopPrank();
 
         assertEq(erc20.balanceOf(alice), 250_000 ether);
-        assertEq(erc20.balanceOf(address(tokenContract)), 750_000 ether);
+        assertEq(erc20.balanceOf(address(distributor)), 750_000 ether);
         assertEq(fractionalizer.totalSupply(fractionId), 75_000);
 
         assertEq(fractionalizer.balanceOf(alice, fractionId), 0);
-        (, uint256 remainingAmount) = fractionalizer.claimableTokens(fractionId, alice);
+        (, uint256 remainingAmount) = distributor.claimableTokens(tokenContract, alice);
         assertEq(remainingAmount, 0);
 
         //claims can be transferred to others and are redeemable by them
@@ -261,25 +268,29 @@ contract FractionalizerSalesTest is Test {
         tokenContract.safeTransfer(charlie, 20_000);
         vm.stopPrank();
 
-        (, uint256 claimableByCharlie) = fractionalizer.claimableTokens(fractionId, charlie);
+        (, uint256 claimableByCharlie) = distributor.claimableTokens(tokenContract, charlie);
         assertEq(claimableByCharlie, 200_000 ether);
 
-        (v, r, s) = vm.sign(charliePk, ECDSA.toEthSignedMessageHash(abi.encodePacked(fractionalizer.specificTermsV1(fractionId))));
+        (v, r, s) = vm.sign(charliePk, ECDSA.toEthSignedMessageHash(abi.encodePacked(permissioner.specificTermsV1(tokenContract))));
 
         vm.startPrank(charlie);
-        tokenContract.burn(abi.encodePacked(r, s, v));
+        tokenContract.approve(address(distributor), 20_000 ether);
+        distributor.claim(tokenContract, abi.encodePacked(r, s, v));
         vm.stopPrank();
 
         assertEq(erc20.balanceOf(charlie), 200_000 ether);
-        assertEq(erc20.balanceOf(address(tokenContract)), 550_000 ether);
+        assertEq(erc20.balanceOf(address(distributor)), 550_000 ether);
     }
 
     function testClaimBuyoutSharesAfterSwap() public {
         vm.startPrank(originalOwner);
         uint256 fractionId = fractionalizer.fractionalizeIpnft(1, 100_000, agreementCid);
-        (,,,, FractionalizedToken tokenContract,,,) = fractionalizer.fractionalized(fractionId);
-        uint256 listingId = helpCreateListing(1_000_000 ether, address(tokenContract));
+        (FractionalizedToken tokenContract,) = fractionalizer.fractionalized(fractionId);
+        uint256 listingId = helpCreateListing(1_000_000 ether, address(distributor));
         tokenContract.safeTransfer(alice, 25_000);
+
+        TermsAcceptedPermissioner permissioner = new TermsAcceptedPermissioner();
+
         vm.stopPrank();
 
         vm.startPrank(ipnftBuyer);
@@ -287,26 +298,28 @@ contract FractionalizerSalesTest is Test {
         schmackoSwap.fulfill(listingId);
         vm.stopPrank();
 
-        // this is wanted: *anyone* (!) can call this. This is an oracle call.
-        vm.startPrank(bob);
-        fractionalizer.afterSale(fractionId, listingId);
+        vm.startPrank(originalOwner);
+        distributor.afterSale(tokenContract, listingId, permissioner);
         vm.stopPrank();
 
         vm.startPrank(alice);
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(alicePk, ECDSA.toEthSignedMessageHash(abi.encodePacked(fractionalizer.specificTermsV1(fractionId))));
+        (uint8 v, bytes32 r, bytes32 s) =
+            vm.sign(alicePk, ECDSA.toEthSignedMessageHash(abi.encodePacked(permissioner.specificTermsV1(tokenContract))));
 
-        (IERC20 paymentToken, uint256 remainingAmount) = fractionalizer.claimableTokens(fractionId, alice);
+        (IERC20 paymentToken, uint256 remainingAmount) = distributor.claimableTokens(tokenContract, alice);
         assertEq(address(paymentToken), address(erc20));
         assertEq(remainingAmount, 250_000 ether);
-        tokenContract.burn(abi.encodePacked(r, s, v));
+        tokenContract.approve(address(distributor), 25_000 ether);
+
+        distributor.claim(tokenContract, abi.encodePacked(r, s, v));
         vm.stopPrank();
 
         assertEq(erc20.balanceOf(alice), 250_000 ether);
-        assertEq(erc20.balanceOf(address(tokenContract)), 750_000 ether);
+        assertEq(erc20.balanceOf(address(distributor)), 750_000 ether);
         assertEq(fractionalizer.totalSupply(fractionId), 75_000);
 
         assertEq(fractionalizer.balanceOf(alice, fractionId), 0);
-        (, remainingAmount) = fractionalizer.claimableTokens(fractionId, alice);
+        (, remainingAmount) = distributor.claimableTokens(tokenContract, alice);
         assertEq(remainingAmount, 0);
     }
 
@@ -316,7 +329,7 @@ contract FractionalizerSalesTest is Test {
 
         vm.startPrank(originalOwner);
         uint256 fractionId = fractionalizer.fractionalizeIpnft(1, fractionAmount, agreementCid);
-        (,,,, FractionalizedToken tokenContract,,,) = fractionalizer.fractionalized(fractionId);
+        (FractionalizedToken tokenContract,) = fractionalizer.fractionalized(fractionId);
 
         assertEq(fractionalizer.balanceOf(originalOwner, fractionId), fractionAmount);
         tokenContract.safeTransfer(alice, fractionAmount);
@@ -328,18 +341,20 @@ contract FractionalizerSalesTest is Test {
         vm.stopPrank();
 
         vm.startPrank(originalOwner);
-        erc20.approve(address(fractionalizer), salesPrice);
-        fractionalizer.afterSale(fractionId, erc20, salesPrice);
+        erc20.approve(address(distributor), salesPrice);
+        distributor.afterSale(tokenContract, erc20, salesPrice, blindPermissioner);
         vm.stopPrank();
     }
 
     function testClaimingFraud() public {
         vm.startPrank(originalOwner);
+        TermsAcceptedPermissioner permissioner = new TermsAcceptedPermissioner();
         uint256 fractionId1 = fractionalizer.fractionalizeIpnft(1, 100_000, agreementCid);
-        (,,,, FractionalizedToken tokenContract,,,) = fractionalizer.fractionalized(fractionId1);
+        (FractionalizedToken tokenContract1,) = fractionalizer.fractionalized(fractionId1);
         ipnft.setApprovalForAll(address(schmackoSwap), true);
-        uint256 listingId1 = schmackoSwap.list(IERC1155Supply(address(ipnft)), 1, erc20, 1000 ether, address(tokenContract));
+        uint256 listingId1 = schmackoSwap.list(IERC1155Supply(address(ipnft)), 1, erc20, 1000 ether, address(distributor));
         schmackoSwap.changeBuyerAllowance(listingId1, ipnftBuyer, true);
+
         vm.stopPrank();
 
         vm.deal(bob, MINTING_FEE);
@@ -351,6 +366,8 @@ contract FractionalizerSalesTest is Test {
         uint256 reservationId = ipnft.reserve();
         ipnft.mintReservation{ value: MINTING_FEE }(bob, reservationId, 2, ipfsUri, DEFAULT_SYMBOL);
         uint256 fractionId2 = fractionalizer.fractionalizeIpnft(2, 70_000, agreementCid);
+        (FractionalizedToken tokenContract2,) = fractionalizer.fractionalized(fractionId2);
+
         ipnft.setApprovalForAll(address(schmackoSwap), true);
         uint256 listingId2 = schmackoSwap.list(IERC1155Supply(address(ipnft)), 2, erc20, 700 ether, address(originalOwner));
         schmackoSwap.changeBuyerAllowance(listingId2, ipnftBuyer, true);
@@ -362,19 +379,24 @@ contract FractionalizerSalesTest is Test {
         schmackoSwap.fulfill(listingId2);
         vm.stopPrank();
 
-        vm.startPrank(alice);
+        vm.startPrank(bob);
+        vm.expectRevert(InsufficientBalance.selector);
+        distributor.afterSale(tokenContract2, listingId2, blindPermissioner);
+        vm.stopPrank();
+
+        vm.startPrank(originalOwner);
         vm.expectRevert(ListingMismatch.selector);
-        fractionalizer.afterSale(fractionId1, listingId2);
+        distributor.afterSale(tokenContract1, listingId2, blindPermissioner);
 
+        vm.expectRevert(MustOwnIpnft.selector);
+        distributor.afterSale(tokenContract2, listingId2, blindPermissioner);
+
+        distributor.afterSale(tokenContract1, listingId1, blindPermissioner);
+        vm.stopPrank();
+
+        vm.startPrank(bob);
         vm.expectRevert(InsufficientBalance.selector);
-        fractionalizer.afterSale(fractionId2, listingId2);
-
-        fractionalizer.afterSale(fractionId1, listingId1);
-        (uint8 v, bytes32 r, bytes32 s) =
-            vm.sign(alicePk, ECDSA.toEthSignedMessageHash(abi.encodePacked(fractionalizer.specificTermsV1(fractionId1))));
-
-        vm.expectRevert(InsufficientBalance.selector);
-        tokenContract.burn(abi.encodePacked(r, s, v));
+        distributor.claim(tokenContract1, bytes(""));
         vm.stopPrank();
     }
 }

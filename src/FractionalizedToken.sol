@@ -44,6 +44,14 @@ contract FractionalizedToken is IERC20Upgradeable, ERC20BurnableUpgradeable, Own
         return _metadata;
     }
 
+    function issuer() public view returns (address) {
+        return _metadata.originalOwner;
+    }
+
+    function fractionId() public view returns (uint256) {
+        return uint256(keccak256(abi.encodePacked(_metadata.originalOwner, _metadata.ipnftId)));
+    }
+
     /**
      * @dev this can only be called by the contract owner which is the `Fractionalizer` who creates it
      * @param receiver address

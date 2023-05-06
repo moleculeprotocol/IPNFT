@@ -9,7 +9,10 @@ import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.s
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import { IERC1155Supply } from "./IERC1155Supply.sol";
+import { Fractionalizer, MustOwnIpnft } from "./Fractionalizer.sol";
+
 import { FractionalizedToken, Metadata } from "./FractionalizedToken.sol";
+
 import { SchmackoSwap, ListingState } from "./SchmackoSwap.sol";
 import { IPermissioner, TermsAcceptedPermissioner } from "./Permissioner.sol";
 
@@ -23,32 +26,23 @@ struct Sales {
 error ListingNotFulfilled();
 error ListingMismatch();
 error InsufficientBalance();
-error MustOwnIpnft();
+
 error NotClaimingYet();
 
 contract SalesShareDistributor is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     using SafeERC20 for IERC20;
 
     SchmackoSwap private schmackoSwap;
+    Fractionalizer private fractionalizer;
 
     mapping(address => Sales) public sales;
 
     event SalesActivated(address indexed fractionToken, address paymentToken, uint256 paidPrice);
     event SharesClaimed(address indexed fractionToken, address indexed claimer, uint256 amount);
 
-    function initialize(SchmackoSwap _schmackoSwap) public {
+    function initialize(Fractionalizer _fractionalizer, SchmackoSwap _schmackoSwap) public {
         schmackoSwap = _schmackoSwap;
-    }
-
-    /// todo: generally, it's not the "original owner" who has admin rights on the fractionalization rules
-    ///       but rather an entity that's denominated by the fraction stakeholders, eg by a governance vote
-    ///       In the long term the permissioner should be initially chosen when the fractions are created
-    function setPermissioner(FractionalizedToken tokenContract, IPermissioner _permissioner) public {
-        Metadata memory metadata = tokenContract.metadata();
-        if (_msgSender() != metadata.originalOwner) {
-            revert MustOwnIpnft();
-        }
-        sales[address(tokenContract)].permissioner = _permissioner;
+        fractionalizer = _fractionalizer;
     }
 
     /**
@@ -79,29 +73,35 @@ contract SalesShareDistributor is UUPSUpgradeable, OwnableUpgradeable, Reentranc
         if (balance == 0) {
             revert InsufficientBalance();
         }
-
-        sales[address(tokenContract)].permissioner.accept(tokenContract, _msgSender(), permissions);
+        Sales memory _sales = sales[address(tokenContract)];
 
         (IERC20 paymentToken, uint256 erc20shares) = claimableTokens(tokenContract, _msgSender());
+
+        _sales.permissioner.accept(tokenContract, _msgSender(), permissions);
+
         if (erc20shares == 0) {
             //todo: this is very hard to simulate because the condition above will already yield 0
             revert InsufficientBalance();
         }
         emit SharesClaimed(address(tokenContract), _msgSender(), balance);
-        //todo this needs approval, again
         tokenContract.burnFrom(_msgSender(), balance);
         paymentToken.safeTransfer(_msgSender(), erc20shares);
     }
 
     /**
-     * @notice When the sales beneficiary has been set to this contract,
-     *         anyone can call this function after having observed the sale
+     * @notice anyone should be able this function after having observed the sale
+     *         rn we restrict it to the token issuer since they must provide a permissioner that controls the claiming rules
      *         this is a deep dependency on our own sales contract
      *
      * @param tokenContract FractionalizedToken     the fraction token
      * @param listingId     uint256     the listing id on Schmackoswap
+     * @param permissioner  IPermissioner   the permissioner that permits claims
      */
-    function afterSale(FractionalizedToken tokenContract, uint256 listingId) external {
+    function afterSale(FractionalizedToken tokenContract, uint256 listingId, IPermissioner permissioner) external {
+        if (_msgSender() != tokenContract.issuer()) {
+            revert MustOwnIpnft();
+        }
+
         Metadata memory metadata = tokenContract.metadata();
         (, uint256 ipnftId,,, IERC20 _paymentToken, uint256 askPrice, address beneficiary, ListingState listingState) =
             schmackoSwap.listings(listingId);
@@ -116,8 +116,11 @@ contract SalesShareDistributor is UUPSUpgradeable, OwnableUpgradeable, Reentranc
             revert InsufficientBalance();
         }
 
-        _startClaimingPhase(tokenContract, listingId, _paymentToken, askPrice);
+        _startClaimingPhase(tokenContract, listingId, _paymentToken, askPrice, permissioner);
     }
+
+    //todo: ensure that no one can withdraw arbitrary amounts here
+    //by simply creating a new fractionalization and claim an arbitrary value
 
     /**
      * @notice When the sales beneficiary has not been set to the underlying erc20 token address but to the original owner's wallet instead,
@@ -128,14 +131,15 @@ contract SalesShareDistributor is UUPSUpgradeable, OwnableUpgradeable, Reentranc
      *
      * @param   tokenContract FractionalizedToken  the fraction token contract
      * @param   paymentToken  IERC20   the payment token contract address
-     * @param   price         uint256  the price the NFT has been sold for
+     * @param   paidPrice         uint256  the price the NFT has been sold for
+     * @param permissioner  IPermissioner   the permissioner that permits claims
      */
-    function afterSale(FractionalizedToken tokenContract, IERC20 paymentToken, uint256 price) external nonReentrant {
-        Sales memory _sales = sales[address(tokenContract)];
-        Metadata memory metadata = tokenContract.metadata();
-        if (_msgSender() != metadata.originalOwner) {
+    function afterSale(FractionalizedToken tokenContract, IERC20 paymentToken, uint256 paidPrice, IPermissioner permissioner) external nonReentrant {
+        if (_msgSender() != tokenContract.issuer()) {
             revert MustOwnIpnft();
         }
+
+        Metadata memory metadata = tokenContract.metadata();
 
         //create a fake (but valid) schmackoswap listing id
         uint256 fulfilledListingId = uint256(
@@ -146,8 +150,8 @@ contract SalesShareDistributor is UUPSUpgradeable, OwnableUpgradeable, Reentranc
                         metadata.ipnftId,
                         _msgSender(),
                         uint256(1),
-                        _sales.paymentToken,
-                        _sales.paidPrice,
+                        paymentToken,
+                        paidPrice,
                         address(this),
                         ListingState.FULFILLED
                     ),
@@ -155,13 +159,20 @@ contract SalesShareDistributor is UUPSUpgradeable, OwnableUpgradeable, Reentranc
                 )
             )
         );
-        _startClaimingPhase(tokenContract, fulfilledListingId, paymentToken, price);
-        paymentToken.safeTransferFrom(_msgSender(), address(this), price);
+        _startClaimingPhase(tokenContract, fulfilledListingId, paymentToken, paidPrice, permissioner);
+        paymentToken.safeTransferFrom(_msgSender(), address(this), paidPrice);
     }
 
-    function _startClaimingPhase(FractionalizedToken tokenContract, uint256 fulfilledListingId, IERC20 _paymentToken, uint256 price) internal {
-        //todo: consider using some default null permissioner that rejects everyone at first
-        sales[address(tokenContract)] = Sales(fulfilledListingId, _paymentToken, price, IPermissioner(address(0)));
+    function _startClaimingPhase(
+        FractionalizedToken tokenContract,
+        uint256 fulfilledListingId,
+        IERC20 _paymentToken,
+        uint256 price,
+        IPermissioner permissioner
+    ) internal {
+        fractionalizer.startClamingPhase(tokenContract.fractionId());
+
+        sales[address(tokenContract)] = Sales(fulfilledListingId, _paymentToken, price, permissioner);
         emit SalesActivated(address(tokenContract), address(_paymentToken), price);
     }
 
