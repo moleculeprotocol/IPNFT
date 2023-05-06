@@ -80,14 +80,14 @@ contract CrowdSale {
         uint256 biddingShare = (_contributions[saleId][msg.sender] * _sales[saleId].fundingGoal) / _saleInfo[saleId].total;
         //        console.log(biddingShare);
 
-        uint256 biddingRatio = (1000 * biddingShare) / _sales[saleId].fundingGoal;
+        uint256 biddingRatio = (1_000_000 * biddingShare) / _sales[saleId].fundingGoal;
         console.log(biddingRatio);
 
-        uint256 auctionTokens = biddingRatio * (_sales[saleId].salesAmount / 1000);
+        uint256 auctionTokens = biddingRatio * (_sales[saleId].salesAmount / 1_000_000);
         //       console.log(auctionTokens);
 
         if (_saleInfo[saleId].surplus > 0) {
-            uint256 refunds = biddingRatio * (_saleInfo[saleId].surplus / 1000); //_contributions[saleId][msg.sender] - biddingShare;
+            uint256 refunds = biddingRatio * (_saleInfo[saleId].surplus / 1_000_000); //_contributions[saleId][msg.sender] - biddingShare;
             console.log(refunds);
 
             if (refunds > 0) {
