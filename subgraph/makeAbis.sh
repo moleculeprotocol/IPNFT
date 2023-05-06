@@ -5,3 +5,5 @@ cat ../out/Mintpass.sol/Mintpass.json | jq .abi > ./abis/Mintpass.json
 cat ../out/SchmackoSwap.sol/SchmackoSwap.json | jq .abi > ./abis/SchmackoSwap.json
 cat ../out/Fractionalizer.sol/Fractionalizer.json | jq .abi > ./abis/Fractionalizer.json
 cat ../out/FractionalizedToken.sol/FractionalizedToken.json | jq .abi > ./abis/FractionalizedToken.json
+cat ../out/SalesShareDistributor.sol/SalesShareDistributor.json | jq .abi > ./abis/SharedSalesDistributor.json
+cat ../out/Permissioner.sol/TermsAcceptedPermissioner.json | jq .abi > ./abis/TermsAcceptedPermissioner.json

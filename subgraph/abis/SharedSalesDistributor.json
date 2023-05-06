@@ -1,32 +1,32 @@
 [
   {
     "inputs": [],
-    "stateMutability": "nonpayable",
-    "type": "constructor"
-  },
-  {
-    "inputs": [],
-    "name": "AlreadyFractionalized",
+    "name": "InsufficientBalance",
     "type": "error"
   },
   {
     "inputs": [],
-    "name": "BadSupply",
+    "name": "ListingMismatch",
     "type": "error"
   },
   {
     "inputs": [],
-    "name": "MustOwnIpnft",
+    "name": "ListingNotFulfilled",
     "type": "error"
   },
   {
     "inputs": [],
-    "name": "NoSymbol",
+    "name": "NotClaimingYet",
     "type": "error"
   },
   {
     "inputs": [],
-    "name": "ToZeroAddress",
+    "name": "OnlyIssuer",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "UncappedToken",
     "type": "error"
   },
   {
@@ -59,61 +59,6 @@
       }
     ],
     "name": "BeaconUpgraded",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "uint256",
-        "name": "fractionId",
-        "type": "uint256"
-      },
-      {
-        "indexed": true,
-        "internalType": "uint256",
-        "name": "ipnftId",
-        "type": "uint256"
-      },
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "tokenContract",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "emitter",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "string",
-        "name": "agreementCid",
-        "type": "string"
-      },
-      {
-        "indexed": false,
-        "internalType": "string",
-        "name": "name",
-        "type": "string"
-      },
-      {
-        "indexed": false,
-        "internalType": "string",
-        "name": "symbol",
-        "type": "string"
-      }
-    ],
-    "name": "FractionsCreated",
     "type": "event"
   },
   {
@@ -154,6 +99,56 @@
       {
         "indexed": true,
         "internalType": "address",
+        "name": "fractionToken",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "paymentToken",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "paidPrice",
+        "type": "uint256"
+      }
+    ],
+    "name": "SalesActivated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "fractionToken",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "claimer",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "SharesClaimed",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
         "name": "implementation",
         "type": "address"
       }
@@ -164,46 +159,96 @@
   {
     "inputs": [
       {
-        "internalType": "uint256",
-        "name": "ipnftId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "fractionsAmount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "string",
-        "name": "agreementCid",
-        "type": "string"
-      }
-    ],
-    "name": "fractionalizeIpnft",
-    "outputs": [
-      {
         "internalType": "contract FractionalizedToken",
-        "name": "token",
+        "name": "tokenContract",
+        "type": "address"
+      },
+      {
+        "internalType": "contract IERC20",
+        "name": "paymentToken",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "paidPrice",
+        "type": "uint256"
+      },
+      {
+        "internalType": "contract IPermissioner",
+        "name": "permissioner",
         "type": "address"
       }
     ],
+    "name": "afterSale",
+    "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
   },
   {
     "inputs": [
       {
+        "internalType": "contract FractionalizedToken",
+        "name": "tokenContract",
+        "type": "address"
+      },
+      {
         "internalType": "uint256",
-        "name": "",
+        "name": "listingId",
         "type": "uint256"
+      },
+      {
+        "internalType": "contract IPermissioner",
+        "name": "permissioner",
+        "type": "address"
       }
     ],
-    "name": "fractionalized",
-    "outputs": [
+    "name": "afterSale",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
       {
         "internalType": "contract FractionalizedToken",
-        "name": "",
+        "name": "tokenContract",
         "type": "address"
+      },
+      {
+        "internalType": "bytes",
+        "name": "permissions",
+        "type": "bytes"
+      }
+    ],
+    "name": "claim",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "contract FractionalizedToken",
+        "name": "tokenContract",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "holder",
+        "type": "address"
+      }
+    ],
+    "name": "claimableTokens",
+    "outputs": [
+      {
+        "internalType": "contract IERC20",
+        "name": "paymentToken",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -212,8 +257,8 @@
   {
     "inputs": [
       {
-        "internalType": "contract IPNFT",
-        "name": "_ipnft",
+        "internalType": "contract SchmackoSwap",
+        "name": "_schmackoSwap",
         "type": "address"
       }
     ],
@@ -259,26 +304,34 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "_feeReceiver",
+        "name": "",
         "type": "address"
       }
     ],
-    "name": "setFeeReceiver",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
+    "name": "sales",
+    "outputs": [
       {
         "internalType": "uint256",
-        "name": "fractionalizationPercentage_",
+        "name": "fulfilledListingId",
         "type": "uint256"
+      },
+      {
+        "internalType": "contract IERC20",
+        "name": "paymentToken",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "paidPrice",
+        "type": "uint256"
+      },
+      {
+        "internalType": "contract IPermissioner",
+        "name": "permissioner",
+        "type": "address"
       }
     ],
-    "name": "setReceiverPercentage",
-    "outputs": [],
-    "stateMutability": "nonpayable",
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -323,25 +376,6 @@
     "name": "upgradeToAndCall",
     "outputs": [],
     "stateMutability": "payable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "fractionHash",
-        "type": "uint256"
-      }
-    ],
-    "name": "uri",
-    "outputs": [
-      {
-        "internalType": "string",
-        "name": "",
-        "type": "string"
-      }
-    ],
-    "stateMutability": "view",
     "type": "function"
   }
 ]

@@ -27,7 +27,14 @@ error AlreadyFractionalized();
 ///         Allows fraction holders to withdraw sales shares when the IPNFT is sold
 contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     event FractionsCreated(
-        uint256 indexed ipnftId, address indexed tokenContract, address emitter, uint256 amount, string agreementCid, string name, string symbol
+        uint256 indexed fractionId,
+        uint256 indexed ipnftId,
+        address indexed tokenContract,
+        address emitter,
+        uint256 amount,
+        string agreementCid,
+        string name,
+        string symbol
     );
 
     IPNFT ipnft;
@@ -102,7 +109,9 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardU
 
         fractionalized[fractionHash] = fractionalizedToken;
 
-        emit FractionsCreated(ipnftId, address(fractionalizedToken), _msgSender(), fractionsAmount, agreementCid, name, ipnftSymbol);
+        emit FractionsCreated(
+            uint256(fractionHash), ipnftId, address(fractionalizedToken), _msgSender(), fractionsAmount, agreementCid, name, ipnftSymbol
+        );
 
         //todo: if we want to take a protocol fee, this might be a good point of doing so.
         fractionalizedToken.issue(_msgSender(), fractionsAmount);

@@ -28,6 +28,8 @@ error OnlyIssuerOrOwner();
 contract FractionalizedToken is IERC20Upgradeable, ERC20BurnableUpgradeable, OwnableUpgradeable {
     using SafeERC20 for IERC20;
 
+    event Capped(uint256 atSupply);
+
     //this will only go up.
     uint256 internal _totalIssued;
     bool internal _capped;
@@ -83,5 +85,6 @@ contract FractionalizedToken is IERC20Upgradeable, ERC20BurnableUpgradeable, Own
 
     function cap() public onlyIssuerOrOwner {
         _capped = true;
+        emit Capped(totalIssued());
     }
 }

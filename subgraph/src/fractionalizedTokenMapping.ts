@@ -1,7 +1,8 @@
 import { Address, BigInt, dataSource, log } from '@graphprotocol/graph-ts';
 import {
   Transfer as TransferEvent,
-  SharesClaimed as SharesClaimedEvent
+  Capped as CappedEvent
+  //SharesClaimed as SharesClaimedEvent
 } from '../generated/templates/FractionalizedToken/FractionalizedToken';
 import { Fractionalized, Fraction, Ipnft } from '../generated/schema';
 
@@ -17,7 +18,6 @@ function createOrUpdateFractions(
     fraction.fractionalizedIpfnt = fractionalizedId;
     fraction.balance = value;
     fraction.owner = owner;
-    fraction.agreementSigned = false;
     fraction.agreementSignature = null;
   } else {
     fraction.balance = fraction.balance.plus(value);
@@ -67,16 +67,16 @@ export function handleTransfer(event: TransferEvent): void {
   createOrUpdateFractions(to, fractionalizedId, value);
 }
 
-export function handleSharesClaimed(event: SharesClaimedEvent): void {
-  let fractionalized = Fractionalized.load(event.params.fractionId.toString());
-  if (!fractionalized) {
-    log.error('Fractionalized ipnft not found for id: {}', [
-      event.params.fractionId.toString()
-    ]);
-    return;
-  }
-  fractionalized.claimedShares = fractionalized.claimedShares.plus(
-    event.params.amount
-  );
-  fractionalized.save();
-}
+// export function handleSharesClaimed(event: SharesClaimedEvent): void {
+//   let fractionalized = Fractionalized.load(event.params.fractionId.toString());
+//   if (!fractionalized) {
+//     log.error('Fractionalized ipnft not found for id: {}', [
+//       event.params.fractionId.toString()
+//     ]);
+//     return;
+//   }
+//   fractionalized.claimedShares = fractionalized.claimedShares.plus(
+//     event.params.amount
+//   );
+//   fractionalized.save();
+// }

@@ -13,18 +13,16 @@ type Fractionalized @entity {
   id: ID! # fractionId hash of original owner + tokenId
   ipnft: Ipnft!
   createdAt: BigInt!
-  #txHash: Bytes
+  erc20address: Bytes! #address of the underlying erc20 token
   agreementCid: String! #IPFS CID string of FAM Agreement
   originalOwner: Bytes! # address of the issuer
-  #initialAmount: BigInt! # initial amount of tokens
   totalIssued: BigInt! #the highest amount of fractions issued, this can be raised by the owner
   circulatingSupply: BigInt! #the amount of unburnt fractions
-  erc20address: Bytes! #address of the underlying erc20 token
   symbol: String!
   tokenName: String!
-  paymentToken: Bytes #address ERC20 Token
-  paidPrice: BigInt #the price paid for the original ipnft
-  claimedShares: BigInt! # the amount of shares that have already been claimed. This needs to have a fulfilledListingId to be set
+  #paymentToken: Bytes #address ERC20 Token
+  #paidPrice: BigInt #the price paid for the original ipnft
+  #claimedShares: BigInt! # the amount of shares that have already been claimed. This needs to have a fulfilledListingId to be set
   fractions: [Fraction!] @derivedFrom(field: "fractionalizedIpfnt")
 }
 
@@ -33,7 +31,6 @@ type Fraction @entity {
   fractionalizedIpfnt: Fractionalized!
   balance: BigInt! # Token balance of the owner
   owner: Bytes! #Address of the token owner
-  agreementSigned: Boolean! #if the owner has signed the agreement
   agreementSignature: Bytes #the agreement signature, to be reused for other operations
 }
 
