@@ -69,12 +69,17 @@ contract CrowdSale {
     function settle(uint256 saleId) external {
         //todo anyone can call this for the beneficiary
         //todo time
+        Sale memory sale = _sales[saleId];
+        SaleInfo storage saleInfo = _saleInfo[saleId];
         //todo check wether goal has been met
-        _saleInfo[saleId].settled = true;
-        _saleInfo[saleId].surplus = _saleInfo[saleId].total - _sales[saleId].fundingGoal;
+        if (saleInfo.total < sale.fundingGoal) {
+            revert("funding goal not met");
+        }
+        saleInfo.settled = true;
+        saleInfo.surplus = saleInfo.total - sale.fundingGoal;
 
         //transfer funds to issuer / beneficiary
-        _sales[saleId].biddingToken.safeTransfer(_saleInfo[saleId].beneficiary, _sales[saleId].fundingGoal);
+        sale.biddingToken.safeTransfer(saleInfo.beneficiary, sale.fundingGoal);
     }
 
     function claim(uint256 saleId) external {
