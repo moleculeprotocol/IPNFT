@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.18;
 
-//import "forge-std/console.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { FixedPointMathLib as FP } from "solmate/utils/FixedPointMathLib.sol";
@@ -34,11 +33,13 @@ contract CrowdSale {
 
     mapping(uint256 => mapping(address => uint256)) _contributions;
 
-    event SaleStarted(uint256 saleId, Sale sale, address indexed emitter);
+    event Started(uint256 indexed saleId, address indexed issuer, Sale sale);
+    event Settled(uint256 indexed saleId, uint256 totalBids, uint256 surplus);
+    event Claimed(uint256 indexed saleId, address indexed claimer, uint256 claimed, uint256 refunded);
 
     constructor() { }
 
-    function startSale(Sale memory sale) external returns (uint256 saleId) {
+    function startSale(Sale memory sale) public returns (uint256 saleId) {
         if (sale.auctionToken.balanceOf(msg.sender) < sale.salesAmount) {
             revert("you dont have sufficient auction tokens");
         }
@@ -52,7 +53,7 @@ contract CrowdSale {
         _saleInfo[saleId] = SaleInfo(msg.sender, false, 0, 0);
 
         sale.auctionToken.safeTransferFrom(msg.sender, address(this), sale.salesAmount);
-        emit SaleStarted(saleId, sale, msg.sender);
+        emit Started(saleId, msg.sender, sale);
     }
 
     function placeBid(uint256 saleId, uint256 biddingTokenAmount) external {
@@ -73,33 +74,31 @@ contract CrowdSale {
 
     function settle(uint256 saleId) external {
         //todo anyone can call this for the beneficiary
-        //todo time
         Sale memory sale = _sales[saleId];
-        SaleInfo storage saleInfo = _saleInfo[saleId];
-        if (saleInfo.total < sale.fundingGoal) {
+        SaleInfo storage __saleInfo = _saleInfo[saleId];
+        if (__saleInfo.total < sale.fundingGoal) {
             revert("funding goal not met");
         }
-        saleInfo.settled = true;
-        saleInfo.surplus = saleInfo.total - sale.fundingGoal;
+        if (__saleInfo.settled) {
+            revert("sale is already settled");
+        }
+        //todo don't allow settlement before end time
+
+        __saleInfo.settled = true;
+        __saleInfo.surplus = __saleInfo.total - sale.fundingGoal;
+
+        emit Settled(saleId, __saleInfo.total, __saleInfo.surplus);
 
         //transfer funds to issuer / beneficiary
-        sale.biddingToken.safeTransfer(saleInfo.beneficiary, sale.fundingGoal);
+        release(sale.biddingToken, __saleInfo.beneficiary, sale.fundingGoal);
     }
 
-    function claim(uint256 saleId) external {
-        uint256 contribution = _contributions[saleId][msg.sender];
-        uint256 fundingGoal = _sales[saleId].fundingGoal;
-        uint256 total = _saleInfo[saleId].total;
-        uint256 salesAmount = _sales[saleId].salesAmount;
+    function claim(uint256 saleId) external virtual {
+        (uint256 auctionTokens, uint256 refunds) = getClaimableAmounts(saleId, msg.sender);
+        emit Claimed(saleId, msg.sender, auctionTokens, refunds);
 
-        uint256 biddingShare = FP.divWadDown(FP.mulWadDown(contribution, fundingGoal), total);
-        uint256 biddingRatio = FP.divWadDown(biddingShare, fundingGoal);
-        uint256 auctionTokens = FP.mulWadDown(biddingRatio, salesAmount);
-        if (_saleInfo[saleId].surplus > 0) {
-            uint256 refunds = FP.mulWadDown(biddingRatio, _saleInfo[saleId].surplus); //_contributions[saleId][msg.sender] - biddingShare;
-            if (refunds > 0) {
-                _sales[saleId].biddingToken.safeTransfer(msg.sender, refunds);
-            }
+        if (refunds > 0) {
+            _sales[saleId].biddingToken.safeTransfer(msg.sender, refunds);
         }
         _sales[saleId].auctionToken.safeTransfer(msg.sender, auctionTokens);
     }
@@ -111,10 +110,24 @@ contract CrowdSale {
     function contribution(uint256 saleId, address contributor) public view returns (uint256) {
         return _contributions[saleId][contributor];
     }
-}
 
-/*
-        if (_saleInfo[saleId].beneficiary != msg.sender) {
-            revert("only emitter can claim the funds");
+    function release(IERC20 biddingToken, address beneficiary, uint256 fundingGoal) internal virtual {
+        biddingToken.safeTransfer(beneficiary, fundingGoal);
+    }
+
+    function getClaimableAmounts(uint256 saleId, address bidder) internal view virtual returns (uint256 auctionTokens, uint256 refunds) {
+        uint256 _contribution = _contributions[saleId][bidder];
+        uint256 fundingGoal = _sales[saleId].fundingGoal;
+        uint256 total = _saleInfo[saleId].total;
+        uint256 salesAmount = _sales[saleId].salesAmount;
+
+        uint256 biddingShare = FP.divWadDown(FP.mulWadDown(_contribution, fundingGoal), total);
+        uint256 biddingRatio = FP.divWadDown(biddingShare, fundingGoal);
+        auctionTokens = FP.mulWadDown(biddingRatio, salesAmount);
+        if (_saleInfo[saleId].surplus > 0) {
+            refunds = FP.mulWadDown(biddingRatio, _saleInfo[saleId].surplus); //_contributions[saleId][msg.sender] - biddingShare;
+        } else {
+            refunds = 0;
         }
-        */
+    }
+}
