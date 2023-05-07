@@ -25,10 +25,8 @@ contract CrowdSaleFuzzTest is Test {
     }
 
     //todo: improve this test
-    function testFuzzManyBidders(uint8 bidders, uint256 salesAmt, uint256 fundingGoal) public {
-        vm.assume(0 < bidders && bidders < 10);
-        vm.assume(salesAmt <= 100_000_000 ether);
-        vm.assume(fundingGoal <= 100_000_000 ether);
+    function testFuzzManyBidders(uint8 bidders, uint96 salesAmt, uint96 fundingGoal) public {
+        vm.assume(bidders > 0 && bidders < 25);
         vm.assume(salesAmt > 0);
         vm.assume(fundingGoal > 0);
 
@@ -39,7 +37,7 @@ contract CrowdSaleFuzzTest is Test {
             biddingToken: IERC20(address(biddingToken)),
             fundingGoal: fundingGoal,
             salesAmount: salesAmt,
-            fixedPrice: 2 ether
+            closingTime: 0
         });
 
         auctionToken.approve(address(crowdSale), salesAmt);

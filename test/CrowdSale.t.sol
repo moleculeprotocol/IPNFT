@@ -44,7 +44,7 @@ contract CrowdSaleTest is Test {
             biddingToken: IERC20(address(biddingToken)),
             fundingGoal: 200_000 ether,
             salesAmount: 400_000 ether,
-            fixedPrice: 2 ether
+            closingTime: 0
         });
     }
 
