@@ -1,11 +1,15 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.18;
+pragma solidity ^0.8.19;
 
+//import "forge-std/console.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
+//prbmath only works with solidity > 0819
+//https://github.com/paulrberg/prb-math
+import { UD60x18, ud, convert } from "@prb/math/UD60x18.sol";
+
 import { Counters } from "@openzeppelin/contracts/utils/Counters.sol";
-import "forge-std/console.sol";
 
 struct Sale {
     IERC20 auctionToken;
@@ -77,24 +81,29 @@ contract CrowdSale {
     }
 
     function claim(uint256 saleId) external {
-        uint256 biddingShare = (_contributions[saleId][msg.sender] * _sales[saleId].fundingGoal) / _saleInfo[saleId].total;
+        UD60x18 contribution = ud(_contributions[saleId][msg.sender]);
+        UD60x18 fundingGoal = ud(_sales[saleId].fundingGoal);
+        UD60x18 total = ud(_saleInfo[saleId].total);
+        UD60x18 salesAmount = ud(_sales[saleId].salesAmount);
+
+        UD60x18 biddingShare = (contribution * fundingGoal) / total;
         //        console.log(biddingShare);
 
-        uint256 biddingRatio = (1_000_000 * biddingShare) / _sales[saleId].fundingGoal;
-        console.log(biddingRatio);
+        UD60x18 biddingRatio = biddingShare / fundingGoal;
+        //console.log(biddingRatio);
 
-        uint256 auctionTokens = biddingRatio * (_sales[saleId].salesAmount / 1_000_000);
+        UD60x18 auctionTokens = biddingRatio * salesAmount;
         //       console.log(auctionTokens);
 
         if (_saleInfo[saleId].surplus > 0) {
-            uint256 refunds = biddingRatio * (_saleInfo[saleId].surplus / 1_000_000); //_contributions[saleId][msg.sender] - biddingShare;
-            console.log(refunds);
+            UD60x18 refunds = biddingRatio * ud(_saleInfo[saleId].surplus); //_contributions[saleId][msg.sender] - biddingShare;
+            // console.log(refunds);
 
-            if (refunds > 0) {
-                _sales[saleId].biddingToken.safeTransfer(msg.sender, refunds);
+            if (!refunds.isZero()) {
+                _sales[saleId].biddingToken.safeTransfer(msg.sender, refunds.unwrap());
             }
         }
-        _sales[saleId].auctionToken.safeTransfer(msg.sender, auctionTokens);
+        _sales[saleId].auctionToken.safeTransfer(msg.sender, auctionTokens.unwrap());
     }
 
     function saleInfo(uint256 saleId) public view returns (SaleInfo memory) {

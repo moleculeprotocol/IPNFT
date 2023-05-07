@@ -250,7 +250,7 @@ contract CrowdSaleTest is Test {
         bidder2's final balance = 550000 + 365094 = 915094
 
         total received 230188.4 + 169811.3208 = 399_999
-        total refunded 860_000 
+        total refunded 860_000
         */
         // vm.startPrank(bidder);
         // crowdSale.placeBid(saleId, 300_000 ether); //overshoot 200k
@@ -268,15 +268,17 @@ contract CrowdSaleTest is Test {
         crowdSale.claim(saleId);
         vm.stopPrank();
 
-        assertEq(auctionToken.balanceOf(bidder), 230188400000000000000000);
-        assertEq(biddingToken.balanceOf(bidder), 884905060000000000000000);
+        assertEq(auctionToken.balanceOf(bidder), 230188679245283018800000);
+        assertEq(biddingToken.balanceOf(bidder), 884905660377358490420000);
 
-        assertEq(auctionToken.balanceOf(bidder2), 169811200000000000000000);
-        assertEq(biddingToken.balanceOf(bidder2), 915094080000000000000000);
+        assertEq(auctionToken.balanceOf(bidder2), 169811320754716980800000);
+        assertEq(biddingToken.balanceOf(bidder2), 915094339622641508720000);
 
         assertEq(biddingToken.balanceOf(emitter), 200_000 ether);
-        //dust is left for each digit under 1 ether, these fail:
-        // assertEq(auctionToken.balanceOf(address(crowdSale)), 0);
-        // assertEq(biddingToken.balanceOf(address(crowdSale)), 0);
+
+        //some dust is left on the table
+        //these are 0.0000000000004 tokens at 18 decimals
+        assertEq(auctionToken.balanceOf(address(crowdSale)), 400_000);
+        assertEq(biddingToken.balanceOf(address(crowdSale)), 860_000);
     }
 }

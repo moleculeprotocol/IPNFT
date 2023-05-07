@@ -4,7 +4,7 @@ out = 'out'
 libs = ['lib']
 test = 'test'
 cache_path  = 'cache_forge'
-solc_version = "0.8.18"
+solc_version = "0.8.19"
 gas_reports = ["IPNFT", "IPNFTV2", "Mintpass", "SchmackoSwap"]
 
 
