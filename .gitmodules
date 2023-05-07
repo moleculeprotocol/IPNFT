@@ -24,3 +24,6 @@
 [submodule "lib/token-vesting-contract"]
 	path = lib/token-vesting-contract
 	url = https://github.com/moleculeprotocol/token-vesting-contract
+[submodule "lib/prb-math"]
+	path = lib/prb-math
+	url = https://github.com/paulrberg/prb-math
