@@ -28,6 +28,15 @@ contract VestedCrowdSale is CrowdSale {
         //todo: clone a new TokenVesting ERC20 contract and call start sale with that one
     }
 
+    function settle(uint256 saleId) public override {
+        Sale memory sale = _sales[saleId];
+        VestingConfig memory vesting = _salesVesting[saleId];
+
+        super.settle(saleId);
+
+        _sales[saleId].auctionToken.approve(address(vesting.vestingContract), sale.salesAmount);
+    }
+
     function claim(uint256 saleId) external override {
         //todo: check that sale exists
         (uint256 auctionTokens, uint256 refunds) = getClaimableAmounts(saleId, msg.sender);
@@ -40,7 +49,6 @@ contract VestedCrowdSale is CrowdSale {
             _sales[saleId].biddingToken.safeTransfer(msg.sender, refunds);
         }
 
-        _sales[saleId].auctionToken.safeTransfer(address(vesting.vestingContract), auctionTokens);
         vesting.vestingContract.createPublicVestingSchedule(msg.sender, block.timestamp, vesting.cliff, vesting.duration, 60, auctionTokens);
         //todo emit vesting schedule id here
     }

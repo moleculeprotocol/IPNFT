@@ -72,7 +72,7 @@ contract CrowdSale {
         biddingToken.safeTransferFrom(msg.sender, address(this), biddingTokenAmount);
     }
 
-    function settle(uint256 saleId) external {
+    function settle(uint256 saleId) public virtual {
         //todo anyone can call this for the beneficiary
         Sale memory sale = _sales[saleId];
         SaleInfo storage __saleInfo = _saleInfo[saleId];
