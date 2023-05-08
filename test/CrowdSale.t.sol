@@ -252,9 +252,6 @@ contract CrowdSaleTest is Test {
         total received 230188.4 + 169811.3208 = 399_999
         total refunded 860_000
         */
-        // vm.startPrank(bidder);
-        // crowdSale.placeBid(saleId, 300_000 ether); //overshoot 200k
-        // vm.stopPrank();
 
         vm.startPrank(anyone);
         crowdSale.settle(saleId);

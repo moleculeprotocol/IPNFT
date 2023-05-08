@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.18;
 
+import "forge-std/console.sol";
+
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
@@ -52,6 +54,10 @@ contract StakedVestedCrowdSale is VestedCrowdSale {
         return startSale(sale, StakingConfig(stakedToken, stakesVesting, initialPrice, 0), cliff, duration);
     }
 
+    function stakesOf(uint256 saleId, address bidder) public view returns (uint256) {
+        return stakes[saleId][bidder];
+    }
+
     function settle(uint256 saleId) public override {
         super.settle(saleId);
         StakingConfig memory staking = salesStaking[saleId];
@@ -79,7 +85,9 @@ contract StakedVestedCrowdSale is VestedCrowdSale {
         (auctionTokens, refunds, biddingRatio) = super.claim(saleId);
         uint256 usedStakes = FP.mulWadDown(biddingRatio, _stakes);
         uint256 refundedStakes = _stakes - usedStakes;
-
+        // console.logUint(_stakes);
+        // console.logUint(usedStakes);
+        // console.logUint(refundedStakes);
         salesStaking[saleId].stakesVestingContract.createPublicVestingSchedule(
             msg.sender, block.timestamp, vestingConfig.cliff, vestingConfig.duration, 60, usedStakes
         );
