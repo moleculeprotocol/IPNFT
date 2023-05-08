@@ -37,7 +37,7 @@ contract VestedCrowdSale is CrowdSale {
         salesVesting[saleId] = vesting;
     }
 
-    function startSale(Sale memory sale, uint256 cliff, uint256 duration) external returns (uint256 saleId) {
+    function startSale(Sale memory sale, uint256 cliff, uint256 duration) public returns (uint256 saleId) {
         //todo: clone a new TokenVesting ERC20 contract and call start sale with that one
         //InitializeableTokenVesting vestingContract = InitializeableTokenVesting(Clones.clone(tokenImplementation));
         //vestingContract.initialize(sale.auctionToken);
@@ -51,7 +51,7 @@ contract VestedCrowdSale is CrowdSale {
         return startSale(sale, vesting);
     }
 
-    function settle(uint256 saleId) public override {
+    function settle(uint256 saleId) public virtual override {
         Sale memory sale = _sales[saleId];
         VestingConfig memory vesting = salesVesting[saleId];
 
@@ -60,9 +60,9 @@ contract VestedCrowdSale is CrowdSale {
         _sales[saleId].auctionToken.approve(address(vesting.vestingContract), sale.salesAmount);
     }
 
-    function claim(uint256 saleId) external override {
+    function claim(uint256 saleId) public virtual override returns (uint256 auctionTokens, uint256 refunds) {
         //todo: check that sale exists
-        (uint256 auctionTokens, uint256 refunds) = getClaimableAmounts(saleId, msg.sender);
+        (auctionTokens, refunds) = getClaimableAmounts(saleId, msg.sender);
         if (auctionTokens == 0) {
             revert("nothing to claim");
         }

@@ -58,7 +58,7 @@ contract CrowdSale {
         emit Started(saleId, msg.sender, sale);
     }
 
-    function placeBid(uint256 saleId, uint256 biddingTokenAmount) external {
+    function placeBid(uint256 saleId, uint256 biddingTokenAmount) public virtual {
         if (biddingTokenAmount == 0) {
             revert("must bid something");
         }
@@ -95,8 +95,8 @@ contract CrowdSale {
         release(sale.biddingToken, __saleInfo.beneficiary, sale.fundingGoal);
     }
 
-    function claim(uint256 saleId) external virtual {
-        (uint256 auctionTokens, uint256 refunds) = getClaimableAmounts(saleId, msg.sender);
+    function claim(uint256 saleId) public virtual returns (uint256 auctionTokens, uint256 refunds) {
+        (auctionTokens, refunds) = getClaimableAmounts(saleId, msg.sender);
         emit Claimed(saleId, msg.sender, auctionTokens, refunds);
 
         if (refunds > 0) {

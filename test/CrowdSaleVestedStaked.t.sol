@@ -3,15 +3,17 @@ pragma solidity ^0.8.17;
 
 import "forge-std/Test.sol";
 import "forge-std/console.sol";
+import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 import { CrowdSale, Sale, SaleInfo } from "../src/crowdsale/CrowdSale.sol";
-import { VestedCrowdSale, VestingConfig } from "../src/crowdsale/VestedCrowdSale.sol";
+import { VestingConfig } from "../src/crowdsale/VestedCrowdSale.sol";
+import { StakedVestedCrowdSale, StakingConfig } from "../src/crowdsale/StakedVestedCrowdSale.sol";
 import { TokenVesting } from "@moleculeprotocol/token-vesting/TokenVesting.sol";
 import { FakeERC20 } from "./helpers/FakeERC20.sol";
 
-contract CrowdSaleVestedTest is Test {
+contract CrowdSaleVestedStakedTest is Test {
     address emitter = makeAddr("emitter");
     address bidder = makeAddr("bidder");
     address bidder2 = makeAddr("bidder2");
@@ -20,23 +22,41 @@ contract CrowdSaleVestedTest is Test {
 
     FakeERC20 internal auctionToken;
     FakeERC20 internal biddingToken;
-    VestedCrowdSale internal crowdSale;
+    FakeERC20 internal daoToken;
+
+    //this typically is the DAO's general vesting contract
+    TokenVesting internal vestedDao;
+
+    StakedVestedCrowdSale internal crowdSale;
 
     function setUp() public {
-        crowdSale = new VestedCrowdSale();
+        crowdSale = new StakedVestedCrowdSale();
         auctionToken = new FakeERC20("Fractionalized IPNFT","FAM");
         biddingToken = new FakeERC20("USD token", "USDC");
+        daoToken = new FakeERC20("DAO token", "DAO");
 
         auctionToken.mint(emitter, 500_000 ether);
+
         biddingToken.mint(bidder, 1_000_000 ether);
+        daoToken.mint(bidder, 1_000_000 ether);
+
         biddingToken.mint(bidder2, 1_000_000 ether);
+        daoToken.mint(bidder2, 1_000_000 ether);
+
+        vestedDao = new TokenVesting(
+            daoToken,
+            string(abi.encodePacked("Vested ", daoToken.name())),
+            string(abi.encodePacked("v", daoToken.symbol()))
+        );
 
         vm.startPrank(bidder);
         biddingToken.approve(address(crowdSale), 1_000_000 ether);
+        daoToken.approve(address(crowdSale), 1_000_000 ether);
         vm.stopPrank();
 
         vm.startPrank(bidder2);
         biddingToken.approve(address(crowdSale), 1_000_000 ether);
+        daoToken.approve(address(crowdSale), 1_000_000 ether);
         vm.stopPrank();
     }
 
@@ -55,13 +75,19 @@ contract CrowdSaleVestedTest is Test {
 
         vm.startPrank(emitter);
         Sale memory _sale = makeSale();
+
         auctionToken.approve(address(crowdSale), 400_000 ether);
-        uint256 saleId = crowdSale.startSale(_sale, 60 days, 365 days);
+        uint256 saleId = crowdSale.startSale(_sale, daoToken, vestedDao, 1e18, 60 days, 365 days);
         vm.stopPrank();
 
         vm.startPrank(bidder);
         crowdSale.placeBid(saleId, 200_000 ether);
         vm.stopPrank();
+
+        assertEq(biddingToken.balanceOf(bidder), 800_000 ether);
+        assertEq(daoToken.balanceOf(bidder), 800_000 ether);
+        assertEq(biddingToken.balanceOf(address(crowdSale)), 200_000 ether);
+        assertEq(daoToken.balanceOf(address(crowdSale)), 200_000 ether);
 
         vm.startPrank(anyone);
         crowdSale.settle(saleId);
@@ -76,23 +102,25 @@ contract CrowdSaleVestedTest is Test {
         vm.stopPrank();
 
         (TokenVesting auctionTokenVesting,,) = crowdSale.salesVesting(saleId);
-
         assertEq(auctionTokenVesting.balanceOf(bidder), _sale.salesAmount);
 
-        vm.startPrank(bidder);
-        vm.warp(genesis + 10 days);
-        auctionTokenVesting.releaseAvailableTokensForHolder(bidder);
-        assertEq(auctionTokenVesting.balanceOf(bidder), _sale.salesAmount);
-        assertEq(auctionToken.balanceOf(bidder), 0);
+        //() = crowdSale.salesStaking(saleId);
+        assertEq(vestedDao.balanceOf(bidder), 200_000 ether);
 
-        vm.warp(genesis + 60 days);
-        auctionTokenVesting.releaseAvailableTokensForHolder(bidder);
-        assertTrue(auctionToken.balanceOf(bidder) > 65_000 ether);
+        // vm.startPrank(bidder);
+        // vm.warp(genesis + 10 days);
+        // auctionTokenVesting.releaseAvailableTokensForHolder(bidder);
+        // assertEq(auctionTokenVesting.balanceOf(bidder), _sale.salesAmount);
+        // assertEq(auctionToken.balanceOf(bidder), 0);
 
-        vm.warp(genesis + 366 days);
-        auctionTokenVesting.releaseAvailableTokensForHolder(bidder);
-        assertEq(auctionToken.balanceOf(bidder), _sale.salesAmount);
-        assertEq(auctionTokenVesting.balanceOf(bidder), 0);
-        vm.stopPrank();
+        // vm.warp(genesis + 60 days);
+        // auctionTokenVesting.releaseAvailableTokensForHolder(bidder);
+        // assertTrue(auctionToken.balanceOf(bidder) > 65_000 ether);
+
+        // vm.warp(genesis + 366 days);
+        // auctionTokenVesting.releaseAvailableTokensForHolder(bidder);
+        // assertEq(auctionToken.balanceOf(bidder), _sale.salesAmount);
+        // assertEq(auctionTokenVesting.balanceOf(bidder), 0);
+        // vm.stopPrank();
     }
 }

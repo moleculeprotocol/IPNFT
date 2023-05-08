@@ -7,8 +7,7 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 import { CrowdSale, Sale, SaleInfo } from "../src/crowdsale/CrowdSale.sol";
-
-import { MyToken } from "../src/MyToken.sol";
+import { FakeERC20 } from "./helpers/FakeERC20.sol";
 
 contract CrowdSaleTest is Test {
     address emitter = makeAddr("emitter");
@@ -17,14 +16,14 @@ contract CrowdSaleTest is Test {
 
     address anyone = makeAddr("anyone");
 
-    MyToken internal auctionToken;
-    MyToken internal biddingToken;
+    FakeERC20 internal auctionToken;
+    FakeERC20 internal biddingToken;
     CrowdSale internal crowdSale;
 
     function setUp() public {
         crowdSale = new CrowdSale();
-        auctionToken = new MyToken();
-        biddingToken = new MyToken();
+        auctionToken = new FakeERC20("Fractionalized IPNFT","FAM");
+        biddingToken = new FakeERC20("USD token", "USDC");
 
         auctionToken.mint(emitter, 500_000 ether);
         biddingToken.mint(bidder, 1_000_000 ether);
