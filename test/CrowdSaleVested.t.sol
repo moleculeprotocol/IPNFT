@@ -21,7 +21,6 @@ contract CrowdSaleVestedTest is Test {
     MyToken internal auctionToken;
     MyToken internal biddingToken;
     VestedCrowdSale internal crowdSale;
-    TokenVesting internal auctionTokenVesting;
 
     function setUp() public {
         crowdSale = new VestedCrowdSale();
@@ -31,8 +30,6 @@ contract CrowdSaleVestedTest is Test {
         auctionToken.mint(emitter, 500_000 ether);
         biddingToken.mint(bidder, 1_000_000 ether);
         biddingToken.mint(bidder2, 1_000_000 ether);
-
-        auctionTokenVesting = new TokenVesting(IERC20Metadata(address(auctionToken)), "Vested FAM", "vFAM");
 
         vm.startPrank(bidder);
         biddingToken.approve(address(crowdSale), 1_000_000 ether);
@@ -45,7 +42,7 @@ contract CrowdSaleVestedTest is Test {
 
     function makeSale() internal returns (Sale memory sale) {
         return Sale({
-            auctionToken: IERC20(address(auctionToken)),
+            auctionToken: IERC20Metadata(address(auctionToken)),
             biddingToken: IERC20(address(biddingToken)),
             fundingGoal: 200_000 ether,
             salesAmount: 400_000 ether,
@@ -58,9 +55,8 @@ contract CrowdSaleVestedTest is Test {
 
         vm.startPrank(emitter);
         Sale memory _sale = makeSale();
-        VestingConfig memory _config = VestingConfig(auctionTokenVesting, 60 days, 365 days);
         auctionToken.approve(address(crowdSale), 400_000 ether);
-        uint256 saleId = crowdSale.startSale(_sale, _config);
+        uint256 saleId = crowdSale.startSale(_sale, 60 days, 365 days);
         vm.stopPrank();
 
         vm.startPrank(bidder);
@@ -78,6 +74,8 @@ contract CrowdSaleVestedTest is Test {
         vm.startPrank(bidder);
         crowdSale.claim(saleId);
         vm.stopPrank();
+
+        (TokenVesting auctionTokenVesting,,) = crowdSale.salesVesting(saleId);
 
         assertEq(auctionTokenVesting.balanceOf(bidder), _sale.salesAmount);
 

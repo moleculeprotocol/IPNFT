@@ -4,6 +4,7 @@ pragma solidity ^0.8.17;
 import "forge-std/Test.sol";
 import "forge-std/console.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 import { CrowdSale, Sale, SaleInfo } from "../src/crowdsale/CrowdSale.sol";
 
@@ -33,7 +34,7 @@ contract CrowdSaleFuzzTest is Test {
         auctionToken.mint(emitter, salesAmt);
         vm.startPrank(emitter);
         Sale memory _sale = Sale({
-            auctionToken: IERC20(address(auctionToken)),
+            auctionToken: IERC20Metadata(address(auctionToken)),
             biddingToken: IERC20(address(biddingToken)),
             fundingGoal: fundingGoal,
             salesAmount: salesAmt,
