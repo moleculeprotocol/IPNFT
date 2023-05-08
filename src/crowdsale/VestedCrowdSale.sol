@@ -60,9 +60,9 @@ contract VestedCrowdSale is CrowdSale {
         _sales[saleId].auctionToken.approve(address(vesting.vestingContract), sale.salesAmount);
     }
 
-    function claim(uint256 saleId) public virtual override returns (uint256 auctionTokens, uint256 refunds) {
+    function claim(uint256 saleId) public virtual override returns (uint256 auctionTokens, uint256 refunds, uint256 biddingRatio) {
         //todo: check that sale exists
-        (auctionTokens, refunds) = getClaimableAmounts(saleId, msg.sender);
+        (auctionTokens, refunds, biddingRatio) = getClaimableAmounts(saleId, msg.sender);
         if (auctionTokens == 0) {
             revert("nothing to claim");
         }

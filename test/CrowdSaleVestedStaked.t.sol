@@ -103,24 +103,7 @@ contract CrowdSaleVestedStakedTest is Test {
 
         (TokenVesting auctionTokenVesting,,) = crowdSale.salesVesting(saleId);
         assertEq(auctionTokenVesting.balanceOf(bidder), _sale.salesAmount);
-
-        //() = crowdSale.salesStaking(saleId);
+        assertEq(daoToken.balanceOf(bidder), 800_000 ether);
         assertEq(vestedDao.balanceOf(bidder), 200_000 ether);
-
-        // vm.startPrank(bidder);
-        // vm.warp(genesis + 10 days);
-        // auctionTokenVesting.releaseAvailableTokensForHolder(bidder);
-        // assertEq(auctionTokenVesting.balanceOf(bidder), _sale.salesAmount);
-        // assertEq(auctionToken.balanceOf(bidder), 0);
-
-        // vm.warp(genesis + 60 days);
-        // auctionTokenVesting.releaseAvailableTokensForHolder(bidder);
-        // assertTrue(auctionToken.balanceOf(bidder) > 65_000 ether);
-
-        // vm.warp(genesis + 366 days);
-        // auctionTokenVesting.releaseAvailableTokensForHolder(bidder);
-        // assertEq(auctionToken.balanceOf(bidder), _sale.salesAmount);
-        // assertEq(auctionTokenVesting.balanceOf(bidder), 0);
-        // vm.stopPrank();
     }
 }
