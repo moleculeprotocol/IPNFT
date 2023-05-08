@@ -87,11 +87,13 @@ You can place required env vars in your `.env` file and run `source .env` to get
 - Anvil is a local testnet node shipped with Foundry. You can use it for testing your contracts from frontends or for interacting over RPC. You can also use the anvil node from docker, see the [accompanying README in the `subgraph` folder](./subgraph/README.md).
 - Run `anvil -h 0.0.0.0` in a terminal window and keep it running
 
-To just deploy all contracts using the default mnemonic's first account, run `forge script script/dev/Dev.s.sol:DevScript -f $RPC_URL --broadcast`
+To just deploy all contracts using the default mnemonic's first account, run `forge script script/dev/Ipnft.s.sol -f $RPC_URL --broadcast`
 
 To issue a mintpass, reserve and mint a test IPNFT for the 1st user, run `forge script script/dev/Fixture.s.sol -f $RPC_URL --broadcast`. This requires you to have executed Dev.s.sol before. This also creates a listing on Schmackoswap but doesn't accept it.
 
 To fractionalize the test IPNFT, run `forge script script/dev/Fractionalize.s.sol -f $RPC_URL --broadcast`
+
+To test a simple StakedVestedCrowdSale with a fractionalized IPNFT, run `forge script script/dev/CrowdSale.s.sol -f $RPC_URL --broadcast`
 
 To approve and finalize the sales listing, run `forge script script/dev/ApproveAndBuy.s.sol -f $RPC_URL --broadcast`. See the inline comment on why this is a separate script.
 
@@ -128,7 +130,7 @@ PROXY_ADDRESS=<the proxy address> forge script script/UpgradeImplementation.s.so
 
 ### Manually verify contracts on Etherscan
 
-full docs: https://book.getfoundry.sh/reference/forge/forge-verify-contract
+full docs: <https://book.getfoundry.sh/reference/forge/forge-verify-contract>
 
 `forge verify-contract --chain-id 5 <address> IPNFT`
 
