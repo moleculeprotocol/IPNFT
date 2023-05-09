@@ -139,33 +139,43 @@ contract CrowdSaleVestedStakedTest is Test {
         800_000$ are bid in total
         600_000$ are surplus
 
-        bidder added 600_000$ (keeps 400_000$)
+        bidder added 600_000$ (and still has 400_000$)
         this is 3/4 of all bids
         bidder receives 3/4 of 400_000 = 300_000 FAM
         bidder is refunded  3/4 of 600_000 = 450_000$
         bidder contributed 600_000$ - 450_000$ = $150_000 to the funding
+
+        bidder staked 600_000 dao at dao/bid price of 1
+        bidder is refunded 450_000 DAO (1DAO/1$ * 450_000$ refunds)
+        bidder gets (all staked - refund) vDAO (600_000-450_000) = 150_000 vDAO
+        token amt of bidder stakes returned =  450_000DAO + 150_000vDAO = 600_000
         bidder's final $ balance = 400_000 + 450_000 = 850_000$
 
-        bidder2 added 200_000$ (keeps 800_000$)
+        bidder2 added 200_000$ (and still has 800_000$)
         this is 1/4 of all bids
         bidder2 receives 1/4 of 400_000 = 100_000 FAM
         bidder2 is refunded 1/4 of 600_000 = 150_000$
         bidder2 contributed 200_000$ - 150_000$ = $50_000 to the funding
+
+        bidder2 staked 200_000 DAO at dao/bid price of 1
+        bidder2 is refunded 150_000 DAO (1DAO/1$ * 150_000$)
+        bidder2 gets (all staked - refund) vDAO (200_000-150_000) 50_000 vDAO
+        token amt of bidder stakes returned =  150_000DAO + 50_000vDAO = 200_000
         bidder2's final $ balance = 800_000 + 150_000 = 950_000$
 
-        > together bidder1 and bidder2 staked 600_000 + 200_000 = 800_000 DAO at dao/$ price of 1
-        > *all* stakes are paid back. The "active" ratio is paid as vested, the "inactive" simply refunded
-        all stakers staked 800_000 dao
+        -- And now with varying prices (same $ amounts)
+        -- auction is settled at a price of 1.5DAO/1$
 
-        bidder staked 600_000 dao at dao/bid price of 1
-        bidder receives 3/4*600_000  = 450_000  vDAO 
-        bidder is refunded the rest (600_000 - 450_000 = 150_000) DAO 
-        bidder stakes returned =  450_000 + 150_000 = 600_000 DAO
+        bidder staked 1_200_000 dao at dao/bid price of 2 ($600_000 * 2)
+        bidder is refunded 675_000 DAO (1.5DAO/1$ * $450_000)
+        bidder received (all staked - refund) vDAO (1_200_000-675_000) = 525_000 vDAO
+        token amt of bidder stakes returned =  675_000DAO + 525_000vDAO = 1_200_000
 
-        bidder2 staked 200_000 dao at dao/bid price of 1
-        bidder2 receives 1/4*200_000 = 50_000  vDAO 
-        bidder2 is refunded the rest (200_000 - 50_000 = 150_000) DAO
-        bidder stakes returned =  50_000 + 150_000 = 200_000 DAO
+        bidder2 staked 600_000 dao at dao/bid price of 3 ($200_000 * 3)
+        bidder2 is refunded 225_000 DAO (1.5DAO/1$ * $150_000)
+        bidder2 gets (all staked - refund) vDAO (600_000-225_000) 375_000 vDAO
+        token amt of bidder stakes returned =  225_000DAO + 375_000vDAO = 600_000
+
         */
         vm.startPrank(anyone);
         crowdSale.settle(saleId);
@@ -183,8 +193,8 @@ contract CrowdSaleVestedStakedTest is Test {
 
         assertEq(auctionTokenVesting.balanceOf(bidder), 300_000 ether);
         assertEq(biddingToken.balanceOf(bidder), 850_000 ether);
-        assertEq(vestedDao.balanceOf(bidder), 450_000 ether);
-        assertEq(daoToken.balanceOf(bidder), 550_000 ether);
+        assertEq(vestedDao.balanceOf(bidder), 150_000 ether);
+        assertEq(daoToken.balanceOf(bidder), 850_000 ether);
 
         assertEq(auctionTokenVesting.balanceOf(bidder2), 100_000 ether);
         assertEq(biddingToken.balanceOf(bidder2), 950_000 ether);
@@ -220,60 +230,15 @@ contract CrowdSaleVestedStakedTest is Test {
         //stakes have been placed.
         assertEq(daoToken.balanceOf(bidder), 390_000 ether);
         assertEq(daoToken.balanceOf(address(crowdSale)), 1_060_000 ether);
-        (,, uint256 price, uint256 stakeTotal) = crowdSale.salesStaking(saleId);
+        (,,,, uint256 stakeTotal) = crowdSale.salesStaking(saleId);
         assertEq(stakeTotal, 1_060_000 ether);
 
         assertEq(crowdSale.stakesOf(saleId, bidder), 610_000 ether);
         assertEq(crowdSale.stakesOf(saleId, bidder2), 450_000 ether);
 
-        /*
-        bidder and bidder2 have 1mn$ each
-
-        400_000 auction tokens are sold
-        200_000$ are requested
-        1_060_000$ are bid in total
-        860_000$ are overshot
-
-        bidder added 610_000$ (keeps 390_000$)
-        this is x = 0.575471  of all bids
-        bidder receives x * 400_000 = 230188.4 FAM
-        bidder is refunded  x of 860_000 = $494905.660377
-        bidder contributed (610_000 - 494905 = 115_095$) to the funding
-        bidder's final $ balance = 390_000 + 494905 = 884905$
-        
-        bidder2 added 450_000$ (keeps 550_000$)
-        this is y = 0.424528 of all bids
-        bidder2 receives y * 400_000 = 169811.3208 FAM
-        bidder2 is refunded y of 860_000 = $365094.33972
-        bidder contributed (450_000 - 365094 = 84_906$) to the funding
-        bidder2's final $ balance = 550_000 + 365094 = 915094$
-
-        > together bidder1 and bidder2 staked 610_000 + 450_000 = 1_060_000 dao tokens at dao/bid price of 1
-        > *all* stakes are paid back. The "active" ratio is paid as vested, the "inactive" simply refunded
-        
-        all stakers staked 1_060_000 dao
-        bidder staked 610_000 dao at dao/bid price of 1
-        bidder receives x*610_000  = 351037.735  vdao 
-        bidder is refunded the rest (610_000 - 351037.31 = 258963) dao 
-        bidder stakes returned =  351037 + 258963 = 610_000 dao
-
-        bidder2 staked 450_000 dao at dao/bid price of 1
-        bidder2 receives y*450_000 = 191037.6  vdao 
-        bidder2 is refunded the rest (450_000 - 191037.6 = 258963) dao
-        bidder stakes returned =  191037 + 258963 = 450_000 dao
-        
-        in total:
-        total FAM sold 230188.4 + 169811.3208 = 399_999.7208
-        total $ refunded 860_000
-        total stakes returned = 450_000 + 610_000 = 1_060_000 (all)
-        */
-
         vm.startPrank(anyone);
         crowdSale.settle(saleId);
         vm.stopPrank();
-
-        uint256 oldDaoBalanceBidder = daoToken.balanceOf(bidder);
-        uint256 oldDaoBalanceBidder2 = daoToken.balanceOf(bidder2);
 
         vm.startPrank(bidder);
         crowdSale.claim(saleId);
@@ -287,15 +252,14 @@ contract CrowdSaleVestedStakedTest is Test {
         assertEq(auctionTokenVesting.balanceOf(bidder), 230188679245283018800000);
         assertEq(auctionTokenVesting.balanceOf(bidder2), 169811320754716980800000);
 
-        //todo: the direct returns are equal?!
-        assertEq(daoToken.balanceOf(bidder) - oldDaoBalanceBidder, 258962264150943396330000);
-        assertEq(daoToken.balanceOf(bidder2) - oldDaoBalanceBidder2, 258962264150943396600000);
+        assertEq(daoToken.balanceOf(bidder), 884905660377358490420000);
+        assertEq(daoToken.balanceOf(bidder2), 915094339622641508720000);
 
-        assertEq(daoToken.balanceOf(bidder) - oldDaoBalanceBidder + vestedDao.balanceOf(bidder), 610_000 ether);
-        assertEq(daoToken.balanceOf(bidder2) - oldDaoBalanceBidder2 + vestedDao.balanceOf(bidder2), 450_000 ether);
+        assertEq(daoToken.balanceOf(bidder) + vestedDao.balanceOf(bidder), 1_000_000 ether);
+        assertEq(daoToken.balanceOf(bidder2) + vestedDao.balanceOf(bidder2), 1_000_000 ether);
 
-        //some dust is left on the table
-        //these are 0.0000000000004 tokens at 18 decimals
+        // //some dust is left on the table
+        // //these are 0.0000000000004 tokens at 18 decimals
         assertEq(auctionToken.balanceOf(address(crowdSale)), 400_000);
         assertEq(biddingToken.balanceOf(address(crowdSale)), 860_000);
         assertEq(daoToken.balanceOf(address(crowdSale)), 0);
