@@ -78,7 +78,8 @@ contract VestedCrowdSale is CrowdSale {
             _sales[saleId].biddingToken.safeTransfer(msg.sender, refunds);
         }
 
-        vesting.vestingContract.createPublicVestingSchedule(msg.sender, block.timestamp, vesting.cliff, vesting.duration, 60, auctionTokens);
+        IERC20(_sales[saleId].auctionToken).safeTransfer(address(vesting.vestingContract), auctionTokens);
+        vesting.vestingContract.createVestingSchedule(msg.sender, block.timestamp, vesting.cliff, vesting.duration, 60, false, auctionTokens);
         //todo emit vesting schedule id here
     }
 }

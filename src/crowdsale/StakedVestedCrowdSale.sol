@@ -103,8 +103,9 @@ contract StakedVestedCrowdSale is VestedCrowdSale {
         uint256 refundedStakes = FP.mulWadDown(refunds, stakingConfig.wadDaoInBidPriceAtSettlement);
         uint256 vestedStakes = _stakes - refundedStakes;
 
-        salesStaking[saleId].stakesVestingContract.createPublicVestingSchedule(
-            msg.sender, block.timestamp, vestingConfig.cliff, vestingConfig.duration, 60, vestedStakes
+        salesStaking[saleId].stakedToken.safeTransfer(address(salesStaking[saleId].stakesVestingContract), vestedStakes);
+        salesStaking[saleId].stakesVestingContract.createVestingSchedule(
+            msg.sender, block.timestamp, vestingConfig.cliff, vestingConfig.duration, 60, false, vestedStakes
         );
         salesStaking[saleId].stakedToken.safeTransfer(msg.sender, refundedStakes);
     }
