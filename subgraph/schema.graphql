@@ -20,14 +20,15 @@ type Fractionalized @entity {
   circulatingSupply: BigInt! #the amount of unburnt fractions
   symbol: String!
   tokenName: String!
-  #paymentToken: Bytes #address ERC20 Token
-  #paidPrice: BigInt #the price paid for the original ipnft
-  #claimedShares: BigInt! # the amount of shares that have already been claimed. This needs to have a fulfilledListingId to be set
+  #   paymentToken: Bytes #address ERC20 Token
+  #   paidPrice: BigInt #the price paid for the original ipnft
+  #   claimedShares: BigInt! # the amount of shares that have already been claimed. This needs to have a fulfilledListingId to be set
   fractions: [Fraction!] @derivedFrom(field: "fractionalizedIpfnt")
+  crowdsales: [CrowdSale!] @derivedFrom(field: "fractionalizedIpnft")
 }
 
 type Fraction @entity {
-  id: ID! # fractionId + owner address
+  id: ID! # erc20address + owner address
   fractionalizedIpfnt: Fractionalized!
   balance: BigInt! # Token balance of the owner
   owner: Bytes! #Address of the token owner
@@ -81,4 +82,33 @@ type Mintpass @entity {
   owner: Bytes! #address
   createdAt: BigInt!
   status: MintpassStatus
+}
+
+type CrowdSale @entity {
+  id: ID!
+  fractionalizedIpnft: Fractionalized!
+  salesAmount: BigInt! #the amount of tokens to be auctioned
+  amountRaised: BigInt! #the amount of tokens raised so far
+  amountStaked: BigInt #the amount of tokens staked so far
+  # biddingToken: Bytes! #address of the erc20Token to be raised
+  fundingGoal: BigInt! #the amount of tokens to be raised
+  #stakedToken: Bytes #address of the erc20Token to be staked (depends on type="stakedVested")
+  closingTime: BigInt! #the time when the auction ends
+  # beneficiary: Bytes! #address of the account that'll receive the fundingGoal
+  settled: Boolean! #true if the fundingGoal has been reached
+  #type: String! #the type of auction, can be "basic", "vested" "stakedVested"
+  #cliff: BigInt # The vesting cliff (depends on type "vested" | "stakedVested")
+  issuer: Bytes! #address of the creator
+  createdAt: BigInt! #the time when the auction was created
+  contributions: [Contribution!] @derivedFrom(field: "crowdSale")
+}
+
+type Contribution @entity {
+  id: ID! #transactionhash
+  contributor: Bytes!
+  crowdSale: CrowdSale!
+  amount: BigInt!
+  stakedAmount: BigInt
+  price: BigInt # staking token vs. bidding token price
+  createdAt: BigInt!
 }
