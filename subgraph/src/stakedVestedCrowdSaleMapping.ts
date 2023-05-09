@@ -1,19 +1,26 @@
-import {
-  Address,
-  BigInt,
-  DataSourceContext,
-  log
-} from '@graphprotocol/graph-ts';
+import { BigInt, log } from '@graphprotocol/graph-ts';
 import {
   Claimed as ClaimedEvent,
   Settled as SettledEvent,
-  Started as StartedEvent
+  Started as StartedEvent,
+  Bid as BidEvent
 } from '../generated/StakedVestedCrowdSale/StakedVestedCrowdSale';
-import { CrowdSale } from '../generated/schema';
+import { Contribution, CrowdSale, Fractionalized } from '../generated/schema';
 
 export function handleStarted(event: StartedEvent): void {
   let crowdSale = new CrowdSale(event.params.saleId.toString());
 
+  let fractionalized = Fractionalized.load(
+    event.params.sale.auctionToken.toHexString()
+  );
+  if (!fractionalized) {
+    log.error('Fractionalized Ipnft not found for id: {}', [
+      event.params.sale.auctionToken.toHexString()
+    ]);
+    return;
+  }
+
+  crowdSale.fractionalizedIpnft = fractionalized.id;
   crowdSale.auctionToken = event.params.sale.auctionToken;
   crowdSale.salesAmount = event.params.sale.salesAmount;
   crowdSale.amountRaised = BigInt.fromU32(0);
@@ -24,8 +31,56 @@ export function handleStarted(event: StartedEvent): void {
   crowdSale.creator = event.params.issuer;
   crowdSale.createdAt = event.block.timestamp;
   crowdSale.closingTime = event.params.sale.closingTime;
+
+  crowdSale.save();
 }
 
-export function handleSettled(event: SettledEvent): void {}
+export function handleBid(event: BidEvent): void {
+  let crowdSale = CrowdSale.load(event.params.saleId.toString());
+  if (!crowdSale) {
+    log.error('CrowdSale not found for id: {}', [
+      event.params.saleId.toString()
+    ]);
+    return;
+  }
 
-export function handleClaimed(event: ClaimedEvent): void {}
+  //   Update CrowdSale
+  crowdSale.amountRaised = crowdSale.amountRaised.plus(event.params.amount);
+  crowdSale.amountStaked = crowdSale.amountStaked.plus(
+    event.params.stakedAmount
+  );
+  crowdSale.save();
+
+  //   Create Contribution
+  let contribution = new Contribution(event.transaction.hash.toHex());
+  contribution.amount = event.params.amount;
+  contribution.stakedAmount = event.params.stakedAmount;
+  contribution.contributor = event.params.bidder;
+  contribution.price = event.params.price;
+  contribution.createdAt = event.block.timestamp;
+  contribution.crowdSale = crowdSale.id;
+
+  contribution.save();
+}
+
+export function handleSettled(event: SettledEvent): void {
+  let crowdSale = CrowdSale.load(event.params.saleId.toString());
+  if (!crowdSale) {
+    log.error('CrowdSale not found for id: {}', [
+      event.params.saleId.toString()
+    ]);
+    return;
+  }
+  crowdSale.settled = true;
+  crowdSale.save();
+}
+
+// export function handleClaimed(event: ClaimedEvent): void {
+//   let crowdSale = CrowdSale.load(event.params.saleId.toString());
+//   if (!crowdSale) {
+//     log.error('CrowdSale not found for id: {}', [
+//       event.params.saleId.toString()
+//     ]);
+//     return;
+//   }
+// }

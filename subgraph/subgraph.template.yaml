@@ -117,6 +117,7 @@ dataSources:
       language: wasm/assemblyscript
       entities:
         - CrowdSale
+        - Contribution
       abis:
         - name: StakedVestedCrowdSale
           file: ./abis/StakedVestedCrowdSale.json
@@ -127,6 +128,8 @@ dataSources:
           handler: handleSettled
         - event: Claimed(indexed uint256,indexed address,uint256,uint256)
           handler: handleClaimed
+        - event: Bid(indexed uint256,indexed address,uint256,uint256,uint256)
+          handler: handleBid
       file: ./src/stakedVestedCrowdSaleMapping.ts
 templates:
   - name: FractionalizedToken
