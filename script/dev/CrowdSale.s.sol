@@ -40,8 +40,6 @@ contract DeployCrowdSale is Script {
         console.log("staked vested crowdsale %s", address(stakedVestedCrowdSale));
         console.log("dao Token %s", address(daoToken));
         console.log("vested Dao Token %s", address(vestedDaoToken));
-
-        (new FixtureCrowdSale()).run();
     }
 }
 
@@ -68,14 +66,14 @@ contract FixtureCrowdSale is Script {
         (charlie,) = deriveRememberKey(mnemonic, 3);
         (anyone,) = deriveRememberKey(mnemonic, 4);
 
-        usdc = FakeERC20(vm.envAddress("ERC20_ADDRESS"));
+        usdc = FakeERC20(vm.envAddress("USDC_ADDRESS"));
         auctionToken = FractionalizedToken(vm.envAddress("FRACTIONALIZED_TOKEN_ADDRESS"));
         stakedVestedCrowdSale = StakedVestedCrowdSale(vm.envAddress("STAKED_VESTED_CROWDSALE_ADDRESS"));
         daoToken = FakeERC20(vm.envAddress("DAO_TOKEN_ADDRESS"));
         vestedDaoToken = TokenVesting(vm.envAddress("VDAO_TOKEN_ADDRESS"));
     }
 
-    function placeBid(address bidder, uint256 amount, uint256 saleId, FakeERC20 daoToken, StakedVestedCrowdSale stakedVestedCrowdSale) internal {
+    function placeBid(address bidder, uint256 amount, uint256 saleId) internal {
         vm.startBroadcast(bidder);
         usdc.approve(address(stakedVestedCrowdSale), amount);
         daoToken.approve(address(stakedVestedCrowdSale), amount);
@@ -83,7 +81,7 @@ contract FixtureCrowdSale is Script {
         vm.stopBroadcast();
     }
 
-    function claim(address claimer, uint256 saleId, StakedVestedCrowdSale stakedVestedCrowdSale) internal {
+    function claim(address claimer, uint256 saleId) internal {
         vm.startBroadcast(claimer);
         stakedVestedCrowdSale.claim(saleId);
         vm.stopBroadcast();
@@ -118,18 +116,14 @@ contract FixtureCrowdSale is Script {
         uint256 saleId = stakedVestedCrowdSale.startSale(_sale, daoToken, vestedDaoToken, 1e18, 60 days, 60 days);
         vm.stopBroadcast();
 
-        placeBid(alice, 100 ether, saleId, daoToken, stakedVestedCrowdSale);
-        placeBid(charlie, 100 ether, saleId, daoToken, stakedVestedCrowdSale);
+        placeBid(alice, 100 ether, saleId);
+        placeBid(charlie, 100 ether, saleId);
 
         vm.startBroadcast(anyone);
         stakedVestedCrowdSale.settle(saleId);
         vm.stopBroadcast();
 
-        claim(alice, saleId, stakedVestedCrowdSale);
-        claim(charlie, saleId, stakedVestedCrowdSale);
-
-        // console.log("daoToken %s", address(daoToken));
-        // console.log("vestedDaoToken %s", address(vestedDaoToken));
-        // console.log("stakedVestedCrowdsale %s", address(stakedVestedCrowdSale));
+        claim(alice, saleId);
+        claim(charlie, saleId);
     }
 }

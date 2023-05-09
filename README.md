@@ -82,18 +82,26 @@ You can place required env vars in your `.env` file and run `source .env` to get
 
 ### Deploy for local development
 
+#### Quickstart
+
+- You can use the shell script `./setupLocal.sh` to deploy all contracts and add the optional `-f` or `--fixture` flag to also run the fixture scripts.
+
+#### Manual
+
 - the dev scripts are supposed to run on your _local_ environment and depend on contract addresses on your local environment. Use `source .env` to pull deterministic local contract addresses to your local session.
 
 - Anvil is a local testnet node shipped with Foundry. You can use it for testing your contracts from frontends or for interacting over RPC. You can also use the anvil node from docker, see the [accompanying README in the `subgraph` folder](./subgraph/README.md).
 - Run `anvil -h 0.0.0.0` in a terminal window and keep it running
 
-To just deploy all contracts using the default mnemonic's first account, run `forge script script/dev/Ipnft.s.sol -f $RPC_URL --broadcast`
+To just deploy all contracts using the default mnemonic's first account, run `forge script script/dev/Ipnft.s.sol:DeployIpnft -f $RPC_URL --broadcast`
 
-To issue a mintpass, reserve and mint a test IPNFT for the 1st user, run `forge script script/dev/Fixture.s.sol -f $RPC_URL --broadcast`. This requires you to have executed Dev.s.sol before. This also creates a listing on Schmackoswap but doesn't accept it.
+To issue a mintpass, reserve and mint a test IPNFT for the 1st user, run `forge script script/dev/Ipnft.s.sol:FixtureIpnft -f $RPC_URL --broadcast`. This requires you to have executed Dev.s.sol before. This also creates a listing on Schmackoswap but doesn't accept it.
 
-To fractionalize the test IPNFT, run `forge script script/dev/Fractionalize.s.sol -f $RPC_URL --broadcast`
+To deploy the Fractionalizer, run `forge script script/dev/Fractionalize.s.sol:DeployFractionalizer -f $RPC_URL --broadcast`
+To fractionalize the test IPNFT, run `forge script script/dev/Fractionalize.s.sol:FixtureFractionalizer -f $RPC_URL --broadcast`
 
-To test a simple StakedVestedCrowdSale with a fractionalized IPNFT, run `forge script script/dev/CrowdSale.s.sol -f $RPC_URL --broadcast`
+To deploy the StakedVestedCrowdSale contract, run `forge script script/dev/CrowdSale.s.sol:DeployCrowdSale -f $RPC_URL --broadcast`
+To test a simple StakedVestedCrowdSale with a fractionalized IPNFT, run `forge script script/dev/CrowdSale.s.sol:FixtureCrowdSale -f $RPC_URL --broadcast`
 
 To approve and finalize the sales listing, run `forge script script/dev/ApproveAndBuy.s.sol -f $RPC_URL --broadcast`. See the inline comment on why this is a separate script.
 
