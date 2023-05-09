@@ -8,8 +8,6 @@ import { Fractionalizer } from "../../src/Fractionalizer.sol";
 import { FractionalizedToken } from "../../src/FractionalizedToken.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
-import { IpnftScript } from "./Ipnft.s.sol";
-
 /**
  * @title FractionalizeScript
  * @author
@@ -21,7 +19,6 @@ contract DeployFractionalizer is Script {
 
     function run() public {
         (address deployer,) = deriveRememberKey(mnemonic, 0);
-        (address bob,) = deriveRememberKey(mnemonic, 1);
 
         vm.startBroadcast(deployer);
 
@@ -36,6 +33,23 @@ contract DeployFractionalizer is Script {
         );
         fractionalizer.initialize(ipnft);
         vm.stopBroadcast();
+    }
+}
+
+contract FixtureFractionalizer is Script {
+    string mnemonic = "test test test test test test test test test test test junk";
+
+    Fractionalizer fractionalizer;
+
+    address bob;
+
+    function prepareAddresses() internal {
+        (bob,) = deriveRememberKey(mnemonic, 1);
+        fractionalizer = Fractionalizer(vm.envAddress("FRACTIONALIZER_ADDRESS"));
+    }
+
+    function run() public {
+        prepareAddresses();
 
         vm.startBroadcast(bob);
         FractionalizedToken tokenContract =
