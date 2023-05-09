@@ -38,6 +38,7 @@ contract CrowdSale {
     event Started(uint256 indexed saleId, address indexed issuer, Sale sale);
     event Settled(uint256 indexed saleId, uint256 totalBids, uint256 surplus);
     event Claimed(uint256 indexed saleId, address indexed claimer, uint256 claimed, uint256 refunded);
+    event Bid(uint256 indexed saleId, address indexed bidder, uint256 amount);
 
     constructor() { }
 
@@ -71,6 +72,7 @@ contract CrowdSale {
         IERC20 biddingToken = sale.biddingToken;
         _saleInfo[saleId].total += biddingTokenAmount;
         _contributions[saleId][msg.sender] += biddingTokenAmount;
+        emit Bid(saleId, msg.sender, biddingTokenAmount);
         biddingToken.safeTransferFrom(msg.sender, address(this), biddingTokenAmount);
     }
 
