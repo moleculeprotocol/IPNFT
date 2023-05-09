@@ -27,8 +27,7 @@ export function handleStarted(event: StartedEvent): void {
   crowdSale.amountStaked = BigInt.fromU32(0);
   crowdSale.fundingGoal = event.params.sale.fundingGoal;
   crowdSale.settled = false;
-  //   crowdSale.price = event.params.price;
-  crowdSale.creator = event.params.issuer;
+  crowdSale.issuer = event.params.issuer;
   crowdSale.createdAt = event.block.timestamp;
   crowdSale.closingTime = event.params.sale.closingTime;
 
@@ -46,9 +45,11 @@ export function handleBid(event: BidEvent): void {
 
   //   Update CrowdSale
   crowdSale.amountRaised = crowdSale.amountRaised.plus(event.params.amount);
-  crowdSale.amountStaked = crowdSale.amountStaked.plus(
-    event.params.stakedAmount
-  );
+  if (crowdSale.amountStaked) {
+    crowdSale.amountStaked = crowdSale.amountStaked.plus(
+      event.params.stakedAmount
+    );
+  }
   crowdSale.save();
 
   //   Create Contribution
