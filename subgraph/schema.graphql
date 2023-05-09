@@ -87,7 +87,6 @@ type Mintpass @entity {
 type CrowdSale @entity {
   id: ID!
   fractionalizedIpnft: Fractionalized!
-  auctionToken: Bytes! #address of the erc20Token to be auctioned
   salesAmount: BigInt! #the amount of tokens to be auctioned
   amountRaised: BigInt! #the amount of tokens raised so far
   amountStaked: BigInt #the amount of tokens staked so far
