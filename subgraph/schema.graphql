@@ -82,3 +82,22 @@ type Mintpass @entity {
   createdAt: BigInt!
   status: MintpassStatus
 }
+
+type CrowdSale @entity {
+  id: ID!
+  auctionToken: Bytes! #address of the erc20Token to be auctioned
+  salesAmount: BigInt! #the amount of tokens to be auctioned
+  amountRaised: BigInt! #the amount of tokens raised so far
+  amountStaked: BigInt! #the amount of tokens staked so far
+  # biddingToken: Bytes! #address of the erc20Token to be raised
+  fundingGoal: BigInt! #the amount of tokens to be raised
+  #stakedToken: Bytes #address of the erc20Token to be staked (depends on type="stakedVested")
+  closingTime: BigInt! #the time when the auction ends
+  # beneficiary: Bytes! #address of the account that'll receive the fundingGoal
+  settled: Boolean! #true if the fundingGoal has been reached
+  #type: String! #the type of auction, can be "basic", "vested" "stakedVested"
+  #cliff: BigInt # The vesting cliff (depends on type "vested" | "stakedVested")
+  price: BigInt #the current price of the token to be staked to ETH (depends on type "stakedVested")
+  creator: Bytes! #address of the creator
+  createdAt: BigInt! #the time when the auction was created
+}
