@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 
-source .env
+# use deterministic addresses
+#source ./.env.example
+set -a
+  . ./.env.example
+set +a
+
 fixture=0
 
 # Parse command-line options
@@ -16,6 +21,9 @@ while [ "$#" -gt 0 ]; do
   esac
   shift
 done
+
+# echo $MINTPASS_ADDRESS
+# exit
 
 # Main logic
 if [ "$fixture" -eq "1" ]; then
