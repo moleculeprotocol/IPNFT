@@ -21,6 +21,7 @@ struct StakingConfig {
     IERC20 stakedToken; //eg VITA DAO token
     TokenVesting stakesVestingContract;
     uint256 auctionInBiddingPrice;
+    uint256 wadDaoInBidPriceAtSettlement;
     uint256 stakeTotal; //initialize with 0
 }
 
@@ -51,7 +52,10 @@ contract StakedVestedCrowdSale is VestedCrowdSale {
         public
         returns (uint256 saleId)
     {
-        return startSale(sale, StakingConfig(stakedToken, stakesVesting, initialPrice, 0), cliff, duration);
+        //1 DAO = 1 bid, current price
+        uint256 wadDaoInBiddingPrice = 1 * FP.WAD;
+
+        return startSale(sale, StakingConfig(stakedToken, stakesVesting, initialPrice, wadDaoInBiddingPrice, 0), cliff, duration);
     }
 
     function stakesOf(uint256 saleId, address bidder) public view returns (uint256) {
@@ -60,7 +64,9 @@ contract StakedVestedCrowdSale is VestedCrowdSale {
 
     function settle(uint256 saleId) public override {
         super.settle(saleId);
-        StakingConfig memory staking = salesStaking[saleId];
+        StakingConfig storage staking = salesStaking[saleId];
+        //1 DAO = 1 bid
+        staking.wadDaoInBidPriceAtSettlement = 1 * FP.WAD;
         staking.stakedToken.approve(address(staking.stakesVestingContract), staking.stakeTotal);
     }
 
@@ -77,19 +83,20 @@ contract StakedVestedCrowdSale is VestedCrowdSale {
         super.placeBid(saleId, biddingTokenAmount);
     }
 
-    function claim(uint256 saleId) public override returns (uint256 auctionTokens, uint256 refunds, uint256 biddingRatio) {
+    //todo: get final price as by price feed at settlement
+    function claim(uint256 saleId) public override returns (uint256 auctionTokens, uint256 refunds) {
         VestingConfig memory vestingConfig = salesVesting[saleId];
+        StakingConfig memory stakingConfig = salesStaking[saleId];
 
         uint256 _stakes = stakes[saleId][msg.sender];
 
-        (auctionTokens, refunds, biddingRatio) = super.claim(saleId);
-        uint256 usedStakes = FP.mulWadDown(biddingRatio, _stakes);
-        uint256 refundedStakes = _stakes - usedStakes;
-        // console.logUint(_stakes);
-        // console.logUint(usedStakes);
-        // console.logUint(refundedStakes);
+        (auctionTokens, refunds) = super.claim(saleId);
+
+        uint256 refundedStakes = FP.mulWadDown(refunds, stakingConfig.wadDaoInBidPriceAtSettlement);
+        uint256 vestedStakes = _stakes - refundedStakes;
+
         salesStaking[saleId].stakesVestingContract.createPublicVestingSchedule(
-            msg.sender, block.timestamp, vestingConfig.cliff, vestingConfig.duration, 60, usedStakes
+            msg.sender, block.timestamp, vestingConfig.cliff, vestingConfig.duration, 60, vestedStakes
         );
         salesStaking[saleId].stakedToken.safeTransfer(msg.sender, refundedStakes);
     }

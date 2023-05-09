@@ -95,8 +95,8 @@ contract CrowdSale {
         release(sale.biddingToken, __saleInfo.beneficiary, sale.fundingGoal);
     }
 
-    function claim(uint256 saleId) public virtual returns (uint256 auctionTokens, uint256 refunds, uint256 biddingRatio) {
-        (auctionTokens, refunds, biddingRatio) = getClaimableAmounts(saleId, msg.sender);
+    function claim(uint256 saleId) public virtual returns (uint256 auctionTokens, uint256 refunds) {
+        (auctionTokens, refunds) = getClaimableAmounts(saleId, msg.sender);
         emit Claimed(saleId, msg.sender, auctionTokens, refunds);
 
         if (refunds > 0) {
@@ -117,19 +117,14 @@ contract CrowdSale {
         biddingToken.safeTransfer(beneficiary, fundingGoal);
     }
 
-    function getClaimableAmounts(uint256 saleId, address bidder)
-        internal
-        view
-        virtual
-        returns (uint256 auctionTokens, uint256 refunds, uint256 biddingRatio)
-    {
+    function getClaimableAmounts(uint256 saleId, address bidder) internal view virtual returns (uint256 auctionTokens, uint256 refunds) {
         uint256 _contribution = _contributions[saleId][bidder];
         uint256 fundingGoal = _sales[saleId].fundingGoal;
         uint256 total = _saleInfo[saleId].total;
         uint256 salesAmount = _sales[saleId].salesAmount;
 
         uint256 biddingShare = FP.divWadDown(FP.mulWadDown(_contribution, fundingGoal), total);
-        biddingRatio = FP.divWadDown(biddingShare, fundingGoal);
+        uint256 biddingRatio = FP.divWadDown(biddingShare, fundingGoal);
         auctionTokens = FP.mulWadDown(biddingRatio, salesAmount);
         if (_saleInfo[saleId].surplus > 0) {
             refunds = FP.mulWadDown(biddingRatio, _saleInfo[saleId].surplus); //_contributions[saleId][msg.sender] - biddingShare;

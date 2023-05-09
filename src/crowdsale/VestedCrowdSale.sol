@@ -20,6 +20,12 @@ struct VestingConfig {
     uint256 duration;
 }
 
+/**
+ * @title VestedCrowdSale
+ *
+ * @author molecule.to
+ * @notice puts the sold tokens under a configured vesting scheme
+ */
 contract VestedCrowdSale is CrowdSale {
     using SafeERC20 for IERC20;
 
@@ -60,9 +66,9 @@ contract VestedCrowdSale is CrowdSale {
         _sales[saleId].auctionToken.approve(address(vesting.vestingContract), sale.salesAmount);
     }
 
-    function claim(uint256 saleId) public virtual override returns (uint256 auctionTokens, uint256 refunds, uint256 biddingRatio) {
+    function claim(uint256 saleId) public virtual override returns (uint256 auctionTokens, uint256 refunds) {
         //todo: check that sale exists
-        (auctionTokens, refunds, biddingRatio) = getClaimableAmounts(saleId, msg.sender);
+        (auctionTokens, refunds) = getClaimableAmounts(saleId, msg.sender);
         if (auctionTokens == 0) {
             revert("nothing to claim");
         }
