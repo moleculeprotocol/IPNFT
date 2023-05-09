@@ -12,8 +12,9 @@ import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 import { CrowdSale, Sale, SaleInfo } from "../../src/crowdsale/CrowdSale.sol";
 import { VestingConfig } from "../../src/crowdsale/VestedCrowdSale.sol";
 import { StakedVestedCrowdSale, StakingConfig } from "../../src/crowdsale/StakedVestedCrowdSale.sol";
-import { TokenVesting } from "@moleculeprotocol/token-vesting/TokenVesting.sol";
 import { FakeERC20 } from "../../test/helpers/FakeERC20.sol";
+import { TokenVesting } from "@moleculeprotocol/token-vesting/TokenVesting.sol";
+
 import { FractionalizedToken } from "../../src/FractionalizedToken.sol";
 
 /**
@@ -27,10 +28,12 @@ contract DeployCrowdSale is Script {
 
     function run() public {
         (address deployer,) = deriveRememberKey(mnemonic, 0);
+        (address bob,) = deriveRememberKey(mnemonic, 1);
         vm.startBroadcast(deployer);
         StakedVestedCrowdSale stakedVestedCrowdSale = new StakedVestedCrowdSale();
         FakeERC20 daoToken = new FakeERC20("DAO Token", "DAO");
         TokenVesting vestedDaoToken = new TokenVesting(IERC20Metadata(address(daoToken)), "VDAO Token", "VDAO");
+        vestedDaoToken.grantRole(vestedDaoToken.ROLE_CREATE_SCHEDULE(), address(stakedVestedCrowdSale));
         vm.stopBroadcast();
 
         vm.setEnv("STAKED_VESTED_CROWDSALE_ADDRESS", Strings.toHexString(address(stakedVestedCrowdSale)));
@@ -125,5 +128,22 @@ contract FixtureCrowdSale is Script {
 
         claim(alice, saleId);
         claim(charlie, saleId);
+
+        // Create second CrowdSale that will not be settled
+        Sale memory _sale2 = Sale({
+            auctionToken: IERC20Metadata(address(auctionToken)),
+            biddingToken: FakeERC20(address(usdc)),
+            fundingGoal: 200 ether,
+            salesAmount: 400 ether,
+            closingTime: 100
+        });
+
+        vm.startBroadcast(bob);
+        auctionToken.approve(address(stakedVestedCrowdSale), 400 ether);
+        uint256 saleId2 = stakedVestedCrowdSale.startSale(_sale, daoToken, vestedDaoToken, 1e18, 60 days, 60 days);
+        vm.stopBroadcast();
+
+        placeBid(alice, 600 ether, saleId);
+        placeBid(charlie, 200 ether, saleId);
     }
 }
