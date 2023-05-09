@@ -8,7 +8,6 @@ import { Fractionalizer } from "../../src/Fractionalizer.sol";
 import { FractionalizedToken } from "../../src/FractionalizedToken.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
-
 import { IpnftScript } from "./Ipnft.s.sol";
 
 /**
@@ -17,26 +16,17 @@ import { IpnftScript } from "./Ipnft.s.sol";
  * @notice execute Ipnft.s.sol && Fixture.s.sol first
  * @notice assumes that bob (hh1) owns IPNFT#1
  */
-contract FractionalizeScript is Script {
+contract DeployFractionalizer is Script {
     string mnemonic = "test test test test test test test test test test test junk";
 
-    IPNFT ipnft;
-
-    address deployer;
-    address bob;
-    address alice;
-
-    function prepareAddresses() internal {
-        (deployer,) = deriveRememberKey(mnemonic, 0);
-        (bob,) = deriveRememberKey(mnemonic, 1);
-        (alice,) = deriveRememberKey(mnemonic, 2);
-    }
-
     function run() public {
-        prepareAddresses();
+        (address deployer,) = deriveRememberKey(mnemonic, 0);
+        (address bob,) = deriveRememberKey(mnemonic, 1);
 
-        ipnft = IPNFT(vm.envAddress("IPNFT_ADDRESS"));
         vm.startBroadcast(deployer);
+
+        IPNFT ipnft = IPNFT(vm.envAddress("IPNFT_ADDRESS"));
+
         Fractionalizer fractionalizer = Fractionalizer(
             address(
                 new ERC1967Proxy(
@@ -53,8 +43,7 @@ contract FractionalizeScript is Script {
         vm.stopBroadcast();
 
         console.log("frac %s", address(fractionalizer));
-        console.log("fraction fam erc20 address: %s", address(tokenContract));
+        console.log("fractionalized erc20 token address: %s", address(tokenContract));
         console.log("fraction hash: %s", tokenContract.hash());
-
     }
 }
