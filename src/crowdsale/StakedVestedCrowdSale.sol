@@ -31,6 +31,8 @@ contract StakedVestedCrowdSale is VestedCrowdSale {
     mapping(uint256 => StakingConfig) public salesStaking;
     mapping(uint256 => mapping(address => uint256)) stakes;
 
+    event Bid(uint256 indexed saleId, address indexed bidder, uint256 stakedAmount, uint256 amount, uint256 price);
+
     /// @custom:oz-upgrades-unsafe-allow state-variable-immutable
     //address immutable tokenImplementation;
 
@@ -74,12 +76,18 @@ contract StakedVestedCrowdSale is VestedCrowdSale {
         StakingConfig storage staking = salesStaking[saleId];
 
         //todo price calculation here:
+        uint256 price = 1;
         uint256 stakedTokenAmount = biddingTokenAmount;
+
+        //uint256 price = priceFeed.getPrice(sale.biddingToken, staking.stakedToken);
+        stakedTokenAmount = biddingTokenAmount * price;
 
         staking.stakeTotal += stakedTokenAmount;
         stakes[saleId][msg.sender] += stakedTokenAmount;
 
         staking.stakedToken.safeTransferFrom(msg.sender, address(this), stakedTokenAmount);
+
+        emit Bid(saleId, msg.sender, biddingTokenAmount, stakedTokenAmount, price);
         super.placeBid(saleId, biddingTokenAmount);
     }
 
