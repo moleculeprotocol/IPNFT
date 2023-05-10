@@ -21,7 +21,6 @@ export function handleStarted(event: StartedEvent): void {
   }
 
   crowdSale.fractionalizedIpnft = fractionalized.id;
-  crowdSale.auctionToken = event.params.sale.auctionToken;
   crowdSale.salesAmount = event.params.sale.salesAmount;
   crowdSale.amountRaised = BigInt.fromU32(0);
   crowdSale.amountStaked = BigInt.fromU32(0);
@@ -45,8 +44,8 @@ export function handleBid(event: BidEvent): void {
 
   //   Update CrowdSale
   crowdSale.amountRaised = crowdSale.amountRaised.plus(event.params.amount);
-  if (crowdSale.amountStaked) {
-    crowdSale.amountStaked = crowdSale.amountStaked.plus(
+  if (crowdSale.amountStaked !== null) {
+    crowdSale.amountStaked = crowdSale.amountStaked!.plus(
       event.params.stakedAmount
     );
   }
