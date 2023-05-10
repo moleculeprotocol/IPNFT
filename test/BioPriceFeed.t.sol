@@ -74,4 +74,11 @@ contract BioPriceFeedTest is Test {
         uint256 usdcPerEth = priceFeed.getPrice(base, quote);
         assertEq(usdcPerEth, 1_500_000_000);
     }
+
+    function testGetPriceForNonExistentPair() public {
+        address b = makeAddr("b");
+        address q = makeAddr("q");
+        // Should return price of 0 for pairs without existing signals
+        assertEq(priceFeed.getPrice(b, q), 0);
+    }
 }
