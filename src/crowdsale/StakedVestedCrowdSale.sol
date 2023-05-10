@@ -16,11 +16,11 @@ import { TokenVesting } from "@moleculeprotocol/token-vesting/TokenVesting.sol";
 import { VestedCrowdSale, VestingConfig } from "./VestedCrowdSale.sol";
 import { CrowdSale, Sale } from "./CrowdSale.sol";
 import { InitializeableTokenVesting } from "./InitializableTokenVesting.sol";
+import { IPriceFeedConsumer } from "../BioPriceFeed.sol";
 
 struct StakingConfig {
     IERC20 stakedToken; //eg VITA DAO token
     TokenVesting stakesVestingContract;
-    uint256 auctionInBiddingPrice;
     uint256 wadDaoInBidPriceAtSettlement;
     uint256 stakeTotal; //initialize with 0
 }
@@ -31,14 +31,13 @@ contract StakedVestedCrowdSale is VestedCrowdSale {
     mapping(uint256 => StakingConfig) public salesStaking;
     mapping(uint256 => mapping(address => uint256)) stakes;
 
+    IPriceFeedConsumer priceFeed;
+
     event Bid(uint256 indexed saleId, address indexed bidder, uint256 stakedAmount, uint256 amount, uint256 price);
 
-    /// @custom:oz-upgrades-unsafe-allow state-variable-immutable
-    //address immutable tokenImplementation;
-
-    // constructor() {
-    //     tokenImplementation = address(new InitializeableTokenVesting(IERC20Metadata(address(new FakeIERC20())), "",""));
-    // }
+    constructor(IPriceFeedConsumer priceFeed_) VestedCrowdSale() {
+        priceFeed = priceFeed_;
+    }
 
     function startSale(Sale memory sale, VestingConfig memory vesting, StakingConfig memory stakingConfig) public returns (uint256 saleId) {
         salesStaking[saleId] = stakingConfig;
@@ -54,10 +53,9 @@ contract StakedVestedCrowdSale is VestedCrowdSale {
         public
         returns (uint256 saleId)
     {
-        //1 DAO = 1 bid, current price
-        uint256 wadDaoInBiddingPrice = 1 * FP.WAD;
+        // uint256 wadDaoInBiddingPrice = uint256(priceFeed.getPrice(address(sale.biddingToken), address(stakedToken))); // * FP.WAD;
 
-        return startSale(sale, StakingConfig(stakedToken, stakesVesting, initialPrice, wadDaoInBiddingPrice, 0), cliff, duration);
+        return startSale(sale, StakingConfig(stakedToken, stakesVesting, 0, 0), cliff, duration);
     }
 
     function stakesOf(uint256 saleId, address bidder) public view returns (uint256) {
@@ -67,8 +65,12 @@ contract StakedVestedCrowdSale is VestedCrowdSale {
     function settle(uint256 saleId) public override {
         super.settle(saleId);
         StakingConfig storage staking = salesStaking[saleId];
-        //1 DAO = 1 bid
-        staking.wadDaoInBidPriceAtSettlement = 1 * FP.WAD;
+        uint256 wadDaoInBiddingPrice = uint256(priceFeed.getPrice(address(_sales[saleId].biddingToken), address(staking.stakedToken))); // * FP.WAD;
+        if (wadDaoInBiddingPrice == 0) {
+            revert("no price available");
+        }
+        staking.wadDaoInBidPriceAtSettlement = wadDaoInBiddingPrice;
+
         staking.stakedToken.approve(address(staking.stakesVestingContract), staking.stakeTotal);
     }
 
@@ -80,14 +82,19 @@ contract StakedVestedCrowdSale is VestedCrowdSale {
         uint256 stakedTokenAmount = biddingTokenAmount;
 
         //uint256 price = priceFeed.getPrice(sale.biddingToken, staking.stakedToken);
-        stakedTokenAmount = biddingTokenAmount * price;
+        uint256 wadDaoInBiddingPrice = uint256(priceFeed.getPrice(address(_sales[saleId].biddingToken), address(staking.stakedToken)));
+        if (wadDaoInBiddingPrice == 0) {
+            revert("no price available");
+        }
+
+        stakedTokenAmount = FP.mulWadDown(biddingTokenAmount, wadDaoInBiddingPrice);
 
         staking.stakeTotal += stakedTokenAmount;
         stakes[saleId][msg.sender] += stakedTokenAmount;
 
+        emit Bid(saleId, msg.sender, biddingTokenAmount, stakedTokenAmount, price);
         staking.stakedToken.safeTransferFrom(msg.sender, address(this), stakedTokenAmount);
 
-        emit Bid(saleId, msg.sender, biddingTokenAmount, stakedTokenAmount, price);
         super.placeBid(saleId, biddingTokenAmount);
     }
 

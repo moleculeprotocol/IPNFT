@@ -12,8 +12,10 @@ import { VestingConfig } from "../src/crowdsale/VestedCrowdSale.sol";
 import { StakedVestedCrowdSale, StakingConfig } from "../src/crowdsale/StakedVestedCrowdSale.sol";
 import { TokenVesting } from "@moleculeprotocol/token-vesting/TokenVesting.sol";
 import { FakeERC20 } from "./helpers/FakeERC20.sol";
+import { BioPriceFeed, IPriceFeedConsumer } from "../src/BioPriceFeed.sol";
 
 contract CrowdSaleVestedStakedTest is Test {
+    address deployer = makeAddr("chucknorris");
     address emitter = makeAddr("emitter");
     address bidder = makeAddr("bidder");
     address bidder2 = makeAddr("bidder2");
@@ -27,13 +29,23 @@ contract CrowdSaleVestedStakedTest is Test {
     //this typically is the DAO's general vesting contract
     TokenVesting internal vestedDao;
 
+    BioPriceFeed internal priceFeed;
+
     StakedVestedCrowdSale internal crowdSale;
 
     function setUp() public {
-        crowdSale = new StakedVestedCrowdSale();
+        vm.startPrank(deployer);
+
         auctionToken = new FakeERC20("Fractionalized IPNFT","FAM");
         biddingToken = new FakeERC20("USD token", "USDC");
         daoToken = new FakeERC20("DAO token", "DAO");
+
+        priceFeed = new BioPriceFeed();
+        // 1=1 is the simplest case
+        priceFeed.signal(address(biddingToken), address(daoToken), 1e18);
+
+        crowdSale = new StakedVestedCrowdSale(priceFeed);
+        vm.stopPrank();
 
         auctionToken.mint(emitter, 500_000 ether);
 
@@ -232,7 +244,7 @@ contract CrowdSaleVestedStakedTest is Test {
         //stakes have been placed.
         assertEq(daoToken.balanceOf(bidder), 390_000 ether);
         assertEq(daoToken.balanceOf(address(crowdSale)), 1_060_000 ether);
-        (,,,, uint256 stakeTotal) = crowdSale.salesStaking(saleId);
+        (,,, uint256 stakeTotal) = crowdSale.salesStaking(saleId);
         assertEq(stakeTotal, 1_060_000 ether);
 
         assertEq(crowdSale.stakesOf(saleId, bidder), 610_000 ether);

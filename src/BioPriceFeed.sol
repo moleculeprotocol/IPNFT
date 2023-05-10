@@ -16,6 +16,10 @@ struct Meta {
     bytes32 symbol;
 }
 
+interface IPriceFeedConsumer {
+    function getPrice(address base, address quote) external view returns (uint184);
+}
+
 //the real thing is this: https://docs.chain.link/data-feeds/feed-registry
 /**
  * @title BioPriceFeed
@@ -23,7 +27,7 @@ struct Meta {
  * @notice lets signallers push prices to chain
  */
 
-contract BioPriceFeed is AccessControl {
+contract BioPriceFeed is IPriceFeedConsumer, AccessControl {
     mapping(bytes32 => Signal) signals;
     mapping(bytes32 => Meta) meta;
 
@@ -42,7 +46,7 @@ contract BioPriceFeed is AccessControl {
         _grantRole(ROLE_SIGNALLER, _msgSender());
     }
 
-    function getPrice(address base, address quote) public view returns (uint184) {
+    function getPrice(address base, address quote) external view returns (uint184) {
         bytes32 key = keccak256(abi.encode(base, quote));
         if (meta[key].decimals != 0) {
             if (meta[key].decimals > 18) revert("unsupported");
