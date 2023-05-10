@@ -21,7 +21,7 @@ import { IPriceFeedConsumer } from "../BioPriceFeed.sol";
 struct StakingConfig {
     IERC20 stakedToken; //eg VITA DAO token
     TokenVesting stakesVestingContract;
-    uint256 wadDaoInBidPriceAtSettlement;
+    uint256 wadFixedDaoInBidPrice;
     uint256 stakeTotal; //initialize with 0
 }
 
@@ -49,13 +49,13 @@ contract StakedVestedCrowdSale is VestedCrowdSale {
         salesStaking[saleId] = stakingConfig;
     }
 
-    function startSale(Sale memory sale, IERC20 stakedToken, TokenVesting stakesVesting, uint256 initialPrice, uint256 cliff, uint256 duration)
+    function startSale(Sale memory sale, IERC20 stakedToken, TokenVesting stakesVesting, uint256 daoPrice, uint256 cliff, uint256 duration)
         public
         returns (uint256 saleId)
     {
-        // uint256 wadDaoInBiddingPrice = uint256(priceFeed.getPrice(address(sale.biddingToken), address(stakedToken))); // * FP.WAD;
+        uint256 wadDaoInBidPrice = uint256(priceFeed.getPrice(address(sale.biddingToken), address(stakedToken)));
 
-        return startSale(sale, StakingConfig(stakedToken, stakesVesting, 0, 0), cliff, duration);
+        return startSale(sale, StakingConfig(stakedToken, stakesVesting, wadDaoInBidPrice, 0), cliff, duration);
     }
 
     function stakesOf(uint256 saleId, address bidder) public view returns (uint256) {
@@ -65,12 +65,6 @@ contract StakedVestedCrowdSale is VestedCrowdSale {
     function settle(uint256 saleId) public override {
         super.settle(saleId);
         StakingConfig storage staking = salesStaking[saleId];
-        uint256 wadDaoInBiddingPrice = uint256(priceFeed.getPrice(address(_sales[saleId].biddingToken), address(staking.stakedToken))); // * FP.WAD;
-        if (wadDaoInBiddingPrice == 0) {
-            revert("no price available");
-        }
-        staking.wadDaoInBidPriceAtSettlement = wadDaoInBiddingPrice;
-
         staking.stakedToken.approve(address(staking.stakesVestingContract), staking.stakeTotal);
     }
 
@@ -107,7 +101,7 @@ contract StakedVestedCrowdSale is VestedCrowdSale {
 
         (auctionTokens, refunds) = super.claim(saleId);
 
-        uint256 refundedStakes = FP.mulWadDown(refunds, stakingConfig.wadDaoInBidPriceAtSettlement);
+        uint256 refundedStakes = FP.mulWadDown(refunds, stakingConfig.wadFixedDaoInBidPrice);
         uint256 vestedStakes = _stakes - refundedStakes;
 
         salesStaking[saleId].stakedToken.safeTransfer(address(salesStaking[saleId].stakesVestingContract), vestedStakes);

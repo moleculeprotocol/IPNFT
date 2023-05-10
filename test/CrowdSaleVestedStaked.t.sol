@@ -41,7 +41,7 @@ contract CrowdSaleVestedStakedTest is Test {
         daoToken = new FakeERC20("DAO token", "DAO");
 
         priceFeed = new BioPriceFeed();
-        // 1=1 is the simplest case
+        // 1=1 is the trivial case
         priceFeed.signal(address(biddingToken), address(daoToken), 1e18);
 
         crowdSale = new StakedVestedCrowdSale(priceFeed);
@@ -220,8 +220,12 @@ contract CrowdSaleVestedStakedTest is Test {
         assertEq(daoToken.balanceOf(address(crowdSale)), 0);
     }
 
-    function testUnevenOverbiddingAndRefunds() public {
+    function testUnevenOverbiddingAndPriceAndRefunds() public {
         uint256 genesis = block.timestamp;
+
+        vm.startPrank(deployer);
+        priceFeed.signal(address(daoToken), address(biddingToken), 4 ether);
+        vm.stopPrank();
 
         vm.startPrank(emitter);
         Sale memory _sale = makeSale();
@@ -231,6 +235,7 @@ contract CrowdSaleVestedStakedTest is Test {
 
         vm.startPrank(bidder);
         crowdSale.placeBid(saleId, 380_000 ether);
+        assertEq(daoToken.balanceOf(address(crowdSale)), 95_000 ether);
         vm.stopPrank();
 
         vm.startPrank(bidder2);
@@ -242,13 +247,13 @@ contract CrowdSaleVestedStakedTest is Test {
         vm.stopPrank();
 
         //stakes have been placed.
-        assertEq(daoToken.balanceOf(bidder), 390_000 ether);
-        assertEq(daoToken.balanceOf(address(crowdSale)), 1_060_000 ether);
+        assertEq(daoToken.balanceOf(bidder), 847_500 ether);
+        assertEq(daoToken.balanceOf(address(crowdSale)), 265_000 ether);
         (,,, uint256 stakeTotal) = crowdSale.salesStaking(saleId);
-        assertEq(stakeTotal, 1_060_000 ether);
+        assertEq(stakeTotal, 265_000 ether);
 
-        assertEq(crowdSale.stakesOf(saleId, bidder), 610_000 ether);
-        assertEq(crowdSale.stakesOf(saleId, bidder2), 450_000 ether);
+        assertEq(crowdSale.stakesOf(saleId, bidder), 152_500 ether);
+        assertEq(crowdSale.stakesOf(saleId, bidder2), 112_500 ether);
 
         vm.startPrank(anyone);
         crowdSale.settle(saleId);
@@ -266,8 +271,8 @@ contract CrowdSaleVestedStakedTest is Test {
         assertEq(auctionTokenVesting.balanceOf(bidder), 230188679245283018800000);
         assertEq(auctionTokenVesting.balanceOf(bidder2), 169811320754716980800000);
 
-        assertEq(daoToken.balanceOf(bidder), 884905660377358490420000);
-        assertEq(daoToken.balanceOf(bidder2), 915094339622641508720000);
+        assertEq(vestedDao.balanceOf(bidder), 28773.584905660377395 ether);
+        assertEq(vestedDao.balanceOf(bidder2), 21226.41509433962282 ether);
 
         assertEq(daoToken.balanceOf(bidder) + vestedDao.balanceOf(bidder), 1_000_000 ether);
         assertEq(daoToken.balanceOf(bidder2) + vestedDao.balanceOf(bidder2), 1_000_000 ether);
