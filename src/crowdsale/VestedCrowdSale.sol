@@ -39,8 +39,9 @@ contract VestedCrowdSale is CrowdSale {
     // }
 
     function startSale(Sale memory sale, VestingConfig memory vesting) public returns (uint256 saleId) {
-        saleId = super.startSale(sale);
+        saleId = uint256(keccak256(abi.encode(sale)));
         salesVesting[saleId] = vesting;
+        saleId = super.startSale(sale);
     }
 
     function startSale(Sale memory sale, uint256 cliff, uint256 duration) public returns (uint256 saleId) {

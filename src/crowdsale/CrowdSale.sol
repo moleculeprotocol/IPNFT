@@ -91,16 +91,19 @@ contract CrowdSale {
     }
 
     function settle(uint256 saleId) public virtual {
-        //todo anyone can call this for the beneficiary
         Sale memory sale = _sales[saleId];
         SaleInfo storage __saleInfo = _saleInfo[saleId];
+        //todo anyone can call this for the beneficiary
+
+        //todo don't allow settlement before end time
+
+        //todo: allow fundraiser to settle and allow everyone to withdraw if funding goal has *not* been met
         if (__saleInfo.total < sale.fundingGoal) {
             revert("funding goal not met");
         }
         if (__saleInfo.settled) {
             revert("sale is already settled");
         }
-        //todo don't allow settlement before end time
 
         __saleInfo.settled = true;
         __saleInfo.surplus = __saleInfo.total - sale.fundingGoal;

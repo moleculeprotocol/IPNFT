@@ -32,9 +32,9 @@ contract DeployCrowdSale is Script {
         (address deployer,) = deriveRememberKey(mnemonic, 0);
         (address bob,) = deriveRememberKey(mnemonic, 1);
         vm.startBroadcast(deployer);
+        StakedVestedCrowdSale stakedVestedCrowdSale = new StakedVestedCrowdSale();
         FakeERC20 daoToken = new FakeERC20("DAO Token", "DAO");
         TokenVesting vestedDaoToken = new TokenVesting(IERC20Metadata(address(daoToken)), "VDAO Token", "VDAO");
-        StakedVestedCrowdSale stakedVestedCrowdSale = new StakedVestedCrowdSale();
         vestedDaoToken.grantRole(vestedDaoToken.ROLE_CREATE_SCHEDULE(), address(stakedVestedCrowdSale));
 
         vm.stopBroadcast();
@@ -82,8 +82,7 @@ contract FixtureCrowdSale is Script {
     function placeBid(address bidder, uint256 amount, uint256 saleId) internal {
         vm.startBroadcast(bidder);
         usdc.approve(address(stakedVestedCrowdSale), amount);
-        //pricefeed is set to 1.5 atm
-        daoToken.approve(address(stakedVestedCrowdSale), amount * 2);
+        daoToken.approve(address(stakedVestedCrowdSale), amount);
         stakedVestedCrowdSale.placeBid(saleId, amount);
         vm.stopBroadcast();
     }
@@ -104,6 +103,7 @@ contract FixtureCrowdSale is Script {
         prepareAddresses();
 
         // Deal Charlie ERC20 tokens to bid in crowdsale
+        dealERC20(alice, 1000 ether, usdc);
         dealERC20(charlie, 1000 ether, usdc);
 
         // Deal Alice and Charlie DAO tokens to stake in crowdsale
@@ -115,7 +115,7 @@ contract FixtureCrowdSale is Script {
             biddingToken: FakeERC20(address(usdc)),
             fundingGoal: 200 ether,
             salesAmount: 400 ether,
-            closingTime: 0
+            closingTime: block.timestamp + 2 hours
         });
 
         vm.startBroadcast(bob);
@@ -139,7 +139,7 @@ contract FixtureCrowdSale is Script {
             biddingToken: FakeERC20(address(usdc)),
             fundingGoal: 200 ether,
             salesAmount: 400 ether,
-            closingTime: 100
+            closingTime: block.timestamp + 4 hours
         });
 
         vm.startBroadcast(bob);
