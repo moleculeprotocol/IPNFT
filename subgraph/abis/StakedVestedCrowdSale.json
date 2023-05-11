@@ -5,6 +5,21 @@
     "type": "error"
   },
   {
+    "inputs": [],
+    "name": "BadSaleDuration",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "BalanceTooLow",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "SaleAlreadyActive",
+    "type": "error"
+  },
+  {
     "anonymous": false,
     "inputs": [
       {
