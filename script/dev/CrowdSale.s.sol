@@ -16,7 +16,7 @@ import { FakeERC20 } from "../../test/helpers/FakeERC20.sol";
 import { TokenVesting } from "@moleculeprotocol/token-vesting/TokenVesting.sol";
 
 import { FractionalizedToken } from "../../src/FractionalizedToken.sol";
-import { BioPriceFeed, Meta as PriceFeedMeta } from "../../src/BioPriceFeed.sol";
+//import { BioPriceFeed, Meta as PriceFeedMeta } from "../../src/BioPriceFeed.sol";
 /**
  * @title CrowdSale
  * @author
@@ -120,7 +120,7 @@ contract FixtureCrowdSale is Script {
 
         vm.startBroadcast(bob);
         auctionToken.approve(address(stakedVestedCrowdSale), 400 ether);
-        uint256 saleId = stakedVestedCrowdSale.startSale(_sale, daoToken, vestedDaoToken, 60 days, 60 days);
+        uint256 saleId = stakedVestedCrowdSale.startSale(_sale, daoToken, vestedDaoToken, 1e18, 60 days, 60 days);
         vm.stopBroadcast();
 
         placeBid(alice, 600 ether, saleId);

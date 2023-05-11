@@ -12,7 +12,8 @@ import { VestingConfig } from "../src/crowdsale/VestedCrowdSale.sol";
 import { StakedVestedCrowdSale, StakingConfig } from "../src/crowdsale/StakedVestedCrowdSale.sol";
 import { TokenVesting } from "@moleculeprotocol/token-vesting/TokenVesting.sol";
 import { FakeERC20 } from "./helpers/FakeERC20.sol";
-import { BioPriceFeed, IPriceFeedConsumer } from "../src/BioPriceFeed.sol";
+//import { BioPriceFeed, IPriceFeedConsumer } from "../src/BioPriceFeed.sol";
+import { CrowdSaleHelpers } from "./helpers/CrowdSaleHelpers.sol";
 
 contract CrowdSaleVestedStakedTest is Test {
     address deployer = makeAddr("chucknorris");
@@ -29,7 +30,7 @@ contract CrowdSaleVestedStakedTest is Test {
     //this typically is the DAO's general vesting contract
     TokenVesting internal vestedDao;
 
-    BioPriceFeed internal priceFeed;
+    //BioPriceFeed internal priceFeed;
 
     StakedVestedCrowdSale internal crowdSale;
 
@@ -40,11 +41,11 @@ contract CrowdSaleVestedStakedTest is Test {
         biddingToken = new FakeERC20("USD token", "USDC");
         daoToken = new FakeERC20("DAO token", "DAO");
 
-        priceFeed = new BioPriceFeed();
-        // 1=1 is the trivial case
-        priceFeed.signal(address(biddingToken), address(daoToken), 1e18);
+        // BioPriceFeed internal priceFeed = new BioPriceFeed();
+        // // 1=1 is the trivial case
+        // priceFeed.signal(address(biddingToken), address(daoToken), 1e18);
 
-        crowdSale = new StakedVestedCrowdSale(priceFeed);
+        crowdSale = new StakedVestedCrowdSale();
         vm.stopPrank();
 
         auctionToken.mint(emitter, 500_000 ether);
@@ -72,21 +73,11 @@ contract CrowdSaleVestedStakedTest is Test {
         vm.stopPrank();
     }
 
-    function makeSale() internal returns (Sale memory sale) {
-        return Sale({
-            auctionToken: IERC20Metadata(address(auctionToken)),
-            biddingToken: IERC20(address(biddingToken)),
-            fundingGoal: 200_000 ether,
-            salesAmount: 400_000 ether,
-            closingTime: 0
-        });
-    }
-
     function testSettlementAndSimpleClaims() public {
         uint256 genesis = block.timestamp;
 
         vm.startPrank(emitter);
-        Sale memory _sale = makeSale();
+        Sale memory _sale = CrowdSaleHelpers.makeSale(auctionToken, biddingToken);
 
         auctionToken.approve(address(crowdSale), 400_000 ether);
         uint256 saleId = crowdSale.startSale(_sale, daoToken, vestedDao, 1e18, 60 days, 365 days);
@@ -123,7 +114,7 @@ contract CrowdSaleVestedStakedTest is Test {
         uint256 genesis = block.timestamp;
 
         vm.startPrank(emitter);
-        Sale memory _sale = makeSale();
+        Sale memory _sale = CrowdSaleHelpers.makeSale(auctionToken, biddingToken);
         auctionToken.approve(address(crowdSale), 400_000 ether);
         uint256 saleId = crowdSale.startSale(_sale, daoToken, vestedDao, 1e18, 60 days, 365 days);
         vm.stopPrank();
@@ -223,14 +214,11 @@ contract CrowdSaleVestedStakedTest is Test {
     function testUnevenOverbiddingAndPriceAndRefunds() public {
         uint256 genesis = block.timestamp;
 
-        vm.startPrank(deployer);
-        priceFeed.signal(address(daoToken), address(biddingToken), 4 ether);
-        vm.stopPrank();
-
         vm.startPrank(emitter);
-        Sale memory _sale = makeSale();
+        Sale memory _sale = CrowdSaleHelpers.makeSale(auctionToken, biddingToken);
         auctionToken.approve(address(crowdSale), 400_000 ether);
-        uint256 saleId = crowdSale.startSale(_sale, daoToken, vestedDao, 1e18, 60 days, 365 days);
+        // 1 DAO = 4 $
+        uint256 saleId = crowdSale.startSale(_sale, daoToken, vestedDao, 25e16, 60 days, 365 days);
         vm.stopPrank();
 
         vm.startPrank(bidder);

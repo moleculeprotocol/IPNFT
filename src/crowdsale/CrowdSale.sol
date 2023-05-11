@@ -2,7 +2,7 @@
 pragma solidity ^0.8.18;
 
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { FixedPointMathLib as FP } from "solmate/utils/FixedPointMathLib.sol";
 
@@ -26,6 +26,11 @@ struct SaleInfo {
     uint256 surplus;
 }
 
+error BalanceTooLow();
+error BadDecimals();
+error BadSaleDuration();
+error SaleAlreadyActive();
+
 contract CrowdSale {
     using SafeERC20 for IERC20;
     using SafeERC20 for IERC20Metadata;
@@ -43,8 +48,14 @@ contract CrowdSale {
     constructor() { }
 
     function startSale(Sale memory sale) public returns (uint256 saleId) {
+        if (sale.closingTime < block.timestamp + 1 hours) {
+            revert BadSaleDuration();
+        }
+        if (sale.auctionToken.decimals() != 18 || IERC20Metadata(address(sale.biddingToken)).decimals() != 18) {
+            revert BadDecimals();
+        }
         if (sale.auctionToken.balanceOf(msg.sender) < sale.salesAmount) {
-            revert("you dont have sufficient auction tokens");
+            revert BalanceTooLow();
         }
         //close to 0 cases lead to very confusing results
         // if (sale.fundingGoal <= 0.5 ether || sale.salesAmount < 0.5 ether) {
@@ -52,6 +63,9 @@ contract CrowdSale {
         // }
 
         saleId = uint256(keccak256(abi.encode(sale)));
+        if (address(_sales[saleId].auctionToken) != address(0)) {
+            revert SaleAlreadyActive();
+        }
         _sales[saleId] = sale;
         _saleInfo[saleId] = SaleInfo(msg.sender, false, 0, 0);
 
