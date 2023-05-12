@@ -147,7 +147,7 @@ contract FixtureCrowdSale is Script {
         uint256 saleId2 = stakedVestedCrowdSale.startSale(_sale2, daoToken, vestedDaoToken, 1e18, 60 days, 60 days);
         vm.stopBroadcast();
 
-        placeBid(alice, 600 ether, saleId);
-        placeBid(charlie, 200 ether, saleId);
+        placeBid(alice, 600 ether, saleId2);
+        placeBid(charlie, 200 ether, saleId2);
     }
 }
