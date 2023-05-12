@@ -83,7 +83,7 @@ contract CrowdSale {
             revert("bad sale id");
         }
 
-        if (_saleInfo[saleId].settled == true) {
+        if (_saleInfo[saleId].settled) {
             revert("sale is already settled");
         }
 
