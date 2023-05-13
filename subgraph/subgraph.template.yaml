@@ -6,7 +6,7 @@ dataSources:
     name: IPNFT
     network: {{network}}
     source:
-      address: "{{ipnft.address}}"
+      address: '{{ipnft.address}}'
       abi: IPNFT
       startBlock: {{ipnft.startBlock}}
     mapping:
@@ -33,7 +33,7 @@ dataSources:
     name: SchmackoSwap
     network: {{network}}
     source:
-      address: "{{schmackoSwap.address}}"
+      address: '{{schmackoSwap.address}}'
       abi: SchmackoSwap
       startBlock: {{schmackoSwap.startBlock}}
     mapping:
@@ -59,7 +59,7 @@ dataSources:
     name: Mintpass
     network: {{network}}
     source:
-      address: "{{mintpass.address}}"
+      address: '{{mintpass.address}}'
       abi: Mintpass
       startBlock: {{mintpass.startBlock}}
     mapping:
@@ -104,6 +104,33 @@ dataSources:
         # - event: TermsAccepted(indexed uint256,indexed address,bytes)
         #   handler: handleTermsAccepted
       file: ./src/fractionalizerMapping.ts
+  - kind: ethereum
+    name: StakedVestedCrowdSale
+    network: {{network}}
+    source:
+      address: '{{stakedVestedCrowdSale.address}}'
+      abi: StakedVestedCrowdSale
+      startBlock: {{stakedVestedCrowdSale.startBlock}}
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - CrowdSale
+        - Contribution
+      abis:
+        - name: StakedVestedCrowdSale
+          file: ./abis/StakedVestedCrowdSale.json
+      eventHandlers:
+        - event: Started(indexed uint256,indexed address,(address,address,uint256,uint256,uint256))
+          handler: handleStarted
+        - event: Settled(indexed uint256,uint256,uint256)
+          handler: handleSettled
+        - event: Claimed(indexed uint256,indexed address,uint256,uint256)
+          handler: handleClaimed
+        - event: Bid(indexed uint256,indexed address,uint256,uint256,uint256)
+          handler: handleBid
+      file: ./src/stakedVestedCrowdSaleMapping.ts
 templates:
   - name: FractionalizedToken
     kind: ethereum/contract

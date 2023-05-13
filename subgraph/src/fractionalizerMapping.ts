@@ -1,21 +1,12 @@
-import {
-  Address,
-  BigInt,
-  DataSourceContext,
-  log
-} from '@graphprotocol/graph-ts';
+import { BigInt } from '@graphprotocol/graph-ts';
 import { FractionsCreated as FractionsCreatedEvent } from '../generated/Fractionalizer/Fractionalizer';
 
 import { FractionalizedToken } from '../generated/templates';
 
-import { Fractionalized, Fraction, Ipnft } from '../generated/schema';
-
-function createFractionId(fracId: BigInt, owner: Address): string {
-  return fracId.toString() + '-' + owner.toHexString();
-}
+import { Fractionalized } from '../generated/schema';
 
 export function handleFractionsCreated(event: FractionsCreatedEvent): void {
-  let frac = new Fractionalized(event.params.fractionId.toString());
+  let frac = new Fractionalized(event.params.tokenContract.toHexString());
 
   frac.createdAt = event.block.timestamp;
   frac.ipnft = event.params.ipnftId.toString();
@@ -28,9 +19,7 @@ export function handleFractionsCreated(event: FractionsCreatedEvent): void {
   frac.symbol = event.params.symbol;
   frac.tokenName = event.params.name;
   //frac.claimedShares = BigInt.fromU32(0);
-  let context = new DataSourceContext();
-  context.setBigInt('fractionalizedId', event.params.fractionId);
-  FractionalizedToken.createWithContext(event.params.tokenContract, context);
+  FractionalizedToken.create(event.params.tokenContract);
 
   frac.save();
 }

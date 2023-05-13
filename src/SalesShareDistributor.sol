@@ -88,7 +88,7 @@ contract SalesShareDistributor is UUPSUpgradeable, OwnableUpgradeable, Reentranc
     }
 
     /**
-     * @notice anyone should be able this function after having observed the sale
+     * @notice anyone should be able to call this function after having observed the sale
      *         rn we restrict it to the token issuer since they must provide a permissioner that controls the claiming rules
      *         this is a deep dependency on our own sales contract
      *
