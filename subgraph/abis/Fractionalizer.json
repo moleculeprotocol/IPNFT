@@ -6,11 +6,6 @@
   },
   {
     "inputs": [],
-    "name": "AlreadyClaiming",
-    "type": "error"
-  },
-  {
-    "inputs": [],
     "name": "AlreadyFractionalized",
     "type": "error"
   },
@@ -21,37 +16,12 @@
   },
   {
     "inputs": [],
-    "name": "InsufficientBalance",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "InvalidSignature",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "ListingMismatch",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "ListingNotFulfilled",
-    "type": "error"
-  },
-  {
-    "inputs": [],
     "name": "MustOwnIpnft",
     "type": "error"
   },
   {
     "inputs": [],
     "name": "NoSymbol",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "NotClaimingYet",
     "type": "error"
   },
   {
@@ -182,56 +152,6 @@
     "anonymous": false,
     "inputs": [
       {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "fractionId",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "paymentToken",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "paidPrice",
-        "type": "uint256"
-      }
-    ],
-    "name": "SalesActivated",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "uint256",
-        "name": "fractionId",
-        "type": "uint256"
-      },
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "signer",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "bytes",
-        "name": "signature",
-        "type": "bytes"
-      }
-    ],
-    "name": "TermsAccepted",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
         "indexed": true,
         "internalType": "address",
         "name": "implementation",
@@ -240,123 +160,6 @@
     ],
     "name": "Upgraded",
     "type": "event"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "fractionId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "address",
-        "name": "_for",
-        "type": "address"
-      },
-      {
-        "internalType": "bytes",
-        "name": "signature",
-        "type": "bytes"
-      }
-    ],
-    "name": "acceptTerms",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "fractionId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "contract IERC20",
-        "name": "paymentToken",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "price",
-        "type": "uint256"
-      }
-    ],
-    "name": "afterSale",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "fractionId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "listingId",
-        "type": "uint256"
-      }
-    ],
-    "name": "afterSale",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "owner",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "fractionId",
-        "type": "uint256"
-      }
-    ],
-    "name": "balanceOf",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "fractionId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "address",
-        "name": "tokenHolder",
-        "type": "address"
-      }
-    ],
-    "name": "claimableTokens",
-    "outputs": [
-      {
-        "internalType": "contract IERC20",
-        "name": "paymentToken",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
   },
   {
     "inputs": [
@@ -379,9 +182,9 @@
     "name": "fractionalizeIpnft",
     "outputs": [
       {
-        "internalType": "uint256",
-        "name": "fractionId",
-        "type": "uint256"
+        "internalType": "contract FractionalizedToken",
+        "name": "token",
+        "type": "address"
       }
     ],
     "stateMutability": "nonpayable",
@@ -398,65 +201,12 @@
     "name": "fractionalized",
     "outputs": [
       {
-        "internalType": "uint256",
-        "name": "tokenId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "totalIssued",
-        "type": "uint256"
-      },
-      {
-        "internalType": "address",
-        "name": "originalOwner",
-        "type": "address"
-      },
-      {
-        "internalType": "string",
-        "name": "agreementCid",
-        "type": "string"
-      },
-      {
         "internalType": "contract FractionalizedToken",
-        "name": "tokenContract",
+        "name": "",
         "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "fulfilledListingId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "contract IERC20",
-        "name": "paymentToken",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "paidPrice",
-        "type": "uint256"
       }
     ],
     "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "fractionId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "fractionsAmount",
-        "type": "uint256"
-      }
-    ],
-    "name": "increaseFractions",
-    "outputs": [],
-    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -465,45 +215,11 @@
         "internalType": "contract IPNFT",
         "name": "_ipnft",
         "type": "address"
-      },
-      {
-        "internalType": "contract SchmackoSwap",
-        "name": "_schmackoSwap",
-        "type": "address"
       }
     ],
     "name": "initialize",
     "outputs": [],
     "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "fractionId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "address",
-        "name": "signer",
-        "type": "address"
-      },
-      {
-        "internalType": "bytes",
-        "name": "signature",
-        "type": "bytes"
-      }
-    ],
-    "name": "isValidSignature",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -568,44 +284,6 @@
   {
     "inputs": [
       {
-        "internalType": "uint256",
-        "name": "fractionId",
-        "type": "uint256"
-      }
-    ],
-    "name": "specificTermsV1",
-    "outputs": [
-      {
-        "internalType": "string",
-        "name": "",
-        "type": "string"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "fractionId",
-        "type": "uint256"
-      }
-    ],
-    "name": "totalSupply",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
         "internalType": "address",
         "name": "newOwner",
         "type": "address"
@@ -651,7 +329,7 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "fractionId",
+        "name": "fractionHash",
         "type": "uint256"
       }
     ],

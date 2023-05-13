@@ -14,7 +14,7 @@ contract DeployFractionalizer is Script {
     function run() public {
         vm.startBroadcast();
         address ipnftAddress = vm.envAddress("IPNFT_ADDRESS");
-        address sosAddress = vm.envAddress("SOS_ADDRESS");
+        //address sosAddress = vm.envAddress("SOS_ADDRESS");
 
         Fractionalizer impl = new Fractionalizer();
 
@@ -25,14 +25,14 @@ contract DeployFractionalizer is Script {
                 )
             )
         );
-        fractionalizer.initialize(IPNFT(ipnftAddress), SchmackoSwap(sosAddress));
+        fractionalizer.initialize(IPNFT(ipnftAddress));
         vm.stopBroadcast();
 
         console.log("fractionalizer %s", address(fractionalizer));
     }
 }
 
-contract DeployFracImplementation is Script {
+contract DeployFractionalizerImplementation is Script {
     function run() public {
         vm.startBroadcast();
         Fractionalizer impl = new Fractionalizer();

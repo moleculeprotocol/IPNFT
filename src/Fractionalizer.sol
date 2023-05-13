@@ -6,52 +6,26 @@ import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/O
 import { ReentrancyGuardUpgradeable } from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 
 import { Base64 } from "@openzeppelin/contracts/utils/Base64.sol";
-import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { Clones } from "@openzeppelin/contracts/proxy/Clones.sol";
-import { SignatureChecker } from "@openzeppelin/contracts/utils/cryptography/SignatureChecker.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
-import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
-import { IERC1155Supply } from "./IERC1155Supply.sol";
-import { FractionalizedToken } from "./FractionalizedToken.sol";
-import { SchmackoSwap, ListingState } from "./SchmackoSwap.sol";
+import { FractionalizedToken, Metadata as FractionalizedTokenMetadata, TokenCapped } from "./FractionalizedToken.sol";
 import { IPNFT } from "./IPNFT.sol";
-
-struct Fractionalized {
-    uint256 tokenId;
-    //needed to remember an individual's share after others burn their tokens
-    uint256 totalIssued;
-    address originalOwner;
-    string agreementCid;
-    FractionalizedToken tokenContract; //the erc20 token contract representing the fractions
-    uint256 fulfilledListingId;
-    IERC20 paymentToken;
-    uint256 paidPrice;
-}
 
 error ToZeroAddress();
 error InsufficientBalance();
 error TermsNotAccepted();
-error InvalidSignature();
 
 error BadSupply();
 error MustOwnIpnft();
 error NoSymbol();
 error AlreadyFractionalized();
 
-error AlreadyClaiming();
-error NotClaimingYet();
-error ListingNotFulfilled();
-error ListingMismatch();
-
 /// @title Fractionalizer
 /// @author molecule.to
 /// @notice fractionalizes an IPNFT to an ERC20 token and controls its supply.
 ///         Allows fraction holders to withdraw sales shares when the IPNFT is sold
 contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardUpgradeable {
-    using SafeERC20 for IERC20;
-
     event FractionsCreated(
         uint256 indexed fractionId,
         uint256 indexed ipnftId,
@@ -62,34 +36,22 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardU
         string name,
         string symbol
     );
-    event SalesActivated(uint256 fractionId, address paymentToken, uint256 paidPrice);
-    event TermsAccepted(uint256 indexed fractionId, address indexed signer, bytes signature);
 
     IPNFT ipnft;
-    SchmackoSwap schmackoSwap;
 
     address feeReceiver;
     uint256 fractionalizationPercentage;
 
-    mapping(uint256 => Fractionalized) public fractionalized;
+    mapping(uint256 => FractionalizedToken) public fractionalized;
 
     /// @custom:oz-upgrades-unsafe-allow state-variable-immutable
     address immutable tokenImplementation;
 
-    function initialize(IPNFT _ipnft, SchmackoSwap _schmackoSwap) public initializer {
+    function initialize(IPNFT _ipnft) public initializer {
         __UUPSUpgradeable_init();
         __Ownable_init();
         __ReentrancyGuard_init();
-
         ipnft = _ipnft;
-        schmackoSwap = _schmackoSwap;
-    }
-
-    modifier notClaiming(uint256 fractionId) {
-        if (address(fractionalized[fractionId].paymentToken) != address(0)) {
-            revert AlreadyClaiming();
-        }
-        _;
     }
 
     /// @custom:oz-upgrades-unsafe-allow constructor
@@ -101,6 +63,7 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardU
     /**
      * @notice we're not taking any fees. If we once decided to do so, this can be used to update the fee receiver
      */
+
     function setFeeReceiver(address _feeReceiver) public onlyOwner {
         if (_feeReceiver == address(0)) {
             revert ToZeroAddress();
@@ -112,27 +75,17 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardU
         fractionalizationPercentage = fractionalizationPercentage_;
     }
 
-    /**
-     * @dev calls the fraction's underlying tokenContract balance function
-     */
-    function balanceOf(address owner, uint256 fractionId) public view returns (uint256) {
-        return fractionalized[fractionId].tokenContract.balanceOf(owner);
-    }
-
-    /**
-     * @dev calls the fraction's underlying tokenContract supply function
-     */
-    function totalSupply(uint256 fractionId) public view returns (uint256) {
-        return fractionalized[fractionId].tokenContract.totalSupply();
-    }
-
+    //todo might make sense to return (tokenContract,fractionId)
     /**
      * @notice
      * @param ipnftId          uint256  the token id on the origin collection
      * @param fractionsAmount  uint256  the initial amount of fractions issued
      * @param agreementCid     bytes32  a content hash that identifies the terms underlying the issued fractions
      */
-    function fractionalizeIpnft(uint256 ipnftId, uint256 fractionsAmount, string calldata agreementCid) external returns (uint256 fractionId) {
+    function fractionalizeIpnft(uint256 ipnftId, uint256 fractionsAmount, string calldata agreementCid)
+        external
+        returns (FractionalizedToken token)
+    {
         if (ipnft.totalSupply(ipnftId) != 1) {
             revert BadSupply();
         }
@@ -144,186 +97,26 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardU
             revert NoSymbol();
         }
 
-        fractionId = uint256(keccak256(abi.encodePacked(_msgSender(), ipnftId)));
-
-        // ensure we can only call this once per sales cycle
-        if (address(fractionalized[fractionId].originalOwner) != address(0)) {
-            revert AlreadyFractionalized();
-        }
-
         // https://github.com/OpenZeppelin/workshops/tree/master/02-contracts-clone
         FractionalizedToken fractionalizedToken = FractionalizedToken(Clones.clone(tokenImplementation));
         string memory name = string(abi.encodePacked("Fractions of IPNFT #", Strings.toString(ipnftId)));
+        fractionalizedToken.initialize(name, ipnftSymbol, FractionalizedTokenMetadata(ipnftId, _msgSender(), agreementCid));
+        uint256 fractionHash = fractionalizedToken.hash();
+        // ensure we can only call this once per sales cycle
+        if (address(fractionalized[fractionHash]) != address(0)) {
+            revert AlreadyFractionalized();
+        }
 
-        fractionalized[fractionId] =
-            Fractionalized(ipnftId, fractionsAmount, _msgSender(), agreementCid, fractionalizedToken, 0, IERC20(address(0)), 0);
-        emit FractionsCreated(fractionId, ipnftId, address(fractionalizedToken), _msgSender(), fractionsAmount, agreementCid, name, ipnftSymbol);
+        fractionalized[fractionHash] = fractionalizedToken;
 
-        fractionalizedToken.initialize(name, ipnftSymbol, fractionId);
-        //todo: if we want to take a protocol fee, this might be agood point of doing so.
+        emit FractionsCreated(
+            uint256(fractionHash), ipnftId, address(fractionalizedToken), _msgSender(), fractionsAmount, agreementCid, name, ipnftSymbol
+        );
+
+        //todo: if we want to take a protocol fee, this might be a good point of doing so.
         fractionalizedToken.issue(_msgSender(), fractionsAmount);
-    }
 
-    /**
-     * @notice we deliberately allow the fraction initializer to increase the fraction supply at will
-     *         as long as the underlying asset has not been sold yet
-     *
-     * @param fractionId uint256
-     * @param fractionsAmount uint256
-     */
-    function increaseFractions(uint256 fractionId, uint256 fractionsAmount) external notClaiming(fractionId) {
-        Fractionalized memory _fractionalized = fractionalized[fractionId];
-
-        if (_msgSender() != _fractionalized.originalOwner) {
-            revert MustOwnIpnft();
-        }
-
-        fractionalized[fractionId].totalIssued += fractionsAmount;
-        _fractionalized.tokenContract.issue(_msgSender(), fractionsAmount);
-    }
-
-    /**
-     * @notice When the sales beneficiary has not been set to the underlying erc20 token address but to the original owner's wallet instead,
-     *         they can invoke this method to start the claiming phase manually. This e.g. allows sales off the record.
-     *
-     *         Requires the originalOwner to behave honestly / in favor of the fraction holders
-     *         Requires the caller to have approved `price` of `paymentToken` to this contract
-     *
-     * @param   fractionId    uint256  the fraction id
-     * @param   paymentToken  IERC20   the payment token contract address
-     * @param   price         uint256  the price the NFT has been sold for
-     */
-    function afterSale(uint256 fractionId, IERC20 paymentToken, uint256 price) external notClaiming(fractionId) nonReentrant {
-        Fractionalized storage frac = fractionalized[fractionId];
-        if (_msgSender() != frac.originalOwner) {
-            revert MustOwnIpnft();
-        }
-
-        //create a fake (but valid) schmackoswap listing id
-        frac.fulfilledListingId = uint256(
-            keccak256(
-                abi.encode(
-                    SchmackoSwap.Listing(
-                        IERC1155Supply(address(ipnft)),
-                        frac.tokenId,
-                        _msgSender(),
-                        uint256(1),
-                        paymentToken,
-                        price,
-                        address(frac.tokenContract),
-                        ListingState.FULFILLED
-                    ),
-                    block.number
-                )
-            )
-        );
-
-        _startClaimingPhase(fractionId, paymentToken, price);
-        paymentToken.safeTransferFrom(_msgSender(), address(frac.tokenContract), price);
-    }
-
-    /**
-     * @notice When the sales beneficiary has been set to this contract,
-     *         anyone can call this function after having observed the sale
-     *         this is a deep dependency on our own sales contract
-     *
-     * @param fractionId    uint256     the unique fraction id
-     * @param listingId     uint256     the listing id on Schmackoswap
-     */
-    function afterSale(uint256 fractionId, uint256 listingId) external notClaiming(fractionId) {
-        Fractionalized storage frac = fractionalized[fractionId];
-
-        (, uint256 tokenId,,, IERC20 _paymentToken, uint256 askPrice, address beneficiary, ListingState listingState) =
-            schmackoSwap.listings(listingId);
-
-        if (listingState != ListingState.FULFILLED) {
-            revert ListingNotFulfilled();
-        }
-        if (tokenId != frac.tokenId) {
-            revert ListingMismatch();
-        }
-        if (beneficiary != address(frac.tokenContract)) {
-            revert InsufficientBalance();
-        }
-
-        frac.fulfilledListingId = listingId;
-        _startClaimingPhase(fractionId, _paymentToken, askPrice);
-    }
-
-    function _startClaimingPhase(uint256 fractionId, IERC20 _paymentToken, uint256 price) internal {
-        Fractionalized storage frac = fractionalized[fractionId];
-        //todo: this is warning, we still could proceed, since it's too late here anyway ;)
-        // if (paymentToken.balanceOf(address(this)) < askPrice) {
-        //     revert("the fulfillment doesn't match the ask");
-        // }
-        frac.paymentToken = _paymentToken;
-        frac.paidPrice = price;
-        emit SalesActivated(fractionId, address(_paymentToken), price);
-    }
-
-    /**
-     * @notice returns the `amount` of `paymentToken` that `tokenHolder` can claim by burning their fractions
-     *
-     * @param fractionId uin256
-     * @param tokenHolder address
-     */
-    function claimableTokens(uint256 fractionId, address tokenHolder) public view returns (IERC20 paymentToken, uint256 amount) {
-        Fractionalized memory frac = fractionalized[fractionId];
-
-        if (address(fractionalized[fractionId].paymentToken) == address(0)) {
-            revert NotClaimingYet();
-        }
-
-        uint256 balance = frac.tokenContract.balanceOf(tokenHolder);
-
-        return (frac.paymentToken, (balance * frac.paidPrice) / frac.totalIssued);
-    }
-
-    /**
-     * @notice this yields the message text that claimers must present as signed message to burn their fractions and claim shares
-     *
-     * @param fractionId uin256
-     */
-    function specificTermsV1(uint256 fractionId) public view returns (string memory) {
-        Fractionalized memory frac = fractionalized[fractionId];
-
-        return string(
-            abi.encodePacked(
-                "As a fraction holder of IPNFT #",
-                Strings.toString(frac.tokenId),
-                ", I accept all terms that I've read here: ipfs://",
-                frac.agreementCid,
-                "\n\n",
-                "Chain Id: ",
-                Strings.toString(block.chainid),
-                "\n",
-                "Version: 1"
-            )
-        );
-    }
-
-    /**
-     * @notice checks whether `signer`'s `signature` of `specificTermsV1` on `fractionId` is valid
-     *
-     * @param fractionId uint256
-     */
-    function isValidSignature(uint256 fractionId, address signer, bytes memory signature) public view returns (bool) {
-        bytes32 termsHash = ECDSA.toEthSignedMessageHash(abi.encodePacked(specificTermsV1(fractionId)));
-        return SignatureChecker.isValidSignatureNow(signer, termsHash, signature);
-    }
-
-    /**
-     * @notice checks validity signer`'s `signature` of `specificTermsV1` on `fractionId` and emits an event
-     * @dev the signature itself or whether it has already been presented is not stored on chain
-     *
-     * @param fractionId fraction id `
-     * @param signature bytes encoded signature, for eip155: abi.encodePacked(r, s, v)
-     */
-    function acceptTerms(uint256 fractionId, address _for, bytes memory signature) public {
-        if (!isValidSignature(fractionId, _for, signature)) {
-            revert InvalidSignature();
-        }
-        emit TermsAccepted(fractionId, _for, signature);
+        return fractionalizedToken;
     }
 
     /// @notice upgrade authorization logic
@@ -337,11 +130,12 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardU
 
     /**
      * @notice contract metadata, compatible to ERC1155
-     * @param fractionId uint256
+     * @param fractionHash uint256
      */
-    function uri(uint256 fractionId) public view returns (string memory) {
-        Fractionalized memory frac = fractionalized[fractionId];
-        string memory tokenId = Strings.toString(frac.tokenId);
+    function uri(uint256 fractionHash) public view returns (string memory) {
+        FractionalizedToken tokenContract = fractionalized[fractionHash];
+        FractionalizedTokenMetadata memory metadata = tokenContract.metadata();
+        string memory tokenId = Strings.toString(metadata.ipnftId);
 
         string memory props = string(
             abi.encodePacked(
@@ -349,13 +143,13 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardU
                 '"ipnft_id": ',
                 tokenId,
                 ',"agreement_content": "ipfs://',
-                frac.agreementCid,
+                metadata.agreementCid,
                 '","original_owner": "',
-                Strings.toHexString(frac.originalOwner),
+                Strings.toHexString(metadata.originalOwner),
                 '","erc20_contract": "',
-                Strings.toHexString(address(frac.tokenContract)),
+                Strings.toHexString(address(tokenContract)),
                 '","supply": "',
-                Strings.toString(frac.totalIssued),
+                Strings.toString(tokenContract.totalIssued()),
                 '"}'
             )
         );

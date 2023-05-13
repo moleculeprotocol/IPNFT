@@ -9,54 +9,82 @@ import { ERC20Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC2
 import { ERC20BurnableUpgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20BurnableUpgradeable.sol";
 
 import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import { Fractionalizer, InsufficientBalance } from "./Fractionalizer.sol";
+
+struct Metadata {
+    uint256 ipnftId;
+    //needed to remember an individual's share after others burn their tokens
+    address originalOwner;
+    string agreementCid;
+}
+
+error TokenCapped();
+error OnlyIssuerOrOwner();
 
 /// @title FractionalizedToken
 /// @author molecule.to
 /// @notice this is a template contract that's spawned by the fractionalizer
 /// @notice the owner of this contract is always the fractionalizer contract
-contract FractionalizedToken is IERC20Upgradeable, ERC20Upgradeable, ERC20BurnableUpgradeable, OwnableUpgradeable {
+
+contract FractionalizedToken is IERC20Upgradeable, ERC20BurnableUpgradeable, OwnableUpgradeable {
     using SafeERC20 for IERC20;
 
-    uint256 fractionId;
+    event Capped(uint256 atSupply);
 
-    event SharesClaimed(uint256 indexed fractionId, address indexed claimer, uint256 amount);
+    //this will only go up.
+    uint256 internal _totalIssued;
+    bool internal _capped;
+    Metadata internal _metadata;
 
-    function initialize(string memory name, string memory symbol, uint256 _fractionId) public initializer {
+    function initialize(string memory name, string memory symbol, Metadata calldata metadata_) public initializer {
         __Ownable_init();
         __ERC20_init(name, symbol);
-        fractionId = _fractionId;
+        _metadata = metadata_;
+        _totalIssued = 0;
+        _capped = false;
+    }
+
+    modifier onlyIssuerOrOwner() {
+        if (msg.sender != issuer() && msg.sender != owner()) {
+            revert OnlyIssuerOrOwner();
+        }
+        _;
+    }
+
+    function totalIssued() public view returns (uint256) {
+        return _totalIssued;
+    }
+
+    function metadata() public view returns (Metadata memory) {
+        return _metadata;
+    }
+
+    function issuer() public view returns (address) {
+        return _metadata.originalOwner;
+    }
+
+    function capped() public view returns (bool) {
+        return _capped;
+    }
+
+    function hash() public view returns (uint256) {
+        return uint256(keccak256(abi.encodePacked(_metadata.originalOwner, _metadata.ipnftId)));
     }
 
     /**
-     * @dev this can only be called by the contract owner which is the `Fractionalizer` who creates it
+     * @notice we deliberately allow the fraction initializer to increase the fraction supply at will
+     *         as long as the underlying asset has not been sold yet
+     *
      * @param receiver address
      * @param amount uint256
      */
-    function issue(address receiver, uint256 amount) public onlyOwner {
+    function issue(address receiver, uint256 amount) public onlyIssuerOrOwner {
+        if (_capped) revert TokenCapped();
+        _totalIssued += amount;
         _mint(receiver, amount);
     }
 
-    /**
-     * @notice call during claiming phase to burn all fractions and receive the pro rata sales share
-     * @param signature bytes a `isValidSignature` by the sender that signs `specificTermsV1`
-     */
-    function burn(bytes memory signature) public {
-        uint256 balance = balanceOf(_msgSender());
-        if (balance == 0) {
-            revert InsufficientBalance();
-        }
-
-        Fractionalizer fractionalizer = Fractionalizer(owner());
-        fractionalizer.acceptTerms(fractionId, _msgSender(), signature);
-
-        (IERC20 paymentToken, uint256 erc20shares) = fractionalizer.claimableTokens(fractionId, _msgSender());
-        if (erc20shares == 0) {
-            //todo: this is very hard to simulate because the condition above will already yield 0
-            revert InsufficientBalance();
-        }
-        emit SharesClaimed(fractionId, _msgSender(), balance);
-        super._burn(_msgSender(), balance);
-        paymentToken.safeTransfer(_msgSender(), erc20shares);
+    function cap() public onlyIssuerOrOwner {
+        _capped = true;
+        emit Capped(totalIssued());
     }
 }
