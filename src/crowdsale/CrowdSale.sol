@@ -83,6 +83,10 @@ contract CrowdSale {
             revert("bad sale id");
         }
 
+        if (_saleInfo[saleId].settled) {
+            revert("sale is already settled");
+        }
+
         IERC20 biddingToken = sale.biddingToken;
         _saleInfo[saleId].total += biddingTokenAmount;
         _contributions[saleId][msg.sender] += biddingTokenAmount;
