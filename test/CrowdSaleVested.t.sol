@@ -10,6 +10,7 @@ import { CrowdSale, Sale, SaleInfo } from "../src/crowdsale/CrowdSale.sol";
 import { VestedCrowdSale, VestingConfig } from "../src/crowdsale/VestedCrowdSale.sol";
 import { TokenVesting } from "@moleculeprotocol/token-vesting/TokenVesting.sol";
 import { FakeERC20 } from "./helpers/FakeERC20.sol";
+import { CrowdSaleHelpers } from "./helpers/CrowdSaleHelpers.sol";
 
 contract CrowdSaleVestedTest is Test {
     address emitter = makeAddr("emitter");
@@ -40,21 +41,11 @@ contract CrowdSaleVestedTest is Test {
         vm.stopPrank();
     }
 
-    function makeSale() internal returns (Sale memory sale) {
-        return Sale({
-            auctionToken: IERC20Metadata(address(auctionToken)),
-            biddingToken: IERC20(address(biddingToken)),
-            fundingGoal: 200_000 ether,
-            salesAmount: 400_000 ether,
-            closingTime: 0
-        });
-    }
-
     function testSettlementAndSimpleClaims() public {
         uint256 genesis = block.timestamp;
 
         vm.startPrank(emitter);
-        Sale memory _sale = makeSale();
+        Sale memory _sale = CrowdSaleHelpers.makeSale(auctionToken, biddingToken);
         auctionToken.approve(address(crowdSale), 400_000 ether);
         uint256 saleId = crowdSale.startSale(_sale, 60 days, 365 days);
         vm.stopPrank();

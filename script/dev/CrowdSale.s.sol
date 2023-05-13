@@ -16,17 +16,19 @@ import { FakeERC20 } from "../../test/helpers/FakeERC20.sol";
 import { TokenVesting } from "@moleculeprotocol/token-vesting/TokenVesting.sol";
 
 import { FractionalizedToken } from "../../src/FractionalizedToken.sol";
-
+//import { BioPriceFeed, Meta as PriceFeedMeta } from "../../src/BioPriceFeed.sol";
 /**
  * @title CrowdSale
  * @author
  * @notice execute Ipnft.s.sol && Fixture.s.sol && Fractionalize.s.sol first
  * @notice assumes that bob (hh1) owns IPNFT#1 and has fractionalized it
  */
+
 contract DeployCrowdSale is Script {
     string mnemonic = "test test test test test test test test test test test junk";
 
     function run() public {
+        FakeERC20 usdc = FakeERC20(vm.envAddress("USDC_ADDRESS"));
         (address deployer,) = deriveRememberKey(mnemonic, 0);
         (address bob,) = deriveRememberKey(mnemonic, 1);
         vm.startBroadcast(deployer);
@@ -34,15 +36,16 @@ contract DeployCrowdSale is Script {
         FakeERC20 daoToken = new FakeERC20("DAO Token", "DAO");
         TokenVesting vestedDaoToken = new TokenVesting(IERC20Metadata(address(daoToken)), "VDAO Token", "VDAO");
         vestedDaoToken.grantRole(vestedDaoToken.ROLE_CREATE_SCHEDULE(), address(stakedVestedCrowdSale));
+
         vm.stopBroadcast();
 
-        vm.setEnv("STAKED_VESTED_CROWDSALE_ADDRESS", Strings.toHexString(address(stakedVestedCrowdSale)));
         vm.setEnv("DAO_TOKEN_ADDRESS", Strings.toHexString(address(daoToken)));
         vm.setEnv("VDAO_TOKEN_ADDRESS", Strings.toHexString(address(vestedDaoToken)));
+        vm.setEnv("STAKED_VESTED_CROWDSALE_ADDRESS", Strings.toHexString(address(stakedVestedCrowdSale)));
 
-        console.log("staked vested crowdsale %s", address(stakedVestedCrowdSale));
         console.log("dao Token %s", address(daoToken));
         console.log("vested Dao Token %s", address(vestedDaoToken));
+        console.log("staked vested crowdsale %s", address(stakedVestedCrowdSale));
     }
 }
 
@@ -100,6 +103,7 @@ contract FixtureCrowdSale is Script {
         prepareAddresses();
 
         // Deal Charlie ERC20 tokens to bid in crowdsale
+        dealERC20(alice, 1000 ether, usdc);
         dealERC20(charlie, 1000 ether, usdc);
 
         // Deal Alice and Charlie DAO tokens to stake in crowdsale
@@ -111,7 +115,7 @@ contract FixtureCrowdSale is Script {
             biddingToken: FakeERC20(address(usdc)),
             fundingGoal: 200 ether,
             salesAmount: 400 ether,
-            closingTime: 0
+            closingTime: block.timestamp + 2 hours
         });
 
         vm.startBroadcast(bob);
@@ -135,15 +139,15 @@ contract FixtureCrowdSale is Script {
             biddingToken: FakeERC20(address(usdc)),
             fundingGoal: 200 ether,
             salesAmount: 400 ether,
-            closingTime: 100
+            closingTime: block.timestamp + 4 hours
         });
 
         vm.startBroadcast(bob);
         auctionToken.approve(address(stakedVestedCrowdSale), 400 ether);
-        uint256 saleId2 = stakedVestedCrowdSale.startSale(_sale, daoToken, vestedDaoToken, 1e18, 60 days, 60 days);
+        uint256 saleId2 = stakedVestedCrowdSale.startSale(_sale2, daoToken, vestedDaoToken, 1e18, 60 days, 60 days);
         vm.stopBroadcast();
 
-        placeBid(alice, 600 ether, saleId);
-        placeBid(charlie, 200 ether, saleId);
+        placeBid(alice, 600 ether, saleId2);
+        placeBid(charlie, 200 ether, saleId2);
     }
 }

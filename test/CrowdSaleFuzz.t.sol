@@ -7,17 +7,17 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 import { CrowdSale, Sale, SaleInfo } from "../src/crowdsale/CrowdSale.sol";
+import { CrowdSaleHelpers } from "./helpers/CrowdSaleHelpers.sol";
 
 import { FakeERC20 } from "./helpers/FakeERC20.sol";
 
 contract CrowdSaleFuzzTest is Test {
     address emitter = makeAddr("emitter");
+    address anyone = makeAddr("anyone");
 
     FakeERC20 internal auctionToken;
     FakeERC20 internal biddingToken;
     CrowdSale internal crowdSale;
-
-    address anyone = makeAddr("anyone");
 
     function setUp() public {
         crowdSale = new CrowdSale();
@@ -32,13 +32,14 @@ contract CrowdSaleFuzzTest is Test {
         vm.assume(fundingGoal > 0);
 
         auctionToken.mint(emitter, salesAmt);
+
         vm.startPrank(emitter);
         Sale memory _sale = Sale({
             auctionToken: IERC20Metadata(address(auctionToken)),
             biddingToken: IERC20(address(biddingToken)),
             fundingGoal: fundingGoal,
             salesAmount: salesAmt,
-            closingTime: 0
+            closingTime: block.timestamp + 2 hours
         });
 
         auctionToken.approve(address(crowdSale), salesAmt);

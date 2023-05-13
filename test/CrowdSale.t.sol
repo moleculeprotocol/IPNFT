@@ -6,8 +6,9 @@ import "forge-std/console.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
-import { CrowdSale, Sale, SaleInfo } from "../src/crowdsale/CrowdSale.sol";
+import { CrowdSale, Sale, SaleInfo, BadSaleDuration, BalanceTooLow, SaleAlreadyActive } from "../src/crowdsale/CrowdSale.sol";
 import { FakeERC20 } from "./helpers/FakeERC20.sol";
+import { CrowdSaleHelpers } from "./helpers/CrowdSaleHelpers.sol";
 
 contract CrowdSaleTest is Test {
     address emitter = makeAddr("emitter");
@@ -38,28 +39,36 @@ contract CrowdSaleTest is Test {
         vm.stopPrank();
     }
 
-    function makeSale() internal returns (Sale memory sale) {
-        return Sale({
-            auctionToken: IERC20Metadata(address(auctionToken)),
-            biddingToken: IERC20(address(biddingToken)),
-            fundingGoal: 200_000 ether,
-            salesAmount: 400_000 ether,
-            closingTime: 0
-        });
+    function testCreateSale() public {
+        Sale memory _sale = CrowdSaleHelpers.makeSale(auctionToken, biddingToken);
+
+        vm.startPrank(emitter);
+        auctionToken.approve(address(crowdSale), 400_000 ether);
+        crowdSale.startSale(_sale);
+        vm.stopPrank();
+
+        //cant create the same sale twice
+        vm.startPrank(emitter);
+        auctionToken.mint(emitter, 300_000 ether);
+        auctionToken.approve(address(crowdSale), 400_000 ether);
+        vm.expectRevert(SaleAlreadyActive.selector);
+        crowdSale.startSale(_sale);
+        vm.stopPrank();
     }
 
-    function testCreateSale() public {
-        vm.startPrank(emitter);
+    function testCannotCreateSaleWithoutFunds() public {
+        address poorguy = makeAddr("poorguy");
+        Sale memory _sale = CrowdSaleHelpers.makeSale(auctionToken, biddingToken);
 
-        Sale memory _sale = makeSale();
-        auctionToken.approve(address(crowdSale), 400_000 ether);
+        vm.startPrank(poorguy);
+        vm.expectRevert(BalanceTooLow.selector);
         crowdSale.startSale(_sale);
         vm.stopPrank();
     }
 
     function testPlaceBid() public {
         vm.startPrank(emitter);
-        Sale memory _sale = makeSale();
+        Sale memory _sale = CrowdSaleHelpers.makeSale(auctionToken, biddingToken);
         auctionToken.approve(address(crowdSale), 400_000 ether);
         uint256 saleId = crowdSale.startSale(_sale);
         vm.stopPrank();
@@ -76,7 +85,7 @@ contract CrowdSaleTest is Test {
 
     function testSettlementAndSimpleClaims() public {
         vm.startPrank(emitter);
-        Sale memory _sale = makeSale();
+        Sale memory _sale = CrowdSaleHelpers.makeSale(auctionToken, biddingToken);
         auctionToken.approve(address(crowdSale), 400_000 ether);
         uint256 saleId = crowdSale.startSale(_sale);
         vm.stopPrank();
@@ -102,7 +111,7 @@ contract CrowdSaleTest is Test {
 
     function testTwoBiddersMeetExactly() public {
         vm.startPrank(emitter);
-        Sale memory _sale = makeSale();
+        Sale memory _sale = CrowdSaleHelpers.makeSale(auctionToken, biddingToken);
         auctionToken.approve(address(crowdSale), 400_000 ether);
         uint256 saleId = crowdSale.startSale(_sale);
         vm.stopPrank();
@@ -133,7 +142,7 @@ contract CrowdSaleTest is Test {
 
     function testSingleRefundsOnOvershoot() public {
         vm.startPrank(emitter);
-        Sale memory _sale = makeSale();
+        Sale memory _sale = CrowdSaleHelpers.makeSale(auctionToken, biddingToken);
         auctionToken.approve(address(crowdSale), 400_000 ether);
         uint256 saleId = crowdSale.startSale(_sale);
         vm.stopPrank();
@@ -157,7 +166,7 @@ contract CrowdSaleTest is Test {
 
     function testOverbiddingAndRefunds() public {
         vm.startPrank(emitter);
-        Sale memory _sale = makeSale();
+        Sale memory _sale = CrowdSaleHelpers.makeSale(auctionToken, biddingToken);
         auctionToken.approve(address(crowdSale), 400_000 ether);
         uint256 saleId = crowdSale.startSale(_sale);
         vm.stopPrank();
@@ -217,7 +226,7 @@ contract CrowdSaleTest is Test {
 
     function testUnevenOverbiddingAndRefunds() public {
         vm.startPrank(emitter);
-        Sale memory _sale = makeSale();
+        Sale memory _sale = CrowdSaleHelpers.makeSale(auctionToken, biddingToken);
         auctionToken.approve(address(crowdSale), 400_000 ether);
         uint256 saleId = crowdSale.startSale(_sale);
         vm.stopPrank();
