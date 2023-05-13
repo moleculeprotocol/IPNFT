@@ -7,8 +7,9 @@ import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/I
 import { CrowdSale, Sale, SaleInfo, BadSaleDuration, BalanceTooLow, SaleAlreadyActive } from "../../src/crowdsale/CrowdSale.sol";
 
 library CrowdSaleHelpers {
-    function makeSale(IERC20 auctionToken, IERC20 biddingToken) internal view returns (Sale memory sale) {
+    function makeSale(address beneficiary, IERC20 auctionToken, IERC20 biddingToken) internal view returns (Sale memory sale) {
         return Sale({
+            beneficiary: beneficiary,
             auctionToken: IERC20Metadata(address(auctionToken)),
             biddingToken: IERC20(address(biddingToken)),
             fundingGoal: 200_000 ether,

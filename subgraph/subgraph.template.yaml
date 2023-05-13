@@ -118,11 +118,14 @@ dataSources:
       entities:
         - CrowdSale
         - Contribution
+        - ERC20Token
       abis:
         - name: StakedVestedCrowdSale
           file: ./abis/StakedVestedCrowdSale.json
+        - name: IERC20Metadata
+          file: ./abis/IERC20Metadata.json
       eventHandlers:
-        - event: Started(indexed uint256,indexed address,(address,address,uint256,uint256,uint256))
+        - event: Started(uint256,indexed address,(address,address,address,uint256,uint256,uint256),(address,uint256,uint256),(address,address,uint256,uint256))
           handler: handleStarted
         - event: Settled(indexed uint256,uint256,uint256)
           handler: handleSettled

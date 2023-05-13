@@ -40,6 +40,8 @@ contract VestedCrowdSale is CrowdSale {
     //     tokenImplementation = address(new InitializeableTokenVesting(IERC20Metadata(address(new FakeIERC20())), "",""));
     // }
 
+    event Started(uint256 saleId, address indexed issuer, Sale sale, VestingConfig vesting);
+
     function startSale(Sale memory sale, VestingConfig memory vesting) public returns (uint256 saleId) {
         saleId = uint256(keccak256(abi.encode(sale)));
         salesVesting[saleId] = vesting;
@@ -58,6 +60,10 @@ contract VestedCrowdSale is CrowdSale {
         );
         VestingConfig memory vesting = VestingConfig(vestingContract, cliff, duration);
         return startSale(sale, vesting);
+    }
+
+    function _onSaleStarted(uint256 saleId) internal virtual override {
+        emit Started(saleId, msg.sender, _sales[saleId], salesVesting[saleId]);
     }
 
     function settle(uint256 saleId) public virtual override {

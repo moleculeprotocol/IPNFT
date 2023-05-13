@@ -33,23 +33,19 @@ contract StakedVestedCrowdSale is VestedCrowdSale {
 
     //IPriceFeedConsumer priceFeed;
 
+    event Started(uint256 saleId, address indexed issuer, Sale sale, VestingConfig vesting, StakingConfig staking);
     event Bid(uint256 indexed saleId, address indexed bidder, uint256 stakedAmount, uint256 amount, uint256 price);
-
     // constructor(IPriceFeedConsumer priceFeed_) VestedCrowdSale() {
     //     priceFeed = priceFeed_;
     // }
-
-    function startSale(Sale memory sale, VestingConfig memory vesting, StakingConfig memory stakingConfig) public returns (uint256 saleId) {
-        salesStaking[saleId] = stakingConfig;
-        saleId = super.startSale(sale, vesting);
-    }
 
     function startSale(Sale memory sale, StakingConfig memory stakingConfig, uint256 cliff, uint256 duration) public returns (uint256 saleId) {
         if (IERC20Metadata(address(stakingConfig.stakedToken)).decimals() != 18) {
             revert BadDecimals();
         }
-        saleId = super.startSale(sale, cliff, duration);
+        saleId = uint256(keccak256(abi.encode(sale)));
         salesStaking[saleId] = stakingConfig;
+        saleId = super.startSale(sale, cliff, duration);
     }
 
     function startSale(
@@ -63,6 +59,10 @@ contract StakedVestedCrowdSale is VestedCrowdSale {
         //uint256 wadDaoInBidPrice = uint256(priceFeed.getPrice(address(sale.biddingToken), address(stakedToken)));
 
         return startSale(sale, StakingConfig(stakedToken, stakesVesting, wadFixedDaoPerBidPrice, 0), cliff, duration);
+    }
+
+    function _onSaleStarted(uint256 saleId) internal override {
+        emit Started(saleId, msg.sender, _sales[saleId], salesVesting[saleId], salesStaking[saleId]);
     }
 
     function stakesOf(uint256 saleId, address bidder) public view returns (uint256) {
