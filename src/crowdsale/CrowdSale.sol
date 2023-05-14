@@ -69,8 +69,8 @@ contract CrowdSale {
         _sales[saleId] = sale;
         _saleInfo[saleId] = SaleInfo(msg.sender, false, 0, 0);
 
-        sale.auctionToken.safeTransferFrom(msg.sender, address(this), sale.salesAmount);
         emit Started(saleId, msg.sender, sale);
+        sale.auctionToken.safeTransferFrom(msg.sender, address(this), sale.salesAmount);
     }
 
     function placeBid(uint256 saleId, uint256 biddingTokenAmount) public virtual {

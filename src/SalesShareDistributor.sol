@@ -67,9 +67,9 @@ contract SalesShareDistributor is UUPSUpgradeable, OwnableUpgradeable, Reentranc
      * @param permissions bytes data that can be read and verified by the configured permissioner
      *        at the moment this simply is a valid signature over a `specificTermsV1` message
      */
-    function claim(FractionalizedToken tokenContract, bytes memory permissions) public {
+    function claim(FractionalizedToken tokenContract, bytes memory permissions) public nonReentrant {
         uint256 balance = tokenContract.balanceOf(_msgSender());
-        if (balance == 0) {
+        if (balance < 1000) {
             revert InsufficientBalance();
         }
         Sales memory _sales = sales[address(tokenContract)];
@@ -78,7 +78,7 @@ contract SalesShareDistributor is UUPSUpgradeable, OwnableUpgradeable, Reentranc
 
         _sales.permissioner.accept(tokenContract, _msgSender(), permissions);
 
-        if (erc20shares == 0) {
+        if (erc20shares < 1000) {
             //todo: this is very hard to simulate because the condition above will already yield 0
             revert InsufficientBalance();
         }

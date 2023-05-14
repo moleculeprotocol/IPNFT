@@ -13,7 +13,7 @@ import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 import { FixedPointMathLib as FP } from "solmate/utils/FixedPointMathLib.sol";
 import { TokenVesting } from "@moleculeprotocol/token-vesting/TokenVesting.sol";
 
-import { VestedCrowdSale, VestingConfig } from "./VestedCrowdSale.sol";
+import { VestedCrowdSale, VestingConfig, ApprovalFailed } from "./VestedCrowdSale.sol";
 import { CrowdSale, Sale, BadDecimals } from "./CrowdSale.sol";
 import { InitializeableTokenVesting } from "./InitializableTokenVesting.sol";
 import { IPriceFeedConsumer } from "../BioPriceFeed.sol";
@@ -72,7 +72,10 @@ contract StakedVestedCrowdSale is VestedCrowdSale {
     function settle(uint256 saleId) public override {
         super.settle(saleId);
         StakingConfig storage staking = salesStaking[saleId];
-        staking.stakedToken.approve(address(staking.stakesVestingContract), staking.stakeTotal);
+        bool result = staking.stakedToken.approve(address(staking.stakesVestingContract), staking.stakeTotal);
+        if (!result) {
+            revert ApprovalFailed();
+        }
     }
 
     function placeBid(uint256 saleId, uint256 biddingTokenAmount) public override {

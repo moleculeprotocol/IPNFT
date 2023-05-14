@@ -84,6 +84,7 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardU
      */
     function fractionalizeIpnft(uint256 ipnftId, uint256 fractionsAmount, string calldata agreementCid)
         external
+        nonReentrant
         returns (FractionalizedToken token)
     {
         if (ipnft.totalSupply(ipnftId) != 1) {

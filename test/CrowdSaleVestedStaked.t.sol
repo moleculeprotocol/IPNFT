@@ -74,8 +74,6 @@ contract CrowdSaleVestedStakedTest is Test {
     }
 
     function testSettlementAndSimpleClaims() public {
-        uint256 genesis = block.timestamp;
-
         vm.startPrank(emitter);
         Sale memory _sale = CrowdSaleHelpers.makeSale(auctionToken, biddingToken);
 
@@ -111,8 +109,6 @@ contract CrowdSaleVestedStakedTest is Test {
     }
 
     function testOverbiddingAndRefunds() public {
-        uint256 genesis = block.timestamp;
-
         vm.startPrank(emitter);
         Sale memory _sale = CrowdSaleHelpers.makeSale(auctionToken, biddingToken);
         auctionToken.approve(address(crowdSale), 400_000 ether);
@@ -212,8 +208,6 @@ contract CrowdSaleVestedStakedTest is Test {
     }
 
     function testUnevenOverbiddingAndPriceAndRefunds() public {
-        uint256 genesis = block.timestamp;
-
         vm.startPrank(emitter);
         Sale memory _sale = CrowdSaleHelpers.makeSale(auctionToken, biddingToken);
         auctionToken.approve(address(crowdSale), 400_000 ether);

@@ -20,6 +20,8 @@ struct VestingConfig {
     uint256 duration;
 }
 
+error ApprovalFailed();
+
 /**
  * @title VestedCrowdSale
  *
@@ -64,7 +66,10 @@ contract VestedCrowdSale is CrowdSale {
 
         super.settle(saleId);
 
-        _sales[saleId].auctionToken.approve(address(vesting.vestingContract), sale.salesAmount);
+        bool result = _sales[saleId].auctionToken.approve(address(vesting.vestingContract), sale.salesAmount);
+        if (!result) {
+            revert ApprovalFailed();
+        }
     }
 
     function claim(uint256 saleId) public virtual override returns (uint256 auctionTokens, uint256 refunds) {
