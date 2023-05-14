@@ -40,7 +40,8 @@ contract CrowdSaleFuzzTest is Test {
             biddingToken: IERC20(address(biddingToken)),
             fundingGoal: fundingGoal,
             salesAmount: salesAmt,
-            closingTime: block.timestamp + 2 hours
+            openingTime: uint64(block.timestamp),
+            closingTime: uint64(block.timestamp + 2 hours)
         });
 
         auctionToken.approve(address(crowdSale), salesAmt);

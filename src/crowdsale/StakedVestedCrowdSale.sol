@@ -102,13 +102,13 @@ contract StakedVestedCrowdSale is VestedCrowdSale {
     }
 
     //todo: get final price as by price feed at settlement
-    function claim(uint256 saleId) public override returns (uint256 auctionTokens, uint256 refunds) {
+    function claim(uint256 saleId, uint256 auctionTokens, uint256 refunds) internal virtual override {
         VestingConfig memory vestingConfig = salesVesting[saleId];
         StakingConfig memory stakingConfig = salesStaking[saleId];
 
         uint256 _stakes = stakes[saleId][msg.sender];
 
-        (auctionTokens, refunds) = super.claim(saleId);
+        super.claim(saleId, auctionTokens, refunds);
 
         uint256 refundedStakes = FP.mulWadDown(refunds, stakingConfig.wadFixedDaoPerBidPrice);
         uint256 vestedStakes = _stakes - refundedStakes;

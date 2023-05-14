@@ -91,6 +91,7 @@ contract CrowdSaleVestedStakedTest is Test {
         assertEq(daoToken.balanceOf(address(crowdSale)), 200_000 ether);
 
         vm.startPrank(anyone);
+        vm.warp(block.timestamp + 3 hours);
         crowdSale.settle(saleId);
         vm.stopPrank();
 
@@ -179,6 +180,7 @@ contract CrowdSaleVestedStakedTest is Test {
 
         */
         vm.startPrank(anyone);
+        vm.warp(block.timestamp + 3 hours);
         crowdSale.settle(saleId);
         vm.stopPrank();
 
@@ -238,6 +240,7 @@ contract CrowdSaleVestedStakedTest is Test {
         assertEq(crowdSale.stakesOf(saleId, bidder2), 112_500 ether);
 
         vm.startPrank(anyone);
+        vm.warp(block.timestamp + 3 hours);
         crowdSale.settle(saleId);
         vm.stopPrank();
 

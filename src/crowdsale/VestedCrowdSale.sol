@@ -11,7 +11,7 @@ import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 import { FixedPointMathLib as FP } from "solmate/utils/FixedPointMathLib.sol";
 import { TokenVesting } from "@moleculeprotocol/token-vesting/TokenVesting.sol";
 
-import { CrowdSale, Sale } from "./CrowdSale.sol";
+import { CrowdSale, Sale, SaleState } from "./CrowdSale.sol";
 import { InitializeableTokenVesting } from "./InitializableTokenVesting.sol";
 
 struct VestingConfig {
@@ -71,6 +71,9 @@ contract VestedCrowdSale is CrowdSale {
         VestingConfig memory vesting = salesVesting[saleId];
 
         super.settle(saleId);
+        if (_saleInfo[saleId].state == SaleState.FAILED) {
+            return;
+        }
 
         bool result = _sales[saleId].auctionToken.approve(address(vesting.vestingContract), sale.salesAmount);
         if (!result) {
@@ -78,12 +81,8 @@ contract VestedCrowdSale is CrowdSale {
         }
     }
 
-    function claim(uint256 saleId) public virtual override returns (uint256 auctionTokens, uint256 refunds) {
-        //todo: check that sale exists
-        (auctionTokens, refunds) = getClaimableAmounts(saleId, msg.sender);
-        if (auctionTokens == 0) {
-            revert("nothing to claim");
-        }
+    function claim(uint256 saleId, uint256 auctionTokens, uint256 refunds) internal virtual override {
+        emit Claimed(saleId, msg.sender, auctionTokens, refunds);
 
         VestingConfig memory vesting = salesVesting[saleId];
         if (refunds > 0) {
@@ -91,7 +90,10 @@ contract VestedCrowdSale is CrowdSale {
         }
 
         IERC20(_sales[saleId].auctionToken).safeTransfer(address(vesting.vestingContract), auctionTokens);
-        vesting.vestingContract.createVestingSchedule(msg.sender, block.timestamp, vesting.cliff, vesting.duration, 60, false, auctionTokens);
-        //todo emit vesting schedule id here
+
+        //todo: find out from where we want to count the vesting cliff time: opening time, settlement time or claiming time
+        vesting.vestingContract.createVestingSchedule(
+            msg.sender, _sales[saleId].openingTime, vesting.cliff, vesting.duration, 60, false, auctionTokens
+        );
     }
 }

@@ -96,6 +96,10 @@ contract CrowdSaleTest is Test {
         vm.stopPrank();
 
         vm.startPrank(anyone);
+        vm.expectRevert("sale has not concluded yet");
+        crowdSale.settle(saleId);
+
+        vm.warp(block.timestamp + 3 hours);
         crowdSale.settle(saleId);
         vm.stopPrank();
 
@@ -126,6 +130,7 @@ contract CrowdSaleTest is Test {
         vm.stopPrank();
 
         vm.startPrank(anyone);
+        vm.warp(block.timestamp + 3 hours);
         crowdSale.settle(saleId);
         vm.stopPrank();
 
@@ -154,6 +159,7 @@ contract CrowdSaleTest is Test {
         assertEq(biddingToken.balanceOf(bidder), 0);
 
         vm.startPrank(anyone);
+        vm.warp(block.timestamp + 3 hours);
         crowdSale.settle(saleId);
         vm.stopPrank();
 
@@ -204,6 +210,7 @@ contract CrowdSaleTest is Test {
         // vm.stopPrank();
 
         vm.startPrank(anyone);
+        vm.warp(block.timestamp + 3 hours);
         crowdSale.settle(saleId);
         vm.stopPrank();
 
@@ -264,6 +271,7 @@ contract CrowdSaleTest is Test {
         */
 
         vm.startPrank(anyone);
+        vm.warp(block.timestamp + 3 hours);
         crowdSale.settle(saleId);
         vm.stopPrank();
 

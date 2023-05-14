@@ -114,7 +114,8 @@ contract FixtureCrowdSale is Script {
             biddingToken: FakeERC20(address(usdc)),
             fundingGoal: 200 ether,
             salesAmount: 400 ether,
-            closingTime: block.timestamp + 2 hours
+            openingTime: uint64(block.timestamp),
+            closingTime: uint64(block.timestamp + 2 hours)
         });
 
         vm.startBroadcast(bob);
@@ -139,7 +140,8 @@ contract FixtureCrowdSale is Script {
             biddingToken: FakeERC20(address(usdc)),
             fundingGoal: 200 ether,
             salesAmount: 400 ether,
-            closingTime: block.timestamp + 4 hours
+            openingTime: uint64(block.timestamp),
+            closingTime: uint64(block.timestamp + 4 hours)
         });
 
         vm.startBroadcast(bob);

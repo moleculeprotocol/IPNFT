@@ -55,6 +55,7 @@ contract CrowdSaleVestedTest is Test {
         vm.stopPrank();
 
         vm.startPrank(anyone);
+        vm.warp(block.timestamp + 3 hours);
         crowdSale.settle(saleId);
         vm.stopPrank();
 
@@ -78,7 +79,7 @@ contract CrowdSaleVestedTest is Test {
 
         vm.warp(genesis + 60 days);
         auctionTokenVesting.releaseAvailableTokensForHolder(bidder);
-        assertTrue(auctionToken.balanceOf(bidder) > 65_000 ether);
+        assertGt(auctionToken.balanceOf(bidder), 65_000 ether);
 
         vm.warp(genesis + 366 days);
         auctionTokenVesting.releaseAvailableTokensForHolder(bidder);
