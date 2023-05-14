@@ -7,7 +7,7 @@ import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
-import { CrowdSale, Sale, SaleInfo } from "../src/crowdsale/CrowdSale.sol";
+import { CrowdSale, Sale, SaleInfo, SaleState } from "../src/crowdsale/CrowdSale.sol";
 import { VestingConfig } from "../src/crowdsale/VestedCrowdSale.sol";
 import { StakedVestedCrowdSale, StakingConfig } from "../src/crowdsale/StakedVestedCrowdSale.sol";
 import { TokenVesting } from "@moleculeprotocol/token-vesting/TokenVesting.sol";
@@ -267,5 +267,43 @@ contract CrowdSaleVestedStakedTest is Test {
         assertEq(auctionToken.balanceOf(address(crowdSale)), 400_000);
         assertEq(biddingToken.balanceOf(address(crowdSale)), 860_000);
         assertEq(daoToken.balanceOf(address(crowdSale)), 0);
+    }
+
+    function testUnsuccessfulSaleClaims() public {
+        vm.startPrank(emitter);
+        Sale memory _sale = CrowdSaleHelpers.makeSale(auctionToken, biddingToken);
+        auctionToken.approve(address(crowdSale), 400_000 ether);
+        uint256 saleId = crowdSale.startSale(_sale, daoToken, vestedDao, 25e16, 60 days, 365 days);
+
+        vm.stopPrank();
+
+        vm.startPrank(bidder);
+        crowdSale.placeBid(saleId, 50_000 ether);
+        vm.stopPrank();
+
+        vm.startPrank(bidder2);
+        crowdSale.placeBid(saleId, 50_000 ether);
+        vm.stopPrank();
+
+        vm.startPrank(anyone);
+        vm.warp(block.timestamp + 3 hours);
+        crowdSale.settle(saleId);
+        vm.stopPrank();
+
+        assertEq(biddingToken.balanceOf(emitter), 0);
+        assertEq(auctionToken.balanceOf(emitter), 500_000 ether);
+        SaleInfo memory info = crowdSale.saleInfo(saleId);
+        assertEq(info.surplus, 0);
+        assertEq(uint256(info.state), uint256(SaleState.FAILED));
+
+        vm.startPrank(bidder);
+        crowdSale.claim(saleId);
+        vm.stopPrank();
+
+        assertEq(biddingToken.balanceOf(bidder), 1_000_000 ether);
+        assertEq(auctionToken.balanceOf(bidder), 0);
+        (TokenVesting auctionTokenVesting,,) = crowdSale.salesVesting(saleId);
+
+        assertEq(auctionTokenVesting.balanceOf(bidder), 0);
     }
 }

@@ -67,15 +67,14 @@ contract VestedCrowdSale is CrowdSale {
     }
 
     function settle(uint256 saleId) public virtual override {
-        Sale memory sale = _sales[saleId];
-        VestingConfig memory vesting = salesVesting[saleId];
-
         super.settle(saleId);
         if (_saleInfo[saleId].state == SaleState.FAILED) {
             return;
         }
 
-        bool result = _sales[saleId].auctionToken.approve(address(vesting.vestingContract), sale.salesAmount);
+        Sale memory sale = _sales[saleId];
+        VestingConfig memory vesting = salesVesting[saleId];
+        bool result = sale.auctionToken.approve(address(vesting.vestingContract), sale.salesAmount);
         if (!result) {
             revert ApprovalFailed();
         }

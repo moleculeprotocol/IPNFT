@@ -6,7 +6,7 @@ import "forge-std/console.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
-import { CrowdSale, Sale, SaleInfo, BadSaleDuration, BalanceTooLow, SaleAlreadyActive } from "../src/crowdsale/CrowdSale.sol";
+import { CrowdSale, SaleState, Sale, SaleInfo, BadSaleDuration, BalanceTooLow, SaleAlreadyActive } from "../src/crowdsale/CrowdSale.sol";
 import { FakeERC20 } from "./helpers/FakeERC20.sol";
 import { CrowdSaleHelpers } from "./helpers/CrowdSaleHelpers.sol";
 
@@ -112,6 +112,36 @@ contract CrowdSaleTest is Test {
         vm.stopPrank();
 
         assertEq(auctionToken.balanceOf(bidder), _sale.salesAmount);
+    }
+
+    function testUnsuccessfulSaleClaims() public {
+        vm.startPrank(emitter);
+        Sale memory _sale = CrowdSaleHelpers.makeSale(auctionToken, biddingToken);
+        auctionToken.approve(address(crowdSale), 400_000 ether);
+        uint256 saleId = crowdSale.startSale(_sale);
+        vm.stopPrank();
+
+        vm.startPrank(bidder);
+        crowdSale.placeBid(saleId, 150_000 ether);
+        vm.stopPrank();
+
+        vm.startPrank(anyone);
+        vm.warp(block.timestamp + 3 hours);
+        crowdSale.settle(saleId);
+        vm.stopPrank();
+
+        assertEq(biddingToken.balanceOf(emitter), 0);
+        assertEq(auctionToken.balanceOf(emitter), 500_000 ether);
+        SaleInfo memory info = crowdSale.saleInfo(saleId);
+        assertEq(info.surplus, 0);
+        assertEq(uint256(info.state), uint256(SaleState.FAILED));
+
+        vm.startPrank(bidder);
+        crowdSale.claim(saleId);
+        vm.stopPrank();
+
+        assertEq(biddingToken.balanceOf(bidder), 1_000_000 ether);
+        assertEq(auctionToken.balanceOf(bidder), 0);
     }
 
     function testTwoBiddersMeetExactly() public {

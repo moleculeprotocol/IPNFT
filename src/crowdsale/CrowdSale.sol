@@ -9,6 +9,7 @@ import { FixedPointMathLib as FP } from "solmate/utils/FixedPointMathLib.sol";
 import { Counters } from "@openzeppelin/contracts/utils/Counters.sol";
 
 enum SaleState {
+    UNKNOWN, //Good to avoid invalid 0 checks
     RUNNING,
     SETTLED,
     FAILED
