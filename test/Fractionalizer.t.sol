@@ -99,6 +99,22 @@ contract FractionalizerTest is Test {
         vm.startPrank(deployer);
         vm.expectRevert(ToZeroAddress.selector);
         fractionalizer.setFeeReceiver(address(0));
+
+        fractionalizer.setFeeReceiver(deployer);
+        fractionalizer.setReceiverPercentage(10);
+        vm.stopPrank();
+
+        vm.startPrank(alice);
+        vm.expectRevert("Ownable: caller is not the owner");
+        fractionalizer.setReceiverPercentage(10);
+        vm.stopPrank();
+    }
+
+    function testUrl() public {
+        vm.startPrank(originalOwner);
+        FractionalizedToken tokenContract = fractionalizer.fractionalizeIpnft(1, 100_000, agreementCid);
+        string memory uri = fractionalizer.uri(tokenContract.hash());
+        assertGt(bytes(uri).length, 200);
         vm.stopPrank();
     }
 

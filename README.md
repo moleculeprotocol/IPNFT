@@ -150,6 +150,18 @@ ERC1967 Proxies are verified using their implementation contstructor call
 
 `forge verify-contract --chain-id 5 <proxyaddress> ERC1967Proxy --constructor-args $(cast abi-encode "constructor(address,bytes)" "<impladdress>" "")`
 
+## checking with mythril on docker
+
+`docker run -m 6G --cpus=8 -w /tmp -v $(pwd):/tmp mythril/myth analyze /tmp/src/IPNFT.sol --solc-json /tmp/mythril.config.json`
+
+## Creating coverage reports
+
+requires the lcov suite installed on your machine
+
+```
+forge coverage --report lcov && genhtml lcov.info -o report --branch-coverage
+```
+
 ## Interacting with cast
 
 `cast` is another CLI command installed by Foundry and allows you to query/manipulate your deployed contracts easily. Find out more here: <https://book.getfoundry.sh/cast/>
