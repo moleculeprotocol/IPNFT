@@ -42,8 +42,6 @@ contract CrowdSaleVestedTest is Test {
     }
 
     function testSettlementAndSimpleClaims() public {
-        uint256 genesis = block.timestamp;
-
         vm.startPrank(emitter);
         Sale memory _sale = CrowdSaleHelpers.makeSale(emitter, auctionToken, biddingToken);
         auctionToken.approve(address(crowdSale), 400_000 ether);
@@ -72,16 +70,16 @@ contract CrowdSaleVestedTest is Test {
         assertEq(auctionTokenVesting.balanceOf(bidder), _sale.salesAmount);
 
         vm.startPrank(bidder);
-        vm.warp(genesis + 10 days);
+        vm.warp(_sale.closingTime + 10 days);
         auctionTokenVesting.releaseAvailableTokensForHolder(bidder);
         assertEq(auctionTokenVesting.balanceOf(bidder), _sale.salesAmount);
         assertEq(auctionToken.balanceOf(bidder), 0);
 
-        vm.warp(genesis + 60 days);
+        vm.warp(_sale.closingTime + 60 days);
         auctionTokenVesting.releaseAvailableTokensForHolder(bidder);
         assertGt(auctionToken.balanceOf(bidder), 65_000 ether);
 
-        vm.warp(genesis + 366 days);
+        vm.warp(_sale.closingTime + 366 days);
         auctionTokenVesting.releaseAvailableTokensForHolder(bidder);
         assertEq(auctionToken.balanceOf(bidder), _sale.salesAmount);
         assertEq(auctionTokenVesting.balanceOf(bidder), 0);
@@ -90,7 +88,7 @@ contract CrowdSaleVestedTest is Test {
 
     function testUnsuccessfulSaleClaims() public {
         vm.startPrank(emitter);
-        Sale memory _sale = CrowdSaleHelpers.makeSale(auctionToken, biddingToken);
+        Sale memory _sale = CrowdSaleHelpers.makeSale(emitter, auctionToken, biddingToken);
         auctionToken.approve(address(crowdSale), 400_000 ether);
         uint256 saleId = crowdSale.startSale(_sale, 60 days, 365 days);
 

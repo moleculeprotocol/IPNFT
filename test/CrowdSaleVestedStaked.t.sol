@@ -271,7 +271,7 @@ contract CrowdSaleVestedStakedTest is Test {
 
     function testUnsuccessfulSaleClaims() public {
         vm.startPrank(emitter);
-        Sale memory _sale = CrowdSaleHelpers.makeSale(auctionToken, biddingToken);
+        Sale memory _sale = CrowdSaleHelpers.makeSale(emitter, auctionToken, biddingToken);
         auctionToken.approve(address(crowdSale), 400_000 ether);
         uint256 saleId = crowdSale.startSale(_sale, daoToken, vestedDao, 25e16, 60 days, 365 days);
 

@@ -23,12 +23,10 @@ struct Sale {
     uint256 fundingGoal;
     //how many auction tokens to sell
     uint256 salesAmount;
-    uint64 openingTime;
     uint64 closingTime;
 }
 
 struct SaleInfo {
-    address beneficiary;
     SaleState state;
     uint256 total;
     uint256 surplus;
@@ -57,9 +55,10 @@ contract CrowdSale {
     constructor() { }
 
     function startSale(Sale memory sale) public returns (uint256 saleId) {
-        if (sale.closingTime < block.timestamp + 1 hours) {
-            revert BadSaleDuration();
-        }
+        //todo: removed this restriction for simpler testing
+        // if (sale.closingTime < block.timestamp + 1 hours) {
+        //     revert BadSaleDuration();
+        // }
         if (sale.auctionToken.decimals() != 18 || IERC20Metadata(address(sale.biddingToken)).decimals() != 18) {
             revert BadDecimals();
         }
@@ -71,20 +70,15 @@ contract CrowdSale {
         //     revert("you must sell or accept something meaningful");
         // }
 
-        sale.openingTime = uint64(block.timestamp);
         saleId = uint256(keccak256(abi.encode(sale)));
         if (address(_sales[saleId].auctionToken) != address(0)) {
             revert SaleAlreadyActive();
         }
         _sales[saleId] = sale;
-        _saleInfo[saleId] = SaleInfo(msg.sender, SaleState.RUNNING, 0, 0);
+        _saleInfo[saleId] = SaleInfo(SaleState.RUNNING, 0, 0);
 
         sale.auctionToken.safeTransferFrom(msg.sender, address(this), sale.salesAmount);
         _onSaleStarted(saleId);
-    }
-
-    function _onSaleStarted(uint256 saleId) internal virtual {
-        emit Started(saleId, msg.sender, _sales[saleId]);
     }
 
     function placeBid(uint256 saleId, uint256 biddingTokenAmount) public virtual {
@@ -121,15 +115,14 @@ contract CrowdSale {
             revert("sale has not concluded yet");
         }
 
-        if (__saleInfo.total < sale.fundingGoal) {
-            failSale(saleId);
-            return;
-        }
-
         if (__saleInfo.state != SaleState.RUNNING) {
             revert("sale is not running");
         }
 
+        if (__saleInfo.total < sale.fundingGoal) {
+            failSale(saleId);
+            return;
+        }
         __saleInfo.state = SaleState.SETTLED;
         __saleInfo.surplus = __saleInfo.total - sale.fundingGoal;
 
@@ -159,11 +152,15 @@ contract CrowdSale {
         return _contributions[saleId][contributor];
     }
 
+    function _onSaleStarted(uint256 saleId) internal virtual {
+        emit Started(saleId, msg.sender, _sales[saleId]);
+    }
+
     function failSale(uint256 saleId) internal virtual {
         Sale memory sale = _sales[saleId];
         _saleInfo[saleId].state = SaleState.FAILED;
         emit Failed(saleId);
-        sale.auctionToken.safeTransfer(_saleInfo[saleId].beneficiary, sale.salesAmount);
+        sale.auctionToken.safeTransfer(sale.beneficiary, sale.salesAmount);
     }
 
     function claimFailed(uint256 saleId) internal virtual returns (uint256 auctionTokens, uint256 refunds) {

@@ -90,9 +90,10 @@ contract VestedCrowdSale is CrowdSale {
 
         IERC20(_sales[saleId].auctionToken).safeTransfer(address(vesting.vestingContract), auctionTokens);
 
-        //todo: find out from where we want to count the vesting cliff time: opening time, settlement time or claiming time
+        //the vesting start time is the official auction closing time
+        //https://discord.com/channels/608198475598790656/1021413298756923462/1107442747687829515
         vesting.vestingContract.createVestingSchedule(
-            msg.sender, _sales[saleId].openingTime, vesting.cliff, vesting.duration, 60, false, auctionTokens
+            msg.sender, _sales[saleId].closingTime, vesting.cliff, vesting.duration, 60, false, auctionTokens
         );
     }
 }
