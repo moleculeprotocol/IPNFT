@@ -7,6 +7,7 @@ import { IPNFT } from "../../src/IPNFT.sol";
 import { Fractionalizer } from "../../src/Fractionalizer.sol";
 import { FractionalizedToken } from "../../src/FractionalizedToken.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+import { TermsAcceptedPermissioner } from "../../src/Permissioner.sol";
 
 /**
  * @title FractionalizeScript
@@ -31,7 +32,10 @@ contract DeployFractionalizer is Script {
                 )
             )
         );
+
         fractionalizer.initialize(ipnft);
+
+        new TermsAcceptedPermissioner();
         vm.stopBroadcast();
     }
 }
@@ -40,12 +44,14 @@ contract FixtureFractionalizer is Script {
     string mnemonic = "test test test test test test test test test test test junk";
 
     Fractionalizer fractionalizer;
+    TermsAcceptedPermissioner permissioner;
 
     address bob;
 
     function prepareAddresses() internal {
         (bob,) = deriveRememberKey(mnemonic, 1);
         fractionalizer = Fractionalizer(vm.envAddress("FRACTIONALIZER_ADDRESS"));
+        permissioner = TermsAcceptedPermissioner(vm.envAddress("PERMISSIONER_ADDRESS"));
     }
 
     function run() public {
@@ -56,6 +62,7 @@ contract FixtureFractionalizer is Script {
             fractionalizer.fractionalizeIpnft(1, 1_000_000 ether, "bafkreigk5dvqblnkdniges6ft5kmuly47ebw4vho6siikzmkaovq6sjstq");
         vm.stopBroadcast();
 
+        console.log("permissioner %s", address(permissioner));
         console.log("frac %s", address(fractionalizer));
         console.log("fractionalized erc20 token address: %s", address(tokenContract));
         console.log("fraction hash: %s", tokenContract.hash());

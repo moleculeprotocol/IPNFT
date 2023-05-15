@@ -90,7 +90,7 @@ type CrowdSale @entity {
   salesAmount: BigInt! #the amount of tokens to be auctioned
   amountRaised: BigInt! #the amount of tokens raised so far
   amountStaked: BigInt #the amount of tokens staked so far
-  # biddingToken: Bytes! #address of the erc20Token to be raised
+  biddingToken: Bytes! #address of the erc20Token to be raised
   fundingGoal: BigInt! #the amount of tokens to be raised
   #stakedToken: Bytes #address of the erc20Token to be staked (depends on type="stakedVested")
   closingTime: BigInt! #the time when the auction ends
