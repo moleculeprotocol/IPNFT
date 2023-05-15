@@ -109,6 +109,7 @@ contract FixtureCrowdSale is Script {
         dealERC20(charlie, 1000 ether, daoToken);
 
         Sale memory _sale = Sale({
+            beneficiary: bob,
             auctionToken: IERC20Metadata(address(auctionToken)),
             biddingToken: FakeERC20(address(usdc)),
             fundingGoal: 200 ether,
@@ -133,6 +134,7 @@ contract FixtureCrowdSale is Script {
 
         // Create second CrowdSale that will not be settled
         Sale memory _sale2 = Sale({
+            beneficiary: bob,
             auctionToken: IERC20Metadata(address(auctionToken)),
             biddingToken: FakeERC20(address(usdc)),
             fundingGoal: 200 ether,

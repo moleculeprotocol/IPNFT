@@ -35,6 +35,7 @@ contract CrowdSaleFuzzTest is Test {
 
         vm.startPrank(emitter);
         Sale memory _sale = Sale({
+            beneficiary: emitter,
             auctionToken: IERC20Metadata(address(auctionToken)),
             biddingToken: IERC20(address(biddingToken)),
             fundingGoal: fundingGoal,

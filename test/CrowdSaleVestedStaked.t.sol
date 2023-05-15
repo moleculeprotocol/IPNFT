@@ -75,7 +75,7 @@ contract CrowdSaleVestedStakedTest is Test {
 
     function testSettlementAndSimpleClaims() public {
         vm.startPrank(emitter);
-        Sale memory _sale = CrowdSaleHelpers.makeSale(auctionToken, biddingToken);
+        Sale memory _sale = CrowdSaleHelpers.makeSale(emitter, auctionToken, biddingToken);
 
         auctionToken.approve(address(crowdSale), 400_000 ether);
         uint256 saleId = crowdSale.startSale(_sale, daoToken, vestedDao, 1e18, 60 days, 365 days);
@@ -110,7 +110,7 @@ contract CrowdSaleVestedStakedTest is Test {
 
     function testOverbiddingAndRefunds() public {
         vm.startPrank(emitter);
-        Sale memory _sale = CrowdSaleHelpers.makeSale(auctionToken, biddingToken);
+        Sale memory _sale = CrowdSaleHelpers.makeSale(emitter, auctionToken, biddingToken);
         auctionToken.approve(address(crowdSale), 400_000 ether);
         uint256 saleId = crowdSale.startSale(_sale, daoToken, vestedDao, 1e18, 60 days, 365 days);
         vm.stopPrank();
@@ -209,7 +209,7 @@ contract CrowdSaleVestedStakedTest is Test {
 
     function testUnevenOverbiddingAndPriceAndRefunds() public {
         vm.startPrank(emitter);
-        Sale memory _sale = CrowdSaleHelpers.makeSale(auctionToken, biddingToken);
+        Sale memory _sale = CrowdSaleHelpers.makeSale(emitter, auctionToken, biddingToken);
         auctionToken.approve(address(crowdSale), 400_000 ether);
         // 1 DAO = 4 $
         uint256 saleId = crowdSale.startSale(_sale, daoToken, vestedDao, 25e16, 60 days, 365 days);

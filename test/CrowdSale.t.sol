@@ -40,7 +40,7 @@ contract CrowdSaleTest is Test {
     }
 
     function testCreateSale() public {
-        Sale memory _sale = CrowdSaleHelpers.makeSale(auctionToken, biddingToken);
+        Sale memory _sale = CrowdSaleHelpers.makeSale(emitter, auctionToken, biddingToken);
 
         vm.startPrank(emitter);
         auctionToken.approve(address(crowdSale), 400_000 ether);
@@ -58,7 +58,7 @@ contract CrowdSaleTest is Test {
 
     function testCannotCreateSaleWithoutFunds() public {
         address poorguy = makeAddr("poorguy");
-        Sale memory _sale = CrowdSaleHelpers.makeSale(auctionToken, biddingToken);
+        Sale memory _sale = CrowdSaleHelpers.makeSale(poorguy, auctionToken, biddingToken);
 
         vm.startPrank(poorguy);
         vm.expectRevert(BalanceTooLow.selector);
@@ -68,7 +68,7 @@ contract CrowdSaleTest is Test {
 
     function testPlaceBid() public {
         vm.startPrank(emitter);
-        Sale memory _sale = CrowdSaleHelpers.makeSale(auctionToken, biddingToken);
+        Sale memory _sale = CrowdSaleHelpers.makeSale(emitter, auctionToken, biddingToken);
         auctionToken.approve(address(crowdSale), 400_000 ether);
         uint256 saleId = crowdSale.startSale(_sale);
         vm.stopPrank();
@@ -85,7 +85,8 @@ contract CrowdSaleTest is Test {
 
     function testSettlementAndSimpleClaims() public {
         vm.startPrank(emitter);
-        Sale memory _sale = CrowdSaleHelpers.makeSale(auctionToken, biddingToken);
+        Sale memory _sale = CrowdSaleHelpers.makeSale(emitter, auctionToken, biddingToken);
+        assertEq(_sale.beneficiary, emitter);
         auctionToken.approve(address(crowdSale), 400_000 ether);
         uint256 saleId = crowdSale.startSale(_sale);
         vm.stopPrank();
@@ -111,7 +112,7 @@ contract CrowdSaleTest is Test {
 
     function testTwoBiddersMeetExactly() public {
         vm.startPrank(emitter);
-        Sale memory _sale = CrowdSaleHelpers.makeSale(auctionToken, biddingToken);
+        Sale memory _sale = CrowdSaleHelpers.makeSale(emitter, auctionToken, biddingToken);
         auctionToken.approve(address(crowdSale), 400_000 ether);
         uint256 saleId = crowdSale.startSale(_sale);
         vm.stopPrank();
@@ -142,7 +143,7 @@ contract CrowdSaleTest is Test {
 
     function testSingleRefundsOnOvershoot() public {
         vm.startPrank(emitter);
-        Sale memory _sale = CrowdSaleHelpers.makeSale(auctionToken, biddingToken);
+        Sale memory _sale = CrowdSaleHelpers.makeSale(emitter, auctionToken, biddingToken);
         auctionToken.approve(address(crowdSale), 400_000 ether);
         uint256 saleId = crowdSale.startSale(_sale);
         vm.stopPrank();
@@ -166,7 +167,7 @@ contract CrowdSaleTest is Test {
 
     function testOverbiddingAndRefunds() public {
         vm.startPrank(emitter);
-        Sale memory _sale = CrowdSaleHelpers.makeSale(auctionToken, biddingToken);
+        Sale memory _sale = CrowdSaleHelpers.makeSale(emitter, auctionToken, biddingToken);
         auctionToken.approve(address(crowdSale), 400_000 ether);
         uint256 saleId = crowdSale.startSale(_sale);
         vm.stopPrank();
@@ -226,7 +227,7 @@ contract CrowdSaleTest is Test {
 
     function testUnevenOverbiddingAndRefunds() public {
         vm.startPrank(emitter);
-        Sale memory _sale = CrowdSaleHelpers.makeSale(auctionToken, biddingToken);
+        Sale memory _sale = CrowdSaleHelpers.makeSale(emitter, auctionToken, biddingToken);
         auctionToken.approve(address(crowdSale), 400_000 ether);
         uint256 saleId = crowdSale.startSale(_sale);
         vm.stopPrank();

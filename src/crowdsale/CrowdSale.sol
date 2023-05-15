@@ -11,6 +11,7 @@ import { Counters } from "@openzeppelin/contracts/utils/Counters.sol";
 struct Sale {
     IERC20Metadata auctionToken;
     IERC20 biddingToken;
+    address beneficiary;
     //how many bidding tokens to collect
     uint256 fundingGoal;
     //how many auction tokens to sell
@@ -20,7 +21,6 @@ struct Sale {
 }
 
 struct SaleInfo {
-    address beneficiary;
     bool settled;
     uint256 total;
     uint256 surplus;
@@ -67,10 +67,14 @@ contract CrowdSale {
             revert SaleAlreadyActive();
         }
         _sales[saleId] = sale;
-        _saleInfo[saleId] = SaleInfo(msg.sender, false, 0, 0);
+        _saleInfo[saleId] = SaleInfo(false, 0, 0);
 
-        emit Started(saleId, msg.sender, sale);
         sale.auctionToken.safeTransferFrom(msg.sender, address(this), sale.salesAmount);
+        _onSaleStarted(saleId);
+    }
+
+    function _onSaleStarted(uint256 saleId) internal virtual {
+        emit Started(saleId, msg.sender, _sales[saleId]);
     }
 
     function placeBid(uint256 saleId, uint256 biddingTokenAmount) public virtual {
@@ -115,7 +119,7 @@ contract CrowdSale {
         emit Settled(saleId, __saleInfo.total, __saleInfo.surplus);
 
         //transfer funds to issuer / beneficiary
-        release(sale.biddingToken, __saleInfo.beneficiary, sale.fundingGoal);
+        release(sale.biddingToken, sale.beneficiary, sale.fundingGoal);
     }
 
     function claim(uint256 saleId) public virtual returns (uint256 auctionTokens, uint256 refunds) {

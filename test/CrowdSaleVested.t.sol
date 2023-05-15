@@ -45,7 +45,7 @@ contract CrowdSaleVestedTest is Test {
         uint256 genesis = block.timestamp;
 
         vm.startPrank(emitter);
-        Sale memory _sale = CrowdSaleHelpers.makeSale(auctionToken, biddingToken);
+        Sale memory _sale = CrowdSaleHelpers.makeSale(emitter, auctionToken, biddingToken);
         auctionToken.approve(address(crowdSale), 400_000 ether);
         uint256 saleId = crowdSale.startSale(_sale, 60 days, 365 days);
         vm.stopPrank();

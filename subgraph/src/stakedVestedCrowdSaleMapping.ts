@@ -1,11 +1,32 @@
 import { BigInt, log } from '@graphprotocol/graph-ts';
+import { IERC20Metadata } from '../generated/StakedVestedCrowdSale/IERC20Metadata';
 import {
-  Claimed as ClaimedEvent,
+  Bid as BidEvent,
   Settled as SettledEvent,
-  Started as StartedEvent,
-  Bid as BidEvent
+  Started as StartedEvent
 } from '../generated/StakedVestedCrowdSale/StakedVestedCrowdSale';
-import { Contribution, CrowdSale, Fractionalized } from '../generated/schema';
+
+import {
+  Contribution,
+  CrowdSale,
+  ERC20Token,
+  Fractionalized
+} from '../generated/schema';
+
+function makeERC20Token(_contract: IERC20Metadata): ERC20Token {
+  let token = ERC20Token.load(_contract._address);
+
+  if (!token) {
+    token = new ERC20Token(_contract._address);
+    token.id = _contract._address;
+    token.decimals = BigInt.fromI32(_contract.decimals());
+    token.symbol = _contract.symbol();
+    token.name = _contract.name();
+  }
+
+  token.save();
+  return token;
+}
 
 export function handleStarted(event: StartedEvent): void {
   let crowdSale = new CrowdSale(event.params.saleId.toString());
@@ -19,18 +40,37 @@ export function handleStarted(event: StartedEvent): void {
     ]);
     return;
   }
-
   crowdSale.fractionalizedIpnft = fractionalized.id;
-  crowdSale.salesAmount = event.params.sale.salesAmount;
-  crowdSale.biddingToken = event.params.sale.biddingToken;
-  crowdSale.amountRaised = BigInt.fromU32(0);
-  crowdSale.amountStaked = BigInt.fromU32(0);
-  crowdSale.fundingGoal = event.params.sale.fundingGoal;
-  crowdSale.settled = false;
   crowdSale.issuer = event.params.issuer;
-  crowdSale.createdAt = event.block.timestamp;
+  crowdSale.beneficiary = event.params.sale.beneficiary;
   crowdSale.closingTime = event.params.sale.closingTime;
+  crowdSale.createdAt = event.block.timestamp;
+  crowdSale.settled = false;
 
+  crowdSale.auctionToken = makeERC20Token(
+    IERC20Metadata.bind(event.params.sale.auctionToken)
+  ).id;
+  crowdSale.salesAmount = event.params.sale.salesAmount;
+  crowdSale.vestedAuctionToken = makeERC20Token(
+    IERC20Metadata.bind(event.params.vesting.vestingContract)
+  ).id;
+
+  crowdSale.auctionCliff = event.params.vesting.cliff;
+
+  crowdSale.biddingToken = makeERC20Token(
+    IERC20Metadata.bind(event.params.sale.biddingToken)
+  ).id;
+  crowdSale.fundingGoal = event.params.sale.fundingGoal;
+  crowdSale.amountRaised = BigInt.fromU32(0);
+  crowdSale.stakingToken = makeERC20Token(
+    IERC20Metadata.bind(event.params.staking.stakedToken)
+  ).id;
+
+  crowdSale.amountStaked = BigInt.fromU32(0);
+  crowdSale.vestedStakingToken = makeERC20Token(
+    IERC20Metadata.bind(event.params.staking.stakesVestingContract)
+  ).id;
+  crowdSale.stakingCliff = event.params.vesting.cliff;
   crowdSale.save();
 }
 
