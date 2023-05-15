@@ -28,9 +28,7 @@ contract DeployCrowdSale is Script {
     string mnemonic = "test test test test test test test test test test test junk";
 
     function run() public {
-        FakeERC20 usdc = FakeERC20(vm.envAddress("USDC_ADDRESS"));
         (address deployer,) = deriveRememberKey(mnemonic, 0);
-        (address bob,) = deriveRememberKey(mnemonic, 1);
         vm.startBroadcast(deployer);
         StakedVestedCrowdSale stakedVestedCrowdSale = new StakedVestedCrowdSale();
         FakeERC20 daoToken = new FakeERC20("DAO Token", "DAO");

@@ -25,5 +25,9 @@ module.exports = {
   stakedVestedCrowdSale: {
     address: process.env.STAKED_VESTED_CROWDSALE_ADDRESS,
     startBlock: 0
+  },
+  termsAcceptedPermissioner: {
+    address: process.env.TERMS_ACCEPTED_PERMISSIONER_ADDRESS,
+    startBlock: 0
   }
 };

@@ -22,6 +22,7 @@ export function handleStarted(event: StartedEvent): void {
 
   crowdSale.fractionalizedIpnft = fractionalized.id;
   crowdSale.salesAmount = event.params.sale.salesAmount;
+  crowdSale.biddingToken = event.params.sale.biddingToken;
   crowdSale.amountRaised = BigInt.fromU32(0);
   crowdSale.amountStaked = BigInt.fromU32(0);
   crowdSale.fundingGoal = event.params.sale.fundingGoal;

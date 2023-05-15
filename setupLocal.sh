@@ -22,8 +22,6 @@ while [ "$#" -gt 0 ]; do
   shift
 done
 
-# echo $MINTPASS_ADDRESS
-# exit
 
 # Main logic
 if [ "$fixture" -eq "1" ]; then

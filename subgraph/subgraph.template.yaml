@@ -131,6 +131,26 @@ dataSources:
         - event: Bid(indexed uint256,indexed address,uint256,uint256,uint256)
           handler: handleBid
       file: ./src/stakedVestedCrowdSaleMapping.ts
+  - kind: ethereum
+    name: TermsAcceptedPermissioner
+    network: {{network}}
+    source:
+      address: '{{termsAcceptedPermissioner.address}}'
+      abi: TermsAcceptedPermissioner
+      startBlock: {{termsAcceptedPermissioner.startBlock}}
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - Fraction
+      abis:
+        - name: TermsAcceptedPermissioner
+          file: ./abis/TermsAcceptedPermissioner.json
+      eventHandlers:
+        - event: TermsAccepted(indexed address,indexed address,bytes)
+          handler: handleTermsAccepted
+      file: ./src/termsAcceptedPermissionerMapping.ts
 templates:
   - name: FractionalizedToken
     kind: ethereum/contract
