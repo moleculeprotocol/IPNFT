@@ -51,7 +51,7 @@ contract FixtureFractionalizer is Script {
     function prepareAddresses() internal {
         (bob,) = deriveRememberKey(mnemonic, 1);
         fractionalizer = Fractionalizer(vm.envAddress("FRACTIONALIZER_ADDRESS"));
-        permissioner = TermsAcceptedPermissioner(vm.envAddress("PERMISSIONER_ADDRESS"));
+        permissioner = TermsAcceptedPermissioner(vm.envAddress("TERMS_ACCEPTED_PERMISSIONER_ADDRESS"));
     }
 
     function run() public {
