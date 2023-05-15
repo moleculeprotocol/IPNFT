@@ -35,8 +35,11 @@ contract DeployFractionalizer is Script {
 
         fractionalizer.initialize(ipnft);
 
-        new TermsAcceptedPermissioner();
+        TermsAcceptedPermissioner permissioner = new TermsAcceptedPermissioner();
+
         vm.stopBroadcast();
+        console.log("fractionalizer %s", address(fractionalizer));
+        console.log("permissioner %s", address(permissioner));
     }
 }
 
@@ -62,8 +65,6 @@ contract FixtureFractionalizer is Script {
             fractionalizer.fractionalizeIpnft(1, 1_000_000 ether, "bafkreigk5dvqblnkdniges6ft5kmuly47ebw4vho6siikzmkaovq6sjstq");
         vm.stopBroadcast();
 
-        console.log("permissioner %s", address(permissioner));
-        console.log("frac %s", address(fractionalizer));
         console.log("fractionalized erc20 token address: %s", address(tokenContract));
         console.log("fraction hash: %s", tokenContract.hash());
     }
