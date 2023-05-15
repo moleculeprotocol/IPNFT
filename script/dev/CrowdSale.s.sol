@@ -85,12 +85,6 @@ contract FixtureCrowdSale is Script {
         vm.stopBroadcast();
     }
 
-    function claim(address claimer, uint256 saleId) internal {
-        vm.startBroadcast(claimer);
-        stakedVestedCrowdSale.claim(saleId);
-        vm.stopBroadcast();
-    }
-
     function dealERC20(address to, uint256 amount, FakeERC20 token) internal {
         vm.startBroadcast(deployer);
         token.mint(to, amount);
@@ -101,21 +95,20 @@ contract FixtureCrowdSale is Script {
         prepareAddresses();
 
         // Deal Charlie ERC20 tokens to bid in crowdsale
-        dealERC20(alice, 1000 ether, usdc);
-        dealERC20(charlie, 1000 ether, usdc);
+        dealERC20(alice, 1200 ether, usdc);
+        dealERC20(charlie, 400 ether, usdc);
 
         // Deal Alice and Charlie DAO tokens to stake in crowdsale
-        dealERC20(alice, 1000 ether, daoToken);
-        dealERC20(charlie, 1000 ether, daoToken);
+        dealERC20(alice, 1200 ether, daoToken);
+        dealERC20(charlie, 400 ether, daoToken);
 
         Sale memory _sale = Sale({
-            beneficiary: bob,
             auctionToken: IERC20Metadata(address(auctionToken)),
             biddingToken: FakeERC20(address(usdc)),
+            beneficiary: bob,
             fundingGoal: 200 ether,
             salesAmount: 400 ether,
-            openingTime: uint64(block.timestamp),
-            closingTime: uint64(block.timestamp + 2 hours)
+            closingTime: uint64(block.timestamp + 5 seconds)
         });
 
         vm.startBroadcast(bob);
@@ -125,22 +118,15 @@ contract FixtureCrowdSale is Script {
 
         placeBid(alice, 600 ether, saleId);
         placeBid(charlie, 200 ether, saleId);
+        console.log("SALE_ID=%s", saleId);
 
-        vm.startBroadcast(anyone);
-        stakedVestedCrowdSale.settle(saleId);
-        vm.stopBroadcast();
-
-        claim(alice, saleId);
-        claim(charlie, saleId);
-
-        // Create second CrowdSale that will not be settled
+        //Create second CrowdSale that will not be settled
         Sale memory _sale2 = Sale({
             beneficiary: bob,
             auctionToken: IERC20Metadata(address(auctionToken)),
             biddingToken: FakeERC20(address(usdc)),
             fundingGoal: 200 ether,
             salesAmount: 400 ether,
-            openingTime: uint64(block.timestamp),
             closingTime: uint64(block.timestamp + 4 hours)
         });
 
@@ -151,5 +137,30 @@ contract FixtureCrowdSale is Script {
 
         placeBid(alice, 600 ether, saleId2);
         placeBid(charlie, 200 ether, saleId2);
+    }
+}
+
+contract ClaimSale is Script {
+    string mnemonic = "test test test test test test test test test test test junk";
+
+    function run() public {
+        uint256 saleId = vm.envUint("SALE_ID");
+        StakedVestedCrowdSale stakedVestedCrowdSale = StakedVestedCrowdSale(vm.envAddress("STAKED_VESTED_CROWDSALE_ADDRESS"));
+
+        (address alice,) = deriveRememberKey(mnemonic, 2);
+        (address charlie,) = deriveRememberKey(mnemonic, 3);
+        (address anyone,) = deriveRememberKey(mnemonic, 4);
+
+        vm.startBroadcast(anyone);
+        stakedVestedCrowdSale.settle(saleId);
+        vm.stopBroadcast();
+
+        vm.startBroadcast(alice);
+        stakedVestedCrowdSale.claim(saleId);
+        vm.stopBroadcast();
+
+        vm.startBroadcast(charlie);
+        stakedVestedCrowdSale.claim(saleId);
+        vm.stopBroadcast();
     }
 }

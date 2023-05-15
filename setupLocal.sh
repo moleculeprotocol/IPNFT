@@ -36,6 +36,10 @@ if [ "$fixture" -eq "1" ]; then
     forge script script/dev/CrowdSale.s.sol:DeployCrowdSale -f $RPC_URL --broadcast
     forge script script/dev/CrowdSale.s.sol:FixtureCrowdSale -f $RPC_URL --broadcast
 
+    sleep 5
+
+    echo "SALE_ID= forge script script/dev/CrowdSale.s.sol:ClaimSale -f $RPC_URL --broadcast"
+
 else
   echo "Only deploying contracts."
     forge script script/dev/Ipnft.s.sol:DeployIpnft -f $RPC_URL --broadcast
