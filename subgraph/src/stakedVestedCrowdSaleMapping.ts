@@ -1,12 +1,10 @@
 import { BigInt, log } from '@graphprotocol/graph-ts';
+import { IERC20Metadata } from '../generated/StakedVestedCrowdSale/IERC20Metadata';
 import {
-  Claimed as ClaimedEvent,
+  Bid as BidEvent,
   Settled as SettledEvent,
-  Started as StartedEvent,
-  Bid as BidEvent
+  Started as StartedEvent
 } from '../generated/StakedVestedCrowdSale/StakedVestedCrowdSale';
-//import { IERC20Metadata as ERC20Contract } from '../generated/templates/IERC20Metadata/IERC20Metadata';
-import { IERC20Metadata } from '../generated/templates/IERC20Metadata/IERC20Metadata';
 
 import {
   Contribution,
