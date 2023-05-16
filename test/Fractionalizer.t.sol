@@ -129,7 +129,7 @@ contract FractionalizerTest is Test {
         assertEq(ipnft.balanceOf(originalOwner, 1), 1);
 
         assertEq(tokenContract.totalIssued(), 100_000);
-        assertEq(tokenContract.symbol(), "MOL-0001");
+        assertEq(tokenContract.symbol(), "MOL-0001-MOL");
 
         vm.startPrank(originalOwner);
         tokenContract.transfer(alice, 10_000);
