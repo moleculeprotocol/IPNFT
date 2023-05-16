@@ -17,17 +17,17 @@ interface IPermissioner {
      * @param _for address
      * @param data bytes
      */
-    function accept(FractionalizedToken tokenContract, address _for, bytes memory data) external;
+    function accept(FractionalizedToken tokenContract, address _for, bytes calldata data) external;
 }
 
 contract BlindPermissioner is IPermissioner {
-    function accept(FractionalizedToken tokenContract, address _for, bytes memory data) external {
+    function accept(FractionalizedToken tokenContract, address _for, bytes calldata data) external {
         //empty
     }
 }
 
 contract ForbidAllPermissioner is IPermissioner {
-    function accept(FractionalizedToken tokenContract, address _for, bytes memory data) external {
+    function accept(FractionalizedToken tokenContract, address _for, bytes calldata data) external {
         revert Denied();
     }
 }
@@ -63,7 +63,7 @@ contract TermsAcceptedPermissioner is IPermissioner {
      *
      * @param tokenContract FractionalizedToken
      */
-    function isValidSignature(FractionalizedToken tokenContract, address signer, bytes memory signature) public view returns (bool) {
+    function isValidSignature(FractionalizedToken tokenContract, address signer, bytes calldata signature) public view returns (bool) {
         bytes32 termsHash = ECDSA.toEthSignedMessageHash(abi.encodePacked(specificTermsV1(tokenContract)));
         return SignatureChecker.isValidSignatureNow(signer, termsHash, signature);
     }
@@ -76,7 +76,7 @@ contract TermsAcceptedPermissioner is IPermissioner {
      * @param _for address the account that has created `signature`
      * @param signature bytes encoded signature, for eip155: `abi.encodePacked(r, s, v)`
      */
-    function accept(FractionalizedToken tokenContract, address _for, bytes memory signature) external {
+    function accept(FractionalizedToken tokenContract, address _for, bytes calldata signature) external {
         if (!isValidSignature(tokenContract, _for, signature)) {
             revert InvalidSignature();
         }
