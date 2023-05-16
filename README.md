@@ -31,6 +31,9 @@ IP-NFTs allow their users to tokenize intellectual property. This repo contains 
   (Impl no 1 0xb5205fd0dd99eed373f447abd223a085472c4027)
   <https://goerli.etherscan.io/address/0xAa3a8758214fe7d90557310cFB42A7f69755aCbf>
 
+- Bio pricefeed: 0xB3Bd21627DC802acF1b8aD4A6Ab7f65A0068481C
+  <https://goerli.etherscan.io/address/0xB3Bd21627DC802acF1b8aD4A6Ab7f65A0068481C#code>
+
 ## Prerequisites
 
 To work with this repository you have to install Foundry (<https://getfoundry.sh>). Run the following command in your terminal, then follow the onscreen instructions (macOS and Linux):

@@ -36,6 +36,8 @@ if [ "$fixture" -eq "1" ]; then
     forge script script/dev/CrowdSale.s.sol:DeployCrowdSale -f $RPC_URL --broadcast
     forge script script/dev/CrowdSale.s.sol:FixtureCrowdSale -f $RPC_URL --broadcast
 
+    forge script script/DeployPricefeed.s.sol:DeployPricefeed -f $RPC_URL --broadcast --private-key $PRIVATE_KEY
+
     sleep 5
 
     echo "SALE_ID= forge script script/dev/CrowdSale.s.sol:ClaimSale -f $RPC_URL --broadcast"
@@ -47,5 +49,8 @@ else
     forge script script/dev/Fractionalize.s.sol:DeployFractionalizer -f $RPC_URL --broadcast
 
     forge script script/dev/CrowdSale.s.sol:DeployCrowdSale -f $RPC_URL --broadcast
+
+    # this will receive the same address as another erc20 contract in the above example:
+    forge script script/DeployPricefeed.s.sol:DeployPricefeed -f $RPC_URL --broadcast --private-key $PRIVATE_KEY
 
 fi
