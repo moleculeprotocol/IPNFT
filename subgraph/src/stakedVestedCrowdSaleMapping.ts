@@ -3,7 +3,9 @@ import { IERC20Metadata } from '../generated/StakedVestedCrowdSale/IERC20Metadat
 import {
   Bid as BidEvent,
   Settled as SettledEvent,
-  Started as StartedEvent
+  Started as StartedEvent,
+  Failed as FailedEvent,
+  Claimed as ClaimedEvent
 } from '../generated/StakedVestedCrowdSale/StakedVestedCrowdSale';
 
 import {
@@ -45,7 +47,7 @@ export function handleStarted(event: StartedEvent): void {
   crowdSale.beneficiary = event.params.sale.beneficiary;
   crowdSale.closingTime = event.params.sale.closingTime;
   crowdSale.createdAt = event.block.timestamp;
-  crowdSale.settled = false;
+  crowdSale.state = 'RUNNING';
 
   crowdSale.auctionToken = makeERC20Token(
     IERC20Metadata.bind(event.params.sale.auctionToken)
@@ -85,11 +87,10 @@ export function handleBid(event: BidEvent): void {
 
   //   Update CrowdSale
   crowdSale.amountRaised = crowdSale.amountRaised.plus(event.params.amount);
-  if (crowdSale.amountStaked !== null) {
-    crowdSale.amountStaked = crowdSale.amountStaked!.plus(
-      event.params.stakedAmount
-    );
-  }
+  crowdSale.amountStaked = crowdSale.amountStaked.plus(
+    event.params.stakedAmount
+  );
+
   crowdSale.save();
 
   //   Create Contribution
@@ -107,21 +108,30 @@ export function handleBid(event: BidEvent): void {
 export function handleSettled(event: SettledEvent): void {
   let crowdSale = CrowdSale.load(event.params.saleId.toString());
   if (!crowdSale) {
+    return log.error('CrowdSale not found for id: {}', [
+      event.params.saleId.toString()
+    ]);
+  }
+  crowdSale.state = 'SETTLED';
+  crowdSale.save();
+}
+
+export function handleFailed(event: FailedEvent): void {
+  let crowdSale = CrowdSale.load(event.params.saleId.toString());
+  if (!crowdSale) {
+    return log.error('CrowdSale not found for id: {}', [
+      event.params.saleId.toString()
+    ]);
+  }
+  crowdSale.state = 'FAILED';
+}
+
+export function handleClaimed(event: ClaimedEvent): void {
+  let crowdSale = CrowdSale.load(event.params.saleId.toString());
+  if (!crowdSale) {
     log.error('CrowdSale not found for id: {}', [
       event.params.saleId.toString()
     ]);
     return;
   }
-  crowdSale.settled = true;
-  crowdSale.save();
 }
-
-// export function handleClaimed(event: ClaimedEvent): void {
-//   let crowdSale = CrowdSale.load(event.params.saleId.toString());
-//   if (!crowdSale) {
-//     log.error('CrowdSale not found for id: {}', [
-//       event.params.saleId.toString()
-//     ]);
-//     return;
-//   }
-// }

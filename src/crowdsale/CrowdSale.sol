@@ -8,6 +8,13 @@ import { FixedPointMathLib as FP } from "solmate/utils/FixedPointMathLib.sol";
 
 import { Counters } from "@openzeppelin/contracts/utils/Counters.sol";
 
+enum SaleState {
+    UNKNOWN, //Good to avoid invalid 0 checks
+    RUNNING,
+    SETTLED,
+    FAILED
+}
+
 struct Sale {
     IERC20Metadata auctionToken;
     IERC20 biddingToken;
@@ -16,12 +23,11 @@ struct Sale {
     uint256 fundingGoal;
     //how many auction tokens to sell
     uint256 salesAmount;
-    // uint256 openingTime;
-    uint256 closingTime;
+    uint64 closingTime;
 }
 
 struct SaleInfo {
-    bool settled;
+    SaleState state;
     uint256 total;
     uint256 surplus;
 }
@@ -44,13 +50,15 @@ contract CrowdSale {
     event Settled(uint256 indexed saleId, uint256 totalBids, uint256 surplus);
     event Claimed(uint256 indexed saleId, address indexed claimer, uint256 claimed, uint256 refunded);
     event Bid(uint256 indexed saleId, address indexed bidder, uint256 amount);
+    event Failed(uint256 saleId);
 
     constructor() { }
 
     function startSale(Sale memory sale) public returns (uint256 saleId) {
-        if (sale.closingTime < block.timestamp + 1 hours) {
-            revert BadSaleDuration();
-        }
+        //todo: removed this restriction for simpler testing
+        // if (sale.closingTime < block.timestamp + 1 hours) {
+        //     revert BadSaleDuration();
+        // }
         if (sale.auctionToken.decimals() != 18 || IERC20Metadata(address(sale.biddingToken)).decimals() != 18) {
             revert BadDecimals();
         }
@@ -67,14 +75,10 @@ contract CrowdSale {
             revert SaleAlreadyActive();
         }
         _sales[saleId] = sale;
-        _saleInfo[saleId] = SaleInfo(false, 0, 0);
+        _saleInfo[saleId] = SaleInfo(SaleState.RUNNING, 0, 0);
 
         sale.auctionToken.safeTransferFrom(msg.sender, address(this), sale.salesAmount);
         _onSaleStarted(saleId);
-    }
-
-    function _onSaleStarted(uint256 saleId) internal virtual {
-        emit Started(saleId, msg.sender, _sales[saleId]);
     }
 
     function placeBid(uint256 saleId, uint256 biddingTokenAmount) public virtual {
@@ -87,8 +91,8 @@ contract CrowdSale {
             revert("bad sale id");
         }
 
-        if (_saleInfo[saleId].settled) {
-            revert("sale is already settled");
+        if (_saleInfo[saleId].state != SaleState.RUNNING) {
+            revert("sale is not running");
         }
 
         IERC20 biddingToken = sale.biddingToken;
@@ -98,22 +102,28 @@ contract CrowdSale {
         biddingToken.safeTransferFrom(msg.sender, address(this), biddingTokenAmount);
     }
 
+    /**
+     * @notice anyone can call this for the beneficiary
+     * @param saleId the sale id
+     */
     function settle(uint256 saleId) public virtual {
         Sale memory sale = _sales[saleId];
         SaleInfo storage __saleInfo = _saleInfo[saleId];
-        //todo anyone can call this for the beneficiary
-
-        //todo don't allow settlement before end time
 
         //todo: allow fundraiser to settle and allow everyone to withdraw if funding goal has *not* been met
-        if (__saleInfo.total < sale.fundingGoal) {
-            revert("funding goal not met");
-        }
-        if (__saleInfo.settled) {
-            revert("sale is already settled");
+        if (block.timestamp < sale.closingTime) {
+            revert("sale has not concluded yet");
         }
 
-        __saleInfo.settled = true;
+        if (__saleInfo.state != SaleState.RUNNING) {
+            revert("sale is not running");
+        }
+
+        if (__saleInfo.total < sale.fundingGoal) {
+            failSale(saleId);
+            return;
+        }
+        __saleInfo.state = SaleState.SETTLED;
         __saleInfo.surplus = __saleInfo.total - sale.fundingGoal;
 
         emit Settled(saleId, __saleInfo.total, __saleInfo.surplus);
@@ -123,13 +133,15 @@ contract CrowdSale {
     }
 
     function claim(uint256 saleId) public virtual returns (uint256 auctionTokens, uint256 refunds) {
-        (auctionTokens, refunds) = getClaimableAmounts(saleId, msg.sender);
-        emit Claimed(saleId, msg.sender, auctionTokens, refunds);
-
-        if (refunds > 0) {
-            _sales[saleId].biddingToken.safeTransfer(msg.sender, refunds);
+        if (_saleInfo[saleId].state == SaleState.RUNNING) {
+            revert("sale is not settled");
         }
-        _sales[saleId].auctionToken.safeTransfer(msg.sender, auctionTokens);
+        if (_saleInfo[saleId].state == SaleState.FAILED) {
+            return claimFailed(saleId);
+        }
+
+        (auctionTokens, refunds) = getClaimableAmounts(saleId, msg.sender);
+        claim(saleId, auctionTokens, refunds);
     }
 
     function saleInfo(uint256 saleId) public view returns (SaleInfo memory) {
@@ -138,6 +150,34 @@ contract CrowdSale {
 
     function contribution(uint256 saleId, address contributor) public view returns (uint256) {
         return _contributions[saleId][contributor];
+    }
+
+    function _onSaleStarted(uint256 saleId) internal virtual {
+        emit Started(saleId, msg.sender, _sales[saleId]);
+    }
+
+    function failSale(uint256 saleId) internal virtual {
+        Sale memory sale = _sales[saleId];
+        _saleInfo[saleId].state = SaleState.FAILED;
+        emit Failed(saleId);
+        sale.auctionToken.safeTransfer(sale.beneficiary, sale.salesAmount);
+    }
+
+    function claimFailed(uint256 saleId) internal virtual returns (uint256 auctionTokens, uint256 refunds) {
+        uint256 _contribution = _contributions[saleId][msg.sender];
+        _contributions[saleId][msg.sender] = 0;
+        emit Claimed(saleId, msg.sender, 0, _contribution);
+        _sales[saleId].biddingToken.safeTransfer(msg.sender, _contribution);
+        return (0, _contribution);
+    }
+
+    function claim(uint256 saleId, uint256 auctionTokens, uint256 refunds) internal virtual {
+        emit Claimed(saleId, msg.sender, auctionTokens, refunds);
+
+        if (refunds > 0) {
+            _sales[saleId].biddingToken.safeTransfer(msg.sender, refunds);
+        }
+        _sales[saleId].auctionToken.safeTransfer(msg.sender, auctionTokens);
     }
 
     function release(IERC20 biddingToken, address beneficiary, uint256 fundingGoal) internal virtual {

@@ -14,7 +14,7 @@ import { FixedPointMathLib as FP } from "solmate/utils/FixedPointMathLib.sol";
 import { TokenVesting } from "@moleculeprotocol/token-vesting/TokenVesting.sol";
 
 import { VestedCrowdSale, VestingConfig, ApprovalFailed } from "./VestedCrowdSale.sol";
-import { CrowdSale, Sale, BadDecimals } from "./CrowdSale.sol";
+import { CrowdSale, Sale, BadDecimals, SaleState } from "./CrowdSale.sol";
 import { InitializeableTokenVesting } from "./InitializableTokenVesting.sol";
 import { IPriceFeedConsumer } from "../BioPriceFeed.sol";
 
@@ -71,6 +71,10 @@ contract StakedVestedCrowdSale is VestedCrowdSale {
 
     function settle(uint256 saleId) public override {
         super.settle(saleId);
+        if (_saleInfo[saleId].state == SaleState.FAILED) {
+            return;
+        }
+
         StakingConfig storage staking = salesStaking[saleId];
         bool result = staking.stakedToken.approve(address(staking.stakesVestingContract), staking.stakeTotal);
         if (!result) {
@@ -81,34 +85,31 @@ contract StakedVestedCrowdSale is VestedCrowdSale {
     function placeBid(uint256 saleId, uint256 biddingTokenAmount) public override {
         StakingConfig storage staking = salesStaking[saleId];
 
-        //todo price calculation here:
-        uint256 price = 1;
-        uint256 stakedTokenAmount = biddingTokenAmount;
-
+        //todo use current price:
         //uint256 wadDaoInBiddingPrice = uint256(priceFeed.getPrice(address(_sales[saleId].biddingToken), address(staking.stakedToken)));
         // if (wadDaoInBiddingPrice == 0) {
         //     revert("no price available");
         // }
 
-        stakedTokenAmount = FP.mulWadDown(biddingTokenAmount, staking.wadFixedDaoPerBidPrice);
+        uint256 stakedTokenAmount = FP.mulWadDown(biddingTokenAmount, staking.wadFixedDaoPerBidPrice);
 
         staking.stakeTotal += stakedTokenAmount;
         stakes[saleId][msg.sender] += stakedTokenAmount;
 
-        emit Bid(saleId, msg.sender, biddingTokenAmount, stakedTokenAmount, price);
+        emit Bid(saleId, msg.sender, biddingTokenAmount, stakedTokenAmount, staking.wadFixedDaoPerBidPrice);
         staking.stakedToken.safeTransferFrom(msg.sender, address(this), stakedTokenAmount);
 
         super.placeBid(saleId, biddingTokenAmount);
     }
 
     //todo: get final price as by price feed at settlement
-    function claim(uint256 saleId) public override returns (uint256 auctionTokens, uint256 refunds) {
+    function claim(uint256 saleId, uint256 auctionTokens, uint256 refunds) internal virtual override {
         VestingConfig memory vestingConfig = salesVesting[saleId];
         StakingConfig memory stakingConfig = salesStaking[saleId];
 
         uint256 _stakes = stakes[saleId][msg.sender];
 
-        (auctionTokens, refunds) = super.claim(saleId);
+        super.claim(saleId, auctionTokens, refunds);
 
         uint256 refundedStakes = FP.mulWadDown(refunds, stakingConfig.wadFixedDaoPerBidPrice);
         uint256 vestedStakes = _stakes - refundedStakes;

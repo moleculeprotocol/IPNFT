@@ -14,7 +14,7 @@ library CrowdSaleHelpers {
             biddingToken: IERC20(address(biddingToken)),
             fundingGoal: 200_000 ether,
             salesAmount: 400_000 ether,
-            closingTime: block.timestamp + 2 hours
+            closingTime: uint64(block.timestamp + 2 hours)
         });
     }
 }
