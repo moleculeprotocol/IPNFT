@@ -39,6 +39,7 @@ contract FixtureFractionalizer is CommonScript {
     TermsAcceptedPermissioner permissioner;
 
     function prepareAddresses() internal override {
+        super.prepareAddresses();
         fractionalizer = Fractionalizer(vm.envAddress("FRACTIONALIZER_ADDRESS"));
         permissioner = TermsAcceptedPermissioner(vm.envAddress("TERMS_ACCEPTED_PERMISSIONER_ADDRESS"));
     }
@@ -51,7 +52,7 @@ contract FixtureFractionalizer is CommonScript {
             fractionalizer.fractionalizeIpnft(1, 1_000_000 ether, "bafkreigk5dvqblnkdniges6ft5kmuly47ebw4vho6siikzmkaovq6sjstq");
         vm.stopBroadcast();
 
-        console.log("fractionalized erc20 token address: %s", address(tokenContract));
+        console.log("FRACTIONALIZED_TOKEN_ADDRESS=%s", address(tokenContract));
         console.log("fraction hash: %s", tokenContract.hash());
     }
 }
