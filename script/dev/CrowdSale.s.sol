@@ -29,11 +29,21 @@ contract DeployCrowdSale is Script {
 
     function run() public {
         (address deployer,) = deriveRememberKey(mnemonic, 0);
+        FractionalizedToken auctionToken = FractionalizedToken(vm.envAddress("FRACTIONALIZED_TOKEN_ADDRESS"));
+
         vm.startBroadcast(deployer);
         StakedVestedCrowdSale stakedVestedCrowdSale = new StakedVestedCrowdSale();
+
         FakeERC20 daoToken = new FakeERC20("DAO Token", "DAO");
         TokenVesting vestedDaoToken = new TokenVesting(IERC20Metadata(address(daoToken)), "VDAO Token", "VDAO");
         vestedDaoToken.grantRole(vestedDaoToken.ROLE_CREATE_SCHEDULE(), address(stakedVestedCrowdSale));
+
+        TokenVesting vestedMolToken = new TokenVesting(
+            IERC20Metadata(address(auctionToken)),
+            string(abi.encodePacked("Vested ", auctionToken.name())),
+            string(abi.encodePacked("v", auctionToken.symbol()))
+        );
+        vestedMolToken.grantRole(vestedDaoToken.ROLE_CREATE_SCHEDULE(), address(stakedVestedCrowdSale));
 
         vm.stopBroadcast();
 
@@ -42,7 +52,8 @@ contract DeployCrowdSale is Script {
         vm.setEnv("STAKED_VESTED_CROWDSALE_ADDRESS", Strings.toHexString(address(stakedVestedCrowdSale)));
 
         console.log("dao Token %s", address(daoToken));
-        console.log("vested Dao Token %s", address(vestedDaoToken));
+        console.log("vested DAO Token %s", address(vestedDaoToken));
+        console.log("vested fraction Token %s", address(vestedMolToken));
         console.log("staked vested crowdsale %s", address(stakedVestedCrowdSale));
     }
 }
@@ -62,6 +73,7 @@ contract FixtureCrowdSale is Script {
     StakedVestedCrowdSale stakedVestedCrowdSale;
     FakeERC20 daoToken;
     TokenVesting vestedDaoToken;
+    TokenVesting vestedMolToken;
 
     function prepareAddresses() internal {
         (deployer,) = deriveRememberKey(mnemonic, 0);
@@ -70,11 +82,14 @@ contract FixtureCrowdSale is Script {
         (charlie,) = deriveRememberKey(mnemonic, 3);
         (anyone,) = deriveRememberKey(mnemonic, 4);
 
-        usdc = FakeERC20(vm.envAddress("USDC_ADDRESS"));
         auctionToken = FractionalizedToken(vm.envAddress("FRACTIONALIZED_TOKEN_ADDRESS"));
-        stakedVestedCrowdSale = StakedVestedCrowdSale(vm.envAddress("STAKED_VESTED_CROWDSALE_ADDRESS"));
+        usdc = FakeERC20(vm.envAddress("USDC_ADDRESS"));
         daoToken = FakeERC20(vm.envAddress("DAO_TOKEN_ADDRESS"));
+
         vestedDaoToken = TokenVesting(vm.envAddress("VDAO_TOKEN_ADDRESS"));
+        vestedMolToken = TokenVesting(vm.envAddress("VESTED_FRACTIONALIZED_TOKEN_ADDRESS"));
+
+        stakedVestedCrowdSale = StakedVestedCrowdSale(vm.envAddress("STAKED_VESTED_CROWDSALE_ADDRESS"));
     }
 
     function placeBid(address bidder, uint256 amount, uint256 saleId) internal {
@@ -111,9 +126,14 @@ contract FixtureCrowdSale is Script {
             closingTime: uint64(block.timestamp + 5 seconds)
         });
 
+        VestingConfig memory _vestingConfig = VestingConfig({ vestingContract: vestedMolToken, cliff: 60 days });
+
+        StakingConfig memory _stakingConfig =
+            StakingConfig({ stakedToken: daoToken, stakesVestingContract: vestedDaoToken, wadFixedDaoPerBidPrice: 1e18, stakeTotal: 0 });
+
         vm.startBroadcast(bob);
         auctionToken.approve(address(stakedVestedCrowdSale), 400 ether);
-        uint256 saleId = stakedVestedCrowdSale.startSale(_sale, daoToken, vestedDaoToken, 1e18, 60 days, 60 days);
+        uint256 saleId = stakedVestedCrowdSale.startSale(_sale, _stakingConfig, _vestingConfig);
         vm.stopBroadcast();
 
         placeBid(alice, 600 ether, saleId);
@@ -132,7 +152,7 @@ contract FixtureCrowdSale is Script {
 
         vm.startBroadcast(bob);
         auctionToken.approve(address(stakedVestedCrowdSale), 400 ether);
-        uint256 saleId2 = stakedVestedCrowdSale.startSale(_sale2, daoToken, vestedDaoToken, 1e18, 60 days, 60 days);
+        uint256 saleId2 = stakedVestedCrowdSale.startSale(_sale2, _stakingConfig, _vestingConfig);
         vm.stopBroadcast();
 
         placeBid(alice, 600 ether, saleId2);

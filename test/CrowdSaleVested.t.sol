@@ -22,6 +22,7 @@ contract CrowdSaleVestedTest is Test {
     FakeERC20 internal auctionToken;
     FakeERC20 internal biddingToken;
     VestedCrowdSale internal crowdSale;
+    VestingConfig internal _vestingConfig;
 
     function setUp() public {
         crowdSale = new VestedCrowdSale();
@@ -39,13 +40,15 @@ contract CrowdSaleVestedTest is Test {
         vm.startPrank(bidder2);
         biddingToken.approve(address(crowdSale), 1_000_000 ether);
         vm.stopPrank();
+
+        _vestingConfig = VestingConfig({ vestingContract: TokenVesting(address(0)), cliff: 60 days });
     }
 
     function testSettlementAndSimpleClaims() public {
         vm.startPrank(emitter);
         Sale memory _sale = CrowdSaleHelpers.makeSale(emitter, auctionToken, biddingToken);
         auctionToken.approve(address(crowdSale), 400_000 ether);
-        uint256 saleId = crowdSale.startSale(_sale, 60 days, 365 days);
+        uint256 saleId = crowdSale.startSale(_sale, _vestingConfig);
         vm.stopPrank();
 
         vm.startPrank(bidder);
@@ -65,7 +68,7 @@ contract CrowdSaleVestedTest is Test {
         crowdSale.claim(saleId);
         vm.stopPrank();
 
-        (TokenVesting auctionTokenVesting,,) = crowdSale.salesVesting(saleId);
+        (TokenVesting auctionTokenVesting,) = crowdSale.salesVesting(saleId);
 
         assertEq(auctionTokenVesting.balanceOf(bidder), _sale.salesAmount);
 
@@ -78,9 +81,6 @@ contract CrowdSaleVestedTest is Test {
         vm.warp(_sale.closingTime + 60 days);
         auctionTokenVesting.releaseAvailableTokensForHolder(bidder);
         assertGt(auctionToken.balanceOf(bidder), 65_000 ether);
-
-        vm.warp(_sale.closingTime + 366 days);
-        auctionTokenVesting.releaseAvailableTokensForHolder(bidder);
         assertEq(auctionToken.balanceOf(bidder), _sale.salesAmount);
         assertEq(auctionTokenVesting.balanceOf(bidder), 0);
         vm.stopPrank();
@@ -90,7 +90,7 @@ contract CrowdSaleVestedTest is Test {
         vm.startPrank(emitter);
         Sale memory _sale = CrowdSaleHelpers.makeSale(emitter, auctionToken, biddingToken);
         auctionToken.approve(address(crowdSale), 400_000 ether);
-        uint256 saleId = crowdSale.startSale(_sale, 60 days, 365 days);
+        uint256 saleId = crowdSale.startSale(_sale, _vestingConfig);
 
         vm.stopPrank();
 
@@ -115,7 +115,7 @@ contract CrowdSaleVestedTest is Test {
 
         assertEq(biddingToken.balanceOf(bidder), 1_000_000 ether);
         assertEq(auctionToken.balanceOf(bidder), 0);
-        (TokenVesting auctionTokenVesting,,) = crowdSale.salesVesting(saleId);
+        (TokenVesting auctionTokenVesting,) = crowdSale.salesVesting(saleId);
 
         assertEq(auctionTokenVesting.balanceOf(bidder), 0);
     }

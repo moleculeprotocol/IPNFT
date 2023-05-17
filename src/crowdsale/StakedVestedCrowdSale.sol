@@ -39,29 +39,21 @@ contract StakedVestedCrowdSale is VestedCrowdSale {
     //     priceFeed = priceFeed_;
     // }
 
-    function startSale(Sale memory sale, StakingConfig memory stakingConfig, uint256 cliff, uint256 duration) public returns (uint256 saleId) {
+    function startSale(Sale memory sale, StakingConfig memory stakingConfig, VestingConfig memory vestingConfig) public returns (uint256 saleId) {
         if (IERC20Metadata(address(stakingConfig.stakedToken)).decimals() != 18) {
             revert BadDecimals();
         }
+        //todo: duck type check whether all token contracts can do what we need.
+        //don't let users create a sale with "bad" values
+        stakingConfig.stakeTotal = 0;
+        //stakingConfig.wadDaoInBidPrice = uint256(priceFeed.getPrice(address(sale.biddingToken), address(stakedToken)));
+
         saleId = uint256(keccak256(abi.encode(sale)));
         salesStaking[saleId] = stakingConfig;
-        saleId = super.startSale(sale, cliff, duration);
+        super.startSale(sale, vestingConfig);
     }
 
-    function startSale(
-        Sale memory sale,
-        IERC20 stakedToken,
-        TokenVesting stakesVesting,
-        uint256 wadFixedDaoPerBidPrice,
-        uint256 cliff,
-        uint256 duration
-    ) public returns (uint256 saleId) {
-        //uint256 wadDaoInBidPrice = uint256(priceFeed.getPrice(address(sale.biddingToken), address(stakedToken)));
-
-        return startSale(sale, StakingConfig(stakedToken, stakesVesting, wadFixedDaoPerBidPrice, 0), cliff, duration);
-    }
-
-    function _onSaleStarted(uint256 saleId) internal override {
+    function _onSaleStarted(uint256 saleId) internal virtual override {
         emit Started(saleId, msg.sender, _sales[saleId], salesVesting[saleId], salesStaking[saleId]);
     }
 
@@ -116,7 +108,7 @@ contract StakedVestedCrowdSale is VestedCrowdSale {
 
         salesStaking[saleId].stakedToken.safeTransfer(address(salesStaking[saleId].stakesVestingContract), vestedStakes);
         salesStaking[saleId].stakesVestingContract.createVestingSchedule(
-            msg.sender, block.timestamp, vestingConfig.cliff, vestingConfig.duration, 60, false, vestedStakes
+            msg.sender, block.timestamp, vestingConfig.cliff, vestingConfig.cliff, 60, false, vestedStakes
         );
         salesStaking[saleId].stakedToken.safeTransfer(msg.sender, refundedStakes);
     }
