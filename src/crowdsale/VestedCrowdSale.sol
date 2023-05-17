@@ -20,6 +20,7 @@ struct VestingConfig {
 }
 
 error ApprovalFailed();
+error UnmanageableVestingContract();
 
 /**
  * @title VestedCrowdSale
@@ -53,6 +54,10 @@ contract VestedCrowdSale is CrowdSale {
 
         if (address(vestingConfig.vestingContract) == address(0)) {
             vestingConfig.vestingContract = _makeVestingContract(sale);
+        } else {
+            if (!vestingConfig.vestingContract.hasRole(vestingConfig.vestingContract.ROLE_CREATE_SCHEDULE(), address(this))) {
+                revert UnmanageableVestingContract();
+            }
         }
 
         salesVesting[saleId] = vestingConfig;

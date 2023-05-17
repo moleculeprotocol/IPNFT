@@ -7,7 +7,7 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 import { CrowdSale, SaleState, Sale, SaleInfo } from "../src/crowdsale/CrowdSale.sol";
-import { VestedCrowdSale, VestingConfig } from "../src/crowdsale/VestedCrowdSale.sol";
+import { VestedCrowdSale, VestingConfig, UnmanageableVestingContract } from "../src/crowdsale/VestedCrowdSale.sol";
 import { TokenVesting } from "@moleculeprotocol/token-vesting/TokenVesting.sol";
 import { FakeERC20 } from "./helpers/FakeERC20.sol";
 import { CrowdSaleHelpers } from "./helpers/CrowdSaleHelpers.sol";
@@ -80,7 +80,6 @@ contract CrowdSaleVestedTest is Test {
 
         vm.warp(_sale.closingTime + 60 days);
         auctionTokenVesting.releaseAvailableTokensForHolder(bidder);
-        assertGt(auctionToken.balanceOf(bidder), 65_000 ether);
         assertEq(auctionToken.balanceOf(bidder), _sale.salesAmount);
         assertEq(auctionTokenVesting.balanceOf(bidder), 0);
         vm.stopPrank();
@@ -118,5 +117,62 @@ contract CrowdSaleVestedTest is Test {
         (TokenVesting auctionTokenVesting,) = crowdSale.salesVesting(saleId);
 
         assertEq(auctionTokenVesting.balanceOf(bidder), 0);
+    }
+
+    function testBringYourOwnVestingContract() public {
+        vm.startPrank(anyone);
+        _vestingConfig.vestingContract = new TokenVesting(auctionToken, "Selfmade vMOL", "vMOLE");
+        bytes32 ROLE_CREATE_SCHEDULE = _vestingConfig.vestingContract.ROLE_CREATE_SCHEDULE();
+        vm.stopPrank();
+
+        vm.startPrank(emitter);
+        Sale memory _sale = CrowdSaleHelpers.makeSale(emitter, auctionToken, biddingToken);
+        auctionToken.approve(address(crowdSale), 400_000 ether);
+
+        vm.expectRevert(UnmanageableVestingContract.selector);
+        crowdSale.startSale(_sale, _vestingConfig);
+
+        vm.expectRevert(
+            "AccessControl: account 0x5b82c2eec3e5e731e21c7fdea9c4e74c49b74093 is missing role 0x0000000000000000000000000000000000000000000000000000000000000000"
+        );
+        _vestingConfig.vestingContract.grantRole(ROLE_CREATE_SCHEDULE, address(crowdSale));
+        vm.stopPrank();
+
+        vm.startPrank(anyone);
+        _vestingConfig.vestingContract.grantRole(_vestingConfig.vestingContract.ROLE_CREATE_SCHEDULE(), address(crowdSale));
+        vm.stopPrank();
+
+        vm.startPrank(emitter);
+        uint256 saleId = crowdSale.startSale(_sale, _vestingConfig);
+        vm.stopPrank();
+
+        vm.startPrank(bidder);
+        crowdSale.placeBid(saleId, 200_000 ether);
+        vm.stopPrank();
+
+        vm.startPrank(anyone);
+        vm.warp(block.timestamp + 3 hours);
+        crowdSale.settle(saleId);
+        vm.stopPrank();
+
+        assertEq(biddingToken.balanceOf(emitter), _sale.fundingGoal);
+        SaleInfo memory info = crowdSale.saleInfo(saleId);
+        assertEq(info.surplus, 0);
+
+        vm.startPrank(bidder);
+        crowdSale.claim(saleId);
+        vm.stopPrank();
+
+        (TokenVesting auctionTokenVesting,) = crowdSale.salesVesting(saleId);
+
+        assertEq(auctionTokenVesting.balanceOf(bidder), _sale.salesAmount);
+
+        vm.warp(_sale.closingTime + 60 days);
+
+        vm.startPrank(bidder); //actually, only the vesting subject may call that.
+        auctionTokenVesting.releaseAvailableTokensForHolder(bidder);
+        assertEq(auctionToken.balanceOf(bidder), _sale.salesAmount);
+        assertEq(auctionTokenVesting.balanceOf(bidder), 0);
+        vm.stopPrank();
     }
 }
