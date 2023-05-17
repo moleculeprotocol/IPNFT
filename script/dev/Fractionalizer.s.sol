@@ -8,23 +8,12 @@ import { Fractionalizer } from "../../src/Fractionalizer.sol";
 import { FractionalizedToken } from "../../src/FractionalizedToken.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import { TermsAcceptedPermissioner } from "../../src/Permissioner.sol";
+import { CommonScript } from "./Common.sol";
 
-/**
- * @title FractionalizeScript
- * @author
- * @notice execute Ipnft.s.sol && Fixture.s.sol first
- * @notice assumes that bob (hh1) owns IPNFT#1
- */
-contract DeployFractionalizer is Script {
-    string mnemonic = "test test test test test test test test test test test junk";
-
+contract DeployFractionalizer is CommonScript {
     function run() public {
-        (address deployer,) = deriveRememberKey(mnemonic, 0);
-
+        prepareAddresses();
         vm.startBroadcast(deployer);
-
-        IPNFT ipnft = IPNFT(vm.envAddress("IPNFT_ADDRESS"));
-
         Fractionalizer fractionalizer = Fractionalizer(
             address(
                 new ERC1967Proxy(
@@ -33,26 +22,23 @@ contract DeployFractionalizer is Script {
             )
         );
 
-        fractionalizer.initialize(ipnft);
-
-        TermsAcceptedPermissioner permissioner = new TermsAcceptedPermissioner();
-
+        fractionalizer.initialize(IPNFT(vm.envAddress("IPNFT_ADDRESS")));
         vm.stopBroadcast();
-        console.log("fractionalizer %s", address(fractionalizer));
-        console.log("permissioner %s", address(permissioner));
+        console.log("FRACTIONALIZER_ADDRESS=%s", address(fractionalizer));
     }
 }
 
-contract FixtureFractionalizer is Script {
-    string mnemonic = "test test test test test test test test test test test junk";
-
+/**
+ * @title FixtureFractionalizer
+ * @author
+ * @notice execute Ipnft.s.sol && DeployFractionalizer first
+ * @notice assumes that bob (hh1) owns IPNFT#1
+ */
+contract FixtureFractionalizer is CommonScript {
     Fractionalizer fractionalizer;
     TermsAcceptedPermissioner permissioner;
 
-    address bob;
-
-    function prepareAddresses() internal {
-        (bob,) = deriveRememberKey(mnemonic, 1);
+    function prepareAddresses() internal override {
         fractionalizer = Fractionalizer(vm.envAddress("FRACTIONALIZER_ADDRESS"));
         permissioner = TermsAcceptedPermissioner(vm.envAddress("TERMS_ACCEPTED_PERMISSIONER_ADDRESS"));
     }

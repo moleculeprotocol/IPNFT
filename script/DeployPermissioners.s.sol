@@ -8,13 +8,8 @@ import { IPermissioner, BlindPermissioner, TermsAcceptedPermissioner } from "../
 contract DeployPermissioners is Script {
     function run() public {
         vm.startBroadcast();
-
         IPermissioner p = new TermsAcceptedPermissioner();
-        IPermissioner bp = new BlindPermissioner();
-
         vm.stopBroadcast();
-
-        console.log("BlindPermissioner %s", address(bp));
-        console.log("TermsPermissioner %s", address(p));
+        console.log("TERMS_ACCEPTED_PERMISSIONER_ADDRESS=%s", address(p));
     }
 }

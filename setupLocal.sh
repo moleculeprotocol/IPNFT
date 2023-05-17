@@ -24,33 +24,20 @@ done
 
 
 # Main logic
+forge script script/dev/Ipnft.s.sol:DeployIpnftSuite -f $RPC_URL --broadcast
+forge script script/dev/Tokens.s.sol -f $RPC_URL --broadcast 
+forge script script/dev/Periphery.s.sol -f $RPC_URL --broadcast
+forge script script/dev/Fractionalizer.s.sol:DeployFractionalizer -f $RPC_URL --broadcast 
+forge script script/dev/CrowdSale.s.sol:DeployCrowdSale -f $RPC_URL --broadcast
+
 if [ "$fixture" -eq "1" ]; then
-  echo "Deploying contracts and running fixture scripts."
+  echo "Running fixture scripts."
 
-    forge script script/dev/Ipnft.s.sol:DeployIpnft -f $RPC_URL --broadcast
     forge script script/dev/Ipnft.s.sol:FixtureIpnft -f $RPC_URL --broadcast
-
-    forge script script/dev/Fractionalize.s.sol:DeployFractionalizer -f $RPC_URL --broadcast
     forge script script/dev/Fractionalize.s.sol:FixtureFractionalizer -f $RPC_URL --broadcast
-
-    forge script script/dev/CrowdSale.s.sol:DeployCrowdSale -f $RPC_URL --broadcast
     forge script script/dev/CrowdSale.s.sol:FixtureCrowdSale -f $RPC_URL --broadcast
-
-    forge script script/DeployPricefeed.s.sol:DeployPricefeed -f $RPC_URL --broadcast --private-key $PRIVATE_KEY
 
     sleep 5
 
-    echo "SALE_ID= forge script script/dev/CrowdSale.s.sol:ClaimSale -f $RPC_URL --broadcast"
-
-else
-  echo "Only deploying contracts."
-    forge script script/dev/Ipnft.s.sol:DeployIpnft -f $RPC_URL --broadcast
-
-    forge script script/dev/Fractionalize.s.sol:DeployFractionalizer -f $RPC_URL --broadcast
-
-    forge script script/dev/CrowdSale.s.sol:DeployCrowdSale -f $RPC_URL --broadcast
-
-    # this will receive the same address as another erc20 contract in the above example:
-    forge script script/DeployPricefeed.s.sol:DeployPricefeed -f $RPC_URL --broadcast --private-key $PRIVATE_KEY
-
+    echo "SALE_ID= forge script script/dev/CrowdSale.s.sol:ClaimSale -f $RPC_URL --broadcast" 
 fi
