@@ -347,4 +347,40 @@ contract CrowdSaleVestedStakedTest is Test {
 
         assertEq(auctionTokenVesting.balanceOf(bidder), 0);
     }
+
+    function testClaimLongAfterVestingPeriod() public {
+        vm.startPrank(emitter);
+        Sale memory _sale = CrowdSaleHelpers.makeSale(emitter, auctionToken, biddingToken);
+        _sale.closingTime = uint64(block.timestamp + 7 days);
+        auctionToken.approve(address(crowdSale), 400_000 ether);
+        uint256 saleId = crowdSale.startSale(_sale, _stakingConfig, _vestingConfig);
+        vm.stopPrank();
+
+        vm.startPrank(bidder);
+        crowdSale.placeBid(saleId, 200_000 ether);
+        vm.stopPrank();
+
+        vm.warp(block.timestamp + 7 days);
+        vm.startPrank(anyone);
+        crowdSale.settle(saleId);
+        vm.stopPrank();
+
+        vm.warp(block.timestamp + 4440 days);
+        vm.startPrank(bidder);
+        crowdSale.claim(saleId);
+
+        (TokenVesting auctionTokenVesting,) = crowdSale.salesVesting(saleId);
+
+        assertEq(auctionTokenVesting.balanceOf(bidder), 400_000 ether);
+        assertEq(daoToken.balanceOf(bidder), 800_000 ether);
+        auctionTokenVesting.releaseAvailableTokensForHolder(bidder);
+        assertEq(auctionToken.balanceOf(bidder), 400_000 ether);
+        assertEq(auctionTokenVesting.balanceOf(bidder), 0);
+
+        assertEq(vestedDao.balanceOf(bidder), 200_000 ether);
+        vestedDao.releaseAvailableTokensForHolder(bidder);
+        assertEq(vestedDao.balanceOf(bidder), 0);
+        assertEq(daoToken.balanceOf(bidder), 1_000_000 ether);
+        vm.stopPrank();
+    }
 }

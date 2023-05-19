@@ -121,9 +121,11 @@ contract StakedVestedCrowdSale is VestedCrowdSale {
         uint256 vestedStakes = _stakes - refundedStakes;
 
         salesStaking[saleId].stakedToken.safeTransfer(address(salesStaking[saleId].stakesVestingContract), vestedStakes);
+        //TODo when claimed beyond the vesting schedule we can simply return the tokens here.
         salesStaking[saleId].stakesVestingContract.createVestingSchedule(
-            msg.sender, block.timestamp, vestingConfig.cliff, vestingConfig.cliff, 60, false, vestedStakes
+            msg.sender, _sales[saleId].closingTime, vestingConfig.cliff, vestingConfig.cliff, 60, false, vestedStakes
         );
+
         salesStaking[saleId].stakedToken.safeTransfer(msg.sender, refundedStakes);
     }
 }
