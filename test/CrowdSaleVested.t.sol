@@ -211,12 +211,12 @@ contract CrowdSaleVestedTest is Test {
         vm.startPrank(bidder);
         crowdSale.claim(saleId);
 
+        //skips the vesting contract
         (TokenVesting auctionTokenVesting,) = crowdSale.salesVesting(saleId);
-
-        assertEq(auctionTokenVesting.balanceOf(bidder), 400_000 ether);
-        auctionTokenVesting.releaseAvailableTokensForHolder(bidder);
-        assertEq(auctionToken.balanceOf(bidder), 400_000 ether);
         assertEq(auctionTokenVesting.balanceOf(bidder), 0);
+
+        assertEq(auctionToken.balanceOf(bidder), 400_000 ether);
+
         vm.stopPrank();
     }
 }

@@ -119,13 +119,17 @@ contract StakedVestedCrowdSale is VestedCrowdSale {
 
         uint256 refundedStakes = FP.mulWadDown(refunds, stakingConfig.wadFixedDaoPerBidPrice);
         uint256 vestedStakes = _stakes - refundedStakes;
-
-        salesStaking[saleId].stakedToken.safeTransfer(address(salesStaking[saleId].stakesVestingContract), vestedStakes);
-        //TODo when claimed beyond the vesting schedule we can simply return the tokens here.
-        salesStaking[saleId].stakesVestingContract.createVestingSchedule(
-            msg.sender, _sales[saleId].closingTime, vestingConfig.cliff, vestingConfig.cliff, 60, false, vestedStakes
-        );
-
-        salesStaking[saleId].stakedToken.safeTransfer(msg.sender, refundedStakes);
+        if (refundedStakes > 0) {
+            stakingConfig.stakedToken.safeTransfer(msg.sender, refundedStakes);
+        }
+        if (block.timestamp > _sales[saleId].closingTime + vestingConfig.cliff) {
+            //no need for vesting when cliff already expired.
+            stakingConfig.stakedToken.safeTransfer(msg.sender, vestedStakes);
+        } else {
+            stakingConfig.stakedToken.safeTransfer(address(stakingConfig.stakesVestingContract), vestedStakes);
+            stakingConfig.stakesVestingContract.createVestingSchedule(
+                msg.sender, _sales[saleId].closingTime, vestingConfig.cliff, vestingConfig.cliff, 60, false, vestedStakes
+            );
+        }
     }
 }

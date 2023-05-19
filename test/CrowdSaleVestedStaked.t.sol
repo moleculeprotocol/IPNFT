@@ -371,14 +371,9 @@ contract CrowdSaleVestedStakedTest is Test {
 
         (TokenVesting auctionTokenVesting,) = crowdSale.salesVesting(saleId);
 
-        assertEq(auctionTokenVesting.balanceOf(bidder), 400_000 ether);
-        assertEq(daoToken.balanceOf(bidder), 800_000 ether);
-        auctionTokenVesting.releaseAvailableTokensForHolder(bidder);
-        assertEq(auctionToken.balanceOf(bidder), 400_000 ether);
         assertEq(auctionTokenVesting.balanceOf(bidder), 0);
+        assertEq(auctionToken.balanceOf(bidder), 400_000 ether);
 
-        assertEq(vestedDao.balanceOf(bidder), 200_000 ether);
-        vestedDao.releaseAvailableTokensForHolder(bidder);
         assertEq(vestedDao.balanceOf(bidder), 0);
         assertEq(daoToken.balanceOf(bidder), 1_000_000 ether);
         vm.stopPrank();
