@@ -9,6 +9,7 @@ import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/I
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 
+import { IPermissioner } from "../../src/Permissioner.sol";
 import { CrowdSale, Sale, SaleInfo } from "../../src/crowdsale/CrowdSale.sol";
 import { VestingConfig } from "../../src/crowdsale/VestedCrowdSale.sol";
 import { StakedVestedCrowdSale, StakingConfig } from "../../src/crowdsale/StakedVestedCrowdSale.sol";
@@ -103,7 +104,8 @@ contract FixtureCrowdSale is CommonScript {
             beneficiary: bob,
             fundingGoal: 200 ether,
             salesAmount: 400 ether,
-            closingTime: uint64(block.timestamp + 15 seconds)
+            closingTime: uint64(block.timestamp + 15 seconds),
+            permissioner: IPermissioner(address(0x0))
         });
 
         VestingConfig memory _vestingConfig = VestingConfig({ vestingContract: vestedMolToken, cliff: 60 days });
@@ -127,7 +129,8 @@ contract FixtureCrowdSale is CommonScript {
             biddingToken: FakeERC20(address(usdc)),
             fundingGoal: 200 ether,
             salesAmount: 400 ether,
-            closingTime: uint64(block.timestamp + 4 hours)
+            closingTime: uint64(block.timestamp + 4 hours),
+            permissioner: IPermissioner(address(0x0))
         });
 
         vm.startBroadcast(bob);

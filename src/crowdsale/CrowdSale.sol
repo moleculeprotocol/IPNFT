@@ -5,8 +5,9 @@ import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/I
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { FixedPointMathLib as FP } from "solmate/utils/FixedPointMathLib.sol";
-
 import { Counters } from "@openzeppelin/contracts/utils/Counters.sol";
+import { IPermissioner } from "../Permissioner.sol";
+import { FractionalizedToken } from "../FractionalizedToken.sol";
 
 enum SaleState {
     UNKNOWN, //Good to avoid invalid 0 checks
@@ -24,6 +25,7 @@ struct Sale {
     //how many auction tokens to sell
     uint256 salesAmount;
     uint64 closingTime;
+    IPermissioner permissioner;
 }
 
 struct SaleInfo {
@@ -89,6 +91,10 @@ contract CrowdSale {
     }
 
     function placeBid(uint256 saleId, uint256 biddingTokenAmount) public virtual {
+        return placeBid(saleId, biddingTokenAmount, bytes(""));
+    }
+
+    function placeBid(uint256 saleId, uint256 biddingTokenAmount, bytes memory permission) public virtual {
         if (biddingTokenAmount == 0) {
             revert("must bid something");
         }
@@ -100,6 +106,10 @@ contract CrowdSale {
 
         if (_saleInfo[saleId].state != SaleState.RUNNING) {
             revert("sale is not running");
+        }
+
+        if (address(sale.permissioner) != address(0)) {
+            sale.permissioner.accept(FractionalizedToken(address(sale.auctionToken)), msg.sender, permission);
         }
 
         IERC20 biddingToken = sale.biddingToken;
@@ -140,13 +150,19 @@ contract CrowdSale {
     }
 
     function claim(uint256 saleId) public virtual returns (uint256 auctionTokens, uint256 refunds) {
+        return claim(saleId, bytes(""));
+    }
+
+    function claim(uint256 saleId, bytes memory permission) public virtual returns (uint256 auctionTokens, uint256 refunds) {
         if (_saleInfo[saleId].state == SaleState.RUNNING) {
             revert("sale is not settled");
         }
         if (_saleInfo[saleId].state == SaleState.FAILED) {
             return claimFailed(saleId);
         }
-
+        if (address(_sales[saleId].permissioner) != address(0)) {
+            _sales[saleId].permissioner.accept(FractionalizedToken(address(_sales[saleId].auctionToken)), msg.sender, permission);
+        }
         (auctionTokens, refunds) = getClaimableAmounts(saleId, msg.sender);
         claim(saleId, auctionTokens, refunds);
     }

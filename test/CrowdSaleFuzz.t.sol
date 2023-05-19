@@ -7,8 +7,9 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 import { CrowdSale, Sale, SaleInfo } from "../src/crowdsale/CrowdSale.sol";
-import { CrowdSaleHelpers } from "./helpers/CrowdSaleHelpers.sol";
+import { IPermissioner } from "../src/Permissioner.sol";
 
+import { CrowdSaleHelpers } from "./helpers/CrowdSaleHelpers.sol";
 import { FakeERC20 } from "./helpers/FakeERC20.sol";
 
 contract CrowdSaleFuzzTest is Test {
@@ -40,7 +41,8 @@ contract CrowdSaleFuzzTest is Test {
             biddingToken: IERC20(address(biddingToken)),
             fundingGoal: fundingGoal,
             salesAmount: salesAmt,
-            closingTime: uint64(block.timestamp + 2 hours)
+            closingTime: uint64(block.timestamp + 2 hours),
+            permissioner: IPermissioner(address(0x0))
         });
 
         auctionToken.approve(address(crowdSale), salesAmt);
