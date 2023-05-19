@@ -67,43 +67,6 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "stakedAmount",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "price",
-        "type": "uint256"
-      }
-    ],
-    "name": "Bid",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "uint256",
-        "name": "saleId",
-        "type": "uint256"
-      },
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "bidder",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
         "name": "amount",
         "type": "uint256"
       }
@@ -184,6 +147,37 @@
     "anonymous": false,
     "inputs": [
       {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "saleId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "bidder",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "stakedAmount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "price",
+        "type": "uint256"
+      }
+    ],
+    "name": "Staked",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
         "indexed": false,
         "internalType": "uint256",
         "name": "saleId",
@@ -226,6 +220,11 @@
             "internalType": "uint64",
             "name": "closingTime",
             "type": "uint64"
+          },
+          {
+            "internalType": "contract IPermissioner",
+            "name": "permissioner",
+            "type": "address"
           }
         ],
         "indexed": false,
@@ -329,6 +328,11 @@
             "internalType": "uint64",
             "name": "closingTime",
             "type": "uint64"
+          },
+          {
+            "internalType": "contract IPermissioner",
+            "name": "permissioner",
+            "type": "address"
           }
         ],
         "indexed": false,
@@ -404,6 +408,11 @@
             "internalType": "uint64",
             "name": "closingTime",
             "type": "uint64"
+          },
+          {
+            "internalType": "contract IPermissioner",
+            "name": "permissioner",
+            "type": "address"
           }
         ],
         "indexed": false,
@@ -466,6 +475,35 @@
         "type": "uint256"
       },
       {
+        "internalType": "bytes",
+        "name": "permission",
+        "type": "bytes"
+      }
+    ],
+    "name": "claim",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "auctionTokens",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "refunds",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "saleId",
+        "type": "uint256"
+      },
+      {
         "internalType": "address",
         "name": "contributor",
         "type": "address"
@@ -493,6 +531,29 @@
         "internalType": "uint256",
         "name": "biddingTokenAmount",
         "type": "uint256"
+      }
+    ],
+    "name": "placeBid",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "saleId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "biddingTokenAmount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bytes",
+        "name": "permission",
+        "type": "bytes"
       }
     ],
     "name": "placeBid",
@@ -664,74 +725,11 @@
             "internalType": "uint64",
             "name": "closingTime",
             "type": "uint64"
-          }
-        ],
-        "internalType": "struct Sale",
-        "name": "sale",
-        "type": "tuple"
-      },
-      {
-        "components": [
+          },
           {
-            "internalType": "contract TokenVesting",
-            "name": "vestingContract",
+            "internalType": "contract IPermissioner",
+            "name": "permissioner",
             "type": "address"
-          },
-          {
-            "internalType": "uint256",
-            "name": "cliff",
-            "type": "uint256"
-          }
-        ],
-        "internalType": "struct VestingConfig",
-        "name": "vestingConfig",
-        "type": "tuple"
-      }
-    ],
-    "name": "startSale",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "saleId",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "components": [
-          {
-            "internalType": "contract IERC20Metadata",
-            "name": "auctionToken",
-            "type": "address"
-          },
-          {
-            "internalType": "contract IERC20",
-            "name": "biddingToken",
-            "type": "address"
-          },
-          {
-            "internalType": "address",
-            "name": "beneficiary",
-            "type": "address"
-          },
-          {
-            "internalType": "uint256",
-            "name": "fundingGoal",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "salesAmount",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint64",
-            "name": "closingTime",
-            "type": "uint64"
           }
         ],
         "internalType": "struct Sale",
@@ -827,6 +825,84 @@
             "internalType": "uint64",
             "name": "closingTime",
             "type": "uint64"
+          },
+          {
+            "internalType": "contract IPermissioner",
+            "name": "permissioner",
+            "type": "address"
+          }
+        ],
+        "internalType": "struct Sale",
+        "name": "sale",
+        "type": "tuple"
+      },
+      {
+        "components": [
+          {
+            "internalType": "contract TokenVesting",
+            "name": "vestingContract",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "cliff",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct VestingConfig",
+        "name": "vestingConfig",
+        "type": "tuple"
+      }
+    ],
+    "name": "startSale",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "saleId",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "contract IERC20Metadata",
+            "name": "auctionToken",
+            "type": "address"
+          },
+          {
+            "internalType": "contract IERC20",
+            "name": "biddingToken",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "beneficiary",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "fundingGoal",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "salesAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint64",
+            "name": "closingTime",
+            "type": "uint64"
+          },
+          {
+            "internalType": "contract IPermissioner",
+            "name": "permissioner",
+            "type": "address"
           }
         ],
         "internalType": "struct Sale",

@@ -2,6 +2,7 @@ import { BigInt, log } from '@graphprotocol/graph-ts';
 import { IERC20Metadata } from '../generated/StakedVestedCrowdSale/IERC20Metadata';
 import {
   Bid as BidEvent,
+  Staked as StakedEvent,
   Settled as SettledEvent,
   Started as StartedEvent,
   Failed as FailedEvent,
@@ -87,21 +88,40 @@ export function handleBid(event: BidEvent): void {
 
   //   Update CrowdSale
   crowdSale.amountRaised = crowdSale.amountRaised.plus(event.params.amount);
-  crowdSale.amountStaked = crowdSale.amountStaked.plus(
-    event.params.stakedAmount
-  );
 
   crowdSale.save();
 
   //   Create Contribution
-  let contribution = new Contribution(event.transaction.hash.toHex());
+  let contribution = new Contribution(event.transaction.hash.toHexString());
   contribution.amount = event.params.amount;
-  contribution.stakedAmount = event.params.stakedAmount;
   contribution.contributor = event.params.bidder;
-  contribution.price = event.params.price;
   contribution.createdAt = event.block.timestamp;
   contribution.crowdSale = crowdSale.id;
 
+  contribution.save();
+}
+
+export function handleStaked(event: StakedEvent): void {
+  let crowdSale = CrowdSale.load(event.params.saleId.toString());
+  if (!crowdSale) {
+    log.error('CrowdSale not found for id: {}', [
+      event.params.saleId.toString()
+    ]);
+    return;
+  }
+  crowdSale.amountStaked = crowdSale.amountStaked.plus(
+    event.params.stakedAmount
+  );
+
+  let contribution = Contribution.load(event.transaction.hash.toHexString());
+  if (!contribution) {
+    log.error('cannot associate contribution for stake handler {}', [
+      event.transaction.hash.toHexString()
+    ]);
+    return;
+  }
+  contribution.stakedAmount = event.params.stakedAmount;
+  contribution.price = event.params.price;
   contribution.save();
 }
 
