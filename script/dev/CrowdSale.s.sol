@@ -71,6 +71,8 @@ contract FixtureCrowdSale is CommonScript {
         );
         vestedMolToken.grantRole(vestedMolToken.ROLE_CREATE_SCHEDULE(), address(stakedVestedCrowdSale));
         console.log("VESTED_FRACTIONALIZED_TOKEN_ADDRESS=%s", address(vestedMolToken));
+
+        vestedDaoToken.grantRole(vestedDaoToken.ROLE_CREATE_SCHEDULE(), address(stakedVestedCrowdSale));
         vm.stopBroadcast();
     }
 
@@ -101,7 +103,7 @@ contract FixtureCrowdSale is CommonScript {
             beneficiary: bob,
             fundingGoal: 200 ether,
             salesAmount: 400 ether,
-            closingTime: uint64(block.timestamp + 5 seconds)
+            closingTime: uint64(block.timestamp + 15 seconds)
         });
 
         VestingConfig memory _vestingConfig = VestingConfig({ vestingContract: vestedMolToken, cliff: 60 days });

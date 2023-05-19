@@ -11,7 +11,32 @@
   },
   {
     "inputs": [],
+    "name": "BadPrice",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "BadSaleDuration",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "BadSalesAmount",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "BalanceTooLow",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "IncompatibleVestingContract",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "InvalidDuration",
     "type": "error"
   },
   {

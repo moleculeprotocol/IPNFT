@@ -7,9 +7,9 @@ import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
-import { CrowdSale, Sale, SaleInfo, SaleState } from "../src/crowdsale/CrowdSale.sol";
+import { CrowdSale, Sale, SaleInfo, SaleState, BadDecimals } from "../src/crowdsale/CrowdSale.sol";
 import { VestingConfig } from "../src/crowdsale/VestedCrowdSale.sol";
-import { StakedVestedCrowdSale, StakingConfig } from "../src/crowdsale/StakedVestedCrowdSale.sol";
+import { StakedVestedCrowdSale, StakingConfig, IncompatibleVestingContract, BadPrice } from "../src/crowdsale/StakedVestedCrowdSale.sol";
 import { TokenVesting } from "@moleculeprotocol/token-vesting/TokenVesting.sol";
 import { FakeERC20 } from "./helpers/FakeERC20.sol";
 //import { BioPriceFeed, IPriceFeedConsumer } from "../src/BioPriceFeed.sol";
@@ -76,6 +76,38 @@ contract CrowdSaleVestedStakedTest is Test {
 
         _vestingConfig = VestingConfig({ vestingContract: TokenVesting(address(0)), cliff: 60 days });
         _stakingConfig = StakingConfig({ stakedToken: daoToken, stakesVestingContract: vestedDao, wadFixedDaoPerBidPrice: 1e18, stakeTotal: 0 });
+    }
+
+    function testStakeVestedCrowdSalesBadParameters() public {
+        vm.startPrank(emitter);
+        Sale memory _sale = CrowdSaleHelpers.makeSale(emitter, auctionToken, biddingToken);
+        auctionToken.approve(address(crowdSale), 400_000 ether);
+        StakingConfig memory brokenConfig = StakingConfig(IERC20(address(0)), TokenVesting(address(0)), 0, 100 ether);
+
+        vm.expectRevert(); //cannot call .decimals() on 0x0
+        crowdSale.startSale(_sale, brokenConfig, _vestingConfig);
+
+        brokenConfig.stakedToken = daoToken;
+        vm.expectRevert();
+        crowdSale.startSale(_sale, brokenConfig, _vestingConfig);
+
+        TokenVesting wrongStakeVestingContract = new TokenVesting(auctionToken, "vested mol", "vmol");
+        wrongStakeVestingContract.grantRole(wrongStakeVestingContract.ROLE_CREATE_SCHEDULE(), address(crowdSale));
+        brokenConfig.stakesVestingContract = wrongStakeVestingContract;
+
+        vm.expectRevert(IncompatibleVestingContract.selector);
+        crowdSale.startSale(_sale, brokenConfig, _vestingConfig);
+
+        brokenConfig.stakesVestingContract = vestedDao;
+        vm.expectRevert(BadPrice.selector);
+        crowdSale.startSale(_sale, brokenConfig, _vestingConfig);
+
+        brokenConfig.wadFixedDaoPerBidPrice = 1;
+        uint256 salesId = crowdSale.startSale(_sale, brokenConfig, _vestingConfig);
+
+        (,,, uint256 stakeTotal) = crowdSale.salesStaking(salesId);
+        //the total stakes are set to 0 upon initialization
+        assertEq(stakeTotal, 0);
     }
 
     function testSettlementAndSimpleClaims() public {

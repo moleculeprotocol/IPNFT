@@ -13,7 +13,7 @@ import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 import { FixedPointMathLib as FP } from "solmate/utils/FixedPointMathLib.sol";
 import { TokenVesting } from "@moleculeprotocol/token-vesting/TokenVesting.sol";
 
-import { VestedCrowdSale, VestingConfig, ApprovalFailed } from "./VestedCrowdSale.sol";
+import { VestedCrowdSale, VestingConfig, ApprovalFailed, IncompatibleVestingContract, UnmanageableVestingContract } from "./VestedCrowdSale.sol";
 import { CrowdSale, Sale, BadDecimals, SaleState } from "./CrowdSale.sol";
 import { InitializeableTokenVesting } from "./InitializableTokenVesting.sol";
 import { IPriceFeedConsumer } from "../BioPriceFeed.sol";
@@ -24,6 +24,8 @@ struct StakingConfig {
     uint256 wadFixedDaoPerBidPrice;
     uint256 stakeTotal; //initialize with 0
 }
+
+error BadPrice();
 
 contract StakedVestedCrowdSale is VestedCrowdSale {
     using SafeERC20 for IERC20;
@@ -42,6 +44,18 @@ contract StakedVestedCrowdSale is VestedCrowdSale {
     function startSale(Sale memory sale, StakingConfig memory stakingConfig, VestingConfig memory vestingConfig) public returns (uint256 saleId) {
         if (IERC20Metadata(address(stakingConfig.stakedToken)).decimals() != 18) {
             revert BadDecimals();
+        }
+
+        if (!stakingConfig.stakesVestingContract.hasRole(stakingConfig.stakesVestingContract.ROLE_CREATE_SCHEDULE(), address(this))) {
+            revert UnmanageableVestingContract();
+        }
+
+        if (address(stakingConfig.stakesVestingContract.nativeToken()) != address(stakingConfig.stakedToken)) {
+            revert IncompatibleVestingContract();
+        }
+
+        if (stakingConfig.wadFixedDaoPerBidPrice == 0) {
+            revert BadPrice();
         }
         //todo: duck type check whether all token contracts can do what we need.
         //don't let users create a sale with "bad" values

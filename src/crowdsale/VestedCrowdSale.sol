@@ -21,6 +21,8 @@ struct VestingConfig {
 
 error ApprovalFailed();
 error UnmanageableVestingContract();
+error InvalidDuration();
+error IncompatibleVestingContract();
 
 /**
  * @title VestedCrowdSale
@@ -47,7 +49,7 @@ contract VestedCrowdSale is CrowdSale {
      * @notice if vestingConfig.vestingContract is 0x0, a new vesting contract is automatically created
      *
      * @param sale  sale configuration
-     * @param vestingConfig  vesting configuration
+     * @param vestingConfig  vesting configuration. Duration must be compatible to TokenVesting hard requirements (7 days < cliff < 50 years)
      */
     function startSale(Sale memory sale, VestingConfig memory vestingConfig) public returns (uint256 saleId) {
         saleId = uint256(keccak256(abi.encode(sale)));
@@ -58,6 +60,13 @@ contract VestedCrowdSale is CrowdSale {
             if (!vestingConfig.vestingContract.hasRole(vestingConfig.vestingContract.ROLE_CREATE_SCHEDULE(), address(this))) {
                 revert UnmanageableVestingContract();
             }
+            if (address(vestingConfig.vestingContract.nativeToken()) != address(sale.auctionToken)) {
+                revert IncompatibleVestingContract();
+            }
+        }
+
+        if (vestingConfig.cliff < 7 days || vestingConfig.cliff > 50 * (365 days)) {
+            revert InvalidDuration();
         }
 
         salesVesting[saleId] = vestingConfig;

@@ -34,6 +34,7 @@ struct SaleInfo {
 
 error BalanceTooLow();
 error BadDecimals();
+error BadSalesAmount();
 error BadSaleDuration();
 error SaleAlreadyActive();
 
@@ -56,9 +57,12 @@ contract CrowdSale {
 
     function startSale(Sale memory sale) public returns (uint256 saleId) {
         //todo: removed this restriction for simpler testing
-        // if (sale.closingTime < block.timestamp + 1 hours) {
+        // if (sale.closingTime < block.timestamp + 2 hours) {
         //     revert BadSaleDuration();
         // }
+        if (sale.closingTime < block.timestamp) {
+            revert BadSaleDuration();
+        }
         if (sale.auctionToken.decimals() != 18 || IERC20Metadata(address(sale.biddingToken)).decimals() != 18) {
             revert BadDecimals();
         }
@@ -66,9 +70,12 @@ contract CrowdSale {
             revert BalanceTooLow();
         }
         //close to 0 cases lead to very confusing results
-        // if (sale.fundingGoal <= 0.5 ether || sale.salesAmount < 0.5 ether) {
-        //     revert("you must sell or accept something meaningful");
-        // }
+        if (sale.fundingGoal < 0.5 ether || sale.salesAmount < 0.5 ether) {
+            revert BadSalesAmount();
+        }
+        if (sale.beneficiary == address(0)) {
+            sale.beneficiary = msg.sender;
+        }
 
         saleId = uint256(keccak256(abi.encode(sale)));
         if (address(_sales[saleId].auctionToken) != address(0)) {

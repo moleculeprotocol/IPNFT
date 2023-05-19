@@ -28,8 +28,8 @@ contract CrowdSaleFuzzTest is Test {
     //todo: improve this test
     function testFuzzManyBidders(uint8 bidders, uint96 salesAmt, uint96 fundingGoal) public {
         vm.assume(bidders > 0 && bidders < 25);
-        vm.assume(salesAmt > 0);
-        vm.assume(fundingGoal > 0);
+        vm.assume(salesAmt > 0.5 ether);
+        vm.assume(fundingGoal > 0.5 ether);
 
         auctionToken.mint(emitter, salesAmt);
 

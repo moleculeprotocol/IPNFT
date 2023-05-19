@@ -7,7 +7,7 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 import { CrowdSale, SaleState, Sale, SaleInfo } from "../src/crowdsale/CrowdSale.sol";
-import { VestedCrowdSale, VestingConfig, UnmanageableVestingContract } from "../src/crowdsale/VestedCrowdSale.sol";
+import { VestedCrowdSale, VestingConfig, UnmanageableVestingContract, InvalidDuration } from "../src/crowdsale/VestedCrowdSale.sol";
 import { TokenVesting } from "@moleculeprotocol/token-vesting/TokenVesting.sol";
 import { FakeERC20 } from "./helpers/FakeERC20.sol";
 import { CrowdSaleHelpers } from "./helpers/CrowdSaleHelpers.sol";
@@ -42,6 +42,19 @@ contract CrowdSaleVestedTest is Test {
         vm.stopPrank();
 
         _vestingConfig = VestingConfig({ vestingContract: TokenVesting(address(0)), cliff: 60 days });
+    }
+
+    function testVestedCrowdSalesConformsToTokenVestingRules() public {
+        vm.startPrank(emitter);
+        Sale memory _sale = CrowdSaleHelpers.makeSale(emitter, auctionToken, biddingToken);
+        auctionToken.approve(address(crowdSale), 400_000 ether);
+
+        vm.expectRevert(InvalidDuration.selector);
+        crowdSale.startSale(_sale, VestingConfig({ vestingContract: TokenVesting(address(0)), cliff: 5 days }));
+
+        vm.expectRevert(InvalidDuration.selector);
+        crowdSale.startSale(_sale, VestingConfig({ vestingContract: TokenVesting(address(0)), cliff: 1 days + 50 * (365 days) }));
+        vm.stopPrank();
     }
 
     function testSettlementAndSimpleClaims() public {
