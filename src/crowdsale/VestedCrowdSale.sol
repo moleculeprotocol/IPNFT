@@ -17,10 +17,12 @@ import { InitializeableTokenVesting } from "./InitializableTokenVesting.sol";
 struct VestingConfig {
     TokenVesting vestingContract;
     uint256 cliff;
-    uint256 duration;
 }
 
 error ApprovalFailed();
+error UnmanageableVestingContract();
+error InvalidDuration();
+error IncompatibleVestingContract();
 
 /**
  * @title VestedCrowdSale
@@ -41,25 +43,34 @@ contract VestedCrowdSale is CrowdSale {
     // }
 
     event Started(uint256 saleId, address indexed issuer, Sale sale, VestingConfig vesting);
+    event VestingContractCreated(TokenVesting vestingContract, IERC20 indexed underlyingToken);
 
-    function startSale(Sale memory sale, VestingConfig memory vesting) public returns (uint256 saleId) {
+    /**
+     * @notice if vestingConfig.vestingContract is 0x0, a new vesting contract is automatically created
+     *
+     * @param sale  sale configuration
+     * @param vestingConfig  vesting configuration. Duration must be compatible to TokenVesting hard requirements (7 days < cliff < 50 years)
+     */
+    function startSale(Sale memory sale, VestingConfig memory vestingConfig) public returns (uint256 saleId) {
         saleId = uint256(keccak256(abi.encode(sale)));
-        salesVesting[saleId] = vesting;
+
+        if (address(vestingConfig.vestingContract) == address(0)) {
+            vestingConfig.vestingContract = _makeVestingContract(sale);
+        } else {
+            if (!vestingConfig.vestingContract.hasRole(vestingConfig.vestingContract.ROLE_CREATE_SCHEDULE(), address(this))) {
+                revert UnmanageableVestingContract();
+            }
+            if (address(vestingConfig.vestingContract.nativeToken()) != address(sale.auctionToken)) {
+                revert IncompatibleVestingContract();
+            }
+        }
+
+        if (vestingConfig.cliff < 7 days || vestingConfig.cliff > 50 * (365 days)) {
+            revert InvalidDuration();
+        }
+
+        salesVesting[saleId] = vestingConfig;
         saleId = super.startSale(sale);
-    }
-
-    function startSale(Sale memory sale, uint256 cliff, uint256 duration) public returns (uint256 saleId) {
-        //todo: clone a new TokenVesting ERC20 contract and call start sale with that one
-        //InitializeableTokenVesting vestingContract = InitializeableTokenVesting(Clones.clone(tokenImplementation));
-        //vestingContract.initialize(sale.auctionToken);
-
-        TokenVesting vestingContract = new TokenVesting(
-            sale.auctionToken,
-            string(abi.encodePacked("Vested ", sale.auctionToken.name())),
-            string(abi.encodePacked("v", sale.auctionToken.symbol()))
-        );
-        VestingConfig memory vesting = VestingConfig(vestingContract, cliff, duration);
-        return startSale(sale, vesting);
     }
 
     function _onSaleStarted(uint256 saleId) internal virtual override {
@@ -80,20 +91,36 @@ contract VestedCrowdSale is CrowdSale {
         }
     }
 
-    function claim(uint256 saleId, uint256 auctionTokens, uint256 refunds) internal virtual override {
-        emit Claimed(saleId, msg.sender, auctionTokens, refunds);
-
+    /**
+     * @dev will send auction tokens to the configured vesting contract. Only the cliff is configured.
+     *
+     * @param saleId sale id
+     * @param tokenAmount amount of tokens to vest
+     * @param refunds unvested tokens to be returned
+     */
+    function claim(uint256 saleId, uint256 tokenAmount, uint256 refunds) internal virtual override {
         VestingConfig memory vesting = salesVesting[saleId];
         if (refunds > 0) {
             _sales[saleId].biddingToken.safeTransfer(msg.sender, refunds);
         }
 
-        IERC20(_sales[saleId].auctionToken).safeTransfer(address(vesting.vestingContract), auctionTokens);
+        emit Claimed(saleId, msg.sender, tokenAmount, refunds);
+        IERC20(_sales[saleId].auctionToken).safeTransfer(address(vesting.vestingContract), tokenAmount);
 
         //the vesting start time is the official auction closing time
         //https://discord.com/channels/608198475598790656/1021413298756923462/1107442747687829515
-        vesting.vestingContract.createVestingSchedule(
-            msg.sender, _sales[saleId].closingTime, vesting.cliff, vesting.duration, 60, false, auctionTokens
+        vesting.vestingContract.createVestingSchedule(msg.sender, _sales[saleId].closingTime, vesting.cliff, vesting.cliff, 60, false, tokenAmount);
+    }
+
+    function _makeVestingContract(Sale memory sale) private returns (TokenVesting vestingContract) {
+        //todo: clone a new TokenVesting ERC20 contract and call start sale with that one
+        //InitializeableTokenVesting vestingContract = InitializeableTokenVesting(Clones.clone(tokenImplementation));
+        //vestingContract.initialize(sale.auctionToken);
+        vestingContract = new TokenVesting(
+            sale.auctionToken,
+            string(abi.encodePacked("Vested ", sale.auctionToken.name())),
+            string(abi.encodePacked("v", sale.auctionToken.symbol()))
         );
+        emit VestingContractCreated(vestingContract, sale.auctionToken);
     }
 }

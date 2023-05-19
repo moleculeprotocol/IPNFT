@@ -9,9 +9,9 @@ import { CrowdSale, Sale, SaleInfo, BadSaleDuration, BalanceTooLow, SaleAlreadyA
 library CrowdSaleHelpers {
     function makeSale(address beneficiary, IERC20 auctionToken, IERC20 biddingToken) internal view returns (Sale memory sale) {
         return Sale({
-            beneficiary: beneficiary,
             auctionToken: IERC20Metadata(address(auctionToken)),
             biddingToken: IERC20(address(biddingToken)),
+            beneficiary: beneficiary,
             fundingGoal: 200_000 ether,
             salesAmount: 400_000 ether,
             closingTime: uint64(block.timestamp + 2 hours)

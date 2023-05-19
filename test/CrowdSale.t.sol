@@ -6,7 +6,9 @@ import "forge-std/console.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
-import { CrowdSale, SaleState, Sale, SaleInfo, BadSaleDuration, BalanceTooLow, SaleAlreadyActive } from "../src/crowdsale/CrowdSale.sol";
+import {
+    CrowdSale, SaleState, Sale, SaleInfo, BadSalesAmount, BadSaleDuration, BalanceTooLow, SaleAlreadyActive
+} from "../src/crowdsale/CrowdSale.sol";
 import { FakeERC20 } from "./helpers/FakeERC20.sol";
 import { CrowdSaleHelpers } from "./helpers/CrowdSaleHelpers.sol";
 
@@ -63,6 +65,44 @@ contract CrowdSaleTest is Test {
         vm.startPrank(poorguy);
         vm.expectRevert(BalanceTooLow.selector);
         crowdSale.startSale(_sale);
+        vm.stopPrank();
+    }
+
+    function testCannotInitializeSaleWithBadParams() public {
+        vm.startPrank(emitter);
+        Sale memory _sale = Sale({
+            auctionToken: IERC20Metadata(address(0)),
+            biddingToken: IERC20(address(0)),
+            beneficiary: address(0),
+            fundingGoal: 0,
+            salesAmount: 0,
+            closingTime: 0
+        });
+
+        vm.expectRevert(BadSaleDuration.selector);
+        crowdSale.startSale(_sale);
+        _sale.closingTime = uint64(block.timestamp + 3 hours);
+
+        vm.expectRevert();
+        crowdSale.startSale(_sale);
+
+        _sale.auctionToken = auctionToken;
+        vm.expectRevert();
+        crowdSale.startSale(_sale);
+
+        _sale.biddingToken = IERC20(address(biddingToken));
+        vm.expectRevert(BadSalesAmount.selector);
+        crowdSale.startSale(_sale);
+
+        _sale.fundingGoal = 1 ether;
+        vm.expectRevert(BadSalesAmount.selector);
+        crowdSale.startSale(_sale);
+
+        _sale.salesAmount = 1 ether;
+        auctionToken.approve(address(crowdSale), 1 ether);
+
+        crowdSale.startSale(_sale);
+
         vm.stopPrank();
     }
 

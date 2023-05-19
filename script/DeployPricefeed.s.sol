@@ -11,6 +11,6 @@ contract DeployPricefeed is Script {
         BioPriceFeed feed = new BioPriceFeed();
         vm.stopBroadcast();
 
-        console.log("Pricefeed %s", address(feed));
+        console.log("PRICEFEED_ADDRESS=%s", address(feed));
     }
 }

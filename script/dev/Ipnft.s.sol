@@ -11,12 +11,11 @@ import { UUPSProxy } from "../../src/UUPSProxy.sol";
 import { FakeERC20 } from "../../test/helpers/FakeERC20.sol";
 import { IERC1155Supply } from "../../src/IERC1155Supply.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { CommonScript } from "./Common.sol";
 
-contract DeployIpnft is Script {
-    string mnemonic = "test test test test test test test test test test test junk";
-
+contract DeployIpnftSuite is CommonScript {
     function run() public {
-        (address deployer,) = deriveRememberKey(mnemonic, 0);
+        prepareAddresses();
         vm.startBroadcast(deployer);
         IPNFT implementationV2 = new IPNFT();
         UUPSProxy proxy = new UUPSProxy(address(implementationV2), "");
@@ -24,49 +23,32 @@ contract DeployIpnft is Script {
         ipnft.initialize();
 
         SchmackoSwap swap = new SchmackoSwap();
-        FakeERC20 usdc = new FakeERC20("USDC Token", "USDC");
 
         Mintpass mintpass = new Mintpass(address(ipnft));
         mintpass.grantRole(mintpass.MODERATOR(), deployer);
 
         ipnft.setAuthorizer(address(mintpass));
 
-        console.log("ipnftv2 %s", address(ipnft));
-        console.log("swap %s", address(swap));
-        console.log("pass %s", address(mintpass));
-        console.log("usdc %s", address(usdc));
+        console.log("IPNFT_ADDRESS=%s", address(ipnft));
+        console.log("SOS_ADDRESS=%s", address(swap));
+        console.log("MINTPASS_ADDRESS=%s", address(mintpass));
 
         vm.stopBroadcast();
     }
 }
 
-contract FixtureIpnft is Script {
-    string mnemonic = "test test test test test test test test test test test junk";
-
+contract FixtureIpnft is CommonScript {
     IPNFT ipnft;
     SchmackoSwap schmackoSwap;
     Mintpass mintpass;
     FakeERC20 usdc;
 
-    address deployer;
-    address bob;
-    address alice;
-
-    function prepareAddresses() internal {
-        (deployer,) = deriveRememberKey(mnemonic, 0);
-        (bob,) = deriveRememberKey(mnemonic, 1);
-        (alice,) = deriveRememberKey(mnemonic, 2);
-
+    function prepareAddresses() internal override {
+        super.prepareAddresses();
         ipnft = IPNFT(vm.envAddress("IPNFT_ADDRESS"));
         schmackoSwap = SchmackoSwap(vm.envAddress("SOS_ADDRESS"));
         mintpass = Mintpass(vm.envAddress("MINTPASS_ADDRESS"));
         usdc = FakeERC20(vm.envAddress("USDC_ADDRESS"));
-    }
-
-    function dealERC20(address to, uint256 amount, FakeERC20 erc20) internal {
-        vm.startBroadcast(deployer);
-        erc20.mint(to, amount);
-        vm.stopBroadcast();
     }
 
     function mintMintPass(address to) internal {
