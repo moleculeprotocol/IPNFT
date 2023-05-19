@@ -12,7 +12,6 @@ import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/O
 
 struct Metadata {
     uint256 ipnftId;
-    //needed to remember an individual's share after others burn their tokens
     address originalOwner;
     string agreementCid;
 }

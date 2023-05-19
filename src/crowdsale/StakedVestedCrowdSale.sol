@@ -36,7 +36,7 @@ contract StakedVestedCrowdSale is VestedCrowdSale {
     //IPriceFeedConsumer priceFeed;
 
     event Started(uint256 saleId, address indexed issuer, Sale sale, VestingConfig vesting, StakingConfig staking);
-    event Bid(uint256 indexed saleId, address indexed bidder, uint256 stakedAmount, uint256 amount, uint256 price);
+    event Staked(uint256 indexed saleId, address indexed bidder, uint256 stakedAmount, uint256 price);
     // constructor(IPriceFeedConsumer priceFeed_) VestedCrowdSale() {
     //     priceFeed = priceFeed_;
     // }
@@ -88,7 +88,7 @@ contract StakedVestedCrowdSale is VestedCrowdSale {
         }
     }
 
-    function placeBid(uint256 saleId, uint256 biddingTokenAmount) public override {
+    function _bid(uint256 saleId, uint256 biddingTokenAmount) internal virtual override {
         StakingConfig storage staking = salesStaking[saleId];
 
         //todo use current price:
@@ -102,10 +102,10 @@ contract StakedVestedCrowdSale is VestedCrowdSale {
         staking.stakeTotal += stakedTokenAmount;
         stakes[saleId][msg.sender] += stakedTokenAmount;
 
-        emit Bid(saleId, msg.sender, biddingTokenAmount, stakedTokenAmount, staking.wadFixedDaoPerBidPrice);
         staking.stakedToken.safeTransferFrom(msg.sender, address(this), stakedTokenAmount);
 
-        super.placeBid(saleId, biddingTokenAmount);
+        super._bid(saleId, biddingTokenAmount);
+        emit Staked(saleId, msg.sender, stakedTokenAmount, staking.wadFixedDaoPerBidPrice);
     }
 
     //todo: get final price as by price feed at settlement

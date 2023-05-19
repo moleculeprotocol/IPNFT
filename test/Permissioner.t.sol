@@ -23,12 +23,13 @@ contract PermissionerTest is Test {
     uint256 bobPk;
 
     FractionalizedToken fracToken;
+    TermsAcceptedPermissioner internal permissioner;
 
     function setUp() public {
         (alice, alicePk) = makeAddrAndKey("alice");
         (bob, bobPk) = makeAddrAndKey("bob");
         vm.startPrank(deployer);
-        TermsAcceptedPermissioner permissioner = new TermsAcceptedPermissioner();
+        permissioner = new TermsAcceptedPermissioner();
 
         fracToken = new FractionalizedToken();
         Metadata memory md = Metadata(1, originalOwner, "abcde");
@@ -38,8 +39,6 @@ contract PermissionerTest is Test {
     }
 
     function testProveSigAndAcceptTerms() public {
-        TermsAcceptedPermissioner permissioner = new TermsAcceptedPermissioner();
-
         vm.startPrank(originalOwner);
 
         string memory terms = permissioner.specificTermsV1(fracToken);
@@ -58,8 +57,6 @@ contract PermissionerTest is Test {
     }
 
     function testThatContractSignaturesAreAccepted() public {
-        TermsAcceptedPermissioner permissioner = new TermsAcceptedPermissioner();
-
         vm.startPrank(deployer);
         SafeProxyFactory fac = new SafeProxyFactory();
         vm.stopPrank();

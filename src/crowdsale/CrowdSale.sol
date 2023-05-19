@@ -112,11 +112,7 @@ contract CrowdSale {
             sale.permissioner.accept(FractionalizedToken(address(sale.auctionToken)), msg.sender, permission);
         }
 
-        IERC20 biddingToken = sale.biddingToken;
-        _saleInfo[saleId].total += biddingTokenAmount;
-        _contributions[saleId][msg.sender] += biddingTokenAmount;
-        emit Bid(saleId, msg.sender, biddingTokenAmount);
-        biddingToken.safeTransferFrom(msg.sender, address(this), biddingTokenAmount);
+        _bid(saleId, biddingTokenAmount);
     }
 
     /**
@@ -192,6 +188,15 @@ contract CrowdSale {
         emit Claimed(saleId, msg.sender, 0, _contribution);
         _sales[saleId].biddingToken.safeTransfer(msg.sender, _contribution);
         return (0, _contribution);
+    }
+
+    function _bid(uint256 saleId, uint256 biddingTokenAmount) internal virtual {
+        IERC20 biddingToken = _sales[saleId].biddingToken;
+        _saleInfo[saleId].total += biddingTokenAmount;
+        _contributions[saleId][msg.sender] += biddingTokenAmount;
+
+        biddingToken.safeTransferFrom(msg.sender, address(this), biddingTokenAmount);
+        emit Bid(saleId, msg.sender, biddingTokenAmount);
     }
 
     function claim(uint256 saleId, uint256 auctionTokens, uint256 refunds) internal virtual {
