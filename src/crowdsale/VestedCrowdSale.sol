@@ -105,11 +105,18 @@ contract VestedCrowdSale is CrowdSale {
         }
 
         emit Claimed(saleId, msg.sender, tokenAmount, refunds);
-        IERC20(_sales[saleId].auctionToken).safeTransfer(address(vesting.vestingContract), tokenAmount);
 
         //the vesting start time is the official auction closing time
         //https://discord.com/channels/608198475598790656/1021413298756923462/1107442747687829515
-        vesting.vestingContract.createVestingSchedule(msg.sender, _sales[saleId].closingTime, vesting.cliff, vesting.cliff, 60, false, tokenAmount);
+        if (block.timestamp > _sales[saleId].closingTime + vesting.cliff) {
+            //no need for vesting when cliff already expired.
+            IERC20(_sales[saleId].auctionToken).safeTransfer(msg.sender, tokenAmount);
+        } else {
+            IERC20(_sales[saleId].auctionToken).safeTransfer(address(vesting.vestingContract), tokenAmount);
+            vesting.vestingContract.createVestingSchedule(
+                msg.sender, _sales[saleId].closingTime, vesting.cliff, vesting.cliff, 60, false, tokenAmount
+            );
+        }
     }
 
     function _makeVestingContract(Sale memory sale) private returns (TokenVesting vestingContract) {
