@@ -19,7 +19,7 @@ import { InitializeableTokenVesting } from "./InitializableTokenVesting.sol";
 import { IPriceFeedConsumer } from "../BioPriceFeed.sol";
 
 struct StakingConfig {
-    IERC20 stakedToken; //eg VITA DAO token
+    IERC20Metadata stakedToken; //eg VITA DAO token
     TokenVesting stakesVestingContract;
     uint256 wadFixedDaoPerBidPrice;
     uint256 stakeTotal; //initialize with 0
@@ -28,7 +28,7 @@ struct StakingConfig {
 error BadPrice();
 
 contract StakedVestedCrowdSale is VestedCrowdSale {
-    using SafeERC20 for IERC20;
+    using SafeERC20 for IERC20Metadata;
 
     mapping(uint256 => StakingConfig) public salesStaking;
     mapping(uint256 => mapping(address => uint256)) stakes;
@@ -57,6 +57,12 @@ contract StakedVestedCrowdSale is VestedCrowdSale {
         if (stakingConfig.wadFixedDaoPerBidPrice == 0) {
             revert BadPrice();
         }
+
+        if (sale.biddingToken.decimals() != 18) {
+            stakingConfig.wadFixedDaoPerBidPrice =
+                (FP.divWadDown(FP.mulWadDown(stakingConfig.wadFixedDaoPerBidPrice, 10 ** 18), 10 ** sale.biddingToken.decimals()));
+        }
+
         //todo: duck type check whether all token contracts can do what we need.
         //don't let users create a sale with "bad" values
         stakingConfig.stakeTotal = 0;

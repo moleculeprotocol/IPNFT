@@ -31,7 +31,7 @@ error IncompatibleVestingContract();
  * @notice puts the sold tokens under a configured vesting scheme
  */
 contract VestedCrowdSale is CrowdSale {
-    using SafeERC20 for IERC20;
+    using SafeERC20 for IERC20Metadata;
 
     mapping(uint256 => VestingConfig) public salesVesting;
 
@@ -110,9 +110,9 @@ contract VestedCrowdSale is CrowdSale {
         //https://discord.com/channels/608198475598790656/1021413298756923462/1107442747687829515
         if (block.timestamp > _sales[saleId].closingTime + vesting.cliff) {
             //no need for vesting when cliff already expired.
-            IERC20(_sales[saleId].auctionToken).safeTransfer(msg.sender, tokenAmount);
+            _sales[saleId].auctionToken.safeTransfer(msg.sender, tokenAmount);
         } else {
-            IERC20(_sales[saleId].auctionToken).safeTransfer(address(vesting.vestingContract), tokenAmount);
+            _sales[saleId].auctionToken.safeTransfer(address(vesting.vestingContract), tokenAmount);
             vesting.vestingContract.createVestingSchedule(
                 msg.sender, _sales[saleId].closingTime, vesting.cliff, vesting.cliff, 60, false, tokenAmount
             );

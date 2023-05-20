@@ -77,7 +77,7 @@ contract CrowdSalePermissionedTest is Test {
 
     function testPermissionedSettlementAndSimpleClaims() public {
         vm.startPrank(emitter);
-        Sale memory _sale = CrowdSaleHelpers.makeSale(emitter, IERC20(address(auctionToken)), biddingToken);
+        Sale memory _sale = CrowdSaleHelpers.makeSale(emitter, IERC20Metadata(address(auctionToken)), biddingToken);
         _sale.permissioner = permissioner;
         auctionToken.approve(address(crowdSale), 400_000 ether);
 

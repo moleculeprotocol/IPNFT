@@ -18,7 +18,7 @@ enum SaleState {
 
 struct Sale {
     IERC20Metadata auctionToken;
-    IERC20 biddingToken;
+    IERC20Metadata biddingToken;
     address beneficiary;
     //how many bidding tokens to collect
     uint256 fundingGoal;
@@ -65,14 +65,15 @@ contract CrowdSale {
         if (sale.closingTime < block.timestamp) {
             revert BadSaleDuration();
         }
-        if (sale.auctionToken.decimals() != 18 || IERC20Metadata(address(sale.biddingToken)).decimals() != 18) {
+        //|| IERC20Metadata(address(sale.biddingToken)).decimals() != 18
+        if (sale.auctionToken.decimals() != 18) {
             revert BadDecimals();
         }
         if (sale.auctionToken.balanceOf(msg.sender) < sale.salesAmount) {
             revert BalanceTooLow();
         }
         //close to 0 cases lead to very confusing results
-        if (sale.fundingGoal < 0.5 ether || sale.salesAmount < 0.5 ether) {
+        if (sale.fundingGoal < 1 * 10 ** sale.biddingToken.decimals() || sale.salesAmount < 0.5 ether) {
             revert BadSalesAmount();
         }
         if (sale.beneficiary == address(0)) {

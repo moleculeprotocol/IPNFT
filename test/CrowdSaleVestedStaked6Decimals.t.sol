@@ -15,7 +15,7 @@ import { FakeERC20 } from "./helpers/FakeERC20.sol";
 //import { BioPriceFeed, IPriceFeedConsumer } from "../src/BioPriceFeed.sol";
 import { CrowdSaleHelpers } from "./helpers/CrowdSaleHelpers.sol";
 
-contract CrowdSaleVestedStakedTest is Test {
+contract CrowdSaleVestedStaked6DecimalsTest is Test {
     address deployer = makeAddr("chucknorris");
     address emitter = makeAddr("emitter");
     address bidder = makeAddr("bidder");
@@ -41,6 +41,8 @@ contract CrowdSaleVestedStakedTest is Test {
 
         auctionToken = new FakeERC20("Fractionalized IPNFT","FAM");
         biddingToken = new FakeERC20("USD token", "USDC");
+        biddingToken.setDecimals(6);
+
         daoToken = new FakeERC20("DAO token", "DAO");
 
         // BioPriceFeed internal priceFeed = new BioPriceFeed();
@@ -61,16 +63,16 @@ contract CrowdSaleVestedStakedTest is Test {
         vestedDao.grantRole(vestedDao.ROLE_CREATE_SCHEDULE(), address(crowdSale));
 
         vm.startPrank(bidder);
-        biddingToken.mint(bidder, 1_000_000 ether);
+        biddingToken.mint(bidder, 1_000_000e6);
         daoToken.mint(bidder, 1_000_000 ether);
-        biddingToken.approve(address(crowdSale), 1_000_000 ether);
+        biddingToken.approve(address(crowdSale), 1_000_000e6);
         daoToken.approve(address(crowdSale), 1_000_000 ether);
         vm.stopPrank();
 
         vm.startPrank(bidder2);
-        biddingToken.mint(bidder2, 1_000_000 ether);
+        biddingToken.mint(bidder2, 1_000_000e6);
         daoToken.mint(bidder2, 1_000_000 ether);
-        biddingToken.approve(address(crowdSale), 1_000_000 ether);
+        biddingToken.approve(address(crowdSale), 1_000_000e6);
         daoToken.approve(address(crowdSale), 1_000_000 ether);
         vm.stopPrank();
 
@@ -78,54 +80,23 @@ contract CrowdSaleVestedStakedTest is Test {
         _stakingConfig = StakingConfig({ stakedToken: daoToken, stakesVestingContract: vestedDao, wadFixedDaoPerBidPrice: 1e18, stakeTotal: 0 });
     }
 
-    function testStakeVestedCrowdSalesBadParameters() public {
-        vm.startPrank(emitter);
-        Sale memory _sale = CrowdSaleHelpers.makeSale(emitter, auctionToken, biddingToken);
-        auctionToken.approve(address(crowdSale), 400_000 ether);
-        StakingConfig memory brokenConfig = StakingConfig(IERC20Metadata(address(0)), TokenVesting(address(0)), 0, 100 ether);
-
-        vm.expectRevert(); //cannot call .decimals() on 0x0
-        crowdSale.startSale(_sale, brokenConfig, _vestingConfig);
-
-        brokenConfig.stakedToken = daoToken;
-        vm.expectRevert();
-        crowdSale.startSale(_sale, brokenConfig, _vestingConfig);
-
-        TokenVesting wrongStakeVestingContract = new TokenVesting(auctionToken, "vested mol", "vmol");
-        wrongStakeVestingContract.grantRole(wrongStakeVestingContract.ROLE_CREATE_SCHEDULE(), address(crowdSale));
-        brokenConfig.stakesVestingContract = wrongStakeVestingContract;
-
-        vm.expectRevert(IncompatibleVestingContract.selector);
-        crowdSale.startSale(_sale, brokenConfig, _vestingConfig);
-
-        brokenConfig.stakesVestingContract = vestedDao;
-        vm.expectRevert(BadPrice.selector);
-        crowdSale.startSale(_sale, brokenConfig, _vestingConfig);
-
-        brokenConfig.wadFixedDaoPerBidPrice = 1;
-        uint256 salesId = crowdSale.startSale(_sale, brokenConfig, _vestingConfig);
-
-        (,,, uint256 stakeTotal) = crowdSale.salesStaking(salesId);
-        //the total stakes are set to 0 upon initialization
-        assertEq(stakeTotal, 0);
-    }
-
     function testSettlementAndSimpleClaims() public {
         vm.startPrank(emitter);
         Sale memory _sale = CrowdSaleHelpers.makeSale(emitter, auctionToken, biddingToken);
-
+        _sale.fundingGoal = 200_000e6;
         auctionToken.approve(address(crowdSale), 400_000 ether);
 
         uint256 saleId = crowdSale.startSale(_sale, _stakingConfig, _vestingConfig);
         vm.stopPrank();
 
         vm.startPrank(bidder);
-        crowdSale.placeBid(saleId, 200_000 ether);
+        crowdSale.placeBid(saleId, 200_000e6);
         vm.stopPrank();
 
-        assertEq(biddingToken.balanceOf(bidder), 800_000 ether);
+        assertEq(biddingToken.balanceOf(bidder), 800_000e6);
+        assertEq(biddingToken.balanceOf(address(crowdSale)), 200_000e6);
         assertEq(daoToken.balanceOf(bidder), 800_000 ether);
-        assertEq(biddingToken.balanceOf(address(crowdSale)), 200_000 ether);
+
         assertEq(daoToken.balanceOf(address(crowdSale)), 200_000 ether);
 
         vm.startPrank(anyone);
@@ -150,73 +121,28 @@ contract CrowdSaleVestedStakedTest is Test {
     function testOverbiddingAndRefunds() public {
         vm.startPrank(emitter);
         Sale memory _sale = CrowdSaleHelpers.makeSale(emitter, auctionToken, biddingToken);
+        _sale.fundingGoal = 200_000e6;
         auctionToken.approve(address(crowdSale), 400_000 ether);
         uint256 saleId = crowdSale.startSale(_sale, _stakingConfig, _vestingConfig);
         vm.stopPrank();
 
         vm.startPrank(bidder);
-        crowdSale.placeBid(saleId, 200_000 ether);
+        crowdSale.placeBid(saleId, 200_000e6);
         vm.stopPrank();
 
         vm.startPrank(bidder2);
-        crowdSale.placeBid(saleId, 200_000 ether);
+        crowdSale.placeBid(saleId, 200_000e6);
         vm.stopPrank();
 
         vm.startPrank(bidder);
-        crowdSale.placeBid(saleId, 400_000 ether);
+        crowdSale.placeBid(saleId, 400_000e6);
         vm.stopPrank();
 
-        assertEq(biddingToken.balanceOf(bidder), 400_000 ether);
+        assertEq(biddingToken.balanceOf(bidder), 400_000e6);
         assertEq(daoToken.balanceOf(bidder), 400_000 ether);
-        assertEq(biddingToken.balanceOf(address(crowdSale)), 800_000 ether);
+        assertEq(biddingToken.balanceOf(address(crowdSale)), 800_000e6);
         assertEq(daoToken.balanceOf(address(crowdSale)), 800_000 ether);
 
-        /*
-        bidder and bidder2 have 1mn$ & 1mn DAO each
-
-        400_000 auction tokens are sold
-        200_000$ are requested
-        800_000$ are bid in total
-        600_000$ are surplus
-
-        bidder added 600_000$ (and still has 400_000$)
-        this is 3/4 of all bids
-        bidder receives 3/4 of 400_000 = 300_000 FAM
-        bidder is refunded  3/4 of 600_000 = 450_000$
-        bidder contributed 600_000$ - 450_000$ = $150_000 to the funding
-
-        bidder staked 600_000 dao at dao/bid price of 1
-        bidder is refunded 450_000 DAO (1DAO/1$ * 450_000$ refunds)
-        bidder gets (all staked - refund) vDAO (600_000-450_000) = 150_000 vDAO
-        token amt of bidder stakes returned =  450_000DAO + 150_000vDAO = 600_000
-        bidder's final $ balance = 400_000 + 450_000 = 850_000$
-
-        bidder2 added 200_000$ (and still has 800_000$)
-        this is 1/4 of all bids
-        bidder2 receives 1/4 of 400_000 = 100_000 FAM
-        bidder2 is refunded 1/4 of 600_000 = 150_000$
-        bidder2 contributed 200_000$ - 150_000$ = $50_000 to the funding
-
-        bidder2 staked 200_000 DAO at dao/bid price of 1
-        bidder2 is refunded 150_000 DAO (1DAO/1$ * 150_000$)
-        bidder2 gets (all staked - refund) vDAO (200_000-150_000) 50_000 vDAO
-        token amt of bidder stakes returned =  150_000DAO + 50_000vDAO = 200_000
-        bidder2's final $ balance = 800_000 + 150_000 = 950_000$
-
-        -- And now with varying prices (same $ amounts)
-        -- auction is settled at a price of 1.5DAO/1$
-
-        bidder staked 1_200_000 dao at dao/bid price of 2 ($600_000 * 2)
-        bidder is refunded 675_000 DAO (1.5DAO/1$ * $450_000)
-        bidder received (all staked - refund) vDAO (1_200_000-675_000) = 525_000 vDAO
-        token amt of bidder stakes returned =  675_000DAO + 525_000vDAO = 1_200_000
-
-        bidder2 staked 600_000 dao at dao/bid price of 3 ($200_000 * 3)
-        bidder2 is refunded 225_000 DAO (1.5DAO/1$ * $150_000)
-        bidder2 gets (all staked - refund) vDAO (600_000-225_000) 375_000 vDAO
-        token amt of bidder stakes returned =  225_000DAO + 375_000vDAO = 600_000
-
-        */
         vm.startPrank(anyone);
         vm.warp(block.timestamp + 3 hours);
         crowdSale.settle(saleId);
@@ -233,12 +159,12 @@ contract CrowdSaleVestedStakedTest is Test {
         (TokenVesting auctionTokenVesting,) = crowdSale.salesVesting(saleId);
 
         assertEq(auctionTokenVesting.balanceOf(bidder), 300_000 ether);
-        assertEq(biddingToken.balanceOf(bidder), 850_000 ether);
+        assertEq(biddingToken.balanceOf(bidder), 850_000e6);
         assertEq(vestedDao.balanceOf(bidder), 150_000 ether);
         assertEq(daoToken.balanceOf(bidder), 850_000 ether);
 
         assertEq(auctionTokenVesting.balanceOf(bidder2), 100_000 ether);
-        assertEq(biddingToken.balanceOf(bidder2), 950_000 ether);
+        assertEq(biddingToken.balanceOf(bidder2), 950_000e6);
         assertEq(vestedDao.balanceOf(bidder2), 50_000 ether);
         assertEq(daoToken.balanceOf(bidder2), 950_000 ether);
 
@@ -250,6 +176,7 @@ contract CrowdSaleVestedStakedTest is Test {
     function testUnevenOverbiddingAndPriceAndRefunds() public {
         vm.startPrank(emitter);
         Sale memory _sale = CrowdSaleHelpers.makeSale(emitter, auctionToken, biddingToken);
+        _sale.fundingGoal = 200_000e6;
         auctionToken.approve(address(crowdSale), 400_000 ether);
         // 1 DAO = 4 $
         _stakingConfig.wadFixedDaoPerBidPrice = 25e16;
@@ -258,16 +185,16 @@ contract CrowdSaleVestedStakedTest is Test {
         vm.stopPrank();
 
         vm.startPrank(bidder);
-        crowdSale.placeBid(saleId, 380_000 ether);
+        crowdSale.placeBid(saleId, 380_000e6);
         assertEq(daoToken.balanceOf(address(crowdSale)), 95_000 ether);
         vm.stopPrank();
 
         vm.startPrank(bidder2);
-        crowdSale.placeBid(saleId, 450_000 ether);
+        crowdSale.placeBid(saleId, 450_000e6);
         vm.stopPrank();
 
         vm.startPrank(bidder);
-        crowdSale.placeBid(saleId, 230_000 ether);
+        crowdSale.placeBid(saleId, 230_000e6);
         vm.stopPrank();
 
         //stakes have been placed.
@@ -293,25 +220,25 @@ contract CrowdSaleVestedStakedTest is Test {
         vm.stopPrank();
 
         (TokenVesting auctionTokenVesting,) = crowdSale.salesVesting(saleId);
-        assertEq(auctionTokenVesting.balanceOf(bidder), 230188679245283018800000);
-        assertEq(auctionTokenVesting.balanceOf(bidder2), 169811320754716980800000);
+        assertEq(auctionTokenVesting.balanceOf(bidder), 230188679244000000000000);
+        assertEq(auctionTokenVesting.balanceOf(bidder2), 169811320754000000000000);
 
-        assertEq(vestedDao.balanceOf(bidder), 28773.584905660377395 ether);
-        assertEq(vestedDao.balanceOf(bidder2), 21226.41509433962282 ether);
+        assertEq(vestedDao.balanceOf(bidder), 28773.5849065 ether);
+        assertEq(vestedDao.balanceOf(bidder2), 21226.41509475 ether);
 
         assertEq(daoToken.balanceOf(bidder) + vestedDao.balanceOf(bidder), 1_000_000 ether);
         assertEq(daoToken.balanceOf(bidder2) + vestedDao.balanceOf(bidder2), 1_000_000 ether);
 
-        // //some dust is left on the table
-        // //these are 0.0000000000004 tokens at 18 decimals
-        assertEq(auctionToken.balanceOf(address(crowdSale)), 400_000);
-        assertEq(biddingToken.balanceOf(address(crowdSale)), 860_000);
+        //some dust is left on the table
+        assertEq(auctionToken.balanceOf(address(crowdSale)), 0.000002 ether);
+        assertEq(biddingToken.balanceOf(address(crowdSale)), 5);
         assertEq(daoToken.balanceOf(address(crowdSale)), 0);
     }
 
     function testUnsuccessfulSaleClaims() public {
         vm.startPrank(emitter);
         Sale memory _sale = CrowdSaleHelpers.makeSale(emitter, auctionToken, biddingToken);
+        _sale.fundingGoal = 200_000e6;
         auctionToken.approve(address(crowdSale), 400_000 ether);
         _stakingConfig.wadFixedDaoPerBidPrice = 25e16;
         uint256 saleId = crowdSale.startSale(_sale, _stakingConfig, _vestingConfig);
@@ -319,11 +246,11 @@ contract CrowdSaleVestedStakedTest is Test {
         vm.stopPrank();
 
         vm.startPrank(bidder);
-        crowdSale.placeBid(saleId, 50_000 ether);
+        crowdSale.placeBid(saleId, 50_000e6);
         vm.stopPrank();
 
         vm.startPrank(bidder2);
-        crowdSale.placeBid(saleId, 50_000 ether);
+        crowdSale.placeBid(saleId, 50_000e6);
         vm.stopPrank();
 
         vm.startPrank(anyone);
@@ -341,41 +268,10 @@ contract CrowdSaleVestedStakedTest is Test {
         crowdSale.claim(saleId);
         vm.stopPrank();
 
-        assertEq(biddingToken.balanceOf(bidder), 1_000_000 ether);
+        assertEq(biddingToken.balanceOf(bidder), 1_000_000e6);
         assertEq(auctionToken.balanceOf(bidder), 0);
         (TokenVesting auctionTokenVesting,) = crowdSale.salesVesting(saleId);
 
         assertEq(auctionTokenVesting.balanceOf(bidder), 0);
-    }
-
-    function testClaimLongAfterVestingPeriod() public {
-        vm.startPrank(emitter);
-        Sale memory _sale = CrowdSaleHelpers.makeSale(emitter, auctionToken, biddingToken);
-        _sale.closingTime = uint64(block.timestamp + 7 days);
-        auctionToken.approve(address(crowdSale), 400_000 ether);
-        uint256 saleId = crowdSale.startSale(_sale, _stakingConfig, _vestingConfig);
-        vm.stopPrank();
-
-        vm.startPrank(bidder);
-        crowdSale.placeBid(saleId, 200_000 ether);
-        vm.stopPrank();
-
-        vm.warp(block.timestamp + 7 days);
-        vm.startPrank(anyone);
-        crowdSale.settle(saleId);
-        vm.stopPrank();
-
-        vm.warp(block.timestamp + 4440 days);
-        vm.startPrank(bidder);
-        crowdSale.claim(saleId);
-
-        (TokenVesting auctionTokenVesting,) = crowdSale.salesVesting(saleId);
-
-        assertEq(auctionTokenVesting.balanceOf(bidder), 0);
-        assertEq(auctionToken.balanceOf(bidder), 400_000 ether);
-
-        assertEq(vestedDao.balanceOf(bidder), 0);
-        assertEq(daoToken.balanceOf(bidder), 1_000_000 ether);
-        vm.stopPrank();
     }
 }

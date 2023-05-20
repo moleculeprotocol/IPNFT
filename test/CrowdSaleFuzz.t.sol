@@ -30,7 +30,7 @@ contract CrowdSaleFuzzTest is Test {
     function testFuzzManyBidders(uint8 bidders, uint96 salesAmt, uint96 fundingGoal) public {
         vm.assume(bidders > 0 && bidders < 25);
         vm.assume(salesAmt > 0.5 ether);
-        vm.assume(fundingGoal > 0.5 ether);
+        vm.assume(fundingGoal > 1 ether);
 
         auctionToken.mint(emitter, salesAmt);
 
@@ -38,7 +38,7 @@ contract CrowdSaleFuzzTest is Test {
         Sale memory _sale = Sale({
             beneficiary: emitter,
             auctionToken: IERC20Metadata(address(auctionToken)),
-            biddingToken: IERC20(address(biddingToken)),
+            biddingToken: IERC20Metadata(address(biddingToken)),
             fundingGoal: fundingGoal,
             salesAmount: salesAmt,
             closingTime: uint64(block.timestamp + 2 hours),

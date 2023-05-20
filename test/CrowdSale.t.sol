@@ -72,7 +72,7 @@ contract CrowdSaleTest is Test {
         vm.startPrank(emitter);
         Sale memory _sale = Sale({
             auctionToken: IERC20Metadata(address(0)),
-            biddingToken: IERC20(address(0)),
+            biddingToken: IERC20Metadata(address(0)),
             beneficiary: address(0),
             fundingGoal: 0,
             salesAmount: 0,
@@ -91,7 +91,7 @@ contract CrowdSaleTest is Test {
         vm.expectRevert();
         crowdSale.startSale(_sale);
 
-        _sale.biddingToken = IERC20(address(biddingToken));
+        _sale.biddingToken = biddingToken;
         vm.expectRevert(BadSalesAmount.selector);
         crowdSale.startSale(_sale);
 
