@@ -205,11 +205,17 @@ contract CrowdSaleTest is Test {
         crowdSale.settle(saleId);
         vm.stopPrank();
 
-        vm.startPrank(bidder);
-        crowdSale.claim(saleId);
+        vm.startPrank(bidder2);
+        (uint256 auctionTokens, uint256 refunds) = crowdSale.claim(saleId);
+        assertEq(auctionTokens, 100_000 ether);
+        assertEq(refunds, 0);
+        //a bidder can call this as often as they want, but they won't get anything
+        (auctionTokens, refunds) = crowdSale.claim(saleId);
+        assertEq(auctionTokens, 0);
+        assertEq(refunds, 0);
         vm.stopPrank();
 
-        vm.startPrank(bidder2);
+        vm.startPrank(bidder);
         crowdSale.claim(saleId);
         vm.stopPrank();
 
@@ -235,7 +241,13 @@ contract CrowdSaleTest is Test {
         vm.stopPrank();
 
         vm.startPrank(bidder);
-        crowdSale.claim(saleId);
+        (uint256 auctionTokens, uint256 refunds) = crowdSale.claim(saleId);
+        assertEq(auctionTokens, 400_000 ether);
+        assertEq(refunds, 800_000 ether);
+        //a bidder can call this as often as they want, but they won't get anything
+        (auctionTokens, refunds) = crowdSale.claim(saleId);
+        assertEq(auctionTokens, 0);
+        assertEq(refunds, 0);
         vm.stopPrank();
 
         assertEq(auctionToken.balanceOf(bidder), 400_000 ether);
@@ -285,12 +297,21 @@ contract CrowdSaleTest is Test {
         crowdSale.settle(saleId);
         vm.stopPrank();
 
-        vm.startPrank(bidder);
-        crowdSale.claim(saleId);
+        vm.startPrank(bidder2);
+        (uint256 auctionTokens, uint256 refunds) = crowdSale.claim(saleId);
+        assertEq(auctionTokens, 100_000 ether);
+        assertEq(refunds, 150_000 ether);
+        //a bidder can call this as often as they want, but they won't get anything
+        (auctionTokens, refunds) = crowdSale.claim(saleId);
+        assertEq(auctionTokens, 0);
+        assertEq(refunds, 0);
         vm.stopPrank();
 
-        vm.startPrank(bidder2);
+        vm.startPrank(bidder);
         crowdSale.claim(saleId);
+        (auctionTokens, refunds) = crowdSale.claim(saleId);
+        assertEq(auctionTokens, 0);
+        assertEq(refunds, 0);
         vm.stopPrank();
 
         assertEq(auctionToken.balanceOf(bidder), 300_000 ether);
@@ -346,11 +367,12 @@ contract CrowdSaleTest is Test {
         crowdSale.settle(saleId);
         vm.stopPrank();
 
-        vm.startPrank(bidder);
+        vm.startPrank(bidder2);
         crowdSale.claim(saleId);
+        crowdSale.claim(saleId); //just to ensure this doesn't have any effect
         vm.stopPrank();
 
-        vm.startPrank(bidder2);
+        vm.startPrank(bidder);
         crowdSale.claim(saleId);
         vm.stopPrank();
 

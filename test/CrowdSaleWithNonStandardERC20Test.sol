@@ -15,7 +15,10 @@ import { FakeERC20 } from "./helpers/FakeERC20.sol";
 //import { BioPriceFeed, IPriceFeedConsumer } from "../src/BioPriceFeed.sol";
 import { CrowdSaleHelpers } from "./helpers/CrowdSaleHelpers.sol";
 
-contract CrowdSaleVestedStaked6DecimalsTest is Test {
+/**
+ * @notice tests support for ERC20 with 6 decimals
+ */
+contract CrowdSaleWithNonStandardERC20Test is Test {
     address deployer = makeAddr("chucknorris");
     address emitter = makeAddr("emitter");
     address bidder = makeAddr("bidder");

@@ -77,7 +77,7 @@ contract StakedVestedCrowdSale is VestedCrowdSale {
         return stakes[saleId][bidder];
     }
 
-    function _onSaleStarted(uint256 saleId) internal virtual override {
+    function _afterSaleStarted(uint256 saleId) internal virtual override {
         emit Started(saleId, msg.sender, _sales[saleId], salesVesting[saleId], salesStaking[saleId]);
     }
 
@@ -115,19 +115,33 @@ contract StakedVestedCrowdSale is VestedCrowdSale {
     }
 
     //todo: get final price as by price feed at settlement
-    function claim(uint256 saleId, uint256 auctionTokens, uint256 refunds) internal virtual override {
+    /**
+     * @notice refunds stakes and locks active stakes in vesting contract
+     * @dev super.claim transitively calls VestedCrowdSale:_claimAuctionTokens
+     * @inheritdoc CrowdSale
+     */
+    function claim(uint256 saleId, uint256 tokenAmount, uint256 refunds) internal virtual override {
         VestingConfig memory vestingConfig = salesVesting[saleId];
         StakingConfig memory stakingConfig = salesStaking[saleId];
 
-        uint256 _stakes = stakes[saleId][msg.sender];
-
-        super.claim(saleId, auctionTokens, refunds);
-
         uint256 refundedStakes = FP.mulWadDown(refunds, stakingConfig.wadFixedDaoPerBidPrice);
-        uint256 vestedStakes = _stakes - refundedStakes;
+        uint256 vestedStakes = stakes[saleId][msg.sender] - refundedStakes;
+
+        //EFFECTS
+        //disarm any effect when calling this twice
+        stakes[saleId][msg.sender] = 0;
+        if (vestedStakes == 0) {
+            //exit early. Also, the vesting contract would revert with a 0 amount.
+            return;
+        }
+
+        // INTERACTIONS
+        super.claim(saleId, tokenAmount, refunds);
+
         if (refundedStakes > 0) {
             stakingConfig.stakedToken.safeTransfer(msg.sender, refundedStakes);
         }
+
         if (block.timestamp > _sales[saleId].closingTime + vestingConfig.cliff) {
             //no need for vesting when cliff already expired.
             stakingConfig.stakedToken.safeTransfer(msg.sender, vestedStakes);

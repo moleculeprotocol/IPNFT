@@ -222,12 +222,19 @@ contract CrowdSaleVestedStakedTest is Test {
         crowdSale.settle(saleId);
         vm.stopPrank();
 
+        vm.startPrank(bidder2);
+        crowdSale.claim(saleId);
+        (uint256 zeroTokens, uint256 zeroRefunds) = crowdSale.claim(saleId);
+        assertEq(zeroRefunds * zeroTokens, 0);
+        vm.stopPrank();
+
         vm.startPrank(bidder);
         crowdSale.claim(saleId);
         vm.stopPrank();
 
-        vm.startPrank(bidder2);
-        crowdSale.claim(saleId);
+        vm.startPrank(bidder2); //tries to "attack" by claiming once again
+        (zeroTokens, zeroRefunds) = crowdSale.claim(saleId);
+        assertEq(zeroRefunds * zeroTokens, 0);
         vm.stopPrank();
 
         (TokenVesting auctionTokenVesting,) = crowdSale.salesVesting(saleId);
