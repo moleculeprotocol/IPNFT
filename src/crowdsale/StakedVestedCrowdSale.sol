@@ -73,12 +73,12 @@ contract StakedVestedCrowdSale is VestedCrowdSale {
         super.startSale(sale, vestingConfig);
     }
 
-    function _onSaleStarted(uint256 saleId) internal virtual override {
-        emit Started(saleId, msg.sender, _sales[saleId], salesVesting[saleId], salesStaking[saleId]);
-    }
-
     function stakesOf(uint256 saleId, address bidder) public view returns (uint256) {
         return stakes[saleId][bidder];
+    }
+
+    function _onSaleStarted(uint256 saleId) internal virtual override {
+        emit Started(saleId, msg.sender, _sales[saleId], salesVesting[saleId], salesStaking[saleId]);
     }
 
     function settle(uint256 saleId) public override {

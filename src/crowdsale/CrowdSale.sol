@@ -146,11 +146,27 @@ contract CrowdSale {
         release(sale.biddingToken, sale.beneficiary, sale.fundingGoal);
     }
 
-    function claim(uint256 saleId) public virtual returns (uint256 auctionTokens, uint256 refunds) {
+    function getClaimableAmounts(uint256 saleId, address bidder) public view virtual returns (uint256 auctionTokens, uint256 refunds) {
+        uint256 _contribution = _contributions[saleId][bidder];
+        uint256 fundingGoal = _sales[saleId].fundingGoal;
+        uint256 total = _saleInfo[saleId].total;
+        uint256 salesAmount = _sales[saleId].salesAmount;
+
+        uint256 biddingShare = FP.divWadDown(FP.mulWadDown(_contribution, fundingGoal), total);
+        uint256 biddingRatio = FP.divWadDown(biddingShare, fundingGoal);
+        auctionTokens = FP.mulWadDown(biddingRatio, salesAmount);
+        if (_saleInfo[saleId].surplus > 0) {
+            refunds = FP.mulWadDown(biddingRatio, _saleInfo[saleId].surplus); //_contributions[saleId][msg.sender] - biddingShare;
+        } else {
+            refunds = 0;
+        }
+    }
+
+    function claim(uint256 saleId) public returns (uint256 auctionTokens, uint256 refunds) {
         return claim(saleId, bytes(""));
     }
 
-    function claim(uint256 saleId, bytes memory permission) public virtual returns (uint256 auctionTokens, uint256 refunds) {
+    function claim(uint256 saleId, bytes memory permission) public returns (uint256 auctionTokens, uint256 refunds) {
         if (_saleInfo[saleId].state == SaleState.RUNNING) {
             revert("sale is not settled");
         }
@@ -162,6 +178,15 @@ contract CrowdSale {
         }
         (auctionTokens, refunds) = getClaimableAmounts(saleId, msg.sender);
         claim(saleId, auctionTokens, refunds);
+    }
+
+    function claim(uint256 saleId, uint256 auctionTokens, uint256 refunds) internal virtual {
+        emit Claimed(saleId, msg.sender, auctionTokens, refunds);
+
+        if (refunds > 0) {
+            _sales[saleId].biddingToken.safeTransfer(msg.sender, refunds);
+        }
+        _sales[saleId].auctionToken.safeTransfer(msg.sender, auctionTokens);
     }
 
     function saleInfo(uint256 saleId) public view returns (SaleInfo memory) {
@@ -200,32 +225,7 @@ contract CrowdSale {
         emit Bid(saleId, msg.sender, biddingTokenAmount);
     }
 
-    function claim(uint256 saleId, uint256 auctionTokens, uint256 refunds) internal virtual {
-        emit Claimed(saleId, msg.sender, auctionTokens, refunds);
-
-        if (refunds > 0) {
-            _sales[saleId].biddingToken.safeTransfer(msg.sender, refunds);
-        }
-        _sales[saleId].auctionToken.safeTransfer(msg.sender, auctionTokens);
-    }
-
     function release(IERC20 biddingToken, address beneficiary, uint256 fundingGoal) internal virtual {
         biddingToken.safeTransfer(beneficiary, fundingGoal);
-    }
-
-    function getClaimableAmounts(uint256 saleId, address bidder) internal view virtual returns (uint256 auctionTokens, uint256 refunds) {
-        uint256 _contribution = _contributions[saleId][bidder];
-        uint256 fundingGoal = _sales[saleId].fundingGoal;
-        uint256 total = _saleInfo[saleId].total;
-        uint256 salesAmount = _sales[saleId].salesAmount;
-
-        uint256 biddingShare = FP.divWadDown(FP.mulWadDown(_contribution, fundingGoal), total);
-        uint256 biddingRatio = FP.divWadDown(biddingShare, fundingGoal);
-        auctionTokens = FP.mulWadDown(biddingRatio, salesAmount);
-        if (_saleInfo[saleId].surplus > 0) {
-            refunds = FP.mulWadDown(biddingRatio, _saleInfo[saleId].surplus); //_contributions[saleId][msg.sender] - biddingShare;
-        } else {
-            refunds = 0;
-        }
     }
 }
