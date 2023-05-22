@@ -6,11 +6,12 @@ import {
   store
 } from '@graphprotocol/graph-ts'
 import {
-  IPNFTMinted as IPNFTMintedLegacyEvent,
-  IPNFTMinted1 as IPNFTMintedWithSymbolEvent,
+  IPNFTMinted as IPNFTMintedWithSymbolEvent,
+  IPNFTMinted1 as IPNFTMintedLegacyEvent,
   Reserved as ReservedEvent,
   ReadAccessGranted as ReadAccessGrantedEvent,
-  TransferSingle as TransferSingleEvent
+  TransferSingle as TransferSingleEvent,
+  SymbolUpdated as SymbolUpdatedEvent
 } from '../generated/IPNFT/IPNFT'
 import { Ipnft, Reservation, CanRead } from '../generated/schema'
 
@@ -75,15 +76,22 @@ export function handleMint(event: IPNFTMintedWithSymbolEvent): void {
   ipnft.createdAt = event.block.timestamp
   ipnft.symbol = event.params.symbol
   store.remove('Reservation', event.params.tokenId.toString())
-  ipnft.save() 
+  ipnft.save()
 }
 
-export function handleMintLegacy(event: IPNFTMintedLegacyEvent): void {  
+// LEGACY handlers to support old IPNFT deployments
+export function handleMintLegacy(event: IPNFTMintedLegacyEvent): void {
   let ipnft = new Ipnft(event.params.tokenId.toString())
   ipnft.owner = event.params.owner
   ipnft.tokenURI = event.params.tokenURI
   ipnft.createdAt = event.block.timestamp
   ipnft.symbol = null
   store.remove('Reservation', event.params.tokenId.toString())
-  ipnft.save() 
+  ipnft.save()
+}
+
+export function handleSymbolUpdatedLegacy(event: SymbolUpdatedEvent): void {
+  let ipnft = new Ipnft(event.params.tokenId.toString())
+  ipnft.symbol = event.params.symbol
+  ipnft.save()
 }
