@@ -9,12 +9,12 @@ import { SchmackoSwap } from "../src/SchmackoSwap.sol";
 import { Mintpass } from "../src/Mintpass.sol";
 import { UUPSProxy } from "../src/UUPSProxy.sol";
 
-contract UpgradeImplementation is Script {
+contract UpgradeIpnft is Script {
     function run() public {
         vm.startBroadcast();
         address proxyAddr = vm.envAddress("IPNFT_ADDRESS");
 
-        //this is not exactly true, it's the old implementation that we don't know here anymore
+        //this is not exactly an "IPNFT", it's rather the old implementation that we don't know here anymore
         //see IPNFTUpgrades.t.sol:testUpgradeContract
         IPNFT proxyIpnft = IPNFT(address(proxyAddr));
         //create a new implementation
@@ -27,7 +27,7 @@ contract UpgradeImplementation is Script {
     }
 }
 
-contract DeployImplementation is Script {
+contract DeployIpnftImpl is Script {
     function run() public {
         vm.startBroadcast();
         IPNFT newImpl = new IPNFT();

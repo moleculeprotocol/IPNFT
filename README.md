@@ -119,9 +119,28 @@ To manually broadcast a bundle of deploy transactions, you can use `Deploy.s.sol
 3. Paste the private key for the deployer account
 4. to verify the contract during deployment, get an Etherscan API key and add `--verify --etherscan-api-key $ETHERSCAN_API_KEY` to the command.
 
-> This is _not_ possible at the moment, but stay tuned:  
-> Alternatively, start Truffle Dashboard suite and use its RPC URL to sign off transactions with Metamask:
-> `npx truffle dashboard` > `MODERATOR_ADDRESS=<first moderator> forge script script/Deploy.s.sol:DeployScript -f http://localhost:24012/rpc --sender <deployer address> --froms <deployer address> --broadcast -vvvv`
+### Deploying the fractionalizer suite
+
+You can deploy the fractionlizer individually, but we created a deployment script that deploys all relevant contracts in the recommended order. These are
+
+- BioPriceFeed
+- TermsAcceptedPermissioner
+- Fractionalizer
+- StakedVestedCrowdsale
+
+You can deploy them all in one go (requires the current network's IPNFT address):
+
+`IPNFT_ADDRESS=... forge script script/DeployFractionalizer.s.sol:DeployFractionalizerInfrastructure --private-key $PRIVATE_KEY --rpc-url $RPC_URL --broadcast`
+
+### Deploying (vested) test tokens
+
+To test staked / vested token interactions, you need some test tokens. Here are 2 convenient script to get them running:
+
+`NAME=Vita SYMBOL=VITA SUPPLY_ETH=10000000 forge script script/Tokens.s.sol:DeployTestTokens --private-key $PRIVATE_KEY --rpc-url $RPC_URL --broadcast`
+
+and to create the vested tokens counterpart:
+
+`TOKEN=0xaddress forge script script/Tokens.s.sol:DeployTokenVesting --private-key $PRIVATE_KEY --rpc-url $RPC_URL --broadcast`
 
 ### Testing a manual upgrade
 
