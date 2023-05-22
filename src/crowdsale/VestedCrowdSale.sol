@@ -31,7 +31,7 @@ error IncompatibleVestingContract();
  * @notice puts the sold tokens under a configured vesting scheme
  */
 contract VestedCrowdSale is CrowdSale {
-    using SafeERC20 for IERC20;
+    using SafeERC20 for IERC20Metadata;
 
     mapping(uint256 => VestingConfig) public salesVesting;
 
@@ -73,7 +73,7 @@ contract VestedCrowdSale is CrowdSale {
         saleId = super.startSale(sale);
     }
 
-    function _onSaleStarted(uint256 saleId) internal virtual override {
+    function _afterSaleStarted(uint256 saleId) internal virtual override {
         emit Started(saleId, msg.sender, _sales[saleId], salesVesting[saleId]);
     }
 
@@ -84,8 +84,7 @@ contract VestedCrowdSale is CrowdSale {
         }
 
         Sale memory sale = _sales[saleId];
-        VestingConfig memory vesting = salesVesting[saleId];
-        bool result = sale.auctionToken.approve(address(vesting.vestingContract), sale.salesAmount);
+        bool result = sale.auctionToken.approve(address(salesVesting[saleId].vestingContract), sale.salesAmount);
         if (!result) {
             revert ApprovalFailed();
         }
@@ -96,23 +95,17 @@ contract VestedCrowdSale is CrowdSale {
      *
      * @param saleId sale id
      * @param tokenAmount amount of tokens to vest
-     * @param refunds unvested tokens to be returned
      */
-    function claim(uint256 saleId, uint256 tokenAmount, uint256 refunds) internal virtual override {
+    function _claimAuctionTokens(uint256 saleId, uint256 tokenAmount) internal virtual override {
         VestingConfig memory vesting = salesVesting[saleId];
-        if (refunds > 0) {
-            _sales[saleId].biddingToken.safeTransfer(msg.sender, refunds);
-        }
-
-        emit Claimed(saleId, msg.sender, tokenAmount, refunds);
 
         //the vesting start time is the official auction closing time
         //https://discord.com/channels/608198475598790656/1021413298756923462/1107442747687829515
         if (block.timestamp > _sales[saleId].closingTime + vesting.cliff) {
             //no need for vesting when cliff already expired.
-            IERC20(_sales[saleId].auctionToken).safeTransfer(msg.sender, tokenAmount);
+            _sales[saleId].auctionToken.safeTransfer(msg.sender, tokenAmount);
         } else {
-            IERC20(_sales[saleId].auctionToken).safeTransfer(address(vesting.vestingContract), tokenAmount);
+            _sales[saleId].auctionToken.safeTransfer(address(vesting.vestingContract), tokenAmount);
             vesting.vestingContract.createVestingSchedule(
                 msg.sender, _sales[saleId].closingTime, vesting.cliff, vesting.cliff, 60, false, tokenAmount
             );

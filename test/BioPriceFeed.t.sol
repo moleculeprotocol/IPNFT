@@ -5,7 +5,7 @@ import "forge-std/Test.sol";
 import "forge-std/console.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-
+import { FixedPointMathLib as FP } from "solmate/utils/FixedPointMathLib.sol";
 import { CrowdSale, Sale, SaleInfo } from "../src/crowdsale/CrowdSale.sol";
 
 import { FakeERC20 } from "./helpers/FakeERC20.sol";
@@ -47,7 +47,7 @@ contract BioPriceFeedTest is Test {
         vm.stopPrank();
     }
 
-    function testSignalFpPrice() public {
+    function testSignalFloatingPrice() public {
         vm.startPrank(signaller);
         priceFeed.signal(base, quote, 1.5 ether);
 
@@ -62,17 +62,40 @@ contract BioPriceFeedTest is Test {
     }
 
     /// @notice USDC has 6 decimals
-    function testUSDCDecimals() public {
+    function testUSDC() public {
         vm.startPrank(signaller);
-        //ETH / USDC
+        quoteToken.setDecimals(6);
+        //base: usd, quote: eth usdc/eth
         priceFeed.signal(base, quote, 1500 ether);
-        priceFeed.setMetadata(base, quote, Meta(6, bytes32("USD/ETH")));
 
         uint256 ethPerUsdc = priceFeed.getPrice(quote, base);
+        assertEq(ethPerUsdc, 666666666666666);
         assertEq(ethPerUsdc, 0.000666666666666666 ether);
 
         uint256 usdcPerEth = priceFeed.getPrice(base, quote);
-        assertEq(usdcPerEth, 1_500_000_000);
+        assertEq(usdcPerEth, 1500 ether);
+
+        //good, how much usdc do I get for 10 ETH?
+        uint256 decimalAdjustedPrice = (FP.divWadDown(FP.mulWadDown(usdcPerEth, 10 ** quoteToken.decimals()), 10 ** baseToken.decimals()));
+        uint256 usdcForTenEth = 10 * decimalAdjustedPrice;
+        assertEq(usdcForTenEth, 15_000e6);
+
+        //great, and how much do I get for 0.01 ETH
+        uint256 usdcFor005Eth = FP.mulWadDown(0.01 ether, decimalAdjustedPrice);
+        assertEq(usdcFor005Eth, 15e6);
+
+        //finally, how much real USDC do I get for 1 ETH
+        uint256 usdcFor1Eth = FP.mulWadDown(1 ether, decimalAdjustedPrice);
+        assertEq(usdcFor1Eth, 1500e6);
+
+        //turn it around. How much ether do I get for 1500 USDC?
+        decimalAdjustedPrice = (FP.divWadUp(FP.mulWadUp(ethPerUsdc, 10 ** baseToken.decimals()), 10 ** quoteToken.decimals()));
+        uint256 ethFor1500USDC = FP.mulWadDown(1500e6, decimalAdjustedPrice);
+        assertEq(ethFor1500USDC, 0.999999999999999 ether);
+
+        //great. And for 1.5 USDC?
+        uint256 ethFor1USDC = FP.mulWadDown(15e5, decimalAdjustedPrice);
+        assertEq(ethFor1USDC, 0.000999999999999999 ether);
     }
 
     function testGetPriceForNonExistentPair() public {

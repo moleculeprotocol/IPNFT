@@ -19,7 +19,7 @@ import { InitializeableTokenVesting } from "./InitializableTokenVesting.sol";
 import { IPriceFeedConsumer } from "../BioPriceFeed.sol";
 
 struct StakingConfig {
-    IERC20 stakedToken; //eg VITA DAO token
+    IERC20Metadata stakedToken; //eg VITA DAO token
     TokenVesting stakesVestingContract;
     uint256 wadFixedDaoPerBidPrice;
     uint256 stakeTotal; //initialize with 0
@@ -28,7 +28,7 @@ struct StakingConfig {
 error BadPrice();
 
 contract StakedVestedCrowdSale is VestedCrowdSale {
-    using SafeERC20 for IERC20;
+    using SafeERC20 for IERC20Metadata;
 
     mapping(uint256 => StakingConfig) public salesStaking;
     mapping(uint256 => mapping(address => uint256)) stakes;
@@ -57,6 +57,12 @@ contract StakedVestedCrowdSale is VestedCrowdSale {
         if (stakingConfig.wadFixedDaoPerBidPrice == 0) {
             revert BadPrice();
         }
+
+        if (sale.biddingToken.decimals() != 18) {
+            stakingConfig.wadFixedDaoPerBidPrice =
+                (FP.divWadDown(FP.mulWadDown(stakingConfig.wadFixedDaoPerBidPrice, 10 ** 18), 10 ** sale.biddingToken.decimals()));
+        }
+
         //todo: duck type check whether all token contracts can do what we need.
         //don't let users create a sale with "bad" values
         stakingConfig.stakeTotal = 0;
@@ -67,12 +73,12 @@ contract StakedVestedCrowdSale is VestedCrowdSale {
         super.startSale(sale, vestingConfig);
     }
 
-    function _onSaleStarted(uint256 saleId) internal virtual override {
-        emit Started(saleId, msg.sender, _sales[saleId], salesVesting[saleId], salesStaking[saleId]);
-    }
-
     function stakesOf(uint256 saleId, address bidder) public view returns (uint256) {
         return stakes[saleId][bidder];
+    }
+
+    function _afterSaleStarted(uint256 saleId) internal virtual override {
+        emit Started(saleId, msg.sender, _sales[saleId], salesVesting[saleId], salesStaking[saleId]);
     }
 
     function settle(uint256 saleId) public override {
@@ -109,19 +115,33 @@ contract StakedVestedCrowdSale is VestedCrowdSale {
     }
 
     //todo: get final price as by price feed at settlement
-    function claim(uint256 saleId, uint256 auctionTokens, uint256 refunds) internal virtual override {
+    /**
+     * @notice refunds stakes and locks active stakes in vesting contract
+     * @dev super.claim transitively calls VestedCrowdSale:_claimAuctionTokens
+     * @inheritdoc CrowdSale
+     */
+    function claim(uint256 saleId, uint256 tokenAmount, uint256 refunds) internal virtual override {
         VestingConfig memory vestingConfig = salesVesting[saleId];
         StakingConfig memory stakingConfig = salesStaking[saleId];
 
-        uint256 _stakes = stakes[saleId][msg.sender];
-
-        super.claim(saleId, auctionTokens, refunds);
-
         uint256 refundedStakes = FP.mulWadDown(refunds, stakingConfig.wadFixedDaoPerBidPrice);
-        uint256 vestedStakes = _stakes - refundedStakes;
+        uint256 vestedStakes = stakes[saleId][msg.sender] - refundedStakes;
+
+        //EFFECTS
+        //disarm any effect when calling this twice
+        stakes[saleId][msg.sender] = 0;
+        if (vestedStakes == 0) {
+            //exit early. Also, the vesting contract would revert with a 0 amount.
+            return;
+        }
+
+        // INTERACTIONS
+        super.claim(saleId, tokenAmount, refunds);
+
         if (refundedStakes > 0) {
             stakingConfig.stakedToken.safeTransfer(msg.sender, refundedStakes);
         }
+
         if (block.timestamp > _sales[saleId].closingTime + vestingConfig.cliff) {
             //no need for vesting when cliff already expired.
             stakingConfig.stakedToken.safeTransfer(msg.sender, vestedStakes);

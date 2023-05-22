@@ -8,10 +8,10 @@ import { CrowdSale, Sale, SaleInfo, BadSaleDuration, BalanceTooLow, SaleAlreadyA
 import { IPermissioner } from "../../src/Permissioner.sol";
 
 library CrowdSaleHelpers {
-    function makeSale(address beneficiary, IERC20 auctionToken, IERC20 biddingToken) internal view returns (Sale memory sale) {
+    function makeSale(address beneficiary, IERC20Metadata auctionToken, IERC20Metadata biddingToken) internal view returns (Sale memory sale) {
         return Sale({
-            auctionToken: IERC20Metadata(address(auctionToken)),
-            biddingToken: IERC20(address(biddingToken)),
+            auctionToken: auctionToken,
+            biddingToken: biddingToken,
             beneficiary: beneficiary,
             fundingGoal: 200_000 ether,
             salesAmount: 400_000 ether,

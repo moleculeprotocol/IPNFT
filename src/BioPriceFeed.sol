@@ -48,17 +48,17 @@ contract BioPriceFeed is IPriceFeedConsumer, AccessControl {
 
     function getPrice(address base, address quote) external view returns (uint184) {
         bytes32 key = keccak256(abi.encode(base, quote));
-        if (meta[key].decimals != 0) {
-            if (meta[key].decimals > 18) revert("unsupported");
-            return uint184(signals[key].rate / 10 ** (18 - meta[key].decimals));
-        } else {
-            return signals[key].rate;
-        }
+        return signals[key].rate;
+        // if (meta[key].decimals != 0) {
+        //     if (meta[key].decimals > 18) revert("unsupported");
+        //     return uint184(signals[key].rate / 10 ** (18 - meta[key].decimals));
+        // } else {
+        // }
     }
 
-    function setMetadata(address base, address quote, Meta calldata _meta) external onlyRole(ROLE_SIGNALLER) {
-        meta[keccak256(abi.encode(base, quote))] = _meta;
-    }
+    // function setMetadata(address base, address quote, Meta calldata _meta) external onlyRole(ROLE_SIGNALLER) {
+    //     meta[keccak256(abi.encode(base, quote))] = _meta;
+    // }
 
     function signal(address base, address quote, uint184 wadPrice) external onlyRole(ROLE_SIGNALLER) {
         signals[keccak256(abi.encode(base, quote))] = Signal(wadPrice, uint64(block.timestamp));

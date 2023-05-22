@@ -18,7 +18,7 @@ enum SaleState {
 
 struct Sale {
     IERC20Metadata auctionToken;
-    IERC20 biddingToken;
+    IERC20Metadata biddingToken;
     address beneficiary;
     //how many bidding tokens to collect
     uint256 fundingGoal;
@@ -65,14 +65,15 @@ contract CrowdSale {
         if (sale.closingTime < block.timestamp) {
             revert BadSaleDuration();
         }
-        if (sale.auctionToken.decimals() != 18 || IERC20Metadata(address(sale.biddingToken)).decimals() != 18) {
+        //|| IERC20Metadata(address(sale.biddingToken)).decimals() != 18
+        if (sale.auctionToken.decimals() != 18) {
             revert BadDecimals();
         }
         if (sale.auctionToken.balanceOf(msg.sender) < sale.salesAmount) {
             revert BalanceTooLow();
         }
         //close to 0 cases lead to very confusing results
-        if (sale.fundingGoal < 0.5 ether || sale.salesAmount < 0.5 ether) {
+        if (sale.fundingGoal < 1 * 10 ** sale.biddingToken.decimals() || sale.salesAmount < 0.5 ether) {
             revert BadSalesAmount();
         }
         if (sale.beneficiary == address(0)) {
@@ -87,14 +88,24 @@ contract CrowdSale {
         _saleInfo[saleId] = SaleInfo(SaleState.RUNNING, 0, 0);
 
         sale.auctionToken.safeTransferFrom(msg.sender, address(this), sale.salesAmount);
-        _onSaleStarted(saleId);
+        _afterSaleStarted(saleId);
+    }
+
+    function saleInfo(uint256 saleId) public view returns (SaleInfo memory) {
+        return _saleInfo[saleId];
     }
 
     function placeBid(uint256 saleId, uint256 biddingTokenAmount) public virtual {
         return placeBid(saleId, biddingTokenAmount, bytes(""));
     }
 
-    function placeBid(uint256 saleId, uint256 biddingTokenAmount, bytes memory permission) public virtual {
+    /**
+     * @dev even though `auctionToken` is casted to `FractionalizedToken` this should still work with IPNFT agnostic tokens
+     * @param saleId the sale id
+     * @param biddingTokenAmount the amount of bidding tokens
+     * @param permission bytes are handed over to a configured permissioner contract
+     */
+    function placeBid(uint256 saleId, uint256 biddingTokenAmount, bytes memory permission) public {
         if (biddingTokenAmount == 0) {
             revert("must bid something");
         }
@@ -115,10 +126,14 @@ contract CrowdSale {
         _bid(saleId, biddingTokenAmount);
     }
 
+    function contribution(uint256 saleId, address contributor) public view returns (uint256) {
+        return _contributions[saleId][contributor];
+    }
     /**
-     * @notice anyone can call this for the beneficiary
+     * @notice anyone can call this for the beneficiary. Releases raised funds to beneficiary when funding goal was met
      * @param saleId the sale id
      */
+
     function settle(uint256 saleId) public virtual {
         Sale memory sale = _sales[saleId];
         SaleInfo storage __saleInfo = _saleInfo[saleId];
@@ -142,14 +157,44 @@ contract CrowdSale {
         emit Settled(saleId, __saleInfo.total, __saleInfo.surplus);
 
         //transfer funds to issuer / beneficiary
-        release(sale.biddingToken, sale.beneficiary, sale.fundingGoal);
+        sale.biddingToken.safeTransfer(sale.beneficiary, sale.fundingGoal);
     }
 
-    function claim(uint256 saleId) public virtual returns (uint256 auctionTokens, uint256 refunds) {
+    /**
+     * @dev computes commitment ratio of bidder
+     *
+     * @param saleId sale id
+     * @param bidder bidder
+     * @return auctionTokens wei value of auction tokens to return
+     * @return refunds wei value of bidding tokens to return
+     */
+    function getClaimableAmounts(uint256 saleId, address bidder) public view virtual returns (uint256 auctionTokens, uint256 refunds) {
+        uint256 _contribution = _contributions[saleId][bidder];
+        uint256 fundingGoal = _sales[saleId].fundingGoal;
+        uint256 total = _saleInfo[saleId].total;
+        uint256 salesAmount = _sales[saleId].salesAmount;
+
+        uint256 biddingShare = FP.divWadDown(FP.mulWadDown(_contribution, fundingGoal), total);
+        uint256 biddingRatio = FP.divWadDown(biddingShare, fundingGoal);
+        auctionTokens = FP.mulWadDown(biddingRatio, salesAmount);
+        if (_saleInfo[saleId].surplus > 0) {
+            refunds = FP.mulWadDown(biddingRatio, _saleInfo[saleId].surplus); //_contributions[saleId][msg.sender] - biddingShare;
+        } else {
+            refunds = 0;
+        }
+    }
+
+    function claim(uint256 saleId) public returns (uint256 auctionTokens, uint256 refunds) {
         return claim(saleId, bytes(""));
     }
 
-    function claim(uint256 saleId, bytes memory permission) public virtual returns (uint256 auctionTokens, uint256 refunds) {
+    /**
+     * @dev even though `auctionToken` is casted to `FractionalizedToken` this should still work with IPNFT agnostic tokens
+     * @notice public method that refunds and lets user redeem their sales shares
+     * @param saleId the sale id
+     * @param permission. bytes are handed over to a configured permissioner contract
+     */
+    function claim(uint256 saleId, bytes memory permission) public returns (uint256 auctionTokens, uint256 refunds) {
         if (_saleInfo[saleId].state == SaleState.RUNNING) {
             revert("sale is not settled");
         }
@@ -160,18 +205,42 @@ contract CrowdSale {
             _sales[saleId].permissioner.accept(FractionalizedToken(address(_sales[saleId].auctionToken)), msg.sender, permission);
         }
         (auctionTokens, refunds) = getClaimableAmounts(saleId, msg.sender);
+        //a reentrancy won't have any effect after this.
+        _contributions[saleId][msg.sender] = 0;
         claim(saleId, auctionTokens, refunds);
     }
 
-    function saleInfo(uint256 saleId) public view returns (SaleInfo memory) {
-        return _saleInfo[saleId];
+    /**
+     * @notice will send `tokenAmount` auction tokens to the bidder
+     *
+     * @param saleId sale id
+     * @param tokenAmount amount of tokens to vest
+     * @param refunds biddingtTokens to refund
+     */
+    function claim(uint256 saleId, uint256 tokenAmount, uint256 refunds) internal virtual {
+        //the sender has claimed already
+        if (tokenAmount == 0) {
+            return;
+        }
+        emit Claimed(saleId, msg.sender, tokenAmount, refunds);
+
+        if (refunds > 0) {
+            _sales[saleId].biddingToken.safeTransfer(msg.sender, refunds);
+        }
+        _claimAuctionTokens(saleId, tokenAmount);
     }
 
-    function contribution(uint256 saleId, address contributor) public view returns (uint256) {
-        return _contributions[saleId][contributor];
+    /**
+     * @dev overridden in VestedCrowdSale (will lock auction tokens in vested contract)
+     */
+    function _claimAuctionTokens(uint256 saleId, uint256 tokenAmount) internal virtual {
+        _sales[saleId].auctionToken.safeTransfer(msg.sender, tokenAmount);
     }
 
-    function _onSaleStarted(uint256 saleId) internal virtual {
+    /**
+     * @dev allows us to emit different events per derived contract
+     */
+    function _afterSaleStarted(uint256 saleId) internal virtual {
         emit Started(saleId, msg.sender, _sales[saleId]);
     }
 
@@ -194,37 +263,7 @@ contract CrowdSale {
         IERC20 biddingToken = _sales[saleId].biddingToken;
         _saleInfo[saleId].total += biddingTokenAmount;
         _contributions[saleId][msg.sender] += biddingTokenAmount;
-
         biddingToken.safeTransferFrom(msg.sender, address(this), biddingTokenAmount);
         emit Bid(saleId, msg.sender, biddingTokenAmount);
-    }
-
-    function claim(uint256 saleId, uint256 auctionTokens, uint256 refunds) internal virtual {
-        emit Claimed(saleId, msg.sender, auctionTokens, refunds);
-
-        if (refunds > 0) {
-            _sales[saleId].biddingToken.safeTransfer(msg.sender, refunds);
-        }
-        _sales[saleId].auctionToken.safeTransfer(msg.sender, auctionTokens);
-    }
-
-    function release(IERC20 biddingToken, address beneficiary, uint256 fundingGoal) internal virtual {
-        biddingToken.safeTransfer(beneficiary, fundingGoal);
-    }
-
-    function getClaimableAmounts(uint256 saleId, address bidder) internal view virtual returns (uint256 auctionTokens, uint256 refunds) {
-        uint256 _contribution = _contributions[saleId][bidder];
-        uint256 fundingGoal = _sales[saleId].fundingGoal;
-        uint256 total = _saleInfo[saleId].total;
-        uint256 salesAmount = _sales[saleId].salesAmount;
-
-        uint256 biddingShare = FP.divWadDown(FP.mulWadDown(_contribution, fundingGoal), total);
-        uint256 biddingRatio = FP.divWadDown(biddingShare, fundingGoal);
-        auctionTokens = FP.mulWadDown(biddingRatio, salesAmount);
-        if (_saleInfo[saleId].surplus > 0) {
-            refunds = FP.mulWadDown(biddingRatio, _saleInfo[saleId].surplus); //_contributions[saleId][msg.sender] - biddingShare;
-        } else {
-            refunds = 0;
-        }
     }
 }
