@@ -27,12 +27,25 @@ IP-NFTs allow their users to tokenize intellectual property. This repo contains 
 - HeadlessDispenser <https://goerli.etherscan.io/address/0x0F1Bd197c5dCC6bC7E8025037a7780010E2Cd22A#code>
 - Subgraph: <https://api.thegraph.com/subgraphs/name/dorianwilhelm/ip-nft-subgraph-goerli/graphql>
 
-- Fractionalizer: 0xAa3a8758214fe7d90557310cFB42A7f69755aCbf
-  (Impl no 1 0xb5205fd0dd99eed373f447abd223a085472c4027)
-  <https://goerli.etherscan.io/address/0xAa3a8758214fe7d90557310cFB42A7f69755aCbf>
+- Fractionalizer: 0x00214fbB81820fEc544A9cF318CF87eDA432F5e3  
+  (Impl no 1 0x8a8bcc23e4386586f692cefff0d7425bde289a54)
+  <https://goerli.etherscan.io/address/0x00214fbB81820fEc544A9cF318CF87eDA432F5e3#code>
 
-- Bio pricefeed: 0xB3Bd21627DC802acF1b8aD4A6Ab7f65A0068481C
-  <https://goerli.etherscan.io/address/0xB3Bd21627DC802acF1b8aD4A6Ab7f65A0068481C#code>
+- Terms Accepted Permissioner: 0xaC17101C598e8D8567a158b773bF76d9CDDdCE31
+  <https://goerli.etherscan.io/address/0xac17101c598e8d8567a158b773bf76d9cdddce31#code>
+
+- Bio pricefeed: 0x8647dEFdEAAdF5448d021B364B2F17815aba4360
+  <https://goerli.etherscan.io/address/0x8647defdeaadf5448d021b364b2f17815aba4360#code>
+
+- Staked/Vested Crowdsale: 0xb3614a39C04D0c9Be7179173336dC0eA0bAEC610
+  <https://goerli.etherscan.io/address/0xb3614a39C04D0c9Be7179173336dC0eA0bAEC610#code>
+
+#### some test tokens
+
+| Token name                | Symbol  | address                                                                                                                           |
+| ------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| MoleDao Test token        | MOLDAO  | [0x3110a768DC64f7aAB92F7Ae6E1371e5CE581F95F](https://goerli.etherscan.io/address/0x3110a768dc64f7aab92f7ae6e1371e5ce581f95f#code) |
+| Vested MoleDao Test token | vMOLDAO | [0x6FFBd6325B2102F5f9AaB74d7418A27F9174c92f](https://goerli.etherscan.io/address/0x6FFBd6325B2102F5f9AaB74d7418A27F9174c92f)      |
 
 ## Prerequisites
 
