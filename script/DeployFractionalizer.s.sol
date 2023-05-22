@@ -4,9 +4,6 @@ pragma solidity ^0.8.18;
 import "forge-std/Script.sol";
 import "forge-std/console.sol";
 import { IPNFT } from "../src/IPNFT.sol";
-import { SchmackoSwap } from "../src/SchmackoSwap.sol";
-import { Mintpass } from "../src/Mintpass.sol";
-import { UUPSProxy } from "../src/UUPSProxy.sol";
 import { Fractionalizer } from "../src/Fractionalizer.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import { BioPriceFeed } from "../src/BioPriceFeed.sol";
@@ -17,8 +14,6 @@ contract DeployFractionalizerInfrastructure is Script {
     function run() public {
         vm.startBroadcast();
         address ipnftAddress = vm.envAddress("IPNFT_ADDRESS");
-        //address sosAddress = vm.envAddress("SOS_ADDRESS");
-
         BioPriceFeed feed = new BioPriceFeed();
         IPermissioner p = new TermsAcceptedPermissioner();
 
