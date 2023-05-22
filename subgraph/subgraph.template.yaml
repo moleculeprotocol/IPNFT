@@ -2,7 +2,7 @@ specVersion: 0.0.4
 schema:
   file: ./schema.graphql
 dataSources:
-  - kind: ethereum
+  - kind: ethereum/contract
     name: IPNFT
     network: {{network}}
     source:
@@ -21,6 +21,8 @@ dataSources:
       eventHandlers:
         - event: Reserved(indexed address,indexed uint256)
           handler: handleReservation
+        - event: IPNFTMinted(indexed address,indexed uint256,string)
+          handler: handleMintLegacy
         - event: IPNFTMinted(indexed address,indexed uint256,string,string)
           handler: handleMint
         - event: TransferSingle(indexed address,indexed address,indexed address,uint256,uint256)
@@ -29,7 +31,7 @@ dataSources:
           handler: handleReadAccess
 
       file: ./src/ipnftMapping.ts
-  - kind: ethereum
+  - kind: ethereum/contract
     name: SchmackoSwap
     network: {{network}}
     source:
@@ -55,7 +57,7 @@ dataSources:
         - event: AllowlistUpdated(uint256,indexed address,bool)
           handler: handleAllowlistUpdated
       file: ./src/swapMapping.ts
-  - kind: ethereum
+  - kind: ethereum/contract
     name: Mintpass
     network: {{network}}
     source:
@@ -79,7 +81,7 @@ dataSources:
         - event: Redeemed(indexed uint256)
           handler: handleRedeemed
       file: ./src/mintpassMapping.ts
-  - kind: ethereum
+  - kind: ethereum/contract
     name: Fractionalizer
     network: {{network}}
     source:
@@ -104,7 +106,7 @@ dataSources:
         # - event: TermsAccepted(indexed uint256,indexed address,bytes)
         #   handler: handleTermsAccepted
       file: ./src/fractionalizerMapping.ts
-  - kind: ethereum
+  - kind: ethereum/contract
     name: StakedVestedCrowdSale
     network: {{network}}
     source:
@@ -138,7 +140,7 @@ dataSources:
         - event: Failed(uint256)
           handler: handleFailed
       file: ./src/stakedVestedCrowdSaleMapping.ts
-  - kind: ethereum
+  - kind: ethereum/contract
     name: TermsAcceptedPermissioner
     network: {{network}}
     source:

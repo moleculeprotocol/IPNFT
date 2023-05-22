@@ -12,7 +12,7 @@ import { FakeERC20 } from "../test/helpers/FakeERC20.sol";
 import { TokenVesting } from "@moleculeprotocol/token-vesting/TokenVesting.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
-contract DeployTestTokens is Script {
+contract DeployTestTokensManually is Script {
     function run() public {
         string memory name = vm.envString("NAME");
         string memory symbol = vm.envString("SYMBOL");

@@ -9,7 +9,7 @@ import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/I
 import { TokenVesting } from "@moleculeprotocol/token-vesting/TokenVesting.sol";
 import { CommonScript } from "./Common.sol";
 
-contract DeployTestTokens is CommonScript {
+contract DeployTokens is CommonScript {
     function run() public {
         prepareAddresses();
         vm.startBroadcast(deployer);

@@ -149,7 +149,7 @@ You can deploy them all in one go (requires the current network's IPNFT address)
 
 To test staked / vested token interactions, you need some test tokens. Here are 2 convenient script to get them running:
 
-`NAME=Vita SYMBOL=VITA SUPPLY_ETH=10000000 forge script script/Tokens.s.sol:DeployTestTokens --private-key $PRIVATE_KEY --rpc-url $RPC_URL --broadcast`
+`NAME=Vita SYMBOL=VITA SUPPLY_ETH=10000000 forge script script/Tokens.s.sol:DeployTestTokensManually --private-key $PRIVATE_KEY --rpc-url $RPC_URL --broadcast`
 
 and to create the vested tokens counterpart:
 

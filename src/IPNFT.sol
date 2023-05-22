@@ -65,6 +65,8 @@ contract IPNFT is
      */
 
     event Reserved(address indexed reserver, uint256 indexed reservationId);
+    //needed to fetch older events
+    event IPNFTMinted(address indexed owner, uint256 indexed tokenId, string tokenURI);
     event IPNFTMinted(address indexed owner, uint256 indexed tokenId, string tokenURI, string symbol);
     event ReadAccessGranted(uint256 indexed tokenId, address indexed reader, uint256 until);
 
