@@ -13,6 +13,7 @@ import { FakeERC20 } from "./helpers/FakeERC20.sol";
 import { CrowdSaleHelpers } from "./helpers/CrowdSaleHelpers.sol";
 
 contract CrowdSaleTest is Test {
+    address deployer = makeAddr("deployer");
     address emitter = makeAddr("emitter");
     address bidder = makeAddr("bidder");
     address bidder2 = makeAddr("bidder2");
@@ -24,9 +25,11 @@ contract CrowdSaleTest is Test {
     CrowdSale internal crowdSale;
 
     function setUp() public {
+        vm.startPrank(deployer);
         crowdSale = new CrowdSale();
         auctionToken = new FakeERC20("Fractionalized IPNFT","FAM");
         biddingToken = new FakeERC20("USD token", "USDC");
+        vm.stopPrank();
 
         auctionToken.mint(emitter, 500_000 ether);
         biddingToken.mint(bidder, 1_000_000 ether);
@@ -54,6 +57,22 @@ contract CrowdSaleTest is Test {
         auctionToken.mint(emitter, 300_000 ether);
         auctionToken.approve(address(crowdSale), 400_000 ether);
         vm.expectRevert(SaleAlreadyActive.selector);
+        crowdSale.startSale(_sale);
+        vm.stopPrank();
+
+        vm.startPrank(anyone);
+        vm.expectRevert("Ownable: caller is not the owner");
+        crowdSale.pause();
+        vm.stopPrank();
+
+        vm.startPrank(deployer);
+        crowdSale.pause();
+        vm.stopPrank();
+
+        //cant create a sale when paused
+        vm.startPrank(emitter);
+        _sale.closingTime = uint64(block.timestamp + 42 hours);
+        vm.expectRevert("Pausable: paused");
         crowdSale.startSale(_sale);
         vm.stopPrank();
     }
@@ -122,6 +141,15 @@ contract CrowdSaleTest is Test {
         crowdSale.placeBid(saleId, 100_000 ether);
         assertEq(crowdSale.contribution(saleId, bidder), 200_000 ether);
         vm.stopPrank();
+
+        vm.startPrank(deployer);
+        crowdSale.pause();
+        vm.stopPrank();
+
+        vm.startPrank(bidder);
+        vm.expectRevert("Pausable: paused");
+        crowdSale.placeBid(saleId, 100_000 ether);
+        vm.stopPrank();
     }
 
     function testSettlementAndSimpleClaims() public {
@@ -136,6 +164,13 @@ contract CrowdSaleTest is Test {
         crowdSale.placeBid(saleId, 200_000 ether);
         vm.stopPrank();
 
+        vm.startPrank(deployer);
+        crowdSale.pause();
+        vm.expectRevert("Pausable: paused");
+        crowdSale.settle(saleId);
+        crowdSale.unpause();
+        vm.stopPrank();
+
         vm.startPrank(anyone);
         vm.expectRevert("sale has not concluded yet");
         crowdSale.settle(saleId);
@@ -147,6 +182,13 @@ contract CrowdSaleTest is Test {
         assertEq(biddingToken.balanceOf(emitter), _sale.fundingGoal);
         SaleInfo memory info = crowdSale.saleInfo(saleId);
         assertEq(info.surplus, 0);
+
+        vm.startPrank(deployer);
+        crowdSale.pause();
+        vm.expectRevert("Pausable: paused");
+        crowdSale.claim(saleId);
+        crowdSale.unpause();
+        vm.stopPrank();
 
         vm.startPrank(bidder);
         crowdSale.claim(saleId);

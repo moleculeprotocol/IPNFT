@@ -4,8 +4,9 @@ pragma solidity ^0.8.18;
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import { Pausable } from "@openzeppelin/contracts/security/Pausable.sol";
+import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { FixedPointMathLib as FP } from "solmate/utils/FixedPointMathLib.sol";
-import { Counters } from "@openzeppelin/contracts/utils/Counters.sol";
 import { IPermissioner } from "../Permissioner.sol";
 import { FractionalizedToken } from "../FractionalizedToken.sol";
 
@@ -40,7 +41,7 @@ error BadSalesAmount();
 error BadSaleDuration();
 error SaleAlreadyActive();
 
-contract CrowdSale {
+contract CrowdSale is Pausable, Ownable {
     using SafeERC20 for IERC20;
     using SafeERC20 for IERC20Metadata;
 
@@ -55,9 +56,17 @@ contract CrowdSale {
     event Bid(uint256 indexed saleId, address indexed bidder, uint256 amount);
     event Failed(uint256 saleId);
 
-    constructor() { }
+    constructor() Ownable() Pausable() { }
 
-    function startSale(Sale memory sale) public returns (uint256 saleId) {
+    function pause() external onlyOwner {
+        _pause();
+    }
+
+    function unpause() external onlyOwner {
+        _unpause();
+    }
+
+    function startSale(Sale memory sale) public whenNotPaused returns (uint256 saleId) {
         //todo: removed this restriction for simpler testing
         // if (sale.closingTime < block.timestamp + 2 hours) {
         //     revert BadSaleDuration();
@@ -105,7 +114,7 @@ contract CrowdSale {
      * @param biddingTokenAmount the amount of bidding tokens
      * @param permission bytes are handed over to a configured permissioner contract
      */
-    function placeBid(uint256 saleId, uint256 biddingTokenAmount, bytes memory permission) public {
+    function placeBid(uint256 saleId, uint256 biddingTokenAmount, bytes memory permission) public whenNotPaused {
         if (biddingTokenAmount == 0) {
             revert("must bid something");
         }
@@ -134,7 +143,7 @@ contract CrowdSale {
      * @param saleId the sale id
      */
 
-    function settle(uint256 saleId) public virtual {
+    function settle(uint256 saleId) public virtual whenNotPaused {
         Sale memory sale = _sales[saleId];
         SaleInfo storage __saleInfo = _saleInfo[saleId];
 
@@ -194,7 +203,7 @@ contract CrowdSale {
      * @param saleId the sale id
      * @param permission. bytes are handed over to a configured permissioner contract
      */
-    function claim(uint256 saleId, bytes memory permission) public returns (uint256 auctionTokens, uint256 refunds) {
+    function claim(uint256 saleId, bytes memory permission) public whenNotPaused returns (uint256 auctionTokens, uint256 refunds) {
         if (_saleInfo[saleId].state == SaleState.RUNNING) {
             revert("sale is not settled");
         }

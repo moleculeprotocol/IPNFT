@@ -41,7 +41,11 @@ contract StakedVestedCrowdSale is VestedCrowdSale {
     //     priceFeed = priceFeed_;
     // }
 
-    function startSale(Sale memory sale, StakingConfig memory stakingConfig, VestingConfig memory vestingConfig) public returns (uint256 saleId) {
+    function startSale(Sale memory sale, StakingConfig memory stakingConfig, VestingConfig memory vestingConfig)
+        public
+        whenNotPaused
+        returns (uint256 saleId)
+    {
         if (IERC20Metadata(address(stakingConfig.stakedToken)).decimals() != 18) {
             revert BadDecimals();
         }
@@ -81,7 +85,7 @@ contract StakedVestedCrowdSale is VestedCrowdSale {
         emit Started(saleId, msg.sender, _sales[saleId], salesVesting[saleId], salesStaking[saleId]);
     }
 
-    function settle(uint256 saleId) public override {
+    function settle(uint256 saleId) public override whenNotPaused {
         super.settle(saleId);
         if (_saleInfo[saleId].state == SaleState.FAILED) {
             return;

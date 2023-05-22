@@ -51,7 +51,7 @@ contract VestedCrowdSale is CrowdSale {
      * @param sale  sale configuration
      * @param vestingConfig  vesting configuration. Duration must be compatible to TokenVesting hard requirements (7 days < cliff < 50 years)
      */
-    function startSale(Sale memory sale, VestingConfig memory vestingConfig) public returns (uint256 saleId) {
+    function startSale(Sale memory sale, VestingConfig memory vestingConfig) public whenNotPaused returns (uint256 saleId) {
         saleId = uint256(keccak256(abi.encode(sale)));
 
         if (address(vestingConfig.vestingContract) == address(0)) {
@@ -77,7 +77,7 @@ contract VestedCrowdSale is CrowdSale {
         emit Started(saleId, msg.sender, _sales[saleId], salesVesting[saleId]);
     }
 
-    function settle(uint256 saleId) public virtual override {
+    function settle(uint256 saleId) public virtual override whenNotPaused {
         super.settle(saleId);
         if (_saleInfo[saleId].state == SaleState.FAILED) {
             return;
