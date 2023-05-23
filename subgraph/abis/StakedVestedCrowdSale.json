@@ -197,7 +197,7 @@
             "type": "address"
           },
           {
-            "internalType": "contract IERC20",
+            "internalType": "contract IERC20Metadata",
             "name": "biddingToken",
             "type": "address"
           },
@@ -253,7 +253,7 @@
       {
         "components": [
           {
-            "internalType": "contract IERC20",
+            "internalType": "contract IERC20Metadata",
             "name": "stakedToken",
             "type": "address"
           },
@@ -305,7 +305,7 @@
             "type": "address"
           },
           {
-            "internalType": "contract IERC20",
+            "internalType": "contract IERC20Metadata",
             "name": "biddingToken",
             "type": "address"
           },
@@ -385,7 +385,7 @@
             "type": "address"
           },
           {
-            "internalType": "contract IERC20",
+            "internalType": "contract IERC20Metadata",
             "name": "biddingToken",
             "type": "address"
           },
@@ -528,6 +528,35 @@
         "type": "uint256"
       },
       {
+        "internalType": "address",
+        "name": "bidder",
+        "type": "address"
+      }
+    ],
+    "name": "getClaimableAmounts",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "auctionTokens",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "refunds",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "saleId",
+        "type": "uint256"
+      },
+      {
         "internalType": "uint256",
         "name": "biddingTokenAmount",
         "type": "uint256"
@@ -608,7 +637,7 @@
     "name": "salesStaking",
     "outputs": [
       {
-        "internalType": "contract IERC20",
+        "internalType": "contract IERC20Metadata",
         "name": "stakedToken",
         "type": "address"
       },
@@ -702,7 +731,7 @@
             "type": "address"
           },
           {
-            "internalType": "contract IERC20",
+            "internalType": "contract IERC20Metadata",
             "name": "biddingToken",
             "type": "address"
           },
@@ -739,7 +768,7 @@
       {
         "components": [
           {
-            "internalType": "contract IERC20",
+            "internalType": "contract IERC20Metadata",
             "name": "stakedToken",
             "type": "address"
           },
@@ -802,7 +831,7 @@
             "type": "address"
           },
           {
-            "internalType": "contract IERC20",
+            "internalType": "contract IERC20Metadata",
             "name": "biddingToken",
             "type": "address"
           },
@@ -875,7 +904,7 @@
             "type": "address"
           },
           {
-            "internalType": "contract IERC20",
+            "internalType": "contract IERC20Metadata",
             "name": "biddingToken",
             "type": "address"
           },
