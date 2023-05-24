@@ -6,7 +6,15 @@ import "forge-std/console.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import {
-    CrowdSale, SaleState, Sale, SaleInfo, BadSalesAmount, BadSaleDuration, BalanceTooLow, SaleAlreadyActive
+    CrowdSale,
+    SaleState,
+    Sale,
+    SaleInfo,
+    BadSalesAmount,
+    BadSaleDuration,
+    BalanceTooLow,
+    SaleAlreadyActive,
+    SaleClosedForBids
 } from "../src/crowdsale/CrowdSale.sol";
 import { IPermissioner } from "../src/Permissioner.sol";
 import { FakeERC20 } from "./helpers/FakeERC20.sol";
@@ -136,11 +144,20 @@ contract CrowdSaleTest is Test {
         crowdSale.placeBid(saleId, 200_000 ether);
         vm.stopPrank();
 
+        // cant settle before sale.closingTime
         vm.startPrank(anyone);
         vm.expectRevert("sale has not concluded yet");
         crowdSale.settle(saleId);
+        vm.stopPrank();
 
-        vm.warp(block.timestamp + 3 hours);
+        vm.warp(block.timestamp + 2 hours + 1);
+        // cant place bids after sale.closingTime
+        vm.startPrank(bidder);
+        vm.expectRevert(SaleClosedForBids.selector);
+        crowdSale.placeBid(saleId, 100_000 ether);
+        vm.stopPrank();
+
+        vm.startPrank(anyone);
         crowdSale.settle(saleId);
         vm.stopPrank();
 

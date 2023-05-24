@@ -39,7 +39,13 @@ error BadDecimals();
 error BadSalesAmount();
 error BadSaleDuration();
 error SaleAlreadyActive();
+error SaleClosedForBids();
 
+/**
+ * @title CrowdSale
+ * @author molecule.to
+ * @notice a fixed price sales base contract
+ */
 contract CrowdSale {
     using SafeERC20 for IERC20;
     using SafeERC20 for IERC20Metadata;
@@ -115,8 +121,9 @@ contract CrowdSale {
             revert("bad sale id");
         }
 
-        if (_saleInfo[saleId].state != SaleState.RUNNING) {
-            revert("sale is not running");
+        // @notice: the 2nd condition is actually quite obsolete
+        if (block.timestamp > sale.closingTime || _saleInfo[saleId].state != SaleState.RUNNING) {
+            revert SaleClosedForBids();
         }
 
         if (address(sale.permissioner) != address(0)) {
@@ -148,7 +155,9 @@ contract CrowdSale {
         }
 
         if (__saleInfo.total < sale.fundingGoal) {
-            failSale(saleId);
+            __saleInfo.state = SaleState.FAILED;
+            emit Failed(saleId);
+            sale.auctionToken.safeTransfer(sale.beneficiary, sale.salesAmount);
             return;
         }
         __saleInfo.state = SaleState.SETTLED;
@@ -211,11 +220,12 @@ contract CrowdSale {
     }
 
     /**
-     * @notice will send `tokenAmount` auction tokens to the bidder
+     * @dev will send `tokenAmount` auction tokens and `refunds` bidding tokens to msg.sender
+     *      This trusts the caller to have checked the amount
      *
      * @param saleId sale id
-     * @param tokenAmount amount of tokens to vest
-     * @param refunds biddingtTokens to refund
+     * @param tokenAmount amount of tokens to claim.
+     * @param refunds biddingTokens to refund
      */
     function claim(uint256 saleId, uint256 tokenAmount, uint256 refunds) internal virtual {
         //the sender has claimed already
@@ -231,6 +241,36 @@ contract CrowdSale {
     }
 
     /**
+     * @dev lets users claim back refunds when the sale has failed
+     *
+     * @param saleId sale id
+     * @return auctionTokens the amount of auction tokens claimed (0)
+     * @return refunds the amount of bidding tokens refunded
+     */
+    function claimFailed(uint256 saleId) internal virtual returns (uint256 auctionTokens, uint256 refunds) {
+        uint256 _contribution = _contributions[saleId][msg.sender];
+        _contributions[saleId][msg.sender] = 0;
+        emit Claimed(saleId, msg.sender, 0, _contribution);
+        _sales[saleId].biddingToken.safeTransfer(msg.sender, _contribution);
+        return (0, _contribution);
+    }
+
+    /**
+     * @dev internal bid method
+     * increases bidder's contribution counter
+     * increases sale's bid total
+     *
+     * @param saleId sale id
+     * @param biddingTokenAmount the amount of tokens bid to the sale
+     */
+    function _bid(uint256 saleId, uint256 biddingTokenAmount) internal virtual {
+        _saleInfo[saleId].total += biddingTokenAmount;
+        _contributions[saleId][msg.sender] += biddingTokenAmount;
+        _sales[saleId].biddingToken.safeTransferFrom(msg.sender, address(this), biddingTokenAmount);
+        emit Bid(saleId, msg.sender, biddingTokenAmount);
+    }
+
+    /**
      * @dev overridden in VestedCrowdSale (will lock auction tokens in vested contract)
      */
     function _claimAuctionTokens(uint256 saleId, uint256 tokenAmount) internal virtual {
@@ -242,28 +282,5 @@ contract CrowdSale {
      */
     function _afterSaleStarted(uint256 saleId) internal virtual {
         emit Started(saleId, msg.sender, _sales[saleId]);
-    }
-
-    function failSale(uint256 saleId) internal virtual {
-        Sale memory sale = _sales[saleId];
-        _saleInfo[saleId].state = SaleState.FAILED;
-        emit Failed(saleId);
-        sale.auctionToken.safeTransfer(sale.beneficiary, sale.salesAmount);
-    }
-
-    function claimFailed(uint256 saleId) internal virtual returns (uint256 auctionTokens, uint256 refunds) {
-        uint256 _contribution = _contributions[saleId][msg.sender];
-        _contributions[saleId][msg.sender] = 0;
-        emit Claimed(saleId, msg.sender, 0, _contribution);
-        _sales[saleId].biddingToken.safeTransfer(msg.sender, _contribution);
-        return (0, _contribution);
-    }
-
-    function _bid(uint256 saleId, uint256 biddingTokenAmount) internal virtual {
-        IERC20 biddingToken = _sales[saleId].biddingToken;
-        _saleInfo[saleId].total += biddingTokenAmount;
-        _contributions[saleId][msg.sender] += biddingTokenAmount;
-        biddingToken.safeTransferFrom(msg.sender, address(this), biddingTokenAmount);
-        emit Bid(saleId, msg.sender, biddingTokenAmount);
     }
 }

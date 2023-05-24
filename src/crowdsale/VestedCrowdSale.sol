@@ -26,9 +26,8 @@ error IncompatibleVestingContract();
 
 /**
  * @title VestedCrowdSale
- *
  * @author molecule.to
- * @notice puts the sold tokens under a configured vesting scheme
+ * @notice a fixed price sales base contract that locks the sold tokens in a configured vesting scheme
  */
 contract VestedCrowdSale is CrowdSale {
     using SafeERC20 for IERC20Metadata;

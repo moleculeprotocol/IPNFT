@@ -27,6 +27,11 @@ struct StakingConfig {
 
 error BadPrice();
 
+/**
+ * @title StakedVestedCrowdSale
+ * @author molecule.to
+ * @notice a fixed price sales base contract that locks the sold tokens in a configured vesting scheme and requires lock-vesting another ("dao") token for a certain period of time to participate
+ */
 contract StakedVestedCrowdSale is VestedCrowdSale {
     using SafeERC20 for IERC20Metadata;
 
@@ -83,7 +88,7 @@ contract StakedVestedCrowdSale is VestedCrowdSale {
 
     function settle(uint256 saleId) public override {
         super.settle(saleId);
-        if (_saleInfo[saleId].state == SaleState.FAILED) {
+        if (SaleState.FAILED == _saleInfo[saleId].state) {
             return;
         }
 
@@ -127,13 +132,14 @@ contract StakedVestedCrowdSale is VestedCrowdSale {
         uint256 refundedStakes = FP.mulWadDown(refunds, stakingConfig.wadFixedDaoPerBidPrice);
         uint256 vestedStakes = stakes[saleId][msg.sender] - refundedStakes;
 
-        //EFFECTS
-        //disarm any effect when calling this twice
-        stakes[saleId][msg.sender] = 0;
         if (vestedStakes == 0) {
             //exit early. Also, the vesting contract would revert with a 0 amount.
             return;
         }
+
+        //EFFECTS
+        //this prevents msg.sender to claim twice
+        stakes[saleId][msg.sender] = 0;
 
         // INTERACTIONS
         super.claim(saleId, tokenAmount, refunds);
