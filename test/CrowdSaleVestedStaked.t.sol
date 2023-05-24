@@ -75,7 +75,7 @@ contract CrowdSaleVestedStakedTest is Test {
         vm.stopPrank();
 
         _vestingConfig = VestingConfig({ vestingContract: TokenVesting(address(0)), cliff: 60 days });
-        _stakingConfig = StakingConfig({ stakedToken: daoToken, stakesVestingContract: vestedDao, wadFixedDaoPerBidPrice: 1e18, stakeTotal: 0 });
+        _stakingConfig = StakingConfig({ stakedToken: daoToken, stakesVestingContract: vestedDao, wadFixedStakedPerBidPrice: 1e18, stakeTotal: 0 });
     }
 
     function testStakeVestedCrowdSalesBadParameters() public {
@@ -102,7 +102,7 @@ contract CrowdSaleVestedStakedTest is Test {
         vm.expectRevert(BadPrice.selector);
         crowdSale.startSale(_sale, brokenConfig, _vestingConfig);
 
-        brokenConfig.wadFixedDaoPerBidPrice = 1;
+        brokenConfig.wadFixedStakedPerBidPrice = 1;
         uint256 salesId = crowdSale.startSale(_sale, brokenConfig, _vestingConfig);
 
         (,,, uint256 stakeTotal) = crowdSale.salesStaking(salesId);
@@ -259,7 +259,7 @@ contract CrowdSaleVestedStakedTest is Test {
         Sale memory _sale = CrowdSaleHelpers.makeSale(emitter, auctionToken, biddingToken);
         auctionToken.approve(address(crowdSale), 400_000 ether);
         // 1 DAO = 4 $
-        _stakingConfig.wadFixedDaoPerBidPrice = 25e16;
+        _stakingConfig.wadFixedStakedPerBidPrice = 25e16;
         uint256 saleId = crowdSale.startSale(_sale, _stakingConfig, _vestingConfig);
 
         vm.stopPrank();
@@ -320,7 +320,7 @@ contract CrowdSaleVestedStakedTest is Test {
         vm.startPrank(emitter);
         Sale memory _sale = CrowdSaleHelpers.makeSale(emitter, auctionToken, biddingToken);
         auctionToken.approve(address(crowdSale), 400_000 ether);
-        _stakingConfig.wadFixedDaoPerBidPrice = 25e16;
+        _stakingConfig.wadFixedStakedPerBidPrice = 25e16;
         uint256 saleId = crowdSale.startSale(_sale, _stakingConfig, _vestingConfig);
 
         vm.stopPrank();

@@ -9,7 +9,7 @@ import { Base64 } from "@openzeppelin/contracts/utils/Base64.sol";
 import { Clones } from "@openzeppelin/contracts/proxy/Clones.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 
-import { FractionalizedToken, Metadata as FractionalizedTokenMetadata, TokenCapped } from "./FractionalizedToken.sol";
+import { FractionalizedToken, Metadata as FractionalizedTokenMetadata } from "./FractionalizedToken.sol";
 import { IPNFT } from "./IPNFT.sol";
 
 error ToZeroAddress();

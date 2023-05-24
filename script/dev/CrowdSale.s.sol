@@ -116,7 +116,7 @@ contract FixtureCrowdSale is CommonScript {
         VestingConfig memory _vestingConfig = VestingConfig({ vestingContract: vestedMolToken, cliff: 60 days });
 
         StakingConfig memory _stakingConfig =
-            StakingConfig({ stakedToken: daoToken, stakesVestingContract: vestedDaoToken, wadFixedDaoPerBidPrice: 1e18, stakeTotal: 0 });
+            StakingConfig({ stakedToken: daoToken, stakesVestingContract: vestedDaoToken, wadFixedStakedPerBidPrice: 1e18, stakeTotal: 0 });
 
         vm.startBroadcast(bob);
         auctionToken.approve(address(stakedVestedCrowdSale), 400 ether);

@@ -21,7 +21,7 @@ import { IPriceFeedConsumer } from "../BioPriceFeed.sol";
 struct StakingConfig {
     IERC20Metadata stakedToken; //eg VITA DAO token
     TokenVesting stakesVestingContract;
-    uint256 wadFixedDaoPerBidPrice;
+    uint256 wadFixedStakedPerBidPrice;
     uint256 stakeTotal; //initialize with 0
 }
 
@@ -59,13 +59,13 @@ contract StakedVestedCrowdSale is VestedCrowdSale {
             revert IncompatibleVestingContract();
         }
 
-        if (stakingConfig.wadFixedDaoPerBidPrice == 0) {
+        if (stakingConfig.wadFixedStakedPerBidPrice == 0) {
             revert BadPrice();
         }
 
         if (sale.biddingToken.decimals() != 18) {
-            stakingConfig.wadFixedDaoPerBidPrice =
-                (FP.divWadDown(FP.mulWadDown(stakingConfig.wadFixedDaoPerBidPrice, 10 ** 18), 10 ** sale.biddingToken.decimals()));
+            stakingConfig.wadFixedStakedPerBidPrice =
+                (FP.divWadDown(FP.mulWadDown(stakingConfig.wadFixedStakedPerBidPrice, 10 ** 18), 10 ** sale.biddingToken.decimals()));
         }
 
         //todo: duck type check whether all token contracts can do what we need.
@@ -108,7 +108,7 @@ contract StakedVestedCrowdSale is VestedCrowdSale {
         //     revert("no price available");
         // }
 
-        uint256 stakedTokenAmount = FP.mulWadDown(biddingTokenAmount, staking.wadFixedDaoPerBidPrice);
+        uint256 stakedTokenAmount = FP.mulWadDown(biddingTokenAmount, staking.wadFixedStakedPerBidPrice);
 
         staking.stakeTotal += stakedTokenAmount;
         stakes[saleId][msg.sender] += stakedTokenAmount;
@@ -116,7 +116,7 @@ contract StakedVestedCrowdSale is VestedCrowdSale {
         staking.stakedToken.safeTransferFrom(msg.sender, address(this), stakedTokenAmount);
 
         super._bid(saleId, biddingTokenAmount);
-        emit Staked(saleId, msg.sender, stakedTokenAmount, staking.wadFixedDaoPerBidPrice);
+        emit Staked(saleId, msg.sender, stakedTokenAmount, staking.wadFixedStakedPerBidPrice);
     }
 
     //todo: get final price as by price feed at settlement
@@ -129,7 +129,7 @@ contract StakedVestedCrowdSale is VestedCrowdSale {
         VestingConfig memory vestingConfig = salesVesting[saleId];
         StakingConfig memory stakingConfig = salesStaking[saleId];
 
-        uint256 refundedStakes = FP.mulWadDown(refunds, stakingConfig.wadFixedDaoPerBidPrice);
+        uint256 refundedStakes = FP.mulWadDown(refunds, stakingConfig.wadFixedStakedPerBidPrice);
         uint256 vestedStakes = stakes[saleId][msg.sender] - refundedStakes;
 
         if (vestedStakes == 0) {

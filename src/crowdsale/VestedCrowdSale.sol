@@ -16,6 +16,7 @@ import { InitializeableTokenVesting } from "./InitializableTokenVesting.sol";
 
 struct VestingConfig {
     TokenVesting vestingContract;
+    // a duration in seconds, will be counted from when the sale's closing time
     uint256 cliff;
 }
 

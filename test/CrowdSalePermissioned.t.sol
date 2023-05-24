@@ -72,7 +72,7 @@ contract CrowdSalePermissionedTest is Test {
 
         permissioner = new TermsAcceptedPermissioner();
         _vestingConfig = VestingConfig({ vestingContract: TokenVesting(address(0)), cliff: 60 days });
-        _stakingConfig = StakingConfig({ stakedToken: daoToken, stakesVestingContract: vestedDao, wadFixedDaoPerBidPrice: 1e18, stakeTotal: 0 });
+        _stakingConfig = StakingConfig({ stakedToken: daoToken, stakesVestingContract: vestedDao, wadFixedStakedPerBidPrice: 1e18, stakeTotal: 0 });
     }
 
     function testPermissionedSettlementAndSimpleClaims() public {
