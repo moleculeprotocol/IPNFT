@@ -4,6 +4,8 @@ pragma solidity ^0.8.18;
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import { ReentrancyGuard } from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+
 import { FixedPointMathLib as FP } from "solmate/utils/FixedPointMathLib.sol";
 import { Counters } from "@openzeppelin/contracts/utils/Counters.sol";
 import { IPermissioner } from "../Permissioner.sol";
@@ -46,7 +48,7 @@ error SaleClosedForBids();
  * @author molecule.to
  * @notice a fixed price sales base contract
  */
-contract CrowdSale {
+contract CrowdSale is ReentrancyGuard {
     using SafeERC20 for IERC20;
     using SafeERC20 for IERC20Metadata;
 
@@ -60,8 +62,6 @@ contract CrowdSale {
     event Claimed(uint256 indexed saleId, address indexed claimer, uint256 claimed, uint256 refunded);
     event Bid(uint256 indexed saleId, address indexed bidder, uint256 amount);
     event Failed(uint256 saleId);
-
-    constructor() { }
 
     function startSale(Sale memory sale) public returns (uint256 saleId) {
         //todo: removed this restriction for simpler testing
@@ -141,7 +141,7 @@ contract CrowdSale {
      * @param saleId the sale id
      */
 
-    function settle(uint256 saleId) public virtual {
+    function settle(uint256 saleId) public virtual nonReentrant {
         Sale memory sale = _sales[saleId];
         SaleInfo storage __saleInfo = _saleInfo[saleId];
 
@@ -203,7 +203,7 @@ contract CrowdSale {
      * @param saleId the sale id
      * @param permission. bytes are handed over to a configured permissioner contract
      */
-    function claim(uint256 saleId, bytes memory permission) public returns (uint256 auctionTokens, uint256 refunds) {
+    function claim(uint256 saleId, bytes memory permission) public nonReentrant returns (uint256 auctionTokens, uint256 refunds) {
         if (_saleInfo[saleId].state == SaleState.RUNNING) {
             revert("sale is not settled");
         }
@@ -214,7 +214,7 @@ contract CrowdSale {
             _sales[saleId].permissioner.accept(FractionalizedToken(address(_sales[saleId].auctionToken)), msg.sender, permission);
         }
         (auctionTokens, refunds) = getClaimableAmounts(saleId, msg.sender);
-        //a reentrancy won't have any effect after this.
+        //a reentrancy won't have any effect after setting this to 0.
         _contributions[saleId][msg.sender] = 0;
         claim(saleId, auctionTokens, refunds);
     }
