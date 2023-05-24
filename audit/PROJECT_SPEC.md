@@ -8,11 +8,11 @@ IPNFTs are modeled as ERC1155 tokens with a supply of 1 where they simply could 
 
 ### Increasing Shares (Fraction Tokens)
 
-The original owner of an IPNFT can tell the `Fractionalizer` to `increaseShares` any number of times and dilute existing fraction token holders. This is intended functionality for the time being, despite being a perceived vulnerability. In the future, we will use off-chain voting (Snapshot) with an oracle (UMA oSnap) to prevent non-consensus minting and dilution, but for now we are aware of and fine with this. For now, we consider the IP-NFT original owner (multisig) a trusted entity.
+The original owner of an IPNFT can tell the `FractionalizedToken` to `issue` any number of times and dilute existing fraction token holders as long as the `FractionalizedToken` is not marked as `capped`. This is intended functionality for the time being, despite being a perceived vulnerability. In the future, we will use off-chain voting (Snapshot) with an oracle (UMA oSnap) to prevent non-consensus minting and dilution, but for now we are aware of and fine with this. For now, we consider the IP-NFT original owner (multisig) a trusted entity.
 
 ### Unique Fractionalization identifiers
 
-An IPNFT can be fractionalized several times but only once per "original owner". That's not a perfect solution and doesn't cover the constructed case that someone fractionalizes, sells to someone else, who fractionalizes it again, and sells it back to the first owner - this one would not be able to fractionalize it another time.
+An IPNFT can be fractionalized several times but only once per "original owner". That's not a perfect solution and doesn't cover the constructed case that someone fractionalizes, sells to someone else, who fractionalizes it again, and sells it back to the first owner.
 
 ### ERC20 fraction tokens are not (will never be) upgradeable
 
