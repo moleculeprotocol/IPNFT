@@ -46,6 +46,11 @@
   },
   {
     "inputs": [],
+    "name": "SaleClosedForBids",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "UnmanageableVestingContract",
     "type": "error"
   },
@@ -264,7 +269,7 @@
           },
           {
             "internalType": "uint256",
-            "name": "wadFixedDaoPerBidPrice",
+            "name": "wadFixedStakedPerBidPrice",
             "type": "uint256"
           },
           {
@@ -648,7 +653,7 @@
       },
       {
         "internalType": "uint256",
-        "name": "wadFixedDaoPerBidPrice",
+        "name": "wadFixedStakedPerBidPrice",
         "type": "uint256"
       },
       {
@@ -779,7 +784,7 @@
           },
           {
             "internalType": "uint256",
-            "name": "wadFixedDaoPerBidPrice",
+            "name": "wadFixedStakedPerBidPrice",
             "type": "uint256"
           },
           {
