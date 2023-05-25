@@ -145,6 +145,8 @@ You can deploy them all in one go (requires the current network's IPNFT address)
 
 `IPNFT_ADDRESS=... forge script script/DeployFractionalizer.s.sol:DeployFractionalizerInfrastructure --private-key $PRIVATE_KEY --rpc-url $RPC_URL --broadcast`
 
+The crowdsale computation model can be tried out here: https://docs.google.com/spreadsheets/d/1vvGzs6n0nGqSBewJFKPsX4umMDCwNhKVqqhGELY543g/edit?usp=sharing
+
 ### Deploying (vested) test tokens
 
 To test staked / vested token interactions, you need some test tokens. Here are 2 convenient script to get them running:

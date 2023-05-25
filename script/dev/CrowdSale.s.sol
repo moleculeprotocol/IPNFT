@@ -109,7 +109,7 @@ contract FixtureCrowdSale is CommonScript {
             beneficiary: bob,
             fundingGoal: 200 ether,
             salesAmount: 400 ether,
-            closingTime: uint64(block.timestamp + 15 seconds),
+            closingTime: uint64(block.timestamp + 2 hours + 5 minutes),
             permissioner: permissioner
         });
 
@@ -130,25 +130,6 @@ contract FixtureCrowdSale is CommonScript {
         (v, r, s) = vm.sign(charliePk, ECDSA.toEthSignedMessageHash(abi.encodePacked(terms)));
         placeBid(charlie, 200 ether, saleId, abi.encodePacked(r, s, v));
         console.log("SALE_ID=%s", saleId);
-
-        //Create second CrowdSale that will not be settled
-        Sale memory _sale2 = Sale({
-            beneficiary: bob,
-            auctionToken: IERC20Metadata(address(auctionToken)),
-            biddingToken: FakeERC20(address(usdc)),
-            fundingGoal: 200 ether,
-            salesAmount: 400 ether,
-            closingTime: uint64(block.timestamp + 4 hours),
-            permissioner: IPermissioner(address(0x0))
-        });
-
-        vm.startBroadcast(bob);
-        auctionToken.approve(address(stakedVestedCrowdSale), 400 ether);
-        uint256 saleId2 = stakedVestedCrowdSale.startSale(_sale2, _stakingConfig, _vestingConfig);
-        vm.stopBroadcast();
-
-        placeBid(alice, 600 ether, saleId2, bytes(""));
-        placeBid(charlie, 200 ether, saleId2, bytes(""));
     }
 }
 

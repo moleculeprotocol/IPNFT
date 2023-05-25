@@ -1,11 +1,6 @@
 [
   {
     "inputs": [],
-    "name": "ApprovalFailed",
-    "type": "error"
-  },
-  {
-    "inputs": [],
     "name": "BadDecimals",
     "type": "error"
   },
