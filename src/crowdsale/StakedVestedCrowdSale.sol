@@ -19,10 +19,14 @@ import { InitializeableTokenVesting } from "./InitializableTokenVesting.sol";
 import { IPriceFeedConsumer } from "../BioPriceFeed.sol";
 
 struct StakingConfig {
-    IERC20Metadata stakedToken; //eg VITA DAO token
+    //e.g. VITA DAO token
+    IERC20Metadata stakedToken;
     TokenVesting stakesVestingContract;
+    //fix price (always expressed at 1e18): stake tokens / bid token
+    //see https://github.com/moleculeprotocol/IPNFT/pull/100
     uint256 wadFixedStakedPerBidPrice;
-    uint256 stakeTotal; //initialize with 0
+    //will be overridden with 0 during initialization
+    uint256 stakeTotal;
 }
 
 error BadPrice();
@@ -38,14 +42,16 @@ contract StakedVestedCrowdSale is VestedCrowdSale {
     mapping(uint256 => StakingConfig) public salesStaking;
     mapping(uint256 => mapping(address => uint256)) stakes;
 
-    //IPriceFeedConsumer priceFeed;
-
     event Started(uint256 saleId, address indexed issuer, Sale sale, VestingConfig vesting, StakingConfig staking);
     event Staked(uint256 indexed saleId, address indexed bidder, uint256 stakedAmount, uint256 price);
-    // constructor(IPriceFeedConsumer priceFeed_) VestedCrowdSale() {
-    //     priceFeed = priceFeed_;
-    // }
 
+    /**
+     * @notice if vestingConfig.vestingContract is 0x0, a new vesting contract is automatically created
+     *
+     * @param sale sale configuration
+     * @param stakingConfig staking config (provide 0 for stakingConfig.stakeTotal)
+     * @param vestingConfig vesting config (will apply for both staked & auction tokens)
+     */
     function startSale(Sale memory sale, StakingConfig memory stakingConfig, VestingConfig memory vestingConfig) public returns (uint256 saleId) {
         if (IERC20Metadata(address(stakingConfig.stakedToken)).decimals() != 18) {
             revert BadDecimals();
@@ -63,50 +69,42 @@ contract StakedVestedCrowdSale is VestedCrowdSale {
             revert BadPrice();
         }
 
+        //if the bidding token (eg USDC) does not come with 18 decimals, we're adjusting the price here.
+        //see https://github.com/moleculeprotocol/IPNFT/pull/100
         if (sale.biddingToken.decimals() != 18) {
             stakingConfig.wadFixedStakedPerBidPrice =
                 (FP.divWadDown(FP.mulWadDown(stakingConfig.wadFixedStakedPerBidPrice, 10 ** 18), 10 ** sale.biddingToken.decimals()));
         }
 
         //todo: duck type check whether all token contracts can do what we need.
-        //don't let users create a sale with "bad" values
+        //so users cannot create a sale with "bad" values
         stakingConfig.stakeTotal = 0;
-        //stakingConfig.wadDaoInBidPrice = uint256(priceFeed.getPrice(address(sale.biddingToken), address(stakedToken)));
 
         saleId = uint256(keccak256(abi.encode(sale)));
         salesStaking[saleId] = stakingConfig;
         super.startSale(sale, vestingConfig);
     }
+    /**
+     * @return uint256 how many stakingTokens `bidder` has staked into sale `saleId`
+     */
 
     function stakesOf(uint256 saleId, address bidder) public view returns (uint256) {
         return stakes[saleId][bidder];
     }
 
+    /**
+     * @dev emits a custom event for this crowdsale class
+     */
     function _afterSaleStarted(uint256 saleId) internal virtual override {
         emit Started(saleId, msg.sender, _sales[saleId], salesVesting[saleId], salesStaking[saleId]);
     }
 
-    function settle(uint256 saleId) public override {
-        super.settle(saleId);
-        if (SaleState.FAILED == _saleInfo[saleId].state) {
-            return;
-        }
-
-        StakingConfig storage staking = salesStaking[saleId];
-        bool result = staking.stakedToken.approve(address(staking.stakesVestingContract), staking.stakeTotal);
-        if (!result) {
-            revert ApprovalFailed();
-        }
-    }
-
+    /**
+     * @dev calculates the amount of required staking tokens using the provided fix price
+     *      will revert if bidder hasn't approved / owns a sufficient amount of staking tokens
+     */
     function _bid(uint256 saleId, uint256 biddingTokenAmount) internal virtual override {
         StakingConfig storage staking = salesStaking[saleId];
-
-        //todo use current price:
-        //uint256 wadDaoInBiddingPrice = uint256(priceFeed.getPrice(address(_sales[saleId].biddingToken), address(staking.stakedToken)));
-        // if (wadDaoInBiddingPrice == 0) {
-        //     revert("no price available");
-        // }
 
         uint256 stakedTokenAmount = FP.mulWadDown(biddingTokenAmount, staking.wadFixedStakedPerBidPrice);
 
@@ -119,7 +117,6 @@ contract StakedVestedCrowdSale is VestedCrowdSale {
         emit Staked(saleId, msg.sender, stakedTokenAmount, staking.wadFixedStakedPerBidPrice);
     }
 
-    //todo: get final price as by price feed at settlement
     /**
      * @notice refunds stakes and locks active stakes in vesting contract
      * @dev super.claim transitively calls VestedCrowdSale:_claimAuctionTokens

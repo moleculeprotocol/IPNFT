@@ -63,7 +63,6 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardU
     /**
      * @notice we're not taking any fees. If we once decided to do so, this can be used to update the fee receiver
      */
-
     function setFeeReceiver(address _feeReceiver) public onlyOwner {
         if (_feeReceiver == address(0)) {
             revert ToZeroAddress();
@@ -75,12 +74,12 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardU
         fractionalizationPercentage = fractionalizationPercentage_;
     }
 
-    //todo might make sense to return (tokenContract,fractionId)
     /**
-     * @notice
-     * @param ipnftId          uint256  the token id on the origin collection
-     * @param fractionsAmount  uint256  the initial amount of fractions issued
-     * @param agreementCid     bytes32  a content hash that identifies the terms underlying the issued fractions
+     * @notice initializes fractions on ipnft#id for the current asset holder.
+     *         Fractional tokens are identified by the original token holder and the token id
+     * @param ipnftId the token id on the underlying nft collection
+     * @param fractionsAmount the initially issued supply of fraction tokens
+     * @param agreementCid a content hash that contains legal terms for fraction owners
      */
     function fractionalizeIpnft(uint256 ipnftId, uint256 fractionsAmount, string calldata agreementCid)
         external

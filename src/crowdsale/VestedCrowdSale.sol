@@ -35,27 +35,20 @@ contract VestedCrowdSale is CrowdSale {
 
     mapping(uint256 => VestingConfig) public salesVesting;
 
-    /// @custom:oz-upgrades-unsafe-allow state-variable-immutable
-    //address immutable tokenImplementation;
-
-    // constructor() {
-    //     tokenImplementation = address(new InitializeableTokenVesting(IERC20Metadata(address(new FakeIERC20())), "",""));
-    // }
-
     event Started(uint256 saleId, address indexed issuer, Sale sale, VestingConfig vesting);
     event VestingContractCreated(TokenVesting vestingContract, IERC20 indexed underlyingToken);
 
     /**
      * @notice if vestingConfig.vestingContract is 0x0, a new vesting contract is automatically created
      *
-     * @param sale  sale configuration
-     * @param vestingConfig  vesting configuration. Duration must be compatible to TokenVesting hard requirements (7 days < cliff < 50 years)
+     * @param sale sale configuration
+     * @param vestingConfig vesting configuration. Duration must be compatible to TokenVesting hard requirements (7 days < cliff < 50 years)
      */
     function startSale(Sale memory sale, VestingConfig memory vestingConfig) public returns (uint256 saleId) {
         saleId = uint256(keccak256(abi.encode(sale)));
 
         if (address(vestingConfig.vestingContract) == address(0)) {
-            vestingConfig.vestingContract = _makeVestingContract(sale);
+            vestingConfig.vestingContract = _makeVestingContract(sale.auctionToken);
         } else {
             if (!vestingConfig.vestingContract.hasRole(vestingConfig.vestingContract.ROLE_CREATE_SCHEDULE(), address(this))) {
                 revert UnmanageableVestingContract();
@@ -65,6 +58,7 @@ contract VestedCrowdSale is CrowdSale {
             }
         }
 
+        // duration must follow the same rules as `TokenVesting`
         if (vestingConfig.cliff < 7 days || vestingConfig.cliff > 50 * (365 days)) {
             revert InvalidDuration();
         }
@@ -75,19 +69,6 @@ contract VestedCrowdSale is CrowdSale {
 
     function _afterSaleStarted(uint256 saleId) internal virtual override {
         emit Started(saleId, msg.sender, _sales[saleId], salesVesting[saleId]);
-    }
-
-    function settle(uint256 saleId) public virtual override {
-        super.settle(saleId);
-        if (_saleInfo[saleId].state == SaleState.FAILED) {
-            return;
-        }
-
-        Sale memory sale = _sales[saleId];
-        bool result = sale.auctionToken.approve(address(salesVesting[saleId].vestingContract), sale.salesAmount);
-        if (!result) {
-            revert ApprovalFailed();
-        }
     }
 
     /**
@@ -112,15 +93,19 @@ contract VestedCrowdSale is CrowdSale {
         }
     }
 
-    function _makeVestingContract(Sale memory sale) private returns (TokenVesting vestingContract) {
-        //todo: clone a new TokenVesting ERC20 contract and call start sale with that one
-        //InitializeableTokenVesting vestingContract = InitializeableTokenVesting(Clones.clone(tokenImplementation));
-        //vestingContract.initialize(sale.auctionToken);
+    /**
+     * @dev deploys a new vesting schedule contract for the auctionToken
+     *      to save on gas and improve UX, this should only be called once per auctionToken.
+     *      If a vesting contract already exists for that token, you can provide it when initializing the sale.
+     *      Cannot use minimal clones here because TokenVesting is not initializeable
+     * @param auctionToken the auction token that a vesting contract is created for
+     */
+    function _makeVestingContract(IERC20Metadata auctionToken) private returns (TokenVesting vestingContract) {
         vestingContract = new TokenVesting(
-            sale.auctionToken,
-            string(abi.encodePacked("Vested ", sale.auctionToken.name())),
-            string(abi.encodePacked("v", sale.auctionToken.symbol()))
+            auctionToken,
+            string(abi.encodePacked("Vested ", auctionToken.name())),
+            string(abi.encodePacked("v", auctionToken.symbol()))
         );
-        emit VestingContractCreated(vestingContract, sale.auctionToken);
+        emit VestingContractCreated(vestingContract, auctionToken);
     }
 }

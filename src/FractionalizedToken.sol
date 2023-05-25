@@ -19,11 +19,13 @@ struct Metadata {
 error TokenCapped();
 error OnlyIssuerOrOwner();
 
-/// @title FractionalizedToken
-/// @author molecule.to
-/// @notice this is a template contract that's spawned by the fractionalizer
-/// @notice the owner of this contract is always the fractionalizer contract
-
+/**
+ * @title FractionalizedToken
+ * @author molecule.to
+ * @notice this is a template contract that's spawned by the Fractionalizer
+ * @notice the owner of this contract is always the Fractionalizer contract.
+ *         the issuer of a token bears the right to increase the supply as long as the token is not capped.
+ */
 contract FractionalizedToken is IERC20Upgradeable, ERC20BurnableUpgradeable, OwnableUpgradeable {
     using SafeERC20 for IERC20;
 
@@ -61,18 +63,22 @@ contract FractionalizedToken is IERC20Upgradeable, ERC20BurnableUpgradeable, Own
         return _metadata.originalOwner;
     }
 
+    /**
+     * @notice when true, no one can ever mint tokens again.
+     */
     function capped() public view returns (bool) {
         return _capped;
     }
 
+    /**
+     * @notice Fractional tokens are identified by the original token holder and the underlying token id
+     */
     function hash() public view returns (uint256) {
         return uint256(keccak256(abi.encodePacked(_metadata.originalOwner, _metadata.ipnftId)));
     }
 
     /**
-     * @notice we deliberately allow the fraction initializer to increase the fraction supply at will
-     *         as long as the underlying asset has not been sold yet
-     *
+     * @notice we deliberately allow the fraction initializer to increase the fraction supply at will as long as the underlying asset has not been sold yet
      * @param receiver address
      * @param amount uint256
      */
@@ -82,6 +88,9 @@ contract FractionalizedToken is IERC20Upgradeable, ERC20BurnableUpgradeable, Own
         _mint(receiver, amount);
     }
 
+    /**
+     * @notice mark this token as capped
+     */
     function cap() public onlyIssuerOrOwner {
         _capped = true;
         emit Capped(totalIssued());
