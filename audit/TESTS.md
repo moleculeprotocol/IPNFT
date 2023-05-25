@@ -12,7 +12,20 @@ forge t
 yarn hardhat test --network hardhat
 ```
 
-more instructions can be found on README.md
+## Local Setup
+
+all instructions can be found on README.md. In a nutshell you should be able to get a full suite setup including a subgraph running by
+
+```
+docker compose up
+./setupLocal.sh --fixture
+cd subgraph
+yarn abis
+yarn prepare:local
+yarn build
+yarn create:local
+yarn deploy:local
+```
 
 ## Coverage
 
