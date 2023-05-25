@@ -37,10 +37,10 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardU
         string symbol
     );
 
-    IPNFT ipnft;
+    IPNFT internal ipnft;
 
-    address feeReceiver;
-    uint256 fractionalizationPercentage;
+    address internal feeReceiver;
+    uint256 internal fractionalizationPercentage;
 
     mapping(uint256 => FractionalizedToken) public fractionalized;
 

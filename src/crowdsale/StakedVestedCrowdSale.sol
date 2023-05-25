@@ -7,16 +7,12 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import { Clones } from "@openzeppelin/contracts/proxy/Clones.sol";
-import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 
 import { FixedPointMathLib as FP } from "solmate/utils/FixedPointMathLib.sol";
 import { TokenVesting } from "@moleculeprotocol/token-vesting/TokenVesting.sol";
 
 import { VestedCrowdSale, VestingConfig, ApprovalFailed, IncompatibleVestingContract, UnmanageableVestingContract } from "./VestedCrowdSale.sol";
 import { CrowdSale, Sale, BadDecimals, SaleState } from "./CrowdSale.sol";
-import { InitializeableTokenVesting } from "./InitializableTokenVesting.sol";
-import { IPriceFeedConsumer } from "../BioPriceFeed.sol";
 
 struct StakingConfig {
     //e.g. VITA DAO token
@@ -40,7 +36,7 @@ contract StakedVestedCrowdSale is VestedCrowdSale {
     using SafeERC20 for IERC20Metadata;
 
     mapping(uint256 => StakingConfig) public salesStaking;
-    mapping(uint256 => mapping(address => uint256)) stakes;
+    mapping(uint256 => mapping(address => uint256)) internal stakes;
 
     event Started(uint256 saleId, address indexed issuer, Sale sale, VestingConfig vesting, StakingConfig staking);
     event Staked(uint256 indexed saleId, address indexed bidder, uint256 stakedAmount, uint256 price);

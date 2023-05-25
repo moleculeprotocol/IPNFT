@@ -54,10 +54,10 @@ contract CrowdSale is ReentrancyGuard {
     using SafeERC20 for IERC20;
     using SafeERC20 for IERC20Metadata;
 
-    mapping(uint256 => Sale) _sales;
-    mapping(uint256 => SaleInfo) _saleInfo;
+    mapping(uint256 => Sale) internal _sales;
+    mapping(uint256 => SaleInfo) internal _saleInfo;
 
-    mapping(uint256 => mapping(address => uint256)) _contributions;
+    mapping(uint256 => mapping(address => uint256)) internal _contributions;
 
     event Started(uint256 indexed saleId, address indexed issuer, Sale sale);
     event Settled(uint256 indexed saleId, uint256 totalBids, uint256 surplus);
@@ -207,8 +207,9 @@ contract CrowdSale is ReentrancyGuard {
         if (_saleInfo[saleId].state == SaleState.FAILED) {
             return claimFailed(saleId);
         }
-        if (address(_sales[saleId].permissioner) != address(0)) {
-            _sales[saleId].permissioner.accept(FractionalizedToken(address(_sales[saleId].auctionToken)), msg.sender, permission);
+        Sale memory sales = _sales[saleId];
+        if (address(sales.permissioner) != address(0)) {
+            sales.permissioner.accept(FractionalizedToken(address(sales.auctionToken)), msg.sender, permission);
         }
         (auctionTokens, refunds) = getClaimableAmounts(saleId, msg.sender);
         //a reentrancy won't have any effect after setting this to 0.

@@ -12,7 +12,6 @@ import { FixedPointMathLib as FP } from "solmate/utils/FixedPointMathLib.sol";
 import { TokenVesting } from "@moleculeprotocol/token-vesting/TokenVesting.sol";
 
 import { CrowdSale, Sale, SaleState } from "./CrowdSale.sol";
-import { InitializeableTokenVesting } from "./InitializableTokenVesting.sol";
 
 struct VestingConfig {
     TokenVesting vestingContract;
