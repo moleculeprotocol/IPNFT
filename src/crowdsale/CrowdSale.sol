@@ -12,7 +12,7 @@ import { IPermissioner } from "../Permissioner.sol";
 import { FractionalizedToken } from "../FractionalizedToken.sol";
 
 enum SaleState {
-    UNKNOWN, //Good to avoid invalid 0 checks
+    UNKNOWN,
     RUNNING,
     SETTLED,
     FAILED
@@ -26,7 +26,9 @@ struct Sale {
     uint256 fundingGoal;
     //how many auction tokens to sell
     uint256 salesAmount;
+    //a timestamp
     uint64 closingTime;
+    //can be address(0) if there are no rules to enforce on token actions
     IPermissioner permissioner;
 }
 
@@ -63,15 +65,16 @@ contract CrowdSale is ReentrancyGuard {
     event Bid(uint256 indexed saleId, address indexed bidder, uint256 amount);
     event Failed(uint256 saleId);
 
+    /**
+     * @notice bidding tokens can have arbitrary decimals, auctionTokens must be 18 decimals
+     *         if no beneficiary is provided, the beneficiary will be set to msg.sender
+     *         caller must approve `sale.fundingGoal` auctionTokens before calling this.
+     * @param sale the sale's base configuration.
+     */
     function startSale(Sale memory sale) public returns (uint256 saleId) {
-        //todo: removed this restriction for simpler testing
-        // if (sale.closingTime < block.timestamp + 2 hours) {
-        //     revert BadSaleDuration();
-        // }
-        if (sale.closingTime < block.timestamp) {
+        if (sale.closingTime < block.timestamp + 2 hours) {
             revert BadSaleDuration();
         }
-        //|| IERC20Metadata(address(sale.biddingToken)).decimals() != 18
         if (sale.auctionToken.decimals() != 18) {
             revert BadDecimals();
         }
@@ -99,6 +102,10 @@ contract CrowdSale is ReentrancyGuard {
 
     function saleInfo(uint256 saleId) public view returns (SaleInfo memory) {
         return _saleInfo[saleId];
+    }
+
+    function contribution(uint256 saleId, address contributor) public view returns (uint256) {
+        return _contributions[saleId][contributor];
     }
 
     function placeBid(uint256 saleId, uint256 biddingTokenAmount) public virtual {
@@ -133,19 +140,14 @@ contract CrowdSale is ReentrancyGuard {
         _bid(saleId, biddingTokenAmount);
     }
 
-    function contribution(uint256 saleId, address contributor) public view returns (uint256) {
-        return _contributions[saleId][contributor];
-    }
     /**
      * @notice anyone can call this for the beneficiary. Releases raised funds to beneficiary when funding goal was met
      * @param saleId the sale id
      */
-
     function settle(uint256 saleId) public virtual nonReentrant {
         Sale memory sale = _sales[saleId];
         SaleInfo storage __saleInfo = _saleInfo[saleId];
 
-        //todo: allow fundraiser to settle and allow everyone to withdraw if funding goal has *not* been met
         if (block.timestamp < sale.closingTime) {
             revert("sale has not concluded yet");
         }
@@ -178,16 +180,11 @@ contract CrowdSale is ReentrancyGuard {
      * @return refunds wei value of bidding tokens to return
      */
     function getClaimableAmounts(uint256 saleId, address bidder) public view virtual returns (uint256 auctionTokens, uint256 refunds) {
-        uint256 _contribution = _contributions[saleId][bidder];
-        uint256 fundingGoal = _sales[saleId].fundingGoal;
-        uint256 total = _saleInfo[saleId].total;
-        uint256 salesAmount = _sales[saleId].salesAmount;
+        uint256 biddingRatio = FP.divWadDown(_contributions[saleId][bidder], _saleInfo[saleId].total);
+        auctionTokens = FP.mulWadDown(biddingRatio, _sales[saleId].salesAmount);
 
-        uint256 biddingShare = FP.divWadDown(FP.mulWadDown(_contribution, fundingGoal), total);
-        uint256 biddingRatio = FP.divWadDown(biddingShare, fundingGoal);
-        auctionTokens = FP.mulWadDown(biddingRatio, salesAmount);
         if (_saleInfo[saleId].surplus > 0) {
-            refunds = FP.mulWadDown(biddingRatio, _saleInfo[saleId].surplus); //_contributions[saleId][msg.sender] - biddingShare;
+            refunds = FP.mulWadDown(biddingRatio, _saleInfo[saleId].surplus);
         } else {
             refunds = 0;
         }

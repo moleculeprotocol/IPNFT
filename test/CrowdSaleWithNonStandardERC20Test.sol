@@ -181,7 +181,8 @@ contract CrowdSaleWithNonStandardERC20Test is Test {
         Sale memory _sale = CrowdSaleHelpers.makeSale(emitter, auctionToken, biddingToken);
         _sale.fundingGoal = 200_000e6;
         auctionToken.approve(address(crowdSale), 400_000 ether);
-        // 1 DAO = 4 $
+        // 1 DAO = 4 $ <=> 1$ = 0.25 DAO
+        // the price is always expressed as 1e18 decimal
         _stakingConfig.wadFixedStakedPerBidPrice = 25e16;
         uint256 saleId = crowdSale.startSale(_sale, _stakingConfig, _vestingConfig);
 
@@ -223,18 +224,19 @@ contract CrowdSaleWithNonStandardERC20Test is Test {
         vm.stopPrank();
 
         (TokenVesting auctionTokenVesting,) = crowdSale.salesVesting(saleId);
-        assertEq(auctionTokenVesting.balanceOf(bidder), 230188679244000000000000);
-        assertEq(auctionTokenVesting.balanceOf(bidder2), 169811320754000000000000);
+        assertEq(auctionTokenVesting.balanceOf(bidder), 230188679245283018800000);
+        assertEq(auctionTokenVesting.balanceOf(bidder2), 169811320754716980800000);
 
-        assertEq(vestedDao.balanceOf(bidder), 28773.5849065 ether);
-        assertEq(vestedDao.balanceOf(bidder2), 21226.41509475 ether);
+        assertEq(vestedDao.balanceOf(bidder), 28773.58490575 ether);
+        assertEq(vestedDao.balanceOf(bidder2), 21226.4150945 ether);
 
         assertEq(daoToken.balanceOf(bidder) + vestedDao.balanceOf(bidder), 1_000_000 ether);
         assertEq(daoToken.balanceOf(bidder2) + vestedDao.balanceOf(bidder2), 1_000_000 ether);
 
         //some dust is left on the table
-        assertEq(auctionToken.balanceOf(address(crowdSale)), 0.000002 ether);
-        assertEq(biddingToken.balanceOf(address(crowdSale)), 5);
+        assertEq(auctionToken.balanceOf(address(crowdSale)), 400_000);
+        assertEq(biddingToken.balanceOf(address(crowdSale)), 1);
+        assertEq(biddingToken.balanceOf(emitter), _sale.fundingGoal);
         assertEq(daoToken.balanceOf(address(crowdSale)), 0);
     }
 
