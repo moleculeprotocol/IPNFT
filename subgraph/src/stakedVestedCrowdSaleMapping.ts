@@ -74,6 +74,8 @@ export function handleStarted(event: StartedEvent): void {
     IERC20Metadata.bind(event.params.staking.stakesVestingContract)
   ).id
   crowdSale.stakingCliff = event.params.vesting.cliff
+  crowdSale.wadFixedStakedPerBidPrice =
+    event.params.staking.wadFixedStakedPerBidPrice
   crowdSale.save()
 }
 

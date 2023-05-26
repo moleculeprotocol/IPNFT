@@ -117,6 +117,7 @@ type CrowdSale @entity {
   amountStaked: BigInt! #the amount of tokens staked so far
   vestedStakingToken: ERC20Token #the vested staking token that bidders partially receive after claiming
   stakingCliff: BigInt! # The staking token cliff
+  wadFixedStakedPerBidPrice: BigInt # the fixed price of stake / bid token
   #type: String! #the type of auction, can be "basic", "vested" "stakedVested"
 
   contributions: [Contribution!] @derivedFrom(field: "crowdSale")
