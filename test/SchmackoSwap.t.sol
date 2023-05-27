@@ -66,7 +66,7 @@ contract SchmackoSwapTest is Test {
         // Ensure marketplace can access sellers's tokens
         ipnft.setApprovalForAll(address(schmackoSwap), true);
         ipnft.reserve();
-        ipnft.mintReservation{value: 0.001 ether}(seller, 1, 1, arUri);
+        ipnft.mintReservation{ value: 0.001 ether }(seller, 1, 1, arUri);
         vm.stopPrank();
     }
 
