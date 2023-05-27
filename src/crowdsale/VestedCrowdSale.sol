@@ -1,17 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.18;
 
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import { Clones } from "@openzeppelin/contracts/proxy/Clones.sol";
-import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
-
-import { FixedPointMathLib as FP } from "solmate/utils/FixedPointMathLib.sol";
 import { TokenVesting } from "@moleculeprotocol/token-vesting/TokenVesting.sol";
-
-import { CrowdSale, Sale, SaleState } from "./CrowdSale.sol";
+import { CrowdSale, Sale } from "./CrowdSale.sol";
 
 struct VestingConfig {
     TokenVesting vestingContract;
@@ -19,7 +12,6 @@ struct VestingConfig {
     uint256 cliff;
 }
 
-error ApprovalFailed();
 error UnmanageableVestingContract();
 error InvalidDuration();
 error IncompatibleVestingContract();
@@ -35,7 +27,7 @@ contract VestedCrowdSale is CrowdSale {
     mapping(uint256 => VestingConfig) public salesVesting;
 
     event Started(uint256 saleId, address indexed issuer, Sale sale, VestingConfig vesting);
-    event VestingContractCreated(TokenVesting vestingContract, IERC20 indexed underlyingToken);
+    event VestingContractCreated(TokenVesting vestingContract, IERC20Metadata indexed underlyingToken);
 
     /**
      * @notice if vestingConfig.vestingContract is 0x0, a new vesting contract is automatically created

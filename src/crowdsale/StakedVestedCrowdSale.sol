@@ -11,7 +11,7 @@ import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.s
 import { FixedPointMathLib as FP } from "solmate/utils/FixedPointMathLib.sol";
 import { TokenVesting } from "@moleculeprotocol/token-vesting/TokenVesting.sol";
 
-import { VestedCrowdSale, VestingConfig, ApprovalFailed, IncompatibleVestingContract, UnmanageableVestingContract } from "./VestedCrowdSale.sol";
+import { VestedCrowdSale, VestingConfig, IncompatibleVestingContract, UnmanageableVestingContract } from "./VestedCrowdSale.sol";
 import { CrowdSale, Sale, BadDecimals, SaleState } from "./CrowdSale.sol";
 
 struct StakingConfig {

@@ -13,8 +13,6 @@ import { FractionalizedToken, Metadata as FractionalizedTokenMetadata } from "./
 import { IPNFT } from "./IPNFT.sol";
 
 error ToZeroAddress();
-error InsufficientBalance();
-error TermsNotAccepted();
 
 error BadSupply();
 error MustOwnIpnft();
@@ -63,7 +61,7 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardU
     /**
      * @notice we're not taking any fees. If we once decided to do so, this can be used to update the fee receiver
      */
-    function setFeeReceiver(address _feeReceiver) public onlyOwner {
+    function setFeeReceiver(address _feeReceiver) external onlyOwner {
         if (_feeReceiver == address(0)) {
             revert ToZeroAddress();
         }
@@ -134,7 +132,7 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardU
      * @notice contract metadata, compatible to ERC1155
      * @param fractionHash uint256
      */
-    function uri(uint256 fractionHash) public view returns (string memory) {
+    function uri(uint256 fractionHash) external view returns (string memory) {
         FractionalizedToken tokenContract = fractionalized[fractionHash];
         FractionalizedTokenMetadata memory metadata = tokenContract.metadata();
         string memory tokenId = Strings.toString(metadata.ipnftId);

@@ -15,10 +15,16 @@ import { Mintpass } from "../src/Mintpass.sol";
 import { IPermissioner, TermsAcceptedPermissioner, BlindPermissioner, InvalidSignature } from "../src/Permissioner.sol";
 
 import { IPNFTMintHelper } from "./IPNFTMintHelper.sol";
-import { Fractionalizer, ToZeroAddress, InsufficientBalance } from "../src/Fractionalizer.sol";
+import { Fractionalizer, ToZeroAddress } from "../src/Fractionalizer.sol";
 
 import {
-    SalesShareDistributor, ListingNotFulfilled, ListingMismatch, NotClaimingYet, UncappedToken, OnlyIssuer
+    SalesShareDistributor,
+    ListingNotFulfilled,
+    ListingMismatch,
+    NotClaimingYet,
+    UncappedToken,
+    OnlyIssuer,
+    InsufficientBalance
 } from "../src/SalesShareDistributor.sol";
 
 import { FractionalizedToken, OnlyIssuerOrOwner } from "../src/FractionalizedToken.sol";
