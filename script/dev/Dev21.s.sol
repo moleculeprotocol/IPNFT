@@ -3,7 +3,8 @@ pragma solidity ^0.8.13;
 
 import "forge-std/Script.sol";
 import "forge-std/console.sol";
-import { MyToken } from "../../src/MyToken.sol";
+//import { FakeERC20 } from "../../src/helpers/FakeERC20.sol";
+import { FakeERC20 } from "../../src/helpers/FakeERC20.sol";
 import { IPNFT } from "../../src/IPNFT.sol";
 import { IPNFTV21 } from "../../src/old/IPNFTV21.sol";
 import { SchmackoSwap } from "../../src/SchmackoSwap.sol";
@@ -44,7 +45,7 @@ contract DeployIpnftV21 is Script {
 
         //only here to have addresses for subgraph in place
         SchmackoSwap swap = new SchmackoSwap();
-        MyToken token = new MyToken();
+        FakeERC20 token = new FakeERC20("Fake ERC20", "FERC");
         Mintpass mintpass = new Mintpass(address(ipnft));
 
         ipnft.setAuthorizer(address(new AuthorizeAll()));

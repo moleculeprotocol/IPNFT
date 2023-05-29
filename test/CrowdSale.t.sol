@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.18;
 
 import "forge-std/Test.sol";
 import "forge-std/console.sol";
@@ -17,7 +17,7 @@ import {
     SaleClosedForBids
 } from "../src/crowdsale/CrowdSale.sol";
 import { IPermissioner } from "../src/Permissioner.sol";
-import { FakeERC20 } from "./helpers/FakeERC20.sol";
+import { FakeERC20 } from "../src/helpers/FakeERC20.sol";
 import { CrowdSaleHelpers } from "./helpers/CrowdSaleHelpers.sol";
 
 contract CrowdSaleTest is Test {

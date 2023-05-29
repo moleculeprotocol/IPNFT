@@ -16,7 +16,7 @@ import { IPermissioner, TermsAcceptedPermissioner } from "../../src/Permissioner
 import { CrowdSale, Sale, SaleInfo } from "../../src/crowdsale/CrowdSale.sol";
 import { VestingConfig } from "../../src/crowdsale/VestedCrowdSale.sol";
 import { StakedVestedCrowdSale, StakingConfig } from "../../src/crowdsale/StakedVestedCrowdSale.sol";
-import { FakeERC20 } from "../../test/helpers/FakeERC20.sol";
+import { FakeERC20 } from "../../src/helpers/FakeERC20.sol";
 import { FractionalizedToken } from "../../src/FractionalizedToken.sol";
 
 import { CommonScript } from "./Common.sol";

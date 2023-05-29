@@ -3,7 +3,7 @@ pragma solidity ^0.8.18;
 
 import "forge-std/Script.sol";
 import "forge-std/console.sol";
-import { FakeERC20 } from "../../test/helpers/FakeERC20.sol";
+import { FakeERC20 } from "../../src/helpers/FakeERC20.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 import { TokenVesting } from "@moleculeprotocol/token-vesting/TokenVesting.sol";

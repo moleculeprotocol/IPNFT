@@ -8,7 +8,7 @@ import { IPNFT } from "../../src/IPNFT.sol";
 import { SchmackoSwap } from "../../src/SchmackoSwap.sol";
 import { Mintpass } from "../../src/Mintpass.sol";
 import { UUPSProxy } from "../../src/UUPSProxy.sol";
-import { FakeERC20 } from "../../test/helpers/FakeERC20.sol";
+import { FakeERC20 } from "../../src/helpers/FakeERC20.sol";
 import { IERC1155Supply } from "../../src/IERC1155Supply.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { CommonScript } from "./Common.sol";

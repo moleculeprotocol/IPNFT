@@ -3,7 +3,7 @@ pragma solidity ^0.8.18;
 
 import "forge-std/Script.sol";
 import "forge-std/console.sol";
-import { FakeERC20 } from "../../test/helpers/FakeERC20.sol";
+import { FakeERC20 } from "../../src/helpers/FakeERC20.sol";
 
 contract CommonScript is Script {
     string mnemonic = "test test test test test test test test test test test junk";
