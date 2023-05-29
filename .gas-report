@@ -1,0 +1,136 @@
+| src/FractionalizedToken.sol:FractionalizedToken contract |                 |        |        |        |         |
+| -------------------------------------------------------- | --------------- | ------ | ------ | ------ | ------- |
+| Deployment Cost                                          | Deployment Size |        |        |        |         |
+| 1104947                                                  | 5551            |        |        |        |         |
+| Function Name                                            | min             | avg    | median | max    | # calls |
+| approve                                                  | 24646           | 24646  | 24646  | 24646  | 4       |
+| balanceOf                                                | 576             | 724    | 576    | 2576   | 27      |
+| burnFrom                                                 | 4444            | 4444   | 4444   | 4444   | 3       |
+| cap                                                      | 527             | 19303  | 21651  | 21651  | 9       |
+| capped                                                   | 437             | 437    | 437    | 437    | 8       |
+| decimals                                                 | 200             | 200    | 200    | 200    | 2       |
+| hash                                                     | 645             | 645    | 645    | 645    | 16      |
+| initialize                                               | 165817          | 202808 | 210207 | 210207 | 18      |
+| issue                                                    | 761             | 56395  | 67339  | 67339  | 18      |
+| issuer                                                   | 432             | 432    | 432    | 432    | 15      |
+| metadata                                                 | 1772            | 2550   | 2069   | 7772   | 30      |
+| name                                                     | 3241            | 3241   | 3241   | 3241   | 1       |
+| setAStateVar                                             | 260             | 260    | 260    | 260    | 1       |
+| symbol                                                   | 1239            | 2239   | 2239   | 3239   | 2       |
+| totalIssued                                              | 424             | 424    | 424    | 424    | 11      |
+| totalSupply                                              | 382             | 382    | 382    | 382    | 4       |
+| transfer                                                 | 20016           | 23654  | 25019  | 25019  | 11      |
+| transferFrom                                             | 24473           | 24473  | 24473  | 24473  | 1       |
+
+| src/Fractionalizer.sol:Fractionalizer contract |                 |        |        |        |         |
+| ---------------------------------------------- | --------------- | ------ | ------ | ------ | ------- |
+| Deployment Cost                                | Deployment Size |        |        |        |         |
+| 2869781                                        | 14452           |        |        |        |         |
+| Function Name                                  | min             | avg    | median | max    | # calls |
+| fractionalizeIpnft                             | 21714           | 347628 | 378178 | 378178 | 16      |
+| initialize                                     | 93088           | 93088  | 93088  | 93088  | 15      |
+| setFeeReceiver                                 | 2624            | 20679  | 22752  | 22752  | 17      |
+| setReceiverPercentage                          | 552             | 11553  | 11553  | 22554  | 2       |
+| upgradeTo                                      | 10284           | 10284  | 10284  | 10284  | 1       |
+| uri                                            | 68580           | 68580  | 68580  | 68580  | 1       |
+
+| src/IPNFT.sol:IPNFT contract                                    |                 |        |        |        |         |
+| --------------------------------------------------------------- | --------------- | ------ | ------ | ------ | ------- |
+| Deployment Cost                                                 | Deployment Size |        |        |        |         |
+| 2828028                                                         | 14294           |        |        |        |         |
+| Function Name                                                   | min             | avg    | median | max    | # calls |
+| balanceOf                                                       | 726             | 1854   | 2726   | 2726   | 39      |
+| burn                                                            | 3949            | 3949   | 3949   | 3949   | 1       |
+| canRead                                                         | 888             | 1884   | 1134   | 5134   | 5       |
+| fallback                                                        | 46              | 46     | 46     | 46     | 1       |
+| grantReadAccess                                                 | 948             | 8875   | 2854   | 22823  | 3       |
+| initialize                                                      | 79261           | 79261  | 79261  | 79261  | 44      |
+| isApprovedForAll                                                | 827             | 1952   | 2827   | 2827   | 16      |
+| mintReservation(address,uint256,uint256,string)(uint256)        | 1512            | 121859 | 139917 | 145786 | 18      |
+| mintReservation(address,uint256,uint256,string,string)(uint256) | 164344          | 178781 | 183407 | 187407 | 23      |
+| pause                                                           | 23766           | 24766  | 24766  | 25766  | 2       |
+| paused                                                          | 2371            | 2371   | 2371   | 2371   | 1       |
+| reservations                                                    | 590             | 590    | 590    | 590    | 3       |
+| reserve                                                         | 446             | 27417  | 25747  | 34547  | 44      |
+| safeTransferFrom                                                | 2477            | 24120  | 25598  | 30756  | 13      |
+| setApprovalForAll                                               | 6073            | 23760  | 24691  | 24691  | 20      |
+| setAuthorizer                                                   | 22772           | 22772  | 22772  | 22772  | 44      |
+| symbol                                                          | 1442            | 2971   | 3442   | 3442   | 17      |
+| totalSupply                                                     | 516             | 1887   | 2516   | 2516   | 35      |
+| upgradeTo                                                       | 8358            | 9691   | 10358  | 10358  | 3       |
+| uri                                                             | 2458            | 4172   | 4172   | 5886   | 2       |
+| withdrawAll                                                     | 4647            | 8499   | 9425   | 11425  | 3       |
+
+| src/Mintpass.sol:Mintpass contract |                 |       |        |        |         |
+| ---------------------------------- | --------------- | ----- | ------ | ------ | ------- |
+| Deployment Cost                    | Deployment Size |       |        |        |         |
+| 1821339                            | 9226            |       |        |        |         |
+| Function Name                      | min             | avg   | median | max    | # calls |
+| MODERATOR                          | 307             | 307   | 307    | 307    | 57      |
+| authorizeMint                      | 6871            | 7471  | 6871   | 8871   | 40      |
+| authorizeReservation               | 676             | 721   | 676    | 2676   | 44      |
+| balanceOf                          | 679             | 879   | 679    | 2679   | 10      |
+| batchMint                          | 30359           | 70913 | 72550  | 169756 | 56      |
+| burn                               | 7978            | 25032 | 25032  | 42086  | 2       |
+| grantRole                          | 27565           | 27600 | 27565  | 29565  | 56      |
+| isRedeemable                       | 1064            | 3064  | 3064   | 5064   | 3       |
+| ownerOf                            | 3042            | 19456 | 3042   | 113881 | 8       |
+| redeem                             | 23250           | 23250 | 23250  | 23250  | 39      |
+| revoke                             | 26772           | 29515 | 29515  | 32258  | 2       |
+| revokeRole                         | 2845            | 2845  | 2845   | 2845   | 1       |
+| tokenURI                           | 5846            | 19109 | 25664  | 25817  | 3       |
+| totalSupply                        | 2633            | 2633  | 2633   | 2633   | 1       |
+| transferFrom                       | 1440            | 1440  | 1440   | 1440   | 1       |
+
+| src/SchmackoSwap.sol:SchmackoSwap contract             |                 |        |        |        |         |
+| ------------------------------------------------------ | --------------- | ------ | ------ | ------ | ------- |
+| Deployment Cost                                        | Deployment Size |        |        |        |         |
+| 944547                                                 | 4538            |        |        |        |         |
+| Function Name                                          | min             | avg    | median | max    | # calls |
+| cancel                                                 | 1473            | 3752   | 3752   | 6032   | 2       |
+| changeBuyerAllowance                                   | 1678            | 19507  | 25684  | 25684  | 15      |
+| fulfill                                                | 9059            | 43688  | 56371  | 68580  | 11      |
+| isAllowed                                              | 686             | 1486   | 686    | 2686   | 5       |
+| list(address,uint256,address,uint256)(uint256)         | 2283            | 141931 | 174187 | 174187 | 11      |
+| list(address,uint256,address,uint256,address)(uint256) | 163211          | 163211 | 163211 | 163211 | 5       |
+| listings                                               | 1530            | 1530   | 1530   | 1530   | 15      |
+
+| src/crowdsale/CrowdSale.sol:CrowdSale contract |                 |        |        |        |         |
+| ---------------------------------------------- | --------------- | ------ | ------ | ------ | ------- |
+| Deployment Cost                                | Deployment Size |        |        |        |         |
+| 1298435                                        | 6412            |        |        |        |         |
+| Function Name                                  | min             | avg    | median | max    | # calls |
+| claim                                          | 5227            | 20214  | 28273  | 32372  | 14      |
+| contribution                                   | 742             | 742    | 742    | 742    | 2       |
+| placeBid                                       | 1412            | 40244  | 27051  | 85213  | 31      |
+| saleInfo                                       | 1032            | 1032   | 1032   | 1032   | 2       |
+| settle                                         | 6456            | 29805  | 28536  | 52770  | 8       |
+| startSale                                      | 1090            | 113737 | 189665 | 189679 | 17      |
+
+| src/crowdsale/StakedVestedCrowdSale.sol:StakedVestedCrowdSale contract |                 |         |         |         |         |
+| ---------------------------------------------------------------------- | --------------- | ------- | ------- | ------- | ------- |
+| Deployment Cost                                                        | Deployment Size |         |         |         |         |
+| 4246567                                                                | 21135           |         |         |         |         |
+| Function Name                                                          | min             | avg     | median  | max     | # calls |
+| claim(uint256)(uint256,uint256)                                        | 6721            | 294950  | 374663  | 539815  | 16      |
+| claim(uint256,bytes)(uint256,uint256)                                  | 506292          | 506292  | 506292  | 506292  | 1       |
+| placeBid(uint256,uint256)                                              | 11732           | 107159  | 85845   | 169445  | 20      |
+| placeBid(uint256,uint256,bytes)                                        | 185491          | 185491  | 185491  | 185491  | 1       |
+| saleInfo                                                               | 1055            | 1055    | 1055    | 1055    | 4       |
+| salesStaking                                                           | 939             | 939     | 939     | 939     | 3       |
+| salesVesting                                                           | 691             | 691     | 691     | 691     | 10      |
+| settle                                                                 | 10171           | 34573   | 28555   | 52793   | 10      |
+| stakesOf                                                               | 676             | 676     | 676     | 676     | 4       |
+| startSale                                                              | 4472            | 1647682 | 2243265 | 2244692 | 15      |
+
+| src/crowdsale/VestedCrowdSale.sol:VestedCrowdSale contract |                 |         |         |         |         |
+| ---------------------------------------------------------- | --------------- | ------- | ------- | ------- | ------- |
+| Deployment Cost                                            | Deployment Size |         |         |         |         |
+| 3778151                                                    | 18796           |         |         |         |         |
+| Function Name                                              | min             | avg     | median  | max     | # calls |
+| claim                                                      | 9074            | 133119  | 138049  | 247303  | 4       |
+| placeBid                                                   | 85302           | 85302   | 85302   | 85302   | 4       |
+| saleInfo                                                   | 1032            | 1032    | 1032    | 1032    | 3       |
+| salesVesting                                               | 713             | 713     | 713     | 713     | 4       |
+| settle                                                     | 10152           | 23940   | 28536   | 28536   | 4       |
+| startSale                                                  | 5498            | 1510303 | 1927002 | 2158805 | 7       |
