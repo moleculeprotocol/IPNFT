@@ -25,11 +25,6 @@
     "type": "error"
   },
   {
-    "inputs": [],
-    "name": "ToZeroAddress",
-    "type": "error"
-  },
-  {
     "anonymous": false,
     "inputs": [
       {

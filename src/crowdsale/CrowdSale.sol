@@ -75,7 +75,7 @@ contract CrowdSale is ReentrancyGuard {
      * @param sale the sale's base configuration.
      * @return saleId
      */
-    function startSale(Sale memory sale) public returns (uint256 saleId) {
+    function startSale(Sale calldata sale) public returns (uint256 saleId) {
         if (sale.closingTime < block.timestamp + 2 hours) {
             revert BadSaleDuration();
         }
@@ -88,9 +88,6 @@ contract CrowdSale is ReentrancyGuard {
         //close to 0 cases lead to very confusing results
         if (sale.fundingGoal < 1 * 10 ** sale.biddingToken.decimals() || sale.salesAmount < 0.5 ether) {
             revert BadSalesAmount();
-        }
-        if (sale.beneficiary == address(0)) {
-            sale.beneficiary = msg.sender;
         }
 
         saleId = uint256(keccak256(abi.encode(sale)));

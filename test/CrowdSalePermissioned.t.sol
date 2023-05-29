@@ -11,7 +11,7 @@ import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import { FractionalizedToken, Metadata } from "../src/FractionalizedToken.sol";
 import { CrowdSale, Sale, SaleInfo, SaleState, BadDecimals } from "../src/crowdsale/CrowdSale.sol";
 import { VestingConfig } from "../src/crowdsale/VestedCrowdSale.sol";
-import { StakedVestedCrowdSale, StakingConfig, IncompatibleVestingContract, BadPrice } from "../src/crowdsale/StakedVestedCrowdSale.sol";
+import { StakedVestedCrowdSale, IncompatibleVestingContract, BadPrice } from "../src/crowdsale/StakedVestedCrowdSale.sol";
 import { IPermissioner, TermsAcceptedPermissioner, InvalidSignature } from "../src/Permissioner.sol";
 
 import { TokenVesting } from "@moleculeprotocol/token-vesting/TokenVesting.sol";
@@ -38,8 +38,6 @@ contract CrowdSalePermissionedTest is Test {
     //BioPriceFeed internal priceFeed;
 
     StakedVestedCrowdSale internal crowdSale;
-    VestingConfig internal _vestingConfig;
-    StakingConfig internal _stakingConfig;
 
     function setUp() public {
         (bidder, bidderPk) = makeAddrAndKey("bidder");
@@ -71,8 +69,6 @@ contract CrowdSalePermissionedTest is Test {
         vm.stopPrank();
 
         permissioner = new TermsAcceptedPermissioner();
-        _vestingConfig = VestingConfig({ vestingContract: TokenVesting(address(0)), cliff: 60 days });
-        _stakingConfig = StakingConfig({ stakedToken: daoToken, stakesVestingContract: vestedDao, wadFixedStakedPerBidPrice: 1e18, stakeTotal: 0 });
     }
 
     function testPermissionedSettlementAndSimpleClaims() public {
@@ -81,7 +77,7 @@ contract CrowdSalePermissionedTest is Test {
         _sale.permissioner = permissioner;
         auctionToken.approve(address(crowdSale), 400_000 ether);
 
-        uint256 saleId = crowdSale.startSale(_sale, _stakingConfig, _vestingConfig);
+        uint256 saleId = crowdSale.startSale(_sale, daoToken, vestedDao, 1e18, TokenVesting(address(0)), 60 days);
         vm.stopPrank();
 
         string memory terms = permissioner.specificTermsV1(auctionToken);

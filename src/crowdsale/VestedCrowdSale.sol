@@ -30,32 +30,33 @@ contract VestedCrowdSale is CrowdSale {
     event VestingContractCreated(TokenVesting vestingContract, IERC20Metadata indexed underlyingToken);
 
     /**
-     * @notice if vestingConfig.vestingContract is 0x0, a new vesting contract is automatically created
+     * @notice if vestingContract is 0x0, a new vesting contract is automatically created
      *
      * @param sale sale configuration
-     * @param vestingConfig vesting configuration. Duration must be compatible to TokenVesting hard requirements (7 days < cliff < 50 years)
+     * @param vestingContract the vesting contract to use or address(0) to spawn a new one
+     * @param cliff must be compatible to TokenVesting hard requirements (7 days < cliff < 50 years)
      * @return saleId
      */
-    function startSale(Sale memory sale, VestingConfig memory vestingConfig) public returns (uint256 saleId) {
+    function startSale(Sale calldata sale, TokenVesting vestingContract, uint256 cliff) public returns (uint256 saleId) {
         saleId = uint256(keccak256(abi.encode(sale)));
 
-        if (address(vestingConfig.vestingContract) == address(0)) {
-            vestingConfig.vestingContract = _makeVestingContract(sale.auctionToken);
+        if (address(vestingContract) == address(0)) {
+            vestingContract = _makeVestingContract(sale.auctionToken);
         } else {
-            if (!vestingConfig.vestingContract.hasRole(vestingConfig.vestingContract.ROLE_CREATE_SCHEDULE(), address(this))) {
+            if (!vestingContract.hasRole(vestingContract.ROLE_CREATE_SCHEDULE(), address(this))) {
                 revert UnmanageableVestingContract();
             }
-            if (address(vestingConfig.vestingContract.nativeToken()) != address(sale.auctionToken)) {
+            if (address(vestingContract.nativeToken()) != address(sale.auctionToken)) {
                 revert IncompatibleVestingContract();
             }
         }
 
         // duration must follow the same rules as `TokenVesting`
-        if (vestingConfig.cliff < 7 days || vestingConfig.cliff > 50 * (365 days)) {
+        if (cliff < 7 days || cliff > 50 * (365 days)) {
             revert InvalidDuration();
         }
 
-        salesVesting[saleId] = vestingConfig;
+        salesVesting[saleId] = VestingConfig(vestingContract, cliff);
         saleId = super.startSale(sale);
     }
 

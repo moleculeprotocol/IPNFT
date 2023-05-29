@@ -15,7 +15,7 @@ import { TokenVesting } from "@moleculeprotocol/token-vesting/TokenVesting.sol";
 import { IPermissioner, TermsAcceptedPermissioner } from "../../src/Permissioner.sol";
 import { CrowdSale, Sale, SaleInfo } from "../../src/crowdsale/CrowdSale.sol";
 import { VestingConfig } from "../../src/crowdsale/VestedCrowdSale.sol";
-import { StakedVestedCrowdSale, StakingConfig } from "../../src/crowdsale/StakedVestedCrowdSale.sol";
+import { StakedVestedCrowdSale } from "../../src/crowdsale/StakedVestedCrowdSale.sol";
 import { FakeERC20 } from "../../src/helpers/FakeERC20.sol";
 import { FractionalizedToken } from "../../src/FractionalizedToken.sol";
 
@@ -113,14 +113,9 @@ contract FixtureCrowdSale is CommonScript {
             permissioner: permissioner
         });
 
-        VestingConfig memory _vestingConfig = VestingConfig({ vestingContract: vestedMolToken, cliff: 60 days });
-
-        StakingConfig memory _stakingConfig =
-            StakingConfig({ stakedToken: daoToken, stakesVestingContract: vestedDaoToken, wadFixedStakedPerBidPrice: 1e18, stakeTotal: 0 });
-
         vm.startBroadcast(bob);
         auctionToken.approve(address(stakedVestedCrowdSale), 400 ether);
-        uint256 saleId = stakedVestedCrowdSale.startSale(_sale, _stakingConfig, _vestingConfig);
+        uint256 saleId = stakedVestedCrowdSale.startSale(_sale, daoToken, vestedDaoToken, 1e18, vestedMolToken, 60 days);
         vm.stopBroadcast();
 
         string memory terms = permissioner.specificTermsV1(auctionToken);
@@ -161,18 +156,11 @@ contract OpenEmptySimpleWethCrowdSale is FixtureCrowdSale {
             permissioner: IPermissioner(address(0))
         });
 
-        VestingConfig memory _vestingConfig = VestingConfig({ vestingContract: vestedMolToken, cliff: 60 days });
-
-        StakingConfig memory _stakingConfig = StakingConfig({
-            stakedToken: daoToken,
-            stakesVestingContract: vestedDaoToken,
-            wadFixedStakedPerBidPrice: wadFixedStakedPerBidPrice,
-            stakeTotal: 0
-        });
-
         vm.startBroadcast(bob);
         auctionToken.approve(address(stakedVestedCrowdSale), 400_000 ether);
-        uint256 saleId = stakedVestedCrowdSale.startSale(_sale, _stakingConfig, _vestingConfig);
+
+        uint256 saleId = stakedVestedCrowdSale.startSale(_sale, daoToken, vestedDaoToken, 1e18, vestedMolToken, 60 days);
+
         vm.stopBroadcast();
 
         console.log("WETH_ADDRESS=%s", address(weth));
