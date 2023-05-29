@@ -43,6 +43,11 @@ error BadSaleDuration();
 error SaleAlreadyActive();
 error SaleClosedForBids();
 
+error BidTooLow();
+error SaleNotFund(uint256);
+error SaleNotConcluded();
+error BadSaleState(SaleState expected, SaleState actual);
+
 /**
  * @title CrowdSale
  * @author molecule.to
@@ -131,12 +136,12 @@ contract CrowdSale is ReentrancyGuard {
      */
     function placeBid(uint256 saleId, uint256 biddingTokenAmount, bytes memory permission) public {
         if (biddingTokenAmount == 0) {
-            revert("must bid something");
+            revert BidTooLow();
         }
 
         Sale memory sale = _sales[saleId];
         if (sale.fundingGoal == 0) {
-            revert("bad sale id");
+            revert SaleNotFund(saleId);
         }
 
         // @notice: while the general rule is that no bids aren't accepted past the sale's closing time
@@ -161,11 +166,11 @@ contract CrowdSale is ReentrancyGuard {
         SaleInfo storage __saleInfo = _saleInfo[saleId];
 
         if (block.timestamp < sale.closingTime) {
-            revert("sale has not concluded yet");
+            revert SaleNotConcluded();
         }
 
         if (__saleInfo.state != SaleState.RUNNING) {
-            revert("sale is not running");
+            revert BadSaleState(SaleState.RUNNING, __saleInfo.state);
         }
 
         if (__saleInfo.total < sale.fundingGoal) {
@@ -214,7 +219,7 @@ contract CrowdSale is ReentrancyGuard {
      */
     function claim(uint256 saleId, bytes memory permission) public nonReentrant returns (uint256 auctionTokens, uint256 refunds) {
         if (_saleInfo[saleId].state == SaleState.RUNNING) {
-            revert("sale is not settled");
+            revert BadSaleState(SaleState.SETTLED, SaleState.RUNNING);
         }
         if (_saleInfo[saleId].state == SaleState.FAILED) {
             return claimFailed(saleId);
