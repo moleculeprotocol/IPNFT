@@ -159,7 +159,7 @@ contract OpenEmptySimpleWethCrowdSale is FixtureCrowdSale {
         vm.startBroadcast(bob);
         auctionToken.approve(address(stakedVestedCrowdSale), 400_000 ether);
 
-        uint256 saleId = stakedVestedCrowdSale.startSale(_sale, daoToken, vestedDaoToken, 1e18, vestedMolToken, 60 days);
+        uint256 saleId = stakedVestedCrowdSale.startSale(_sale, daoToken, vestedDaoToken, wadFixedStakedPerBidPrice, vestedMolToken, 60 days);
 
         vm.stopBroadcast();
 
