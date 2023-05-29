@@ -72,8 +72,7 @@ contract StakedVestedCrowdSale is VestedCrowdSale {
                 (FP.divWadDown(FP.mulWadDown(stakingConfig.wadFixedStakedPerBidPrice, 10 ** 18), 10 ** sale.biddingToken.decimals()));
         }
 
-        //todo: duck type check whether all token contracts can do what we need.
-        //so users cannot create a sale with "bad" values
+        //todo: duck type check whether all token contracts can do what we need so users cannot create a sale with "bad" values
         stakingConfig.stakeTotal = 0;
 
         saleId = uint256(keccak256(abi.encode(sale)));

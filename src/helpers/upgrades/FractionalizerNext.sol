@@ -84,7 +84,7 @@ contract FractionalizerNext is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGu
 
         emit FractionsCreated(ipnftId, address(fractionalizedToken), _msgSender(), fractionsAmount, agreementCid, name, ipnftSymbol);
 
-        //todo: if we want to take a protocol fee, this might be a good point of doing so.
+        //if we want to take a protocol fee, this might be a good point of doing so.
         fractionalizedToken.issue(_msgSender(), fractionsAmount);
 
         return fractionalizedToken;

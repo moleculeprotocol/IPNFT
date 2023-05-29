@@ -26,7 +26,6 @@ contract CrowdSaleFuzzTest is Test {
         biddingToken = new FakeERC20("USD token", "USDC");
     }
 
-    //todo: improve this test
     function testFuzzManyBidders(uint8 bidders, uint96 salesAmt, uint96 fundingGoal) public {
         vm.assume(bidders > 0 && bidders < 25);
         vm.assume(salesAmt > 0.5 ether);

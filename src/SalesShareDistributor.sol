@@ -79,7 +79,7 @@ contract SalesShareDistributor is UUPSUpgradeable, OwnableUpgradeable, Reentranc
         _sales.permissioner.accept(tokenContract, _msgSender(), permissions);
 
         if (erc20shares < 1000) {
-            //todo: this is very hard to simulate because the condition above will already yield 0
+            //this is very hard to simulate because the condition above will already yield 0
             revert InsufficientBalance();
         }
         emit SharesClaimed(address(tokenContract), _msgSender(), balance);
@@ -118,7 +118,7 @@ contract SalesShareDistributor is UUPSUpgradeable, OwnableUpgradeable, Reentranc
         _startClaimingPhase(tokenContract, listingId, _paymentToken, askPrice, permissioner);
     }
 
-    //todo: ensure that no one can withdraw arbitrary amounts here
+    //audit: ensure that no one can withdraw arbitrary amounts here
     //by simply creating a new fractionalization and claim an arbitrary value
 
     /**
