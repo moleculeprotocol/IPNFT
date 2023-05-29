@@ -119,8 +119,8 @@ contract StakedVestedCrowdSale is VestedCrowdSale {
      * @inheritdoc CrowdSale
      */
     function claim(uint256 saleId, uint256 tokenAmount, uint256 refunds) internal virtual override {
-        VestingConfig memory vestingConfig = salesVesting[saleId];
-        StakingConfig memory stakingConfig = salesStaking[saleId];
+        VestingConfig storage vestingConfig = salesVesting[saleId];
+        StakingConfig storage stakingConfig = salesStaking[saleId];
 
         uint256 refundedStakes = refunds.mulWadDown(stakingConfig.wadFixedStakedPerBidPrice);
         uint256 vestedStakes = stakes[saleId][msg.sender] - refundedStakes;

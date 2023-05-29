@@ -51,7 +51,7 @@ contract SalesShareDistributor is UUPSUpgradeable, OwnableUpgradeable, Reentranc
      * @param holder address
      */
     function claimableTokens(FractionalizedToken tokenContract, address holder) public view returns (IERC20 paymentToken, uint256 amount) {
-        Sales memory _sales = sales[address(tokenContract)];
+        Sales storage _sales = sales[address(tokenContract)];
 
         if (address(_sales.paymentToken) == address(0)) {
             revert NotClaimingYet();
@@ -72,7 +72,7 @@ contract SalesShareDistributor is UUPSUpgradeable, OwnableUpgradeable, Reentranc
         if (balance < 1000) {
             revert InsufficientBalance();
         }
-        Sales memory _sales = sales[address(tokenContract)];
+        Sales storage _sales = sales[address(tokenContract)];
 
         (IERC20 paymentToken, uint256 erc20shares) = claimableTokens(tokenContract, _msgSender());
 

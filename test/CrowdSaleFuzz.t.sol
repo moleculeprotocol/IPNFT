@@ -48,9 +48,11 @@ contract CrowdSaleFuzzTest is Test {
         uint256 saleId = crowdSale.startSale(_sale);
         vm.stopPrank();
 
+        address[] memory _bidders = new address[](bidders);
+
         for (uint8 it = 0; it < bidders; it++) {
             address someone = makeAddr(string(abi.encode("bidder", it)));
-
+            _bidders[it] = someone;
             vm.startPrank(someone);
             uint256 bid = 1000 ether;
             biddingToken.mint(someone, bid);
@@ -58,12 +60,21 @@ contract CrowdSaleFuzzTest is Test {
             crowdSale.placeBid(saleId, bid);
             vm.stopPrank();
         }
+        vm.warp(_sale.closingTime + 60 seconds);
+
         vm.startPrank(anyone);
-        try crowdSale.settle(saleId) {
-            return;
-        } catch Error(string memory err) {
-            //console.log(err);
-        }
+        crowdSale.settle(saleId);
         vm.stopPrank();
+
+        for (uint8 it = 0; it < bidders; it++) {
+            address someone = _bidders[it];
+
+            vm.startPrank(someone);
+            crowdSale.claim(saleId);
+            vm.stopPrank();
+        }
+        //dust
+        assertLt(auctionToken.balanceOf(address(crowdSale)), 0.00001 ether);
+        assertLt(biddingToken.balanceOf(address(crowdSale)), 0.00001 ether);
     }
 }

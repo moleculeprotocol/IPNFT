@@ -139,7 +139,7 @@ contract CrowdSale is ReentrancyGuard {
             revert BidTooLow();
         }
 
-        Sale memory sale = _sales[saleId];
+        Sale storage sale = _sales[saleId];
         if (sale.fundingGoal == 0) {
             revert SaleNotFund(saleId);
         }
@@ -162,7 +162,7 @@ contract CrowdSale is ReentrancyGuard {
      * @param saleId the sale id
      */
     function settle(uint256 saleId) public virtual nonReentrant {
-        Sale memory sale = _sales[saleId];
+        Sale storage sale = _sales[saleId];
         SaleInfo storage __saleInfo = _saleInfo[saleId];
 
         if (block.timestamp < sale.closingTime) {
@@ -224,7 +224,7 @@ contract CrowdSale is ReentrancyGuard {
         if (_saleInfo[saleId].state == SaleState.FAILED) {
             return claimFailed(saleId);
         }
-        Sale memory sales = _sales[saleId];
+        Sale storage sales = _sales[saleId];
         if (address(sales.permissioner) != address(0)) {
             sales.permissioner.accept(FractionalizedToken(address(sales.auctionToken)), msg.sender, permission);
         }

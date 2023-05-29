@@ -70,7 +70,7 @@ contract VestedCrowdSale is CrowdSale {
      * @param tokenAmount amount of tokens to vest
      */
     function _claimAuctionTokens(uint256 saleId, uint256 tokenAmount) internal virtual override {
-        VestingConfig memory vesting = salesVesting[saleId];
+        VestingConfig storage vesting = salesVesting[saleId];
 
         //the vesting start time is the official auction closing time
         //https://discord.com/channels/608198475598790656/1021413298756923462/1107442747687829515
