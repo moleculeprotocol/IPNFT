@@ -3,12 +3,11 @@ pragma solidity 0.8.18;
 
 import "forge-std/console.sol";
 
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
-import { FixedPointMathLib as FP } from "solmate/utils/FixedPointMathLib.sol";
+import { FixedPointMathLib } from "solmate/utils/FixedPointMathLib.sol";
 import { TokenVesting } from "@moleculeprotocol/token-vesting/TokenVesting.sol";
 
 import { VestedCrowdSale, VestingConfig, IncompatibleVestingContract, UnmanageableVestingContract } from "./VestedCrowdSale.sol";
@@ -34,6 +33,7 @@ error BadPrice();
  */
 contract StakedVestedCrowdSale is VestedCrowdSale {
     using SafeERC20 for IERC20Metadata;
+    using FixedPointMathLib for uint256;
 
     mapping(uint256 => StakingConfig) public salesStaking;
     mapping(uint256 => mapping(address => uint256)) internal stakes;
@@ -70,7 +70,7 @@ contract StakedVestedCrowdSale is VestedCrowdSale {
         //see https://github.com/moleculeprotocol/IPNFT/pull/100
         if (sale.biddingToken.decimals() != 18) {
             stakingConfig.wadFixedStakedPerBidPrice =
-                (FP.divWadDown(FP.mulWadDown(stakingConfig.wadFixedStakedPerBidPrice, 10 ** 18), 10 ** sale.biddingToken.decimals()));
+                stakingConfig.wadFixedStakedPerBidPrice.mulWadDown(10 ** 18).divWadDown(10 ** sale.biddingToken.decimals());
         }
 
         //todo: duck type check whether all token contracts can do what we need so users cannot create a sale with "bad" values
@@ -102,7 +102,7 @@ contract StakedVestedCrowdSale is VestedCrowdSale {
     function _bid(uint256 saleId, uint256 biddingTokenAmount) internal virtual override {
         StakingConfig storage staking = salesStaking[saleId];
 
-        uint256 stakedTokenAmount = FP.mulWadDown(biddingTokenAmount, staking.wadFixedStakedPerBidPrice);
+        uint256 stakedTokenAmount = biddingTokenAmount.mulWadDown(staking.wadFixedStakedPerBidPrice);
 
         staking.stakeTotal += stakedTokenAmount;
         stakes[saleId][msg.sender] += stakedTokenAmount;
@@ -122,7 +122,7 @@ contract StakedVestedCrowdSale is VestedCrowdSale {
         VestingConfig memory vestingConfig = salesVesting[saleId];
         StakingConfig memory stakingConfig = salesStaking[saleId];
 
-        uint256 refundedStakes = FP.mulWadDown(refunds, stakingConfig.wadFixedStakedPerBidPrice);
+        uint256 refundedStakes = refunds.mulWadDown(stakingConfig.wadFixedStakedPerBidPrice);
         uint256 vestedStakes = stakes[saleId][msg.sender] - refundedStakes;
 
         if (vestedStakes == 0) {

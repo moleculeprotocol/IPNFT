@@ -2,12 +2,10 @@
 pragma solidity 0.8.18;
 
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { ReentrancyGuard } from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-import { FixedPointMathLib as FP } from "solmate/utils/FixedPointMathLib.sol";
-import { Counters } from "@openzeppelin/contracts/utils/Counters.sol";
+import { FixedPointMathLib } from "solmate/utils/FixedPointMathLib.sol";
 import { IPermissioner } from "../Permissioner.sol";
 import { FractionalizedToken } from "../FractionalizedToken.sol";
 
@@ -51,8 +49,8 @@ error SaleClosedForBids();
  * @notice a fixed price sales base contract
  */
 contract CrowdSale is ReentrancyGuard {
-    using SafeERC20 for IERC20;
     using SafeERC20 for IERC20Metadata;
+    using FixedPointMathLib for uint256;
 
     mapping(uint256 => Sale) internal _sales;
     mapping(uint256 => SaleInfo) internal _saleInfo;
@@ -141,7 +139,8 @@ contract CrowdSale is ReentrancyGuard {
             revert("bad sale id");
         }
 
-        // @notice: the 2nd condition is actually quite obsolete
+        // @notice: while the general rule is that no bids aren't accepted past the sale's closing time
+        //          it's still possible for derived contracts to fail a sale early by changing the sale's state
         if (block.timestamp > sale.closingTime || _saleInfo[saleId].state != SaleState.RUNNING) {
             revert SaleClosedForBids();
         }
@@ -193,11 +192,11 @@ contract CrowdSale is ReentrancyGuard {
      * @return refunds wei value of bidding tokens to return
      */
     function getClaimableAmounts(uint256 saleId, address bidder) public view virtual returns (uint256 auctionTokens, uint256 refunds) {
-        uint256 biddingRatio = FP.divWadDown(_contributions[saleId][bidder], _saleInfo[saleId].total);
-        auctionTokens = FP.mulWadDown(biddingRatio, _sales[saleId].salesAmount);
+        uint256 biddingRatio = _contributions[saleId][bidder].divWadDown(_saleInfo[saleId].total);
+        auctionTokens = biddingRatio.mulWadDown(_sales[saleId].salesAmount);
 
         if (_saleInfo[saleId].surplus > 0) {
-            refunds = FP.mulWadDown(biddingRatio, _saleInfo[saleId].surplus);
+            refunds = biddingRatio.mulWadDown(_saleInfo[saleId].surplus);
         } else {
             refunds = 0;
         }
