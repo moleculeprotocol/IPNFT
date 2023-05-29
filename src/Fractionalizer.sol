@@ -99,10 +99,9 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardU
 
         // https://github.com/OpenZeppelin/workshops/tree/master/02-contracts-clone
         FractionalizedToken fractionalizedToken = FractionalizedToken(Clones.clone(tokenImplementation));
-        string memory name = string(abi.encodePacked("Fractions of IPNFT #", Strings.toString(ipnftId)));
-        fractionalizedToken.initialize(
-            name, string(abi.encodePacked(ipnftSymbol, "-MOL")), FractionalizedTokenMetadata(ipnftId, _msgSender(), agreementCid)
-        );
+        string memory name = string.concat("Fractions of IPNFT #", Strings.toString(ipnftId));
+        fractionalizedToken.initialize(name, string.concat(ipnftSymbol, "-MOL"), FractionalizedTokenMetadata(ipnftId, _msgSender(), agreementCid));
+
         uint256 fractionHash = fractionalizedToken.hash();
         // ensure we can only call this once per sales cycle
         if (address(fractionalized[fractionHash]) != address(0)) {
@@ -137,28 +136,26 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardU
         FractionalizedTokenMetadata memory metadata = tokenContract.metadata();
         string memory tokenId = Strings.toString(metadata.ipnftId);
 
-        string memory props = string(
-            abi.encodePacked(
-                '"properties": {',
-                '"ipnft_id": ',
-                tokenId,
-                ',"agreement_content": "ipfs://',
-                metadata.agreementCid,
-                '","original_owner": "',
-                Strings.toHexString(metadata.originalOwner),
-                '","erc20_contract": "',
-                Strings.toHexString(address(tokenContract)),
-                '","supply": "',
-                Strings.toString(tokenContract.totalIssued()),
-                '"}'
-            )
+        string memory props = string.concat(
+            '"properties": {',
+            '"ipnft_id": ',
+            tokenId,
+            ',"agreement_content": "ipfs://',
+            metadata.agreementCid,
+            '","original_owner": "',
+            Strings.toHexString(metadata.originalOwner),
+            '","erc20_contract": "',
+            Strings.toHexString(address(tokenContract)),
+            '","supply": "',
+            Strings.toString(tokenContract.totalIssued()),
+            '"}'
         );
 
-        return string(
-            abi.encodePacked(
-                "data:application/json;base64,",
-                Base64.encode(
-                    abi.encodePacked(
+        return string.concat(
+            "data:application/json;base64,",
+            Base64.encode(
+                bytes(
+                    string.concat(
                         '{"name": "Fractions of IPNFT #',
                         tokenId,
                         '","description": "this token represents fractions of the underlying asset","decimals": 18,"external_url": "https://molecule.to","image": "",',

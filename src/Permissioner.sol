@@ -57,7 +57,7 @@ contract TermsAcceptedPermissioner is IPermissioner {
      * @param tokenContract FractionalizedToken
      */
     function isValidSignature(FractionalizedToken tokenContract, address signer, bytes calldata signature) public view returns (bool) {
-        bytes32 termsHash = ECDSA.toEthSignedMessageHash(abi.encodePacked(specificTermsV1(tokenContract)));
+        bytes32 termsHash = ECDSA.toEthSignedMessageHash(bytes(specificTermsV1(tokenContract)));
         return SignatureChecker.isValidSignatureNow(signer, termsHash, signature);
     }
 
@@ -68,18 +68,16 @@ contract TermsAcceptedPermissioner is IPermissioner {
     function specificTermsV1(FractionalizedToken tokenContract) public view returns (string memory) {
         Metadata memory metadata = tokenContract.metadata();
 
-        return string(
-            abi.encodePacked(
-                "As a fraction holder of IPNFT #",
-                Strings.toString(metadata.ipnftId),
-                ", I accept all terms that I've read here: ipfs://",
-                metadata.agreementCid,
-                "\n\n",
-                "Chain Id: ",
-                Strings.toString(block.chainid),
-                "\n",
-                "Version: 1"
-            )
+        return string.concat(
+            "As a fraction holder of IPNFT #",
+            Strings.toString(metadata.ipnftId),
+            ", I accept all terms that I've read here: ipfs://",
+            metadata.agreementCid,
+            "\n\n",
+            "Chain Id: ",
+            Strings.toString(block.chainid),
+            "\n",
+            "Version: 1"
         );
     }
 }

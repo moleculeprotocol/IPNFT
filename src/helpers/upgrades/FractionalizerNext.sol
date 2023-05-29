@@ -72,8 +72,8 @@ contract FractionalizerNext is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGu
 
         // https://github.com/OpenZeppelin/workshops/tree/master/02-contracts-clone
         FractionalizedTokenNext fractionalizedToken = FractionalizedTokenNext(Clones.clone(tokenImplementation));
-        string memory name = string(abi.encodePacked("Fractions of IPNFT #", Strings.toString(ipnftId)));
-        fractionalizedToken.initialize(name, ipnftSymbol, Metadata(ipnftId, _msgSender(), agreementCid));
+        string memory name = string.concat("Fractions of IPNFT #", Strings.toString(ipnftId));
+        fractionalizedToken.initialize(name, string.concat(ipnftSymbol, "-MOL"), Metadata(ipnftId, _msgSender(), agreementCid));
         uint256 fractionHash = fractionalizedToken.hash();
         // ensure we can only call this once per sales cycle
         if (address(fractionalized[fractionHash]) != address(0)) {

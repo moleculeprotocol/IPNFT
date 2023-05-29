@@ -95,8 +95,8 @@ contract VestedCrowdSale is CrowdSale {
     function _makeVestingContract(IERC20Metadata auctionToken) private returns (TokenVesting vestingContract) {
         vestingContract = new TokenVesting(
             auctionToken,
-            string(abi.encodePacked("Vested ", auctionToken.name())),
-            string(abi.encodePacked("v", auctionToken.symbol()))
+            string.concat("Vested ", auctionToken.name()),
+            string.concat("v", auctionToken.symbol())
         );
         emit VestingContractCreated(vestingContract, auctionToken);
     }
