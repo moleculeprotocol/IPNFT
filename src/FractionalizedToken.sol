@@ -40,7 +40,7 @@ contract FractionalizedToken is ERC20BurnableUpgradeable, OwnableUpgradeable {
     }
 
     modifier onlyIssuerOrOwner() {
-        if (msg.sender != _metadata.originalOwner && msg.sender != owner()) {
+        if (_msgSender() != _metadata.originalOwner && _msgSender() != owner()) {
             revert OnlyIssuerOrOwner();
         }
         _;

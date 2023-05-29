@@ -1,17 +1,18 @@
 | src/FractionalizedToken.sol:FractionalizedToken contract |                 |        |        |        |         |
 |----------------------------------------------------------|-----------------|--------|--------|--------|---------|
 | Deployment Cost                                          | Deployment Size |        |        |        |         |
-| 1112754                                                  | 5590            |        |        |        |         |
+| 1116360                                                  | 5608            |        |        |        |         |
 | Function Name                                            | min             | avg    | median | max    | # calls |
-| approve                                                  | 24646           | 24646  | 24646  | 24646  | 4       |
+| approve(address,uint256)                                 | 24646           | 24646  | 24646  | 24646  | 3       |
+| approve(address,uint256)(bool)                           | 24646           | 24646  | 24646  | 24646  | 1       |
 | balanceOf                                                | 576             | 724    | 576    | 2576   | 27      |
 | burnFrom                                                 | 4444            | 4444   | 4444   | 4444   | 3       |
-| cap                                                      | 527             | 19309  | 21657  | 21657  | 9       |
+| cap                                                      | 545             | 19327  | 21675  | 21675  | 9       |
 | capped                                                   | 443             | 443    | 443    | 443    | 8       |
 | decimals                                                 | 200             | 200    | 200    | 200    | 2       |
 | hash                                                     | 645             | 645    | 645    | 645    | 16      |
 | initialize                                               | 161418          | 198409 | 205808 | 205808 | 18      |
-| issue                                                    | 761             | 59728  | 71339  | 71339  | 18      |
+| issue                                                    | 779             | 59746  | 71357  | 71357  | 18      |
 | issuer                                                   | 432             | 432    | 432    | 432    | 15      |
 | metadata                                                 | 1772            | 2550   | 2069   | 7772   | 30      |
 | name                                                     | 3241            | 3241   | 3241   | 3241   | 1       |
@@ -26,9 +27,9 @@
 | src/Fractionalizer.sol:Fractionalizer contract |                 |        |        |        |         |
 |------------------------------------------------|-----------------|--------|--------|--------|---------|
 | Deployment Cost                                | Deployment Size |        |        |        |         |
-| 2868984                                        | 14448           |        |        |        |         |
+| 2872593                                        | 14466           |        |        |        |         |
 | Function Name                                  | min             | avg    | median | max    | # calls |
-| fractionalizeIpnft                             | 21714           | 347004 | 377779 | 377779 | 16      |
+| fractionalizeIpnft                             | 21714           | 347020 | 377797 | 377797 | 16      |
 | initialize                                     | 93088           | 93088  | 93088  | 93088  | 15      |
 | setFeeReceiver                                 | 22717           | 22717  | 22717  | 22717  | 15      |
 | setReceiverPercentage                          | 2552            | 2552   | 2552   | 2552   | 1       |
@@ -105,9 +106,9 @@
 | Deployment Cost                                | Deployment Size |        |        |        |         |
 | 1250581                                        | 6173            |        |        |        |         |
 | Function Name                                  | min             | avg    | median | max    | # calls |
-| claim                                          | 4625            | 19469  | 24994  | 31769  | 17      |
+| claim                                          | 4625            | 22231  | 24994  | 31769  | 34      |
 | contribution                                   | 742             | 742    | 742    | 742    | 2       |
-| placeBid                                       | 367             | 46426  | 42836  | 84636  | 18      |
+| placeBid                                       | 367             | 36791  | 26589  | 84636  | 35      |
 | saleInfo                                       | 1059            | 1059   | 1059   | 1059   | 2       |
 | settle                                         | 4069            | 28816  | 28304  | 52480  | 9       |
 | startSale                                      | 581             | 113250 | 171027 | 190927 | 17      |
