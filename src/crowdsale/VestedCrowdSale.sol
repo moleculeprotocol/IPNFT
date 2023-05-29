@@ -34,6 +34,7 @@ contract VestedCrowdSale is CrowdSale {
      *
      * @param sale sale configuration
      * @param vestingConfig vesting configuration. Duration must be compatible to TokenVesting hard requirements (7 days < cliff < 50 years)
+     * @return saleId
      */
     function startSale(Sale memory sale, VestingConfig memory vestingConfig) public returns (uint256 saleId) {
         saleId = uint256(keccak256(abi.encode(sale)));

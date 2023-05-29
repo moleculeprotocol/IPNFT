@@ -55,6 +55,7 @@ contract FractionalizedToken is ERC20BurnableUpgradeable, OwnableUpgradeable {
     }
     /**
      * @notice Fractional tokens are identified by the original token holder and the underlying token id
+     * @return uint256 a token hash that's unique for [`originaOwner`,`ipnftid`]
      */
 
     function hash() external view returns (uint256) {
@@ -73,7 +74,7 @@ contract FractionalizedToken is ERC20BurnableUpgradeable, OwnableUpgradeable {
     }
 
     /**
-     * @notice mark this token as capped
+     * @notice mark this token as capped. After calling this, no new tokens can be `issue`d
      */
     function cap() external onlyIssuerOrOwner {
         capped = true;

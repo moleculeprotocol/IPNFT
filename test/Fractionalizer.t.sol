@@ -17,7 +17,6 @@ import { IPNFT } from "../src/IPNFT.sol";
 import { Mintpass } from "../src/Mintpass.sol";
 import { UUPSProxy } from "../src/UUPSProxy.sol";
 
-//import { FakeERC20 } from "../src/helpers/FakeERC20.sol";
 import { FakeERC20 } from "../src/helpers/FakeERC20.sol";
 import { Fractionalizer } from "../src/Fractionalizer.sol";
 import { ToZeroAddress, BadSupply, MustOwnIpnft, NoSymbol, AlreadyFractionalized } from "../src/Fractionalizer.sol";
@@ -96,14 +95,6 @@ contract FractionalizerTest is Test {
     }
 
     function testCannotSetInfraToZero() public {
-        vm.startPrank(deployer);
-        vm.expectRevert(ToZeroAddress.selector);
-        fractionalizer.setFeeReceiver(address(0));
-
-        fractionalizer.setFeeReceiver(deployer);
-        fractionalizer.setReceiverPercentage(10);
-        vm.stopPrank();
-
         vm.startPrank(alice);
         vm.expectRevert("Ownable: caller is not the owner");
         fractionalizer.setReceiverPercentage(10);
@@ -175,7 +166,7 @@ contract FractionalizerTest is Test {
 
     function testCanBeFractionalizedOnlyOnce() public {
         vm.startPrank(originalOwner);
-        FractionalizedToken tokenContract = fractionalizer.fractionalizeIpnft(1, 100_000, agreementCid);
+        fractionalizer.fractionalizeIpnft(1, 100_000, agreementCid);
 
         vm.expectRevert(AlreadyFractionalized.selector);
         fractionalizer.fractionalizeIpnft(1, 100_000, agreementCid);

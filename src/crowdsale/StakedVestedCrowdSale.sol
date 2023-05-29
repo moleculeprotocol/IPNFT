@@ -47,6 +47,7 @@ contract StakedVestedCrowdSale is VestedCrowdSale {
      * @param sale sale configuration
      * @param stakingConfig staking config (provide 0 for stakingConfig.stakeTotal)
      * @param vestingConfig vesting config (will apply for both staked & auction tokens)
+     * @return saleId
      */
     function startSale(Sale memory sale, StakingConfig memory stakingConfig, VestingConfig memory vestingConfig) public returns (uint256 saleId) {
         if (IERC20Metadata(address(stakingConfig.stakedToken)).decimals() != 18) {

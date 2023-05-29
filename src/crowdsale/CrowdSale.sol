@@ -70,6 +70,7 @@ contract CrowdSale is ReentrancyGuard {
      *         if no beneficiary is provided, the beneficiary will be set to msg.sender
      *         caller must approve `sale.fundingGoal` auctionTokens before calling this.
      * @param sale the sale's base configuration.
+     * @return saleId
      */
     function startSale(Sale memory sale) public returns (uint256 saleId) {
         if (sale.closingTime < block.timestamp + 2 hours) {
@@ -100,14 +101,26 @@ contract CrowdSale is ReentrancyGuard {
         _afterSaleStarted(saleId);
     }
 
+    /**
+     * @return SaleInfo information about the sale
+     */
     function saleInfo(uint256 saleId) public view returns (SaleInfo memory) {
         return _saleInfo[saleId];
     }
 
+    /**
+     * @param saleId sale id
+     * @param contributor address
+     * @return uint256 the amount of bidding tokens `contributor` has bid into the sale
+     */
     function contribution(uint256 saleId, address contributor) public view returns (uint256) {
         return _contributions[saleId][contributor];
     }
 
+    /**
+     * @param saleId the sale id
+     * @param biddingTokenAmount the amount of bidding tokens
+     */
     function placeBid(uint256 saleId, uint256 biddingTokenAmount) public virtual {
         return placeBid(saleId, biddingTokenAmount, bytes(""));
     }

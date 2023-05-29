@@ -36,8 +36,33 @@ contract TermsAcceptedPermissioner is IPermissioner {
     event TermsAccepted(address indexed tokenContract, address indexed signer, bytes signature);
 
     /**
-     * @notice this yields the message text that claimers must present as signed message to burn their fractions and claim shares
+     * @notice checks validity signer`'s `signature` of `specificTermsV1` on `fractionId` and emits an event
+     *         reverts when `signature` can't be verified
+     * @dev the signature itself or whether it has already been presented is not stored on chain
+     *      uses OZ:`SignatureChecker` under the hood and also supports EIP1271 signatures
      *
+     * @param tokenContract FractionalizedToken
+     * @param _for address the account that has created `signature`
+     * @param signature bytes encoded signature, for eip155: `abi.encodePacked(r, s, v)`
+     */
+    function accept(FractionalizedToken tokenContract, address _for, bytes calldata signature) external {
+        if (!isValidSignature(tokenContract, _for, signature)) {
+            revert InvalidSignature();
+        }
+        emit TermsAccepted(address(tokenContract), _for, signature);
+    }
+
+    /**
+     * @notice checks whether `signer`'s `signature` of `specificTermsV1` on `fractionId` is valid
+     * @param tokenContract FractionalizedToken
+     */
+    function isValidSignature(FractionalizedToken tokenContract, address signer, bytes calldata signature) public view returns (bool) {
+        bytes32 termsHash = ECDSA.toEthSignedMessageHash(abi.encodePacked(specificTermsV1(tokenContract)));
+        return SignatureChecker.isValidSignatureNow(signer, termsHash, signature);
+    }
+
+    /**
+     * @notice this yields the message text that claimers must present as signed message to burn their fractions and claim shares
      * @param tokenContract IFractionalizedToken
      */
     function specificTermsV1(FractionalizedToken tokenContract) public view returns (string memory) {
@@ -56,30 +81,5 @@ contract TermsAcceptedPermissioner is IPermissioner {
                 "Version: 1"
             )
         );
-    }
-
-    /**
-     * @notice checks whether `signer`'s `signature` of `specificTermsV1` on `fractionId` is valid
-     *
-     * @param tokenContract FractionalizedToken
-     */
-    function isValidSignature(FractionalizedToken tokenContract, address signer, bytes calldata signature) public view returns (bool) {
-        bytes32 termsHash = ECDSA.toEthSignedMessageHash(abi.encodePacked(specificTermsV1(tokenContract)));
-        return SignatureChecker.isValidSignatureNow(signer, termsHash, signature);
-    }
-
-    /**
-     * @notice checks validity signer`'s `signature` of `specificTermsV1` on `fractionId` and emits an event
-     * @dev the signature itself or whether it has already been presented is not stored on chain
-     *
-     * @param tokenContract FractionalizedToken
-     * @param _for address the account that has created `signature`
-     * @param signature bytes encoded signature, for eip155: `abi.encodePacked(r, s, v)`
-     */
-    function accept(FractionalizedToken tokenContract, address _for, bytes calldata signature) external {
-        if (!isValidSignature(tokenContract, _for, signature)) {
-            revert InvalidSignature();
-        }
-        emit TermsAccepted(address(tokenContract), _for, signature);
     }
 }
