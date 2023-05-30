@@ -127,13 +127,9 @@ contract StakedVestedCrowdSale is VestedCrowdSale {
         VestingConfig storage vestingConfig = salesVesting[saleId];
         StakingInfo storage staking = salesStaking[saleId];
 
+        //todo: it check that this works with 6 decimal bidding & 18 decimals staking tokens
         uint256 refundedStakes = refunds.mulWadDown(staking.wadFixedStakedPerBidPrice);
         uint256 vestedStakes = stakes[saleId][msg.sender] - refundedStakes;
-
-        if (vestedStakes == 0) {
-            //exit early. Also, the vesting contract would revert with a 0 amount.
-            return;
-        }
 
         //EFFECTS
         //this prevents msg.sender to claim twice
@@ -146,6 +142,10 @@ contract StakedVestedCrowdSale is VestedCrowdSale {
             staking.stakedToken.safeTransfer(msg.sender, refundedStakes);
         }
 
+        if (vestedStakes == 0) {
+            //Also, the vesting contract would revert with a 0 amount.
+            return;
+        }
         if (block.timestamp > _sales[saleId].closingTime + vestingConfig.cliff) {
             //no need for vesting when cliff already expired.
             staking.stakedToken.safeTransfer(msg.sender, vestedStakes);
@@ -155,5 +155,17 @@ contract StakedVestedCrowdSale is VestedCrowdSale {
                 msg.sender, _sales[saleId].closingTime, vestingConfig.cliff, vestingConfig.cliff, 60, false, vestedStakes
             );
         }
+    }
+
+    /**
+     * @notice will additionally charge back all staked tokens
+     * @inheritdoc CrowdSale
+     */
+    function claimFailed(uint256 saleId) internal override returns (uint256 auctionTokens, uint256 refunds) {
+        uint256 refundableStakes = stakes[saleId][msg.sender];
+        stakes[saleId][msg.sender] = 0;
+
+        (auctionTokens, refunds) = super.claimFailed(saleId);
+        salesStaking[saleId].stakedToken.safeTransfer(msg.sender, refundableStakes);
     }
 }
