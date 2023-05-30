@@ -95,8 +95,8 @@ contract CrowdSaleWithNonStandardERC20Test is Test {
 
         assertEq(biddingToken.balanceOf(bidder), 800_000e6);
         assertEq(biddingToken.balanceOf(address(crowdSale)), 200_000e6);
-        assertEq(daoToken.balanceOf(bidder), 800_000 ether);
 
+        assertEq(daoToken.balanceOf(bidder), 800_000 ether);
         assertEq(daoToken.balanceOf(address(crowdSale)), 200_000 ether);
 
         vm.startPrank(anyone);
@@ -240,16 +240,19 @@ contract CrowdSaleWithNonStandardERC20Test is Test {
         Sale memory _sale = CrowdSaleHelpers.makeSale(emitter, auctionToken, biddingToken);
         _sale.fundingGoal = 200_000e6;
         auctionToken.approve(address(crowdSale), 400_000 ether);
+        //0.25 DAO (18dec) / USDC (6dec)
         uint256 saleId = crowdSale.startSale(_sale, daoToken, vestedDao, 25e16, TokenVesting(address(0)), 60 days);
 
         vm.stopPrank();
 
         vm.startPrank(bidder);
         crowdSale.placeBid(saleId, 50_000e6);
+        assertEq(daoToken.balanceOf(address(crowdSale)), 12_500 ether);
         vm.stopPrank();
 
         vm.startPrank(bidder2);
         crowdSale.placeBid(saleId, 50_000e6);
+        assertEq(daoToken.balanceOf(address(crowdSale)), 25_000 ether);
         vm.stopPrank();
 
         vm.startPrank(anyone);
@@ -259,6 +262,7 @@ contract CrowdSaleWithNonStandardERC20Test is Test {
 
         assertEq(biddingToken.balanceOf(emitter), 0);
         assertEq(auctionToken.balanceOf(emitter), 500_000 ether);
+
         SaleInfo memory info = crowdSale.getSaleInfo(saleId);
         assertEq(info.surplus, 0);
         assertEq(uint256(info.state), uint256(SaleState.FAILED));
@@ -267,8 +271,15 @@ contract CrowdSaleWithNonStandardERC20Test is Test {
         crowdSale.claim(saleId);
         vm.stopPrank();
 
+        vm.startPrank(bidder2);
+        crowdSale.claim(saleId);
+        vm.stopPrank();
+
         assertEq(biddingToken.balanceOf(bidder), 1_000_000e6);
+        assertEq(biddingToken.balanceOf(bidder2), 1_000_000e6);
         assertEq(auctionToken.balanceOf(bidder), 0);
+        assertEq(daoToken.balanceOf(bidder), 1_000_000 ether);
+        assertEq(daoToken.balanceOf(bidder2), 1_000_000 ether);
         (TokenVesting auctionTokenVesting,) = crowdSale.salesVesting(saleId);
 
         assertEq(auctionTokenVesting.balanceOf(bidder), 0);

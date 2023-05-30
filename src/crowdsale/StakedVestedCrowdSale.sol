@@ -101,6 +101,21 @@ contract StakedVestedCrowdSale is VestedCrowdSale {
     }
 
     /**
+     * @dev computes stake returns for a bidder
+     *
+     * @param saleId sale id
+     * @param refunds amount of bidding tokens being refunded
+     * @return refundedStakes wei value of refunded staking tokens
+     * @return vestedStakes wei value of staking tokens returned wrapped as vesting tokens
+     */
+    function getClaimableStakes(uint256 saleId, uint256 refunds) public view virtual returns (uint256 refundedStakes, uint256 vestedStakes) {
+        StakingInfo storage staking = salesStaking[saleId];
+
+        refundedStakes = refunds.mulWadDown(staking.wadFixedStakedPerBidPrice);
+        vestedStakes = stakes[saleId][msg.sender] - refundedStakes;
+    }
+
+    /**
      * @dev calculates the amount of required staking tokens using the provided fix price
      *      will revert if bidder hasn't approved / owns a sufficient amount of staking tokens
      */
@@ -126,10 +141,7 @@ contract StakedVestedCrowdSale is VestedCrowdSale {
     function claim(uint256 saleId, uint256 tokenAmount, uint256 refunds) internal virtual override {
         VestingConfig storage vestingConfig = salesVesting[saleId];
         StakingInfo storage staking = salesStaking[saleId];
-
-        //todo: it check that this works with 6 decimal bidding & 18 decimals staking tokens
-        uint256 refundedStakes = refunds.mulWadDown(staking.wadFixedStakedPerBidPrice);
-        uint256 vestedStakes = stakes[saleId][msg.sender] - refundedStakes;
+        (uint256 refundedStakes, uint256 vestedStakes) = getClaimableStakes(saleId, refunds);
 
         //EFFECTS
         //this prevents msg.sender to claim twice
@@ -143,9 +155,9 @@ contract StakedVestedCrowdSale is VestedCrowdSale {
         }
 
         if (vestedStakes == 0) {
-            //Also, the vesting contract would revert with a 0 amount.
             return;
         }
+
         if (block.timestamp > _sales[saleId].closingTime + vestingConfig.cliff) {
             //no need for vesting when cliff already expired.
             staking.stakedToken.safeTransfer(msg.sender, vestedStakes);

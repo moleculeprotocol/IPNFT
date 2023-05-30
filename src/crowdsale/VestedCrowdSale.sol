@@ -74,7 +74,6 @@ contract VestedCrowdSale is CrowdSale {
         VestingConfig storage vesting = salesVesting[saleId];
 
         //the vesting start time is the official auction closing time
-        //https://discord.com/channels/608198475598790656/1021413298756923462/1107442747687829515
         if (block.timestamp > _sales[saleId].closingTime + vesting.cliff) {
             //no need for vesting when cliff already expired.
             _sales[saleId].auctionToken.safeTransfer(msg.sender, tokenAmount);

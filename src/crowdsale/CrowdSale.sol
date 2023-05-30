@@ -155,7 +155,9 @@ contract CrowdSale is ReentrancyGuard {
     }
 
     /**
-     * @notice anyone can call this for the beneficiary. Releases raised funds to beneficiary when funding goal was met
+     * @notice anyone can call this for the beneficiary.
+     *         Releases raised funds to beneficiary when funding goal was met
+     *         Returns all auction tokens to beneficiary (auctioneer) when funding goal was not met
      * @param saleId the sale id
      */
     function settle(uint256 saleId) public virtual nonReentrant {
@@ -222,6 +224,7 @@ contract CrowdSale is ReentrancyGuard {
             return claimFailed(saleId);
         }
         Sale storage sales = _sales[saleId];
+        //we're not querying the permissioner if the sale has failed.
         if (address(sales.permissioner) != address(0)) {
             sales.permissioner.accept(FractionalizedToken(address(sales.auctionToken)), msg.sender, permission);
         }
