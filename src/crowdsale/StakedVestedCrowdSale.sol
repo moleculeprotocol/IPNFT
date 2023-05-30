@@ -101,6 +101,21 @@ contract StakedVestedCrowdSale is VestedCrowdSale {
     }
 
     /**
+     * @dev computes stake returns for a bidder
+     *
+     * @param saleId sale id
+     * @param refunds amount of bidding tokens being refunded
+     * @return refundedStakes wei value of refunded staking tokens
+     * @return vestedStakes wei value of staking tokens returned wrapped as vesting tokens
+     */
+    function getClaimableStakes(uint256 saleId, uint256 refunds) public view virtual returns (uint256 refundedStakes, uint256 vestedStakes) {
+        StakingInfo storage staking = salesStaking[saleId];
+
+        refundedStakes = refunds.mulWadDown(staking.wadFixedStakedPerBidPrice);
+        vestedStakes = stakes[saleId][msg.sender] - refundedStakes;
+    }
+
+    /**
      * @dev calculates the amount of required staking tokens using the provided fix price
      *      will revert if bidder hasn't approved / owns a sufficient amount of staking tokens
      */
@@ -126,14 +141,7 @@ contract StakedVestedCrowdSale is VestedCrowdSale {
     function claim(uint256 saleId, uint256 tokenAmount, uint256 refunds) internal virtual override {
         VestingConfig storage vestingConfig = salesVesting[saleId];
         StakingInfo storage staking = salesStaking[saleId];
-
-        uint256 refundedStakes = refunds.mulWadDown(staking.wadFixedStakedPerBidPrice);
-        uint256 vestedStakes = stakes[saleId][msg.sender] - refundedStakes;
-
-        if (vestedStakes == 0) {
-            //exit early. Also, the vesting contract would revert with a 0 amount.
-            return;
-        }
+        (uint256 refundedStakes, uint256 vestedStakes) = getClaimableStakes(saleId, refunds);
 
         //EFFECTS
         //this prevents msg.sender to claim twice
@@ -146,6 +154,10 @@ contract StakedVestedCrowdSale is VestedCrowdSale {
             staking.stakedToken.safeTransfer(msg.sender, refundedStakes);
         }
 
+        if (vestedStakes == 0) {
+            return;
+        }
+
         if (block.timestamp > _sales[saleId].closingTime + vestingConfig.cliff) {
             //no need for vesting when cliff already expired.
             staking.stakedToken.safeTransfer(msg.sender, vestedStakes);
@@ -155,5 +167,17 @@ contract StakedVestedCrowdSale is VestedCrowdSale {
                 msg.sender, _sales[saleId].closingTime, vestingConfig.cliff, vestingConfig.cliff, 60, false, vestedStakes
             );
         }
+    }
+
+    /**
+     * @notice will additionally charge back all staked tokens
+     * @inheritdoc CrowdSale
+     */
+    function claimFailed(uint256 saleId) internal override returns (uint256 auctionTokens, uint256 refunds) {
+        uint256 refundableStakes = stakes[saleId][msg.sender];
+        stakes[saleId][msg.sender] = 0;
+
+        (auctionTokens, refunds) = super.claimFailed(saleId);
+        salesStaking[saleId].stakedToken.safeTransfer(msg.sender, refundableStakes);
     }
 }

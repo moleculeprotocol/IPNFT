@@ -76,7 +76,7 @@ contract CrowdSaleVestedTest is Test {
         vm.stopPrank();
 
         assertEq(biddingToken.balanceOf(emitter), _sale.fundingGoal);
-        SaleInfo memory info = crowdSale.saleInfo(saleId);
+        SaleInfo memory info = crowdSale.getSaleInfo(saleId);
         assertEq(info.surplus, 0);
 
         vm.startPrank(bidder);
@@ -118,7 +118,7 @@ contract CrowdSaleVestedTest is Test {
 
         assertEq(biddingToken.balanceOf(emitter), 0);
         assertEq(auctionToken.balanceOf(emitter), 500_000 ether);
-        SaleInfo memory info = crowdSale.saleInfo(saleId);
+        SaleInfo memory info = crowdSale.getSaleInfo(saleId);
         assertEq(info.surplus, 0);
         assertEq(uint256(info.state), uint256(SaleState.FAILED));
 
@@ -170,7 +170,7 @@ contract CrowdSaleVestedTest is Test {
         vm.stopPrank();
 
         assertEq(biddingToken.balanceOf(emitter), _sale.fundingGoal);
-        SaleInfo memory info = crowdSale.saleInfo(saleId);
+        SaleInfo memory info = crowdSale.getSaleInfo(saleId);
         assertEq(info.surplus, 0);
 
         vm.startPrank(bidder);

@@ -104,7 +104,7 @@ contract CrowdSale is ReentrancyGuard {
     /**
      * @return SaleInfo information about the sale
      */
-    function saleInfo(uint256 saleId) public view returns (SaleInfo memory) {
+    function getSaleInfo(uint256 saleId) public view returns (SaleInfo memory) {
         return _saleInfo[saleId];
     }
 
@@ -155,31 +155,33 @@ contract CrowdSale is ReentrancyGuard {
     }
 
     /**
-     * @notice anyone can call this for the beneficiary. Releases raised funds to beneficiary when funding goal was met
+     * @notice anyone can call this for the beneficiary.
+     *         Releases raised funds to beneficiary when funding goal was met
+     *         Returns all auction tokens to beneficiary (auctioneer) when funding goal was not met
      * @param saleId the sale id
      */
     function settle(uint256 saleId) public virtual nonReentrant {
         Sale storage sale = _sales[saleId];
-        SaleInfo storage __saleInfo = _saleInfo[saleId];
+        SaleInfo storage saleInfo = _saleInfo[saleId];
 
         if (block.timestamp < sale.closingTime) {
             revert SaleNotConcluded();
         }
 
-        if (__saleInfo.state != SaleState.RUNNING) {
-            revert BadSaleState(SaleState.RUNNING, __saleInfo.state);
+        if (saleInfo.state != SaleState.RUNNING) {
+            revert BadSaleState(SaleState.RUNNING, saleInfo.state);
         }
 
-        if (__saleInfo.total < sale.fundingGoal) {
-            __saleInfo.state = SaleState.FAILED;
+        if (saleInfo.total < sale.fundingGoal) {
+            saleInfo.state = SaleState.FAILED;
             emit Failed(saleId);
             sale.auctionToken.safeTransfer(sale.beneficiary, sale.salesAmount);
             return;
         }
-        __saleInfo.state = SaleState.SETTLED;
-        __saleInfo.surplus = __saleInfo.total - sale.fundingGoal;
+        saleInfo.state = SaleState.SETTLED;
+        saleInfo.surplus = saleInfo.total - sale.fundingGoal;
 
-        emit Settled(saleId, __saleInfo.total, __saleInfo.surplus);
+        emit Settled(saleId, saleInfo.total, saleInfo.surplus);
 
         //transfer funds to issuer / beneficiary
         sale.biddingToken.safeTransfer(sale.beneficiary, sale.fundingGoal);
@@ -222,6 +224,7 @@ contract CrowdSale is ReentrancyGuard {
             return claimFailed(saleId);
         }
         Sale storage sales = _sales[saleId];
+        //we're not querying the permissioner if the sale has failed.
         if (address(sales.permissioner) != address(0)) {
             sales.permissioner.accept(FractionalizedToken(address(sales.auctionToken)), msg.sender, permission);
         }

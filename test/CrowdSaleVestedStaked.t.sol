@@ -124,7 +124,7 @@ contract CrowdSaleVestedStakedTest is Test {
         vm.stopPrank();
 
         assertEq(biddingToken.balanceOf(emitter), _sale.fundingGoal);
-        SaleInfo memory info = crowdSale.saleInfo(saleId);
+        SaleInfo memory info = crowdSale.getSaleInfo(saleId);
         assertEq(info.surplus, 0);
 
         vm.startPrank(bidder);
@@ -327,9 +327,11 @@ contract CrowdSaleVestedStakedTest is Test {
         crowdSale.settle(saleId);
         vm.stopPrank();
 
-        assertEq(biddingToken.balanceOf(emitter), 0);
+        //when settling a failed sale, the auctioneer receives back all their auction tokens
         assertEq(auctionToken.balanceOf(emitter), 500_000 ether);
-        SaleInfo memory info = crowdSale.saleInfo(saleId);
+        assertEq(biddingToken.balanceOf(emitter), 0);
+
+        SaleInfo memory info = crowdSale.getSaleInfo(saleId);
         assertEq(info.surplus, 0);
         assertEq(uint256(info.state), uint256(SaleState.FAILED));
 
@@ -337,7 +339,11 @@ contract CrowdSaleVestedStakedTest is Test {
         crowdSale.claim(saleId);
         vm.stopPrank();
 
+        //after claiming a bid on a failed sale, the bidder
+        //receives all their bids and stakes back
         assertEq(biddingToken.balanceOf(bidder), 1_000_000 ether);
+        assertEq(daoToken.balanceOf(bidder), 1_000_000 ether);
+
         assertEq(auctionToken.balanceOf(bidder), 0);
         (TokenVesting auctionTokenVesting,) = crowdSale.salesVesting(saleId);
 
