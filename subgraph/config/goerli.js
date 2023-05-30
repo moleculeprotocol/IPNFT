@@ -1,8 +1,8 @@
-const path = require('node:path');
+const path = require('node:path')
 require('dotenv').config({
   debug: true,
   path: path.resolve(process.cwd(), '../.env')
-});
+})
 
 module.exports = {
   network: 'goerli',
@@ -23,11 +23,11 @@ module.exports = {
     startBlock: 9044965
   },
   stakedVestedCrowdSale: {
-    address: '0xb3614a39C04D0c9Be7179173336dC0eA0bAEC610',
-    startBlock: 9044965
+    address: '0x04A44702Bc07De65EA721aEb32d836D9C2d1d2a9',
+    startBlock: 9087462
   },
   termsAcceptedPermissioner: {
     address: '0xaC17101C598e8D8567a158b773bF76d9CDDdCE31',
     startBlock: 9044965
   }
-};
+}
