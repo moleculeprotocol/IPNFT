@@ -12,14 +12,16 @@ struct Schedule {
 }
 
 error NotSupported();
+error StillLocked();
+error DuplicateSchedule();
 
-contract TimeLockedToken is IERC20MetadataUpgradeable, Initializable {
+contract TimelockedToken is IERC20MetadataUpgradeable, Initializable {
     using SafeERC20Upgradeable for IERC20MetadataUpgradeable;
 
     IERC20MetadataUpgradeable underlyingToken;
-    mapping(bytes32 => Schedule) public schedules;
-    mapping(address => uint256) balances;
     uint256 public totalSupply;
+    mapping(address => uint256) balances;
+    mapping(bytes32 => Schedule) public schedules;
 
     function initialize(IERC20MetadataUpgradeable underlyingToken_) external initializer {
         underlyingToken = underlyingToken_;
@@ -66,12 +68,15 @@ contract TimeLockedToken is IERC20MetadataUpgradeable, Initializable {
         return balances[account];
     }
 
-    function lock(address beneficiary, uint256 amount, uint64 untilTimestamp) external {
+    function lock(address beneficiary, uint256 amount, uint64 untilTimestamp) external returns (bytes32 scheduleId) {
         if (untilTimestamp < block.timestamp + 15 minutes) {
             revert("too short notice");
         }
 
-        bytes32 scheduleId = keccak256(abi.encode(msg.sender, beneficiary, amount, untilTimestamp));
+        scheduleId = keccak256(abi.encodePacked(msg.sender, beneficiary, amount, untilTimestamp));
+        if (schedules[scheduleId].beneficiary != address(0)) {
+            revert DuplicateSchedule();
+        }
         schedules[scheduleId] = Schedule(untilTimestamp, beneficiary, amount);
         balances[beneficiary] += amount;
         totalSupply += amount;
@@ -80,8 +85,8 @@ contract TimeLockedToken is IERC20MetadataUpgradeable, Initializable {
 
     function release(bytes32 scheduleId) public {
         Schedule memory schedule = schedules[scheduleId];
-        if (schedule.until < block.timestamp) {
-            revert("still locked");
+        if (schedule.until > block.timestamp) {
+            revert StillLocked();
         }
         totalSupply -= schedule.amount;
         balances[schedule.beneficiary] -= schedule.amount;
