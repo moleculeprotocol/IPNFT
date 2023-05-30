@@ -37,11 +37,6 @@
   },
   {
     "inputs": [],
-    "name": "BalanceTooLow",
-    "type": "error"
-  },
-  {
-    "inputs": [],
     "name": "BidTooLow",
     "type": "error"
   },
@@ -146,7 +141,7 @@
     "anonymous": false,
     "inputs": [
       {
-        "indexed": false,
+        "indexed": true,
         "internalType": "uint256",
         "name": "saleId",
         "type": "uint256"
@@ -215,7 +210,7 @@
     "anonymous": false,
     "inputs": [
       {
-        "indexed": false,
+        "indexed": true,
         "internalType": "uint256",
         "name": "saleId",
         "type": "uint256"
@@ -323,7 +318,7 @@
     "anonymous": false,
     "inputs": [
       {
-        "indexed": false,
+        "indexed": true,
         "internalType": "uint256",
         "name": "saleId",
         "type": "uint256"
@@ -595,36 +590,24 @@
       },
       {
         "internalType": "uint256",
-        "name": "biddingTokenAmount",
+        "name": "refunds",
         "type": "uint256"
       }
     ],
-    "name": "placeBid",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
+    "name": "getClaimableStakes",
+    "outputs": [
       {
         "internalType": "uint256",
-        "name": "saleId",
+        "name": "refundedStakes",
         "type": "uint256"
       },
       {
         "internalType": "uint256",
-        "name": "biddingTokenAmount",
+        "name": "vestedStakes",
         "type": "uint256"
-      },
-      {
-        "internalType": "bytes",
-        "name": "permission",
-        "type": "bytes"
       }
     ],
-    "name": "placeBid",
-    "outputs": [],
-    "stateMutability": "nonpayable",
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -635,7 +618,7 @@
         "type": "uint256"
       }
     ],
-    "name": "saleInfo",
+    "name": "getSaleInfo",
     "outputs": [
       {
         "components": [
@@ -661,6 +644,29 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "saleId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "biddingTokenAmount",
+        "type": "uint256"
+      },
+      {
+        "internalType": "bytes",
+        "name": "permission",
+        "type": "bytes"
+      }
+    ],
+    "name": "placeBid",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
