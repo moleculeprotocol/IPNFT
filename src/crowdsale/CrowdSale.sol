@@ -118,20 +118,12 @@ contract CrowdSale is ReentrancyGuard {
     }
 
     /**
-     * @param saleId the sale id
-     * @param biddingTokenAmount the amount of bidding tokens
-     */
-    function placeBid(uint256 saleId, uint256 biddingTokenAmount) public virtual {
-        return placeBid(saleId, biddingTokenAmount, bytes(""));
-    }
-
-    /**
      * @dev even though `auctionToken` is casted to `FractionalizedToken` this should still work with IPNFT agnostic tokens
      * @param saleId the sale id
      * @param biddingTokenAmount the amount of bidding tokens
-     * @param permission bytes are handed over to a configured permissioner contract
+     * @param permission bytes are handed over to a configured permissioner contract. Set to 0x0 / "" / [] if not needed
      */
-    function placeBid(uint256 saleId, uint256 biddingTokenAmount, bytes memory permission) public {
+    function placeBid(uint256 saleId, uint256 biddingTokenAmount, bytes calldata permission) public {
         if (biddingTokenAmount == 0) {
             revert BidTooLow();
         }

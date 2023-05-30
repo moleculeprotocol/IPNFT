@@ -110,7 +110,7 @@ contract CrowdSaleVestedStakedTest is Test {
         vm.stopPrank();
 
         vm.startPrank(bidder);
-        crowdSale.placeBid(saleId, 200_000 ether);
+        crowdSale.placeBid(saleId, 200_000 ether, "");
         vm.stopPrank();
 
         assertEq(biddingToken.balanceOf(bidder), 800_000 ether);
@@ -146,15 +146,15 @@ contract CrowdSaleVestedStakedTest is Test {
         vm.stopPrank();
 
         vm.startPrank(bidder);
-        crowdSale.placeBid(saleId, 200_000 ether);
+        crowdSale.placeBid(saleId, 200_000 ether, "");
         vm.stopPrank();
 
         vm.startPrank(bidder2);
-        crowdSale.placeBid(saleId, 200_000 ether);
+        crowdSale.placeBid(saleId, 200_000 ether, "");
         vm.stopPrank();
 
         vm.startPrank(bidder);
-        crowdSale.placeBid(saleId, 400_000 ether);
+        crowdSale.placeBid(saleId, 400_000 ether, "");
         vm.stopPrank();
 
         assertEq(biddingToken.balanceOf(bidder), 400_000 ether);
@@ -255,16 +255,16 @@ contract CrowdSaleVestedStakedTest is Test {
         vm.stopPrank();
 
         vm.startPrank(bidder);
-        crowdSale.placeBid(saleId, 380_000 ether);
+        crowdSale.placeBid(saleId, 380_000 ether, "");
         assertEq(daoToken.balanceOf(address(crowdSale)), 95_000 ether);
         vm.stopPrank();
 
         vm.startPrank(bidder2);
-        crowdSale.placeBid(saleId, 450_000 ether);
+        crowdSale.placeBid(saleId, 450_000 ether, "");
         vm.stopPrank();
 
         vm.startPrank(bidder);
-        crowdSale.placeBid(saleId, 230_000 ether);
+        crowdSale.placeBid(saleId, 230_000 ether, "");
         vm.stopPrank();
 
         //stakes have been placed.
@@ -315,11 +315,11 @@ contract CrowdSaleVestedStakedTest is Test {
         vm.stopPrank();
 
         vm.startPrank(bidder);
-        crowdSale.placeBid(saleId, 50_000 ether);
+        crowdSale.placeBid(saleId, 50_000 ether, "");
         vm.stopPrank();
 
         vm.startPrank(bidder2);
-        crowdSale.placeBid(saleId, 50_000 ether);
+        crowdSale.placeBid(saleId, 50_000 ether, "");
         vm.stopPrank();
 
         vm.startPrank(anyone);
@@ -359,7 +359,7 @@ contract CrowdSaleVestedStakedTest is Test {
         vm.stopPrank();
 
         vm.startPrank(bidder);
-        crowdSale.placeBid(saleId, 200_000 ether);
+        crowdSale.placeBid(saleId, 200_000 ether, "");
         vm.stopPrank();
 
         vm.warp(block.timestamp + 7 days);

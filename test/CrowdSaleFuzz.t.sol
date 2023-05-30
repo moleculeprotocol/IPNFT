@@ -57,7 +57,7 @@ contract CrowdSaleFuzzTest is Test {
             uint256 bid = 1000 ether;
             biddingToken.mint(someone, bid);
             biddingToken.approve(address(crowdSale), bid);
-            crowdSale.placeBid(saleId, bid);
+            crowdSale.placeBid(saleId, bid, "");
             vm.stopPrank();
         }
         vm.warp(_sale.closingTime + 60 seconds);

@@ -67,7 +67,7 @@ contract CrowdSaleVestedTest is Test {
         vm.stopPrank();
 
         vm.startPrank(bidder);
-        crowdSale.placeBid(saleId, 200_000 ether);
+        crowdSale.placeBid(saleId, 200_000 ether, "");
         vm.stopPrank();
 
         vm.startPrank(anyone);
@@ -108,7 +108,7 @@ contract CrowdSaleVestedTest is Test {
         vm.stopPrank();
 
         vm.startPrank(bidder);
-        crowdSale.placeBid(saleId, 150_000 ether);
+        crowdSale.placeBid(saleId, 150_000 ether, "");
         vm.stopPrank();
 
         vm.startPrank(anyone);
@@ -161,7 +161,7 @@ contract CrowdSaleVestedTest is Test {
         vm.stopPrank();
 
         vm.startPrank(bidder);
-        crowdSale.placeBid(saleId, 200_000 ether);
+        crowdSale.placeBid(saleId, 200_000 ether, "");
         vm.stopPrank();
 
         vm.startPrank(anyone);
@@ -200,7 +200,7 @@ contract CrowdSaleVestedTest is Test {
         vm.stopPrank();
 
         vm.startPrank(bidder);
-        crowdSale.placeBid(saleId, 200_000 ether);
+        crowdSale.placeBid(saleId, 200_000 ether, "");
         vm.stopPrank();
 
         vm.warp(block.timestamp + 7 days);

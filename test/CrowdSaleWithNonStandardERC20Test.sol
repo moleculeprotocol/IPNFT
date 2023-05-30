@@ -90,7 +90,7 @@ contract CrowdSaleWithNonStandardERC20Test is Test {
         vm.stopPrank();
 
         vm.startPrank(bidder);
-        crowdSale.placeBid(saleId, 200_000e6);
+        crowdSale.placeBid(saleId, 200_000e6, "");
         vm.stopPrank();
 
         assertEq(biddingToken.balanceOf(bidder), 800_000e6);
@@ -128,15 +128,15 @@ contract CrowdSaleWithNonStandardERC20Test is Test {
         vm.stopPrank();
 
         vm.startPrank(bidder);
-        crowdSale.placeBid(saleId, 200_000e6);
+        crowdSale.placeBid(saleId, 200_000e6, "");
         vm.stopPrank();
 
         vm.startPrank(bidder2);
-        crowdSale.placeBid(saleId, 200_000e6);
+        crowdSale.placeBid(saleId, 200_000e6, "");
         vm.stopPrank();
 
         vm.startPrank(bidder);
-        crowdSale.placeBid(saleId, 400_000e6);
+        crowdSale.placeBid(saleId, 400_000e6, "");
         vm.stopPrank();
 
         assertEq(biddingToken.balanceOf(bidder), 400_000e6);
@@ -184,16 +184,16 @@ contract CrowdSaleWithNonStandardERC20Test is Test {
         vm.stopPrank();
 
         vm.startPrank(bidder);
-        crowdSale.placeBid(saleId, 380_000e6);
+        crowdSale.placeBid(saleId, 380_000e6, "");
         assertEq(daoToken.balanceOf(address(crowdSale)), 95_000 ether);
         vm.stopPrank();
 
         vm.startPrank(bidder2);
-        crowdSale.placeBid(saleId, 450_000e6);
+        crowdSale.placeBid(saleId, 450_000e6, "");
         vm.stopPrank();
 
         vm.startPrank(bidder);
-        crowdSale.placeBid(saleId, 230_000e6);
+        crowdSale.placeBid(saleId, 230_000e6, "");
         vm.stopPrank();
 
         //stakes have been placed.
@@ -246,12 +246,12 @@ contract CrowdSaleWithNonStandardERC20Test is Test {
         vm.stopPrank();
 
         vm.startPrank(bidder);
-        crowdSale.placeBid(saleId, 50_000e6);
+        crowdSale.placeBid(saleId, 50_000e6, "");
         assertEq(daoToken.balanceOf(address(crowdSale)), 12_500 ether);
         vm.stopPrank();
 
         vm.startPrank(bidder2);
-        crowdSale.placeBid(saleId, 50_000e6);
+        crowdSale.placeBid(saleId, 50_000e6, "");
         assertEq(daoToken.balanceOf(address(crowdSale)), 25_000 ether);
         vm.stopPrank();
 
