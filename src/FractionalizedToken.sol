@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.18;
 
-import { ERC20Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 import { ERC20BurnableUpgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20BurnableUpgradeable.sol";
-
 import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
+import { Base64 } from "@openzeppelin/contracts/utils/Base64.sol";
 
 struct Metadata {
     uint256 ipnftId;
@@ -79,5 +79,43 @@ contract FractionalizedToken is ERC20BurnableUpgradeable, OwnableUpgradeable {
     function cap() external onlyIssuerOrOwner {
         capped = true;
         emit Capped(totalIssued);
+    }
+
+    /**
+     * @notice contract metadata, compatible to ERC1155
+     * @return string base64 encoded data url
+     */
+    function uri() external view returns (string memory) {
+        string memory tokenId = Strings.toString(_metadata.ipnftId);
+
+        string memory props = string.concat(
+            '"properties": {',
+            '"ipnft_id": ',
+            tokenId,
+            ',"agreement_content": "ipfs://',
+            _metadata.agreementCid,
+            '","original_owner": "',
+            Strings.toHexString(_metadata.originalOwner),
+            '","erc20_contract": "',
+            Strings.toHexString(address(this)),
+            '","supply": "',
+            Strings.toString(totalIssued),
+            '"}'
+        );
+
+        return string.concat(
+            "data:application/json;base64,",
+            Base64.encode(
+                bytes(
+                    string.concat(
+                        '{"name": "Fractions of IPNFT #',
+                        tokenId,
+                        '","description": "this token represents fractions of the underlying asset","decimals": 18,"external_url": "https://molecule.to","image": "",',
+                        props,
+                        "}"
+                    )
+                )
+            )
+        );
     }
 }

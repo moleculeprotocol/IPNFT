@@ -87,7 +87,7 @@ contract CrowdSalePermissionedTest is Test {
 
         vm.startPrank(bidder);
         vm.expectRevert(InvalidSignature.selector);
-        crowdSale.placeBid(saleId, 200_000 ether);
+        crowdSale.placeBid(saleId, 200_000 ether, "");
 
         crowdSale.placeBid(saleId, 200_000 ether, xsignature);
         vm.stopPrank();

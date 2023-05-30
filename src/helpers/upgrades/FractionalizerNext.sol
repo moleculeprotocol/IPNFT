@@ -3,13 +3,10 @@ pragma solidity 0.8.18;
 
 import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import { ReentrancyGuardUpgradeable } from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
-
 import { Base64 } from "@openzeppelin/contracts/utils/Base64.sol";
 import { Clones } from "@openzeppelin/contracts/proxy/Clones.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
-import { ToZeroAddress, BadSupply, MustOwnIpnft, NoSymbol, AlreadyFractionalized } from "../../Fractionalizer.sol";
-
+import { MustOwnIpnft, NoSymbol, AlreadyFractionalized } from "../../Fractionalizer.sol";
 import { FractionalizedToken, Metadata, TokenCapped } from "../../FractionalizedToken.sol";
 import { IPNFT } from "../../IPNFT.sol";
 
@@ -28,7 +25,7 @@ contract FractionalizedTokenNext is FractionalizedToken {
 /// @title FractionalizerNext
 /// @author molecule.to
 /// @notice this is used to test upgrade safety
-contract FractionalizerNext is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardUpgradeable {
+contract FractionalizerNext is UUPSUpgradeable, OwnableUpgradeable {
     event FractionsCreated(
         uint256 indexed ipnftId, address indexed tokenContract, address emitter, uint256 amount, string agreementCid, string name, string symbol
     );
@@ -45,7 +42,6 @@ contract FractionalizerNext is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGu
     function initialize(IPNFT _ipnft) public initializer {
         __UUPSUpgradeable_init();
         __Ownable_init();
-        __ReentrancyGuard_init();
         ipnft = _ipnft;
     }
 
@@ -59,9 +55,6 @@ contract FractionalizerNext is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGu
         external
         returns (FractionalizedTokenNext token)
     {
-        if (ipnft.totalSupply(ipnftId) != 1) {
-            revert BadSupply();
-        }
         if (ipnft.balanceOf(_msgSender(), ipnftId) != 1) {
             revert MustOwnIpnft();
         }

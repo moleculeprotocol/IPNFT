@@ -19,7 +19,7 @@ import { UUPSProxy } from "../src/UUPSProxy.sol";
 
 import { FakeERC20 } from "../src/helpers/FakeERC20.sol";
 import { Fractionalizer } from "../src/Fractionalizer.sol";
-import { ToZeroAddress, BadSupply, MustOwnIpnft, NoSymbol, AlreadyFractionalized } from "../src/Fractionalizer.sol";
+import { MustOwnIpnft, NoSymbol, AlreadyFractionalized } from "../src/Fractionalizer.sol";
 
 import { FractionalizedToken, OnlyIssuerOrOwner, TokenCapped } from "../src/FractionalizedToken.sol";
 import { FractionalizerNext, FractionalizedTokenNext } from "../src/helpers/upgrades/FractionalizerNext.sol";
@@ -104,7 +104,7 @@ contract FractionalizerTest is Test {
     function testUrl() public {
         vm.startPrank(originalOwner);
         FractionalizedToken tokenContract = fractionalizer.fractionalizeIpnft(1, 100_000, agreementCid);
-        string memory uri = fractionalizer.uri(tokenContract.hash());
+        string memory uri = tokenContract.uri();
         assertGt(bytes(uri).length, 200);
         vm.stopPrank();
     }

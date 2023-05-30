@@ -12,7 +12,6 @@ import {
     SaleInfo,
     BadSalesAmount,
     BadSaleDuration,
-    BalanceTooLow,
     SaleAlreadyActive,
     SaleClosedForBids,
     BidTooLow,
@@ -75,7 +74,7 @@ contract CrowdSaleTest is Test {
         Sale memory _sale = CrowdSaleHelpers.makeSale(poorguy, auctionToken, biddingToken);
 
         vm.startPrank(poorguy);
-        vm.expectRevert(BalanceTooLow.selector);
+        vm.expectRevert("ERC20: insufficient allowance");
         crowdSale.startSale(_sale);
         vm.stopPrank();
     }
@@ -128,15 +127,15 @@ contract CrowdSaleTest is Test {
 
         vm.startPrank(bidder);
         vm.expectRevert(BidTooLow.selector);
-        crowdSale.placeBid(saleId, 0);
+        crowdSale.placeBid(saleId, 0, "");
 
         vm.expectRevert(abi.encodeWithSelector(SaleNotFund.selector, 42));
-        crowdSale.placeBid(42, 1000);
+        crowdSale.placeBid(42, 1000, "");
 
-        crowdSale.placeBid(saleId, 100_000 ether);
+        crowdSale.placeBid(saleId, 100_000 ether, "");
         assertEq(crowdSale.contribution(saleId, bidder), 100_000 ether);
 
-        crowdSale.placeBid(saleId, 100_000 ether);
+        crowdSale.placeBid(saleId, 100_000 ether, "");
         assertEq(crowdSale.contribution(saleId, bidder), 200_000 ether);
         vm.stopPrank();
     }
@@ -150,7 +149,7 @@ contract CrowdSaleTest is Test {
         vm.stopPrank();
 
         vm.startPrank(bidder);
-        crowdSale.placeBid(saleId, 200_000 ether);
+        crowdSale.placeBid(saleId, 200_000 ether, "");
         vm.stopPrank();
 
         // cant settle before sale.closingTime
@@ -163,7 +162,7 @@ contract CrowdSaleTest is Test {
         // cant place bids after sale.closingTime
         vm.startPrank(bidder);
         vm.expectRevert(SaleClosedForBids.selector);
-        crowdSale.placeBid(saleId, 100_000 ether);
+        crowdSale.placeBid(saleId, 100_000 ether, "");
         vm.stopPrank();
 
         // cant claim before settled
@@ -198,7 +197,7 @@ contract CrowdSaleTest is Test {
         vm.stopPrank();
 
         vm.startPrank(bidder);
-        crowdSale.placeBid(saleId, 150_000 ether);
+        crowdSale.placeBid(saleId, 150_000 ether, "");
         vm.stopPrank();
 
         vm.startPrank(anyone);
@@ -230,11 +229,11 @@ contract CrowdSaleTest is Test {
         vm.stopPrank();
 
         vm.startPrank(bidder);
-        crowdSale.placeBid(saleId, 150_000 ether);
+        crowdSale.placeBid(saleId, 150_000 ether, "");
         vm.stopPrank();
 
         vm.startPrank(bidder2);
-        crowdSale.placeBid(saleId, 50_000 ether);
+        crowdSale.placeBid(saleId, 50_000 ether, "");
         vm.stopPrank();
 
         vm.startPrank(anyone);
@@ -268,7 +267,7 @@ contract CrowdSaleTest is Test {
         vm.stopPrank();
 
         vm.startPrank(bidder);
-        crowdSale.placeBid(saleId, 1_000_000 ether);
+        crowdSale.placeBid(saleId, 1_000_000 ether, "");
         vm.stopPrank();
         assertEq(biddingToken.balanceOf(bidder), 0);
 
@@ -299,15 +298,15 @@ contract CrowdSaleTest is Test {
         vm.stopPrank();
 
         vm.startPrank(bidder);
-        crowdSale.placeBid(saleId, 200_000 ether);
+        crowdSale.placeBid(saleId, 200_000 ether, "");
         vm.stopPrank();
 
         vm.startPrank(bidder2);
-        crowdSale.placeBid(saleId, 200_000 ether);
+        crowdSale.placeBid(saleId, 200_000 ether, "");
         vm.stopPrank();
 
         vm.startPrank(bidder);
-        crowdSale.placeBid(saleId, 400_000 ether);
+        crowdSale.placeBid(saleId, 400_000 ether, "");
         vm.stopPrank();
         /*
         800_000 are bid
@@ -369,15 +368,15 @@ contract CrowdSaleTest is Test {
         vm.stopPrank();
 
         vm.startPrank(bidder);
-        crowdSale.placeBid(saleId, 380_000 ether);
+        crowdSale.placeBid(saleId, 380_000 ether, "");
         vm.stopPrank();
 
         vm.startPrank(bidder2);
-        crowdSale.placeBid(saleId, 450_000 ether);
+        crowdSale.placeBid(saleId, 450_000 ether, "");
         vm.stopPrank();
 
         vm.startPrank(bidder);
-        crowdSale.placeBid(saleId, 230_000 ether);
+        crowdSale.placeBid(saleId, 230_000 ether, "");
         vm.stopPrank();
         /*
         1_060_000 are bid

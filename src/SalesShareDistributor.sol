@@ -4,14 +4,10 @@ pragma solidity 0.8.18;
 import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import { ReentrancyGuardUpgradeable } from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
-
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-
 import { IERC1155Supply } from "./IERC1155Supply.sol";
-
 import { FractionalizedToken, Metadata } from "./FractionalizedToken.sol";
-
 import { SchmackoSwap, ListingState } from "./SchmackoSwap.sol";
 import { IPermissioner, TermsAcceptedPermissioner } from "./Permissioner.sol";
 

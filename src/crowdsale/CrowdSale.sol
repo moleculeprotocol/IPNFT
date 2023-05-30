@@ -4,7 +4,6 @@ pragma solidity 0.8.18;
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { ReentrancyGuard } from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-
 import { FixedPointMathLib } from "solmate/utils/FixedPointMathLib.sol";
 import { IPermissioner } from "../Permissioner.sol";
 import { FractionalizedToken } from "../FractionalizedToken.sol";
@@ -36,7 +35,6 @@ struct SaleInfo {
     uint256 surplus;
 }
 
-error BalanceTooLow();
 error BadDecimals();
 error BadSalesAmount();
 error BadSaleDuration();
@@ -66,7 +64,7 @@ contract CrowdSale is ReentrancyGuard {
     event Settled(uint256 indexed saleId, uint256 totalBids, uint256 surplus);
     event Claimed(uint256 indexed saleId, address indexed claimer, uint256 claimed, uint256 refunded);
     event Bid(uint256 indexed saleId, address indexed bidder, uint256 amount);
-    event Failed(uint256 saleId);
+    event Failed(uint256 indexed saleId);
 
     /**
      * @notice bidding tokens can have arbitrary decimals, auctionTokens must be 18 decimals
@@ -76,17 +74,18 @@ contract CrowdSale is ReentrancyGuard {
      * @return saleId
      */
     function startSale(Sale calldata sale) public returns (uint256 saleId) {
+        //todo: use 15 minutes
         if (sale.closingTime < block.timestamp + 2 hours) {
             revert BadSaleDuration();
         }
+
         if (sale.auctionToken.decimals() != 18) {
             revert BadDecimals();
         }
-        if (sale.auctionToken.balanceOf(msg.sender) < sale.salesAmount) {
-            revert BalanceTooLow();
-        }
+
         //close to 0 cases lead to very confusing results
-        if (sale.fundingGoal < 1 * 10 ** sale.biddingToken.decimals() || sale.salesAmount < 0.5 ether) {
+        //todo: use 10^(decimals-2) to allow 0.01 ethers
+        if (sale.fundingGoal < 10 ** sale.biddingToken.decimals() || sale.salesAmount < 0.5 ether) {
             revert BadSalesAmount();
         }
 
@@ -94,6 +93,7 @@ contract CrowdSale is ReentrancyGuard {
         if (address(_sales[saleId].auctionToken) != address(0)) {
             revert SaleAlreadyActive();
         }
+
         _sales[saleId] = sale;
         _saleInfo[saleId] = SaleInfo(SaleState.RUNNING, 0, 0);
 
@@ -118,20 +118,12 @@ contract CrowdSale is ReentrancyGuard {
     }
 
     /**
-     * @param saleId the sale id
-     * @param biddingTokenAmount the amount of bidding tokens
-     */
-    function placeBid(uint256 saleId, uint256 biddingTokenAmount) public virtual {
-        return placeBid(saleId, biddingTokenAmount, bytes(""));
-    }
-
-    /**
      * @dev even though `auctionToken` is casted to `FractionalizedToken` this should still work with IPNFT agnostic tokens
      * @param saleId the sale id
      * @param biddingTokenAmount the amount of bidding tokens
-     * @param permission bytes are handed over to a configured permissioner contract
+     * @param permission bytes are handed over to a configured permissioner contract. Set to 0x0 / "" / [] if not needed
      */
-    function placeBid(uint256 saleId, uint256 biddingTokenAmount, bytes memory permission) public {
+    function placeBid(uint256 saleId, uint256 biddingTokenAmount, bytes calldata permission) public {
         if (biddingTokenAmount == 0) {
             revert BidTooLow();
         }
@@ -199,11 +191,10 @@ contract CrowdSale is ReentrancyGuard {
         uint256 biddingRatio = _contributions[saleId][bidder].divWadDown(_saleInfo[saleId].total);
         auctionTokens = biddingRatio.mulWadDown(_sales[saleId].salesAmount);
 
-        if (_saleInfo[saleId].surplus > 0) {
+        if (_saleInfo[saleId].surplus != 0) {
             refunds = biddingRatio.mulWadDown(_saleInfo[saleId].surplus);
-        } else {
-            refunds = 0;
         }
+        //refunds = 0
     }
 
     function claim(uint256 saleId) public returns (uint256 auctionTokens, uint256 refunds) {
@@ -249,7 +240,7 @@ contract CrowdSale is ReentrancyGuard {
         }
         emit Claimed(saleId, msg.sender, tokenAmount, refunds);
 
-        if (refunds > 0) {
+        if (refunds != 0) {
             _sales[saleId].biddingToken.safeTransfer(msg.sender, refunds);
         }
         _claimAuctionTokens(saleId, tokenAmount);
