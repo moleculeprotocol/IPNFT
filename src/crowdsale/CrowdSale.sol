@@ -1,13 +1,11 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.18;
+pragma solidity 0.8.18;
 
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { ReentrancyGuard } from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-import { FixedPointMathLib as FP } from "solmate/utils/FixedPointMathLib.sol";
-import { Counters } from "@openzeppelin/contracts/utils/Counters.sol";
+import { FixedPointMathLib } from "solmate/utils/FixedPointMathLib.sol";
 import { IPermissioner } from "../Permissioner.sol";
 import { FractionalizedToken } from "../FractionalizedToken.sol";
 
@@ -45,14 +43,19 @@ error BadSaleDuration();
 error SaleAlreadyActive();
 error SaleClosedForBids();
 
+error BidTooLow();
+error SaleNotFund(uint256);
+error SaleNotConcluded();
+error BadSaleState(SaleState expected, SaleState actual);
+
 /**
  * @title CrowdSale
  * @author molecule.to
  * @notice a fixed price sales base contract
  */
 contract CrowdSale is ReentrancyGuard {
-    using SafeERC20 for IERC20;
     using SafeERC20 for IERC20Metadata;
+    using FixedPointMathLib for uint256;
 
     mapping(uint256 => Sale) internal _sales;
     mapping(uint256 => SaleInfo) internal _saleInfo;
@@ -70,8 +73,9 @@ contract CrowdSale is ReentrancyGuard {
      *         if no beneficiary is provided, the beneficiary will be set to msg.sender
      *         caller must approve `sale.fundingGoal` auctionTokens before calling this.
      * @param sale the sale's base configuration.
+     * @return saleId
      */
-    function startSale(Sale memory sale) public returns (uint256 saleId) {
+    function startSale(Sale calldata sale) public returns (uint256 saleId) {
         if (sale.closingTime < block.timestamp + 2 hours) {
             revert BadSaleDuration();
         }
@@ -85,9 +89,6 @@ contract CrowdSale is ReentrancyGuard {
         if (sale.fundingGoal < 1 * 10 ** sale.biddingToken.decimals() || sale.salesAmount < 0.5 ether) {
             revert BadSalesAmount();
         }
-        if (sale.beneficiary == address(0)) {
-            sale.beneficiary = msg.sender;
-        }
 
         saleId = uint256(keccak256(abi.encode(sale)));
         if (address(_sales[saleId].auctionToken) != address(0)) {
@@ -100,14 +101,26 @@ contract CrowdSale is ReentrancyGuard {
         _afterSaleStarted(saleId);
     }
 
+    /**
+     * @return SaleInfo information about the sale
+     */
     function saleInfo(uint256 saleId) public view returns (SaleInfo memory) {
         return _saleInfo[saleId];
     }
 
+    /**
+     * @param saleId sale id
+     * @param contributor address
+     * @return uint256 the amount of bidding tokens `contributor` has bid into the sale
+     */
     function contribution(uint256 saleId, address contributor) public view returns (uint256) {
         return _contributions[saleId][contributor];
     }
 
+    /**
+     * @param saleId the sale id
+     * @param biddingTokenAmount the amount of bidding tokens
+     */
     function placeBid(uint256 saleId, uint256 biddingTokenAmount) public virtual {
         return placeBid(saleId, biddingTokenAmount, bytes(""));
     }
@@ -120,15 +133,16 @@ contract CrowdSale is ReentrancyGuard {
      */
     function placeBid(uint256 saleId, uint256 biddingTokenAmount, bytes memory permission) public {
         if (biddingTokenAmount == 0) {
-            revert("must bid something");
+            revert BidTooLow();
         }
 
-        Sale memory sale = _sales[saleId];
+        Sale storage sale = _sales[saleId];
         if (sale.fundingGoal == 0) {
-            revert("bad sale id");
+            revert SaleNotFund(saleId);
         }
 
-        // @notice: the 2nd condition is actually quite obsolete
+        // @notice: while the general rule is that no bids aren't accepted past the sale's closing time
+        //          it's still possible for derived contracts to fail a sale early by changing the sale's state
         if (block.timestamp > sale.closingTime || _saleInfo[saleId].state != SaleState.RUNNING) {
             revert SaleClosedForBids();
         }
@@ -145,15 +159,15 @@ contract CrowdSale is ReentrancyGuard {
      * @param saleId the sale id
      */
     function settle(uint256 saleId) public virtual nonReentrant {
-        Sale memory sale = _sales[saleId];
+        Sale storage sale = _sales[saleId];
         SaleInfo storage __saleInfo = _saleInfo[saleId];
 
         if (block.timestamp < sale.closingTime) {
-            revert("sale has not concluded yet");
+            revert SaleNotConcluded();
         }
 
         if (__saleInfo.state != SaleState.RUNNING) {
-            revert("sale is not running");
+            revert BadSaleState(SaleState.RUNNING, __saleInfo.state);
         }
 
         if (__saleInfo.total < sale.fundingGoal) {
@@ -180,11 +194,11 @@ contract CrowdSale is ReentrancyGuard {
      * @return refunds wei value of bidding tokens to return
      */
     function getClaimableAmounts(uint256 saleId, address bidder) public view virtual returns (uint256 auctionTokens, uint256 refunds) {
-        uint256 biddingRatio = FP.divWadDown(_contributions[saleId][bidder], _saleInfo[saleId].total);
-        auctionTokens = FP.mulWadDown(biddingRatio, _sales[saleId].salesAmount);
+        uint256 biddingRatio = _contributions[saleId][bidder].divWadDown(_saleInfo[saleId].total);
+        auctionTokens = biddingRatio.mulWadDown(_sales[saleId].salesAmount);
 
         if (_saleInfo[saleId].surplus > 0) {
-            refunds = FP.mulWadDown(biddingRatio, _saleInfo[saleId].surplus);
+            refunds = biddingRatio.mulWadDown(_saleInfo[saleId].surplus);
         } else {
             refunds = 0;
         }
@@ -202,12 +216,12 @@ contract CrowdSale is ReentrancyGuard {
      */
     function claim(uint256 saleId, bytes memory permission) public nonReentrant returns (uint256 auctionTokens, uint256 refunds) {
         if (_saleInfo[saleId].state == SaleState.RUNNING) {
-            revert("sale is not settled");
+            revert BadSaleState(SaleState.SETTLED, SaleState.RUNNING);
         }
         if (_saleInfo[saleId].state == SaleState.FAILED) {
             return claimFailed(saleId);
         }
-        Sale memory sales = _sales[saleId];
+        Sale storage sales = _sales[saleId];
         if (address(sales.permissioner) != address(0)) {
             sales.permissioner.accept(FractionalizedToken(address(sales.auctionToken)), msg.sender, permission);
         }

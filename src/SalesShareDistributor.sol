@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.18;
+pragma solidity 0.8.18;
 
 import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
@@ -51,7 +51,7 @@ contract SalesShareDistributor is UUPSUpgradeable, OwnableUpgradeable, Reentranc
      * @param holder address
      */
     function claimableTokens(FractionalizedToken tokenContract, address holder) public view returns (IERC20 paymentToken, uint256 amount) {
-        Sales memory _sales = sales[address(tokenContract)];
+        Sales storage _sales = sales[address(tokenContract)];
 
         if (address(_sales.paymentToken) == address(0)) {
             revert NotClaimingYet();
@@ -72,14 +72,14 @@ contract SalesShareDistributor is UUPSUpgradeable, OwnableUpgradeable, Reentranc
         if (balance < 1000) {
             revert InsufficientBalance();
         }
-        Sales memory _sales = sales[address(tokenContract)];
+        Sales storage _sales = sales[address(tokenContract)];
 
         (IERC20 paymentToken, uint256 erc20shares) = claimableTokens(tokenContract, _msgSender());
 
         _sales.permissioner.accept(tokenContract, _msgSender(), permissions);
 
         if (erc20shares < 1000) {
-            //todo: this is very hard to simulate because the condition above will already yield 0
+            //this is very hard to simulate because the condition above will already yield 0
             revert InsufficientBalance();
         }
         emit SharesClaimed(address(tokenContract), _msgSender(), balance);
@@ -118,7 +118,7 @@ contract SalesShareDistributor is UUPSUpgradeable, OwnableUpgradeable, Reentranc
         _startClaimingPhase(tokenContract, listingId, _paymentToken, askPrice, permissioner);
     }
 
-    //todo: ensure that no one can withdraw arbitrary amounts here
+    //audit: ensure that no one can withdraw arbitrary amounts here
     //by simply creating a new fractionalization and claim an arbitrary value
 
     /**

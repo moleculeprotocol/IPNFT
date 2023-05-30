@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.18;
+pragma solidity 0.8.18;
 
 import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
@@ -72,8 +72,8 @@ contract FractionalizerNext is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGu
 
         // https://github.com/OpenZeppelin/workshops/tree/master/02-contracts-clone
         FractionalizedTokenNext fractionalizedToken = FractionalizedTokenNext(Clones.clone(tokenImplementation));
-        string memory name = string(abi.encodePacked("Fractions of IPNFT #", Strings.toString(ipnftId)));
-        fractionalizedToken.initialize(name, ipnftSymbol, Metadata(ipnftId, _msgSender(), agreementCid));
+        string memory name = string.concat("Fractions of IPNFT #", Strings.toString(ipnftId));
+        fractionalizedToken.initialize(name, string.concat(ipnftSymbol, "-MOL"), Metadata(ipnftId, _msgSender(), agreementCid));
         uint256 fractionHash = fractionalizedToken.hash();
         // ensure we can only call this once per sales cycle
         if (address(fractionalized[fractionHash]) != address(0)) {
@@ -84,7 +84,7 @@ contract FractionalizerNext is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGu
 
         emit FractionsCreated(ipnftId, address(fractionalizedToken), _msgSender(), fractionsAmount, agreementCid, name, ipnftSymbol);
 
-        //todo: if we want to take a protocol fee, this might be a good point of doing so.
+        //if we want to take a protocol fee, this might be a good point of doing so.
         fractionalizedToken.issue(_msgSender(), fractionsAmount);
 
         return fractionalizedToken;

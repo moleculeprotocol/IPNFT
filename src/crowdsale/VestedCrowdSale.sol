@@ -1,17 +1,10 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.18;
+pragma solidity 0.8.18;
 
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import { Clones } from "@openzeppelin/contracts/proxy/Clones.sol";
-import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
-
-import { FixedPointMathLib as FP } from "solmate/utils/FixedPointMathLib.sol";
 import { TokenVesting } from "@moleculeprotocol/token-vesting/TokenVesting.sol";
-
-import { CrowdSale, Sale, SaleState } from "./CrowdSale.sol";
+import { CrowdSale, Sale } from "./CrowdSale.sol";
 
 struct VestingConfig {
     TokenVesting vestingContract;
@@ -19,7 +12,6 @@ struct VestingConfig {
     uint256 cliff;
 }
 
-error ApprovalFailed();
 error UnmanageableVestingContract();
 error InvalidDuration();
 error IncompatibleVestingContract();
@@ -35,34 +27,36 @@ contract VestedCrowdSale is CrowdSale {
     mapping(uint256 => VestingConfig) public salesVesting;
 
     event Started(uint256 saleId, address indexed issuer, Sale sale, VestingConfig vesting);
-    event VestingContractCreated(TokenVesting vestingContract, IERC20 indexed underlyingToken);
+    event VestingContractCreated(TokenVesting vestingContract, IERC20Metadata indexed underlyingToken);
 
     /**
-     * @notice if vestingConfig.vestingContract is 0x0, a new vesting contract is automatically created
+     * @notice if vestingContract is 0x0, a new vesting contract is automatically created
      *
      * @param sale sale configuration
-     * @param vestingConfig vesting configuration. Duration must be compatible to TokenVesting hard requirements (7 days < cliff < 50 years)
+     * @param vestingContract the vesting contract to use or address(0) to spawn a new one
+     * @param cliff must be compatible to TokenVesting hard requirements (7 days < cliff < 50 years)
+     * @return saleId
      */
-    function startSale(Sale memory sale, VestingConfig memory vestingConfig) public returns (uint256 saleId) {
+    function startSale(Sale calldata sale, TokenVesting vestingContract, uint256 cliff) public returns (uint256 saleId) {
         saleId = uint256(keccak256(abi.encode(sale)));
 
-        if (address(vestingConfig.vestingContract) == address(0)) {
-            vestingConfig.vestingContract = _makeVestingContract(sale.auctionToken);
+        if (address(vestingContract) == address(0)) {
+            vestingContract = _makeVestingContract(sale.auctionToken);
         } else {
-            if (!vestingConfig.vestingContract.hasRole(vestingConfig.vestingContract.ROLE_CREATE_SCHEDULE(), address(this))) {
+            if (!vestingContract.hasRole(vestingContract.ROLE_CREATE_SCHEDULE(), address(this))) {
                 revert UnmanageableVestingContract();
             }
-            if (address(vestingConfig.vestingContract.nativeToken()) != address(sale.auctionToken)) {
+            if (address(vestingContract.nativeToken()) != address(sale.auctionToken)) {
                 revert IncompatibleVestingContract();
             }
         }
 
         // duration must follow the same rules as `TokenVesting`
-        if (vestingConfig.cliff < 7 days || vestingConfig.cliff > 50 * (365 days)) {
+        if (cliff < 7 days || cliff > 50 * (365 days)) {
             revert InvalidDuration();
         }
 
-        salesVesting[saleId] = vestingConfig;
+        salesVesting[saleId] = VestingConfig(vestingContract, cliff);
         saleId = super.startSale(sale);
     }
 
@@ -77,7 +71,7 @@ contract VestedCrowdSale is CrowdSale {
      * @param tokenAmount amount of tokens to vest
      */
     function _claimAuctionTokens(uint256 saleId, uint256 tokenAmount) internal virtual override {
-        VestingConfig memory vesting = salesVesting[saleId];
+        VestingConfig storage vesting = salesVesting[saleId];
 
         //the vesting start time is the official auction closing time
         //https://discord.com/channels/608198475598790656/1021413298756923462/1107442747687829515
@@ -102,8 +96,8 @@ contract VestedCrowdSale is CrowdSale {
     function _makeVestingContract(IERC20Metadata auctionToken) private returns (TokenVesting vestingContract) {
         vestingContract = new TokenVesting(
             auctionToken,
-            string(abi.encodePacked("Vested ", auctionToken.name())),
-            string(abi.encodePacked("v", auctionToken.symbol()))
+            string.concat("Vested ", auctionToken.name()),
+            string.concat("v", auctionToken.symbol())
         );
         emit VestingContractCreated(vestingContract, auctionToken);
     }

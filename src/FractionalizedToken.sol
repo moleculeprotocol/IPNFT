@@ -1,10 +1,6 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.18;
+pragma solidity 0.8.18;
 
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-
-import { IERC20Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import { ERC20Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 import { ERC20BurnableUpgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20BurnableUpgradeable.sol";
 
@@ -26,54 +22,43 @@ error OnlyIssuerOrOwner();
  * @notice the owner of this contract is always the Fractionalizer contract.
  *         the issuer of a token bears the right to increase the supply as long as the token is not capped.
  */
-contract FractionalizedToken is IERC20Upgradeable, ERC20BurnableUpgradeable, OwnableUpgradeable {
-    using SafeERC20 for IERC20;
-
+contract FractionalizedToken is ERC20BurnableUpgradeable, OwnableUpgradeable {
     event Capped(uint256 atSupply);
 
     //this will only go up.
-    uint256 internal _totalIssued;
-    bool internal _capped;
+    uint256 public totalIssued;
+    /**
+     * @notice when true, no one can ever mint tokens again.
+     */
+    bool public capped;
     Metadata internal _metadata;
 
-    function initialize(string memory name, string memory symbol, Metadata calldata metadata_) public initializer {
+    function initialize(string calldata name, string calldata symbol, Metadata calldata metadata_) external initializer {
         __Ownable_init();
         __ERC20_init(name, symbol);
         _metadata = metadata_;
-        _totalIssued = 0;
-        _capped = false;
     }
 
     modifier onlyIssuerOrOwner() {
-        if (msg.sender != issuer() && msg.sender != owner()) {
+        if (_msgSender() != _metadata.originalOwner && _msgSender() != owner()) {
             revert OnlyIssuerOrOwner();
         }
         _;
     }
 
-    function totalIssued() public view returns (uint256) {
-        return _totalIssued;
-    }
-
-    function metadata() public view returns (Metadata memory) {
-        return _metadata;
-    }
-
-    function issuer() public view returns (address) {
+    function issuer() external view returns (address) {
         return _metadata.originalOwner;
     }
 
-    /**
-     * @notice when true, no one can ever mint tokens again.
-     */
-    function capped() public view returns (bool) {
-        return _capped;
+    function metadata() external view returns (Metadata memory) {
+        return _metadata;
     }
-
     /**
      * @notice Fractional tokens are identified by the original token holder and the underlying token id
+     * @return uint256 a token hash that's unique for [`originaOwner`,`ipnftid`]
      */
-    function hash() public view returns (uint256) {
+
+    function hash() external view returns (uint256) {
         return uint256(keccak256(abi.encodePacked(_metadata.originalOwner, _metadata.ipnftId)));
     }
 
@@ -82,17 +67,17 @@ contract FractionalizedToken is IERC20Upgradeable, ERC20BurnableUpgradeable, Own
      * @param receiver address
      * @param amount uint256
      */
-    function issue(address receiver, uint256 amount) public onlyIssuerOrOwner {
-        if (_capped) revert TokenCapped();
-        _totalIssued += amount;
+    function issue(address receiver, uint256 amount) external onlyIssuerOrOwner {
+        if (capped) revert TokenCapped();
+        totalIssued += amount;
         _mint(receiver, amount);
     }
 
     /**
-     * @notice mark this token as capped
+     * @notice mark this token as capped. After calling this, no new tokens can be `issue`d
      */
-    function cap() public onlyIssuerOrOwner {
-        _capped = true;
-        emit Capped(totalIssued());
+    function cap() external onlyIssuerOrOwner {
+        capped = true;
+        emit Capped(totalIssued);
     }
 }

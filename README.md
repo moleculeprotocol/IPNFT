@@ -37,8 +37,8 @@ IP-NFTs allow their users to tokenize intellectual property. This repo contains 
 - Bio pricefeed: 0x8647dEFdEAAdF5448d021B364B2F17815aba4360
   <https://goerli.etherscan.io/address/0x8647defdeaadf5448d021b364b2f17815aba4360#code>
 
-- Staked/Vested Crowdsale: 0xb3614a39C04D0c9Be7179173336dC0eA0bAEC610
-  <https://goerli.etherscan.io/address/0xb3614a39C04D0c9Be7179173336dC0eA0bAEC610#code>
+- Staked/Vested Crowdsale: 0x04A44702Bc07De65EA721aEb32d836D9C2d1d2a9
+  <https://goerli.etherscan.io/address/0x04a44702bc07de65ea721aeb32d836d9c2d1d2a9#code>
 
 #### some test tokens
 
@@ -146,6 +146,9 @@ You can deploy them all in one go (requires the current network's IPNFT address)
 `IPNFT_ADDRESS=... forge script script/DeployFractionalizer.s.sol:DeployFractionalizerInfrastructure --private-key $PRIVATE_KEY --rpc-url $RPC_URL --broadcast`
 
 The crowdsale computation model can be tried out here: https://docs.google.com/spreadsheets/d/1vvGzs6n0nGqSBewJFKPsX4umMDCwNhKVqqhGELY543g/edit?usp=sharing
+
+Deploying and verifying a single contract without the help of any script
+`forge create --rpc-url $RPC_URL --private-key $PRIVATE_KEY --chain 5 --etherscan-api-key $ETHERSCAN_API_KEY --verify src/crowdsale/StakedVestedCrowdSale.sol:StakedVestedCrowdSale`
 
 ### Deploying (vested) test tokens
 

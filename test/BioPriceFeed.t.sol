@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.18;
 
 import "forge-std/Test.sol";
 import "forge-std/console.sol";
@@ -8,7 +8,7 @@ import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/I
 import { FixedPointMathLib as FP } from "solmate/utils/FixedPointMathLib.sol";
 import { CrowdSale, Sale, SaleInfo } from "../src/crowdsale/CrowdSale.sol";
 
-import { FakeERC20 } from "./helpers/FakeERC20.sol";
+import { FakeERC20 } from "../src/helpers/FakeERC20.sol";
 import { BioPriceFeed, Meta } from "../src/BioPriceFeed.sol";
 
 contract BioPriceFeedTest is Test {

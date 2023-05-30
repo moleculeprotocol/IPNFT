@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.18;
+pragma solidity 0.8.18;
 
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
@@ -36,41 +36,10 @@ contract TermsAcceptedPermissioner is IPermissioner {
     event TermsAccepted(address indexed tokenContract, address indexed signer, bytes signature);
 
     /**
-     * @notice this yields the message text that claimers must present as signed message to burn their fractions and claim shares
-     *
-     * @param tokenContract IFractionalizedToken
-     */
-    function specificTermsV1(FractionalizedToken tokenContract) public view returns (string memory) {
-        Metadata memory metadata = tokenContract.metadata();
-
-        return string(
-            abi.encodePacked(
-                "As a fraction holder of IPNFT #",
-                Strings.toString(metadata.ipnftId),
-                ", I accept all terms that I've read here: ipfs://",
-                metadata.agreementCid,
-                "\n\n",
-                "Chain Id: ",
-                Strings.toString(block.chainid),
-                "\n",
-                "Version: 1"
-            )
-        );
-    }
-
-    /**
-     * @notice checks whether `signer`'s `signature` of `specificTermsV1` on `fractionId` is valid
-     *
-     * @param tokenContract FractionalizedToken
-     */
-    function isValidSignature(FractionalizedToken tokenContract, address signer, bytes calldata signature) public view returns (bool) {
-        bytes32 termsHash = ECDSA.toEthSignedMessageHash(abi.encodePacked(specificTermsV1(tokenContract)));
-        return SignatureChecker.isValidSignatureNow(signer, termsHash, signature);
-    }
-
-    /**
      * @notice checks validity signer`'s `signature` of `specificTermsV1` on `fractionId` and emits an event
+     *         reverts when `signature` can't be verified
      * @dev the signature itself or whether it has already been presented is not stored on chain
+     *      uses OZ:`SignatureChecker` under the hood and also supports EIP1271 signatures
      *
      * @param tokenContract FractionalizedToken
      * @param _for address the account that has created `signature`
@@ -81,5 +50,34 @@ contract TermsAcceptedPermissioner is IPermissioner {
             revert InvalidSignature();
         }
         emit TermsAccepted(address(tokenContract), _for, signature);
+    }
+
+    /**
+     * @notice checks whether `signer`'s `signature` of `specificTermsV1` on `fractionId` is valid
+     * @param tokenContract FractionalizedToken
+     */
+    function isValidSignature(FractionalizedToken tokenContract, address signer, bytes calldata signature) public view returns (bool) {
+        bytes32 termsHash = ECDSA.toEthSignedMessageHash(bytes(specificTermsV1(tokenContract)));
+        return SignatureChecker.isValidSignatureNow(signer, termsHash, signature);
+    }
+
+    /**
+     * @notice this yields the message text that claimers must present as signed message to burn their fractions and claim shares
+     * @param tokenContract IFractionalizedToken
+     */
+    function specificTermsV1(FractionalizedToken tokenContract) public view returns (string memory) {
+        Metadata memory metadata = tokenContract.metadata();
+
+        return string.concat(
+            "As a fraction holder of IPNFT #",
+            Strings.toString(metadata.ipnftId),
+            ", I accept all terms that I've read here: ipfs://",
+            metadata.agreementCid,
+            "\n\n",
+            "Chain Id: ",
+            Strings.toString(block.chainid),
+            "\n",
+            "Version: 1"
+        );
     }
 }

@@ -15,16 +15,22 @@ import { Mintpass } from "../src/Mintpass.sol";
 import { IPermissioner, TermsAcceptedPermissioner, BlindPermissioner, InvalidSignature } from "../src/Permissioner.sol";
 
 import { IPNFTMintHelper } from "./IPNFTMintHelper.sol";
-import { Fractionalizer, ToZeroAddress, InsufficientBalance } from "../src/Fractionalizer.sol";
+import { Fractionalizer, ToZeroAddress } from "../src/Fractionalizer.sol";
 
 import {
-    SalesShareDistributor, ListingNotFulfilled, ListingMismatch, NotClaimingYet, UncappedToken, OnlyIssuer
+    SalesShareDistributor,
+    ListingNotFulfilled,
+    ListingMismatch,
+    NotClaimingYet,
+    UncappedToken,
+    OnlyIssuer,
+    InsufficientBalance
 } from "../src/SalesShareDistributor.sol";
 
 import { FractionalizedToken, OnlyIssuerOrOwner } from "../src/FractionalizedToken.sol";
 import { IERC1155Supply } from "../src/IERC1155Supply.sol";
 import { SchmackoSwap, ListingState } from "../src/SchmackoSwap.sol";
-import { MyToken } from "../src/MyToken.sol";
+import { FakeERC20 } from "../src/helpers/FakeERC20.sol";
 
 contract SalesShareDistributorTest is Test {
     using SafeERC20Upgradeable for FractionalizedToken;
@@ -51,9 +57,10 @@ contract SalesShareDistributorTest is Test {
     Fractionalizer internal fractionalizer;
     SalesShareDistributor internal distributor;
     SchmackoSwap internal schmackoSwap;
-    MyToken internal myToken;
+
     Mintpass internal mintpass;
-    IERC20 internal erc20;
+
+    FakeERC20 internal erc20;
     IPermissioner internal blindPermissioner;
 
     function setUp() public {
@@ -64,9 +71,9 @@ contract SalesShareDistributorTest is Test {
         ipnft.initialize();
 
         schmackoSwap = new SchmackoSwap();
-        myToken = new MyToken();
-        myToken.mint(ipnftBuyer, 1_000_000 ether);
-        erc20 = IERC20(address(myToken));
+        erc20 = new FakeERC20("Fake ERC20", "FERC");
+        erc20.mint(ipnftBuyer, 1_000_000 ether);
+
         blindPermissioner = new BlindPermissioner();
         mintpass = new Mintpass(address(ipnft));
         mintpass.grantRole(mintpass.MODERATOR(), deployer);
@@ -327,7 +334,7 @@ contract SalesShareDistributorTest is Test {
         vm.stopPrank();
 
         vm.startPrank(ipnftBuyer);
-        myToken.mint(ipnftBuyer, salesPrice);
+        erc20.mint(ipnftBuyer, salesPrice);
         erc20.transfer(originalOwner, salesPrice);
         vm.stopPrank();
 

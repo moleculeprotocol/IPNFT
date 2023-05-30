@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.18;
 
 import "forge-std/Test.sol";
 import { console } from "forge-std/console.sol";
@@ -17,6 +17,7 @@ import { IPNFT } from "../src/IPNFT.sol";
 import { Mintpass } from "../src/Mintpass.sol";
 import { UUPSProxy } from "../src/UUPSProxy.sol";
 
+import { FakeERC20 } from "../src/helpers/FakeERC20.sol";
 import { Fractionalizer } from "../src/Fractionalizer.sol";
 import { ToZeroAddress, BadSupply, MustOwnIpnft, NoSymbol, AlreadyFractionalized } from "../src/Fractionalizer.sol";
 
@@ -25,7 +26,6 @@ import { FractionalizerNext, FractionalizedTokenNext } from "../src/helpers/upgr
 
 import { IERC1155Supply } from "../src/IERC1155Supply.sol";
 import { SchmackoSwap, ListingState } from "../src/SchmackoSwap.sol";
-import { MyToken } from "../src/MyToken.sol";
 
 contract FractionalizerTest is Test {
     using SafeERC20Upgradeable for FractionalizedToken;
@@ -54,7 +54,7 @@ contract FractionalizerTest is Test {
     SchmackoSwap internal schmackoSwap;
     Mintpass internal mintpass;
 
-    IERC20 internal erc20;
+    FakeERC20 internal erc20;
 
     function setUp() public {
         (alice, alicePk) = makeAddrAndKey("alice");
@@ -65,9 +65,8 @@ contract FractionalizerTest is Test {
         ipnft.initialize();
 
         schmackoSwap = new SchmackoSwap();
-        MyToken myToken = new MyToken();
-        myToken.mint(ipnftBuyer, 1_000_000 ether);
-        erc20 = IERC20(address(myToken));
+        erc20 = new FakeERC20("Fake ERC20", "FERC");
+        erc20.mint(ipnftBuyer, 1_000_000 ether);
 
         mintpass = new Mintpass(address(ipnft));
         mintpass.grantRole(mintpass.MODERATOR(), deployer);
@@ -96,14 +95,6 @@ contract FractionalizerTest is Test {
     }
 
     function testCannotSetInfraToZero() public {
-        vm.startPrank(deployer);
-        vm.expectRevert(ToZeroAddress.selector);
-        fractionalizer.setFeeReceiver(address(0));
-
-        fractionalizer.setFeeReceiver(deployer);
-        fractionalizer.setReceiverPercentage(10);
-        vm.stopPrank();
-
         vm.startPrank(alice);
         vm.expectRevert("Ownable: caller is not the owner");
         fractionalizer.setReceiverPercentage(10);
@@ -175,7 +166,7 @@ contract FractionalizerTest is Test {
 
     function testCanBeFractionalizedOnlyOnce() public {
         vm.startPrank(originalOwner);
-        FractionalizedToken tokenContract = fractionalizer.fractionalizeIpnft(1, 100_000, agreementCid);
+        fractionalizer.fractionalizeIpnft(1, 100_000, agreementCid);
 
         vm.expectRevert(AlreadyFractionalized.selector);
         fractionalizer.fractionalizeIpnft(1, 100_000, agreementCid);

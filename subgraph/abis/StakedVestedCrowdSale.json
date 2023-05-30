@@ -15,6 +15,22 @@
     "type": "error"
   },
   {
+    "inputs": [
+      {
+        "internalType": "enum SaleState",
+        "name": "expected",
+        "type": "uint8"
+      },
+      {
+        "internalType": "enum SaleState",
+        "name": "actual",
+        "type": "uint8"
+      }
+    ],
+    "name": "BadSaleState",
+    "type": "error"
+  },
+  {
     "inputs": [],
     "name": "BadSalesAmount",
     "type": "error"
@@ -22,6 +38,11 @@
   {
     "inputs": [],
     "name": "BalanceTooLow",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "BidTooLow",
     "type": "error"
   },
   {
@@ -42,6 +63,22 @@
   {
     "inputs": [],
     "name": "SaleClosedForBids",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "SaleNotConcluded",
+    "type": "error"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "SaleNotFund",
     "type": "error"
   },
   {
@@ -274,7 +311,7 @@
           }
         ],
         "indexed": false,
-        "internalType": "struct StakingConfig",
+        "internalType": "struct StakingInfo",
         "name": "staking",
         "type": "tuple"
       }
@@ -435,7 +472,7 @@
       },
       {
         "indexed": true,
-        "internalType": "contract IERC20",
+        "internalType": "contract IERC20Metadata",
         "name": "underlyingToken",
         "type": "address"
       }
@@ -766,48 +803,14 @@
         "type": "tuple"
       },
       {
-        "components": [
-          {
-            "internalType": "contract IERC20Metadata",
-            "name": "stakedToken",
-            "type": "address"
-          },
-          {
-            "internalType": "contract TokenVesting",
-            "name": "stakesVestingContract",
-            "type": "address"
-          },
-          {
-            "internalType": "uint256",
-            "name": "wadFixedStakedPerBidPrice",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "stakeTotal",
-            "type": "uint256"
-          }
-        ],
-        "internalType": "struct StakingConfig",
-        "name": "stakingConfig",
-        "type": "tuple"
+        "internalType": "contract TokenVesting",
+        "name": "vestingContract",
+        "type": "address"
       },
       {
-        "components": [
-          {
-            "internalType": "contract TokenVesting",
-            "name": "vestingContract",
-            "type": "address"
-          },
-          {
-            "internalType": "uint256",
-            "name": "cliff",
-            "type": "uint256"
-          }
-        ],
-        "internalType": "struct VestingConfig",
-        "name": "vestingConfig",
-        "type": "tuple"
+        "internalType": "uint256",
+        "name": "cliff",
+        "type": "uint256"
       }
     ],
     "name": "startSale",
@@ -866,21 +869,29 @@
         "type": "tuple"
       },
       {
-        "components": [
-          {
-            "internalType": "contract TokenVesting",
-            "name": "vestingContract",
-            "type": "address"
-          },
-          {
-            "internalType": "uint256",
-            "name": "cliff",
-            "type": "uint256"
-          }
-        ],
-        "internalType": "struct VestingConfig",
-        "name": "vestingConfig",
-        "type": "tuple"
+        "internalType": "contract IERC20Metadata",
+        "name": "stakedToken",
+        "type": "address"
+      },
+      {
+        "internalType": "contract TokenVesting",
+        "name": "stakesVestingContract",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "wadFixedStakedPerBidPrice",
+        "type": "uint256"
+      },
+      {
+        "internalType": "contract TokenVesting",
+        "name": "vestingContract",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "cliff",
+        "type": "uint256"
       }
     ],
     "name": "startSale",

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.18;
 
 import "forge-std/Test.sol";
 import "forge-std/console.sol";
@@ -14,10 +14,14 @@ import {
     BadSaleDuration,
     BalanceTooLow,
     SaleAlreadyActive,
-    SaleClosedForBids
+    SaleClosedForBids,
+    BidTooLow,
+    SaleNotFund,
+    SaleNotConcluded,
+    BadSaleState
 } from "../src/crowdsale/CrowdSale.sol";
 import { IPermissioner } from "../src/Permissioner.sol";
-import { FakeERC20 } from "./helpers/FakeERC20.sol";
+import { FakeERC20 } from "../src/helpers/FakeERC20.sol";
 import { CrowdSaleHelpers } from "./helpers/CrowdSaleHelpers.sol";
 
 contract CrowdSaleTest is Test {
@@ -123,6 +127,11 @@ contract CrowdSaleTest is Test {
         vm.stopPrank();
 
         vm.startPrank(bidder);
+        vm.expectRevert(BidTooLow.selector);
+        crowdSale.placeBid(saleId, 0);
+
+        vm.expectRevert(abi.encodeWithSelector(SaleNotFund.selector, 42));
+        crowdSale.placeBid(42, 1000);
 
         crowdSale.placeBid(saleId, 100_000 ether);
         assertEq(crowdSale.contribution(saleId, bidder), 100_000 ether);
@@ -146,7 +155,7 @@ contract CrowdSaleTest is Test {
 
         // cant settle before sale.closingTime
         vm.startPrank(anyone);
-        vm.expectRevert("sale has not concluded yet");
+        vm.expectRevert(SaleNotConcluded.selector);
         crowdSale.settle(saleId);
         vm.stopPrank();
 
@@ -157,7 +166,16 @@ contract CrowdSaleTest is Test {
         crowdSale.placeBid(saleId, 100_000 ether);
         vm.stopPrank();
 
+        // cant claim before settled
+        vm.startPrank(bidder);
+        vm.expectRevert(abi.encodeWithSelector(BadSaleState.selector, SaleState.SETTLED, SaleState.RUNNING));
+        crowdSale.claim(saleId);
+        vm.stopPrank();
+
         vm.startPrank(anyone);
+        crowdSale.settle(saleId);
+
+        vm.expectRevert(abi.encodeWithSelector(BadSaleState.selector, SaleState.RUNNING, SaleState.SETTLED));
         crowdSale.settle(saleId);
         vm.stopPrank();
 
@@ -201,6 +219,8 @@ contract CrowdSaleTest is Test {
         assertEq(biddingToken.balanceOf(bidder), 1_000_000 ether);
         assertEq(auctionToken.balanceOf(bidder), 0);
     }
+
+    //todo test bidders that bit 1 wei
 
     function testTwoBiddersMeetExactly() public {
         vm.startPrank(emitter);

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.18;
+pragma solidity 0.8.18;
 
 import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
@@ -13,8 +13,6 @@ import { FractionalizedToken, Metadata as FractionalizedTokenMetadata } from "./
 import { IPNFT } from "./IPNFT.sol";
 
 error ToZeroAddress();
-error InsufficientBalance();
-error TermsNotAccepted();
 
 error BadSupply();
 error MustOwnIpnft();
@@ -62,14 +60,16 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardU
 
     /**
      * @notice we're not taking any fees. If we once decided to do so, this can be used to update the fee receiver
+     * @param _feeReceiver the address that will receive fraction fees
      */
-    function setFeeReceiver(address _feeReceiver) public onlyOwner {
-        if (_feeReceiver == address(0)) {
-            revert ToZeroAddress();
-        }
+    function setFeeReceiver(address _feeReceiver) external onlyOwner {
         feeReceiver = _feeReceiver;
     }
 
+    /**
+     * @notice unused in this version
+     * @param fractionalizationPercentage_  uint256 the fee percentage `feeReceiver` takes on a new fractionalization
+     */
     function setReceiverPercentage(uint256 fractionalizationPercentage_) external onlyOwner {
         fractionalizationPercentage = fractionalizationPercentage_;
     }
@@ -99,10 +99,9 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardU
 
         // https://github.com/OpenZeppelin/workshops/tree/master/02-contracts-clone
         FractionalizedToken fractionalizedToken = FractionalizedToken(Clones.clone(tokenImplementation));
-        string memory name = string(abi.encodePacked("Fractions of IPNFT #", Strings.toString(ipnftId)));
-        fractionalizedToken.initialize(
-            name, string(abi.encodePacked(ipnftSymbol, "-MOL")), FractionalizedTokenMetadata(ipnftId, _msgSender(), agreementCid)
-        );
+        string memory name = string.concat("Fractions of IPNFT #", Strings.toString(ipnftId));
+        fractionalizedToken.initialize(name, string.concat(ipnftSymbol, "-MOL"), FractionalizedTokenMetadata(ipnftId, _msgSender(), agreementCid));
+
         uint256 fractionHash = fractionalizedToken.hash();
         // ensure we can only call this once per sales cycle
         if (address(fractionalized[fractionHash]) != address(0)) {
@@ -111,11 +110,9 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardU
 
         fractionalized[fractionHash] = fractionalizedToken;
 
-        emit FractionsCreated(
-            uint256(fractionHash), ipnftId, address(fractionalizedToken), _msgSender(), fractionsAmount, agreementCid, name, ipnftSymbol
-        );
+        emit FractionsCreated(fractionHash, ipnftId, address(fractionalizedToken), _msgSender(), fractionsAmount, agreementCid, name, ipnftSymbol);
 
-        //todo: if we want to take a protocol fee, this might be a good point of doing so.
+        //if we want to take a protocol fee, this might be a good point of doing so.
         fractionalizedToken.issue(_msgSender(), fractionsAmount);
 
         return fractionalizedToken;
@@ -134,33 +131,31 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardU
      * @notice contract metadata, compatible to ERC1155
      * @param fractionHash uint256
      */
-    function uri(uint256 fractionHash) public view returns (string memory) {
+    function uri(uint256 fractionHash) external view returns (string memory) {
         FractionalizedToken tokenContract = fractionalized[fractionHash];
         FractionalizedTokenMetadata memory metadata = tokenContract.metadata();
         string memory tokenId = Strings.toString(metadata.ipnftId);
 
-        string memory props = string(
-            abi.encodePacked(
-                '"properties": {',
-                '"ipnft_id": ',
-                tokenId,
-                ',"agreement_content": "ipfs://',
-                metadata.agreementCid,
-                '","original_owner": "',
-                Strings.toHexString(metadata.originalOwner),
-                '","erc20_contract": "',
-                Strings.toHexString(address(tokenContract)),
-                '","supply": "',
-                Strings.toString(tokenContract.totalIssued()),
-                '"}'
-            )
+        string memory props = string.concat(
+            '"properties": {',
+            '"ipnft_id": ',
+            tokenId,
+            ',"agreement_content": "ipfs://',
+            metadata.agreementCid,
+            '","original_owner": "',
+            Strings.toHexString(metadata.originalOwner),
+            '","erc20_contract": "',
+            Strings.toHexString(address(tokenContract)),
+            '","supply": "',
+            Strings.toString(tokenContract.totalIssued()),
+            '"}'
         );
 
-        return string(
-            abi.encodePacked(
-                "data:application/json;base64,",
-                Base64.encode(
-                    abi.encodePacked(
+        return string.concat(
+            "data:application/json;base64,",
+            Base64.encode(
+                bytes(
+                    string.concat(
                         '{"name": "Fractions of IPNFT #',
                         tokenId,
                         '","description": "this token represents fractions of the underlying asset","decimals": 18,"external_url": "https://molecule.to","image": "",',
