@@ -4,7 +4,6 @@ pragma solidity 0.8.18;
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import { SignatureChecker } from "@openzeppelin/contracts/utils/cryptography/SignatureChecker.sol";
-
 import { FractionalizedToken, Metadata } from "./FractionalizedToken.sol";
 
 error InvalidSignature();

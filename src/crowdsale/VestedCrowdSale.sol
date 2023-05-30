@@ -8,7 +8,7 @@ import { CrowdSale, Sale } from "./CrowdSale.sol";
 
 struct VestingConfig {
     TokenVesting vestingContract;
-    // a duration in seconds, will be counted from when the sale's closing time
+    // a duration in seconds, counted from the sale's closing time
     uint256 cliff;
 }
 
@@ -26,7 +26,7 @@ contract VestedCrowdSale is CrowdSale {
 
     mapping(uint256 => VestingConfig) public salesVesting;
 
-    event Started(uint256 saleId, address indexed issuer, Sale sale, VestingConfig vesting);
+    event Started(uint256 indexed saleId, address indexed issuer, Sale sale, VestingConfig vesting);
     event VestingContractCreated(TokenVesting vestingContract, IERC20Metadata indexed underlyingToken);
 
     /**
@@ -35,7 +35,7 @@ contract VestedCrowdSale is CrowdSale {
      * @param sale sale configuration
      * @param vestingContract the vesting contract to use or address(0) to spawn a new one
      * @param cliff must be compatible to TokenVesting hard requirements (7 days < cliff < 50 years)
-     * @return saleId
+     * @return saleId the newly created sale's id
      */
     function startSale(Sale calldata sale, TokenVesting vestingContract, uint256 cliff) public returns (uint256 saleId) {
         saleId = uint256(keccak256(abi.encode(sale)));
@@ -89,7 +89,7 @@ contract VestedCrowdSale is CrowdSale {
      * @dev deploys a new vesting schedule contract for the auctionToken
      *      to save on gas and improve UX, this should only be called once per auctionToken.
      *      If a vesting contract already exists for that token, you can provide it when initializing the sale.
-     *      Cannot use minimal clones here because TokenVesting is not initializeable
+     *      Cannot use minimal clones here because TokenVesting is not initializable
      * @param auctionToken the auction token that a vesting contract is created for
      */
     function _makeVestingContract(IERC20Metadata auctionToken) private returns (TokenVesting vestingContract) {

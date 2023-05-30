@@ -1,17 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.18;
 
-import "forge-std/console.sol";
-
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-
 import { FixedPointMathLib } from "solmate/utils/FixedPointMathLib.sol";
 import { TokenVesting } from "@moleculeprotocol/token-vesting/TokenVesting.sol";
-
 import { VestedCrowdSale, VestingConfig, IncompatibleVestingContract, UnmanageableVestingContract } from "./VestedCrowdSale.sol";
-import { CrowdSale, Sale, BadDecimals, SaleState } from "./CrowdSale.sol";
+import { CrowdSale, Sale, BadDecimals } from "./CrowdSale.sol";
 
 struct StakingInfo {
     //e.g. VITA DAO token
@@ -37,7 +32,7 @@ contract StakedVestedCrowdSale is VestedCrowdSale {
     mapping(uint256 => StakingInfo) public salesStaking;
     mapping(uint256 => mapping(address => uint256)) internal stakes;
 
-    event Started(uint256 saleId, address indexed issuer, Sale sale, VestingConfig vesting, StakingInfo staking);
+    event Started(uint256 indexed saleId, address indexed issuer, Sale sale, VestingConfig vesting, StakingInfo staking);
     event Staked(uint256 indexed saleId, address indexed bidder, uint256 stakedAmount, uint256 price);
 
     /**
@@ -85,11 +80,11 @@ contract StakedVestedCrowdSale is VestedCrowdSale {
         salesStaking[saleId] = StakingInfo(stakedToken, stakesVestingContract, wadFixedStakedPerBidPrice, 0);
         super.startSale(sale, vestingContract, cliff);
     }
+
     /**
      * @return uint256 how many stakingTokens `bidder` has staked into sale `saleId`
      */
-
-    function stakesOf(uint256 saleId, address bidder) public view returns (uint256) {
+    function stakesOf(uint256 saleId, address bidder) external view returns (uint256) {
         return stakes[saleId][bidder];
     }
 
@@ -150,7 +145,7 @@ contract StakedVestedCrowdSale is VestedCrowdSale {
         // INTERACTIONS
         super.claim(saleId, tokenAmount, refunds);
 
-        if (refundedStakes > 0) {
+        if (refundedStakes != 0) {
             staking.stakedToken.safeTransfer(msg.sender, refundedStakes);
         }
 

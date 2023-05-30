@@ -12,7 +12,6 @@ import {
     SaleInfo,
     BadSalesAmount,
     BadSaleDuration,
-    BalanceTooLow,
     SaleAlreadyActive,
     SaleClosedForBids,
     BidTooLow,
@@ -75,7 +74,7 @@ contract CrowdSaleTest is Test {
         Sale memory _sale = CrowdSaleHelpers.makeSale(poorguy, auctionToken, biddingToken);
 
         vm.startPrank(poorguy);
-        vm.expectRevert(BalanceTooLow.selector);
+        vm.expectRevert("ERC20: insufficient allowance");
         crowdSale.startSale(_sale);
         vm.stopPrank();
     }

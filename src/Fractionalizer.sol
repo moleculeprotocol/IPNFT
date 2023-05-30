@@ -3,18 +3,11 @@ pragma solidity 0.8.18;
 
 import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import { ReentrancyGuardUpgradeable } from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
-
-import { Base64 } from "@openzeppelin/contracts/utils/Base64.sol";
 import { Clones } from "@openzeppelin/contracts/proxy/Clones.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
-
 import { FractionalizedToken, Metadata as FractionalizedTokenMetadata } from "./FractionalizedToken.sol";
 import { IPNFT } from "./IPNFT.sol";
 
-error ToZeroAddress();
-
-error BadSupply();
 error MustOwnIpnft();
 error NoSymbol();
 error AlreadyFractionalized();
@@ -23,7 +16,7 @@ error AlreadyFractionalized();
 /// @author molecule.to
 /// @notice fractionalizes an IPNFT to an ERC20 token and controls its supply.
 ///         Allows fraction holders to withdraw sales shares when the IPNFT is sold
-contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardUpgradeable {
+contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable {
     event FractionsCreated(
         uint256 indexed fractionId,
         uint256 indexed ipnftId,
@@ -45,10 +38,9 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardU
     /// @custom:oz-upgrades-unsafe-allow state-variable-immutable
     address immutable tokenImplementation;
 
-    function initialize(IPNFT _ipnft) public initializer {
+    function initialize(IPNFT _ipnft) external initializer {
         __UUPSUpgradeable_init();
         __Ownable_init();
-        __ReentrancyGuard_init();
         ipnft = _ipnft;
     }
 
@@ -80,15 +72,14 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardU
      * @param ipnftId the token id on the underlying nft collection
      * @param fractionsAmount the initially issued supply of fraction tokens
      * @param agreementCid a content hash that contains legal terms for fraction owners
+     * @return fractionalizedToken a new created ERC20 token contract that represents the fractions
      */
+
+    //todo: remove the supply & symbol checks after upgrading IPNFT
     function fractionalizeIpnft(uint256 ipnftId, uint256 fractionsAmount, string calldata agreementCid)
         external
-        nonReentrant
-        returns (FractionalizedToken token)
+        returns (FractionalizedToken fractionalizedToken)
     {
-        if (ipnft.totalSupply(ipnftId) != 1) {
-            revert BadSupply();
-        }
         if (ipnft.balanceOf(_msgSender(), ipnftId) != 1) {
             revert MustOwnIpnft();
         }
@@ -98,7 +89,7 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardU
         }
 
         // https://github.com/OpenZeppelin/workshops/tree/master/02-contracts-clone
-        FractionalizedToken fractionalizedToken = FractionalizedToken(Clones.clone(tokenImplementation));
+        fractionalizedToken = FractionalizedToken(Clones.clone(tokenImplementation));
         string memory name = string.concat("Fractions of IPNFT #", Strings.toString(ipnftId));
         fractionalizedToken.initialize(name, string.concat(ipnftSymbol, "-MOL"), FractionalizedTokenMetadata(ipnftId, _msgSender(), agreementCid));
 
@@ -114,8 +105,6 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardU
 
         //if we want to take a protocol fee, this might be a good point of doing so.
         fractionalizedToken.issue(_msgSender(), fractionsAmount);
-
-        return fractionalizedToken;
     }
 
     /// @notice upgrade authorization logic
@@ -125,45 +114,5 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardU
         onlyOwner // solhint-disable-next-line no-empty-blocks
     {
         //empty block
-    }
-
-    /**
-     * @notice contract metadata, compatible to ERC1155
-     * @param fractionHash uint256
-     */
-    function uri(uint256 fractionHash) external view returns (string memory) {
-        FractionalizedToken tokenContract = fractionalized[fractionHash];
-        FractionalizedTokenMetadata memory metadata = tokenContract.metadata();
-        string memory tokenId = Strings.toString(metadata.ipnftId);
-
-        string memory props = string.concat(
-            '"properties": {',
-            '"ipnft_id": ',
-            tokenId,
-            ',"agreement_content": "ipfs://',
-            metadata.agreementCid,
-            '","original_owner": "',
-            Strings.toHexString(metadata.originalOwner),
-            '","erc20_contract": "',
-            Strings.toHexString(address(tokenContract)),
-            '","supply": "',
-            Strings.toString(tokenContract.totalIssued()),
-            '"}'
-        );
-
-        return string.concat(
-            "data:application/json;base64,",
-            Base64.encode(
-                bytes(
-                    string.concat(
-                        '{"name": "Fractions of IPNFT #',
-                        tokenId,
-                        '","description": "this token represents fractions of the underlying asset","decimals": 18,"external_url": "https://molecule.to","image": "",',
-                        props,
-                        "}"
-                    )
-                )
-            )
-        );
     }
 }

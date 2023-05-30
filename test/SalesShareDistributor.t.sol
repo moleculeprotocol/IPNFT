@@ -15,7 +15,7 @@ import { Mintpass } from "../src/Mintpass.sol";
 import { IPermissioner, TermsAcceptedPermissioner, BlindPermissioner, InvalidSignature } from "../src/Permissioner.sol";
 
 import { IPNFTMintHelper } from "./IPNFTMintHelper.sol";
-import { Fractionalizer, ToZeroAddress } from "../src/Fractionalizer.sol";
+import { Fractionalizer } from "../src/Fractionalizer.sol";
 
 import {
     SalesShareDistributor,
