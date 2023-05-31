@@ -82,9 +82,8 @@ contract CrowdSale is ReentrancyGuard {
             revert BadDecimals();
         }
 
-        //close to 0 cases lead to very confusing results
-        //todo: use 10^(decimals-2) to allow 0.01 ethers
-        if (sale.fundingGoal < 10 ** sale.biddingToken.decimals() || sale.salesAmount < 0.5 ether) {
+        //close to 0 cases lead to precision issues.Using 0.01 bidding tokens as minimium funding goal
+        if (sale.fundingGoal < 10 ** (sale.biddingToken.decimals() - 2) || sale.salesAmount < 0.5 ether) {
             revert BadSalesAmount();
         }
 
