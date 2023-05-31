@@ -23,16 +23,10 @@ dataSources:
           handler: handleReservation
         - event: IPNFTMinted(indexed address,indexed uint256,string,string)
           handler: handleMint
-        - event: TransferSingle(indexed address,indexed address,indexed address,uint256,uint256)
-          handler: handleTransferSingle
+        - event: Transfer(indexed address,indexed address,indexed uint256)
+          handler: handleTransfer
         - event: ReadAccessGranted(indexed uint256,indexed address,uint256)
           handler: handleReadAccess
-# legacy handlers to support the old IPNFT deployment that emitted different events:
-        - event: IPNFTMinted(indexed address,indexed uint256,string)
-          handler: handleMintLegacy
-        - event: SymbolUpdated(indexed uint256,string)
-          handler: handleSymbolUpdatedLegacy
-
       file: ./src/ipnftMapping.ts
   - kind: ethereum/contract
     name: SchmackoSwap
@@ -51,11 +45,11 @@ dataSources:
         - name: SchmackoSwap
           file: ./abis/SchmackoSwap.json
       eventHandlers:
-        - event: Listed(uint256,(address,uint256,address,uint256,address,uint256,address,uint8))
+        - event: Listed(uint256,(address,uint256,address,address,uint256,address,uint8))
           handler: handleListed
-        - event: Unlisted(uint256,(address,uint256,address,uint256,address,uint256,address,uint8))
+        - event: Unlisted(uint256,(address,uint256,address,address,uint256,address,uint8))
           handler: handleUnlisted
-        - event: Purchased(uint256,indexed address,(address,uint256,address,uint256,address,uint256,address,uint8))
+        - event: Purchased(uint256,indexed address,(address,uint256,address,address,uint256,address,uint8))
           handler: handlePurchased
         - event: AllowlistUpdated(uint256,indexed address,bool)
           handler: handleAllowlistUpdated

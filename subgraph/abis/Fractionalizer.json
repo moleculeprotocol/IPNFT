@@ -15,11 +15,6 @@
     "type": "error"
   },
   {
-    "inputs": [],
-    "name": "NoSymbol",
-    "type": "error"
-  },
-  {
     "anonymous": false,
     "inputs": [
       {

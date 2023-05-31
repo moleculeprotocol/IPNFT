@@ -50,10 +50,6 @@ type TimelockedToken @entity {
   schedules: [LockedSchedule!] @derivedFrom(field: "tokenContract")
 }
 
-# type Locked @entity {
-
-# }
-
 type LockedSchedule @entity {
   id: Bytes!
   tokenContract: TimelockedToken!
@@ -67,7 +63,6 @@ type Listing @entity {
   id: ID!
   ipnft: Ipnft!
   creator: Bytes! #address
-  tokenAmount: BigInt! #the amount of this token to sell, usually 1
   paymentToken: Bytes! #address ERC20 Token
   beneficiary: Bytes! #address of the account that'll receive the payment
   askPrice: BigInt!

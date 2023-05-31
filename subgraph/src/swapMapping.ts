@@ -1,4 +1,4 @@
-import { Bytes, log, store } from '@graphprotocol/graph-ts'
+import { log, store } from '@graphprotocol/graph-ts'
 import { Allowed, Ipnft, Listing } from '../generated/schema'
 import {
   AllowlistUpdated as AllowlistUpdatedEvent,
@@ -23,7 +23,6 @@ export function handleListed(event: ListedEvent): void {
 
   listing.ipnft = ipnft.id
   listing.creator = event.params.listing.creator
-  listing.tokenAmount = event.params.listing.tokenAmount
   listing.paymentToken = event.params.listing.paymentToken
   listing.askPrice = event.params.listing.askPrice
   listing.beneficiary = event.params.listing.beneficiary
@@ -50,7 +49,7 @@ export function handleUnlisted(event: UnlistedEvent): void {
 export function handleAllowlistUpdated(event: AllowlistUpdatedEvent): void {
   let listing = Listing.load(event.params.listingId.toString())
   if (!listing) {
-    log.debug(
+    log.warning(
       `could not load listing from tokenId: ${event.params.listingId.toString()}`,
       []
     )
@@ -82,7 +81,7 @@ export function handleAllowlistUpdated(event: AllowlistUpdatedEvent): void {
 export function handlePurchased(event: PurchasedEvent): void {
   let listing = Listing.load(event.params.listingId.toString())
   if (!listing) {
-    log.debug(
+    log.warning(
       `could not load listing from listingId: ${event.params.listingId.toString()}`,
       []
     )

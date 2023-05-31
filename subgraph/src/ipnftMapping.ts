@@ -6,18 +6,16 @@ import {
   store
 } from '@graphprotocol/graph-ts'
 import {
-  IPNFTMinted as IPNFTMintedWithSymbolEvent,
-  IPNFTMinted1 as IPNFTMintedLegacyEvent,
+  IPNFTMinted as IPNFTMintedEvent,
   Reserved as ReservedEvent,
   ReadAccessGranted as ReadAccessGrantedEvent,
-  TransferSingle as TransferSingleEvent,
-  SymbolUpdated as SymbolUpdatedEvent
+  Transfer as TransferEvent
 } from '../generated/IPNFT/IPNFT'
 import { Ipnft, Reservation, CanRead } from '../generated/schema'
 
-export function handleTransferSingle(event: TransferSingleEvent): void {
+export function handleTransfer(event: TransferEvent): void {
   if (event.params.from !== Address.zero()) {
-    let ipnft = Ipnft.load(event.params.id.toString())
+    let ipnft = Ipnft.load(event.params.tokenId.toString())
     if (ipnft) {
       ipnft.owner = event.params.to
       ipnft.save()
@@ -69,29 +67,12 @@ export function handleReservation(event: ReservedEvent): void {
 }
 
 //the underlying parameter arrays are misaligned, hence we cannot cast or unify both events
-export function handleMint(event: IPNFTMintedWithSymbolEvent): void {
+export function handleMint(event: IPNFTMintedEvent): void {
   let ipnft = new Ipnft(event.params.tokenId.toString())
   ipnft.owner = event.params.owner
   ipnft.tokenURI = event.params.tokenURI
   ipnft.createdAt = event.block.timestamp
   ipnft.symbol = event.params.symbol
   store.remove('Reservation', event.params.tokenId.toString())
-  ipnft.save()
-}
-
-// LEGACY handlers to support old IPNFT deployments
-export function handleMintLegacy(event: IPNFTMintedLegacyEvent): void {
-  let ipnft = new Ipnft(event.params.tokenId.toString())
-  ipnft.owner = event.params.owner
-  ipnft.tokenURI = event.params.tokenURI
-  ipnft.createdAt = event.block.timestamp
-  ipnft.symbol = null
-  store.remove('Reservation', event.params.tokenId.toString())
-  ipnft.save()
-}
-
-export function handleSymbolUpdatedLegacy(event: SymbolUpdatedEvent): void {
-  let ipnft = new Ipnft(event.params.tokenId.toString())
-  ipnft.symbol = event.params.symbol
   ipnft.save()
 }
