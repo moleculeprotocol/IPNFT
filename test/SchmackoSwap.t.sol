@@ -15,6 +15,9 @@ import { FakeERC20 } from "../src/helpers/FakeERC20.sol";
 
 contract SchmackoSwapTest is Test {
     string arUri = "ar://tNbdHqh3AVDHVD06P0OPUXSProI5kGcZZw8IvLkekSY";
+    uint256 constant MINTING_FEE = 0.001 ether;
+    string DEFAULT_SYMBOL = "MOL-0001";
+
     Mintpass mintpass;
     IPNFT internal ipnft;
     IERC721 internal ierc721;
@@ -55,14 +58,13 @@ contract SchmackoSwapTest is Test {
         // Ensure marketplace can access sellers's tokens
         ipnft.setApprovalForAll(address(schmackoSwap), true);
         ipnft.reserve();
-        ipnft.mintReservation{ value: 0.001 ether }(seller, 1, 1, arUri);
+        ipnft.mintReservation{ value: 0.001 ether }(seller, 1, 1, arUri, DEFAULT_SYMBOL);
         vm.stopPrank();
     }
 
     function testGeneralBalancesAndSupplies() public {
         assertEq(ipnft.balanceOf(seller), 1);
         assertEq(ipnft.balanceOf(buyer), 0);
-        //todo assertEq(ipnft.totalSupply(1), 1);
         assertEq(testToken.balanceOf(buyer), 1 ether);
         assertEq(testToken.balanceOf(seller), 0);
         assertEq(testToken.balanceOf(address(schmackoSwap)), 0);

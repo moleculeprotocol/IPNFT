@@ -121,18 +121,6 @@ contract IPNFT is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IReser
     }
 
     /**
-     * @notice deprecated: the old interface without a symbol.
-     */
-    function mintReservation(address to, uint256 reservationId, uint256 mintPassId, string memory _tokenURI)
-        public
-        payable
-        whenNotPaused
-        returns (uint256)
-    {
-        return mintReservation(to, reservationId, mintPassId, _tokenURI, "");
-    }
-
-    /**
      * @notice mints an IPNFT with `tokenURI` as source of metadata. Invalidates the reservation. Redeems `mintpassId` on the authorizer contract
      * @notice We are charging a nominal fee to symbolically represent the transfer of ownership rights, for a price of .001 ETH (<$2USD at current prices). This helps the ensure the protocol is affordable to almost all projects, but discourages frivolous IP-NFT minting.
      *

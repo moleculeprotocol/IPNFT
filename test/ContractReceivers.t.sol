@@ -101,9 +101,9 @@ contract ContractReceiverTest is IPNFTMintHelper {
         uint256 reservationId = ipnft.reserve();
         BoringContractWallet boringWallet = new BoringContractWallet();
         vm.expectRevert(bytes("ERC721: transfer to non ERC721Receiver implementer"));
-        ipnft.mintReservation{ value: MINTING_FEE }(address(boringWallet), reservationId, 1, arUri);
+        ipnft.mintReservation{ value: MINTING_FEE }(address(boringWallet), reservationId, 1, arUri, DEFAULT_SYMBOL);
         CleverContractWallet wallet = new CleverContractWallet();
-        ipnft.mintReservation{ value: MINTING_FEE }(address(wallet), reservationId, 1, arUri);
+        ipnft.mintReservation{ value: MINTING_FEE }(address(wallet), reservationId, 1, arUri, DEFAULT_SYMBOL);
         vm.stopPrank();
 
         assertEq(ipnft.ownerOf(1), address(wallet));
@@ -120,7 +120,7 @@ contract ContractReceiverTest is IPNFTMintHelper {
         vm.startPrank(owner);
         CleverContractWallet wallet = new CleverContractWallet();
         uint256 reservationId = ipnft.reserve();
-        ipnft.mintReservation{ value: MINTING_FEE }(address(wallet), reservationId, 1, arUri);
+        ipnft.mintReservation{ value: MINTING_FEE }(address(wallet), reservationId, 1, arUri, DEFAULT_SYMBOL);
 
         uint256 listingId = wallet.startSelling(address(schmackoSwap), address(ipnft), address(testToken), 1, address(buyerWallet));
         vm.stopPrank();
