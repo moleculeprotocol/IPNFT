@@ -2,7 +2,8 @@
 pragma solidity 0.8.18;
 
 import { IERC20MetadataUpgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/IERC20MetadataUpgradeable.sol";
-import { SafeERC20Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
+import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { Initializable } from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 struct Schedule {
@@ -16,14 +17,14 @@ error StillLocked();
 error DuplicateSchedule();
 
 contract TimelockedToken is IERC20MetadataUpgradeable, Initializable {
-    using SafeERC20Upgradeable for IERC20MetadataUpgradeable;
+    using SafeERC20 for IERC20Metadata;
 
-    IERC20MetadataUpgradeable underlyingToken;
+    IERC20Metadata public underlyingToken;
     uint256 public totalSupply;
     mapping(address => uint256) balances;
     mapping(bytes32 => Schedule) public schedules;
 
-    function initialize(IERC20MetadataUpgradeable underlyingToken_) external initializer {
+    function initialize(IERC20Metadata underlyingToken_) external initializer {
         underlyingToken = underlyingToken_;
     }
 

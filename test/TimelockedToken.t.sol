@@ -5,7 +5,6 @@ import "forge-std/Test.sol";
 import "forge-std/console.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-import { IERC20MetadataUpgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/IERC20MetadataUpgradeable.sol";
 
 import { FakeERC20 } from "../src/helpers/FakeERC20.sol";
 import { TimelockedToken, NotSupported, StillLocked, DuplicateSchedule } from "../src/TimelockedToken.sol";
@@ -21,7 +20,7 @@ contract TimelockedTokenTest is Test {
     function setUp() public {
         baseToken = new FakeERC20("Base Token","BT");
         lockedToken = new TimelockedToken();
-        lockedToken.initialize(IERC20MetadataUpgradeable(address(baseToken)));
+        lockedToken.initialize(IERC20Metadata(address(baseToken)));
 
         baseToken.mint(locker, 100_000 ether);
         vm.startPrank(locker);

@@ -3,11 +3,12 @@ pragma solidity 0.8.18;
 
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import { TokenVesting } from "@moleculeprotocol/token-vesting/TokenVesting.sol";
+import { Clones } from "@openzeppelin/contracts/proxy/Clones.sol";
+import { TimelockedToken } from "../TimelockedToken.sol";
 import { CrowdSale, Sale } from "./CrowdSale.sol";
 
 struct VestingConfig {
-    TokenVesting vestingContract;
+    TimelockedToken vestingContract;
     // a duration in seconds, counted from the sale's closing time
     uint256 cliff;
 }
@@ -25,38 +26,31 @@ contract VestedCrowdSale is CrowdSale {
     using SafeERC20 for IERC20Metadata;
 
     mapping(uint256 => VestingConfig) public salesVesting;
+    address immutable lockingTokenImplementation = address(new TimelockedToken());
 
-    event Started(uint256 indexed saleId, address indexed issuer, Sale sale, VestingConfig vesting);
-    event VestingContractCreated(TokenVesting vestingContract, IERC20Metadata indexed underlyingToken);
+    event Started(uint256 indexed saleId, address indexed issuer, Sale sale, VestingConfig locking);
+    event VestingContractCreated(TimelockedToken indexed lockingContract, IERC20Metadata indexed underlyingToken);
 
     /**
      * @notice if vestingContract is 0x0, a new vesting contract is automatically created
      *
      * @param sale sale configuration
-     * @param vestingContract the vesting contract to use or address(0) to spawn a new one
-     * @param cliff must be compatible to TokenVesting hard requirements (7 days < cliff < 50 years)
+     * @param lockedTokenContract the timelock contract to use or address(0) to spawn a new one
+     * @param cliff a duration after that the receiver can redeem their tokens
      * @return saleId the newly created sale's id
      */
-    function startSale(Sale calldata sale, TokenVesting vestingContract, uint256 cliff) public returns (uint256 saleId) {
+    function startSale(Sale calldata sale, TimelockedToken lockedTokenContract, uint256 cliff) public returns (uint256 saleId) {
         saleId = uint256(keccak256(abi.encode(sale)));
 
-        if (address(vestingContract) == address(0)) {
-            vestingContract = _makeVestingContract(sale.auctionToken);
+        if (address(lockedTokenContract) == address(0)) {
+            lockedTokenContract = _makeNewLockedTokenContract(sale.auctionToken);
         } else {
-            if (!vestingContract.hasRole(vestingContract.ROLE_CREATE_SCHEDULE(), address(this))) {
-                revert UnmanageableVestingContract();
-            }
-            if (address(vestingContract.nativeToken()) != address(sale.auctionToken)) {
+            if (address(lockedTokenContract.underlyingToken()) != address(sale.auctionToken)) {
                 revert IncompatibleVestingContract();
             }
         }
 
-        // duration must follow the same rules as `TokenVesting`
-        if (cliff < 7 days || cliff > 50 * (365 days)) {
-            revert InvalidDuration();
-        }
-
-        salesVesting[saleId] = VestingConfig(vestingContract, cliff);
+        salesVesting[saleId] = VestingConfig(lockedTokenContract, cliff);
         saleId = super.startSale(sale);
     }
 
@@ -64,40 +58,41 @@ contract VestedCrowdSale is CrowdSale {
         emit Started(saleId, msg.sender, _sales[saleId], salesVesting[saleId]);
     }
 
+    function _afterSaleSettled(uint256 saleId) internal override {
+        Sale storage sale = _sales[saleId];
+        sale.auctionToken.approve(address(salesVesting[saleId].vestingContract), sale.salesAmount);
+    }
+
     /**
-     * @dev will send auction tokens to the configured vesting contract. Only the cliff is configured.
+     * @dev will send auction tokens to the configured timelock contract.
      *
      * @param saleId sale id
      * @param tokenAmount amount of tokens to vest
      */
     function _claimAuctionTokens(uint256 saleId, uint256 tokenAmount) internal virtual override {
-        VestingConfig storage vesting = salesVesting[saleId];
+        VestingConfig storage vestingConfig = salesVesting[saleId];
 
         //the vesting start time is the official auction closing time
-        if (block.timestamp > _sales[saleId].closingTime + vesting.cliff) {
+        if (block.timestamp > _sales[saleId].closingTime + vestingConfig.cliff) {
             //no need for vesting when cliff already expired.
             _sales[saleId].auctionToken.safeTransfer(msg.sender, tokenAmount);
         } else {
-            _sales[saleId].auctionToken.safeTransfer(address(vesting.vestingContract), tokenAmount);
-            vesting.vestingContract.createVestingSchedule(
-                msg.sender, _sales[saleId].closingTime, vesting.cliff, vesting.cliff, 60, false, tokenAmount
-            );
+            //_sales[saleId].auctionToken.safeTransfer(address(vesting.lockingContract), tokenAmount);
+
+            vestingConfig.vestingContract.lock(msg.sender, tokenAmount, uint64(_sales[saleId].closingTime + vestingConfig.cliff));
         }
     }
 
     /**
-     * @dev deploys a new vesting schedule contract for the auctionToken
+     * @dev deploys a new timelocked token contract for the auctionToken
      *      to save on gas and improve UX, this should only be called once per auctionToken.
-     *      If a vesting contract already exists for that token, you can provide it when initializing the sale.
-     *      Cannot use minimal clones here because TokenVesting is not initializable
-     * @param auctionToken the auction token that a vesting contract is created for
+     *      If a timelocked token contract already exists for auctionToken, you can provide it when initializing the sale.
+     * @param auctionToken the auction token that a timelocked token contract is created for
+     * @return lockedTokenContract address of the new timelocked token contract
      */
-    function _makeVestingContract(IERC20Metadata auctionToken) private returns (TokenVesting vestingContract) {
-        vestingContract = new TokenVesting(
-            auctionToken,
-            string.concat("Vested ", auctionToken.name()),
-            string.concat("v", auctionToken.symbol())
-        );
-        emit VestingContractCreated(vestingContract, auctionToken);
+    function _makeNewLockedTokenContract(IERC20Metadata auctionToken) private returns (TimelockedToken lockedTokenContract) {
+        lockedTokenContract = TimelockedToken(Clones.clone(lockingTokenImplementation));
+        lockedTokenContract.initialize(auctionToken);
+        emit VestingContractCreated(lockedTokenContract, auctionToken);
     }
 }
