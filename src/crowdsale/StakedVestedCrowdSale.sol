@@ -5,6 +5,8 @@ import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/I
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { FixedPointMathLib } from "solmate/utils/FixedPointMathLib.sol";
 import { TokenVesting } from "@moleculeprotocol/token-vesting/TokenVesting.sol";
+import { TimelockedToken } from "../TimelockedToken.sol";
+
 import { VestedCrowdSale, VestingConfig, IncompatibleVestingContract, UnmanageableVestingContract } from "./VestedCrowdSale.sol";
 import { CrowdSale, Sale, BadDecimals } from "./CrowdSale.sol";
 
@@ -36,7 +38,7 @@ contract StakedVestedCrowdSale is VestedCrowdSale {
     event Staked(uint256 indexed saleId, address indexed bidder, uint256 stakedAmount, uint256 price);
 
     /**
-     * @notice if vestingConfig.vestingContract is 0x0, a new vesting contract is automatically created
+     * @notice if vestingContract is 0x0, a new timelocked token vesting contract clone is automatically created
      *
      * @param sale sale configuration
      * @param stakedToken the ERC20 contract for staking tokens
@@ -51,7 +53,7 @@ contract StakedVestedCrowdSale is VestedCrowdSale {
         IERC20Metadata stakedToken,
         TokenVesting stakesVestingContract,
         uint256 wadFixedStakedPerBidPrice,
-        TokenVesting vestingContract,
+        TimelockedToken vestingContract,
         uint256 cliff
     ) public returns (uint256 saleId) {
         if (IERC20Metadata(address(stakedToken)).decimals() != 18) {

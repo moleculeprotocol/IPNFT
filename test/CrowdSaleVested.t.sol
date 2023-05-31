@@ -9,6 +9,7 @@ import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/I
 import { CrowdSale, SaleState, Sale, SaleInfo } from "../src/crowdsale/CrowdSale.sol";
 import { VestedCrowdSale, VestingConfig, UnmanageableVestingContract, InvalidDuration } from "../src/crowdsale/VestedCrowdSale.sol";
 import { TokenVesting } from "@moleculeprotocol/token-vesting/TokenVesting.sol";
+import { TimelockedToken, StillLocked } from "../src/TimelockedToken.sol";
 import { FakeERC20 } from "../src/helpers/FakeERC20.sol";
 import { CrowdSaleHelpers } from "./helpers/CrowdSaleHelpers.sol";
 
@@ -41,21 +42,7 @@ contract CrowdSaleVestedTest is Test {
         biddingToken.approve(address(crowdSale), 1_000_000 ether);
         vm.stopPrank();
 
-        _vestingConfig = VestingConfig({ vestingContract: TokenVesting(address(0)), cliff: 60 days });
-    }
-
-    function testVestedCrowdSalesConformsToTokenVestingRules() public {
-        vm.startPrank(emitter);
-        Sale memory _sale = CrowdSaleHelpers.makeSale(emitter, auctionToken, biddingToken);
-        auctionToken.approve(address(crowdSale), 400_000 ether);
-
-        vm.expectRevert(InvalidDuration.selector);
-        crowdSale.startSale(_sale, TokenVesting(address(0)), 5 days);
-
-        vm.expectRevert(InvalidDuration.selector);
-        crowdSale.startSale(_sale, TokenVesting(address(0)), 1 days + 50 * (365 days));
-
-        vm.stopPrank();
+        _vestingConfig = VestingConfig({ vestingContract: TimelockedToken(address(0)), cliff: 60 days });
     }
 
     function testSettlementAndSimpleClaims() public {
@@ -63,7 +50,7 @@ contract CrowdSaleVestedTest is Test {
         Sale memory _sale = CrowdSaleHelpers.makeSale(emitter, auctionToken, biddingToken);
         auctionToken.approve(address(crowdSale), 400_000 ether);
 
-        uint256 saleId = crowdSale.startSale(_sale, TokenVesting(address(0)), 60 days);
+        uint256 saleId = crowdSale.startSale(_sale, TimelockedToken(address(0)), 60 days);
         vm.stopPrank();
 
         vm.startPrank(bidder);
@@ -80,21 +67,26 @@ contract CrowdSaleVestedTest is Test {
         assertEq(info.surplus, 0);
 
         vm.startPrank(bidder);
+        vm.recordLogs();
         crowdSale.claim(saleId);
+        Vm.Log[] memory entries = vm.getRecordedLogs();
+        assertEq(entries[1].topics[0], keccak256("ScheduleCreated(bytes32,address,address,uint256,uint64)"));
+        bytes32 scheduleId = entries[1].topics[1];
         vm.stopPrank();
 
-        (TokenVesting auctionTokenVesting,) = crowdSale.salesVesting(saleId);
+        (TimelockedToken auctionTokenVesting,) = crowdSale.salesVesting(saleId);
 
         assertEq(auctionTokenVesting.balanceOf(bidder), _sale.salesAmount);
 
         vm.startPrank(bidder);
         vm.warp(_sale.closingTime + 10 days);
-        auctionTokenVesting.releaseAvailableTokensForHolder(bidder);
+        vm.expectRevert(StillLocked.selector);
+        auctionTokenVesting.release(scheduleId);
         assertEq(auctionTokenVesting.balanceOf(bidder), _sale.salesAmount);
         assertEq(auctionToken.balanceOf(bidder), 0);
 
         vm.warp(_sale.closingTime + 60 days);
-        auctionTokenVesting.releaseAvailableTokensForHolder(bidder);
+        auctionTokenVesting.release(scheduleId);
         assertEq(auctionToken.balanceOf(bidder), _sale.salesAmount);
         assertEq(auctionTokenVesting.balanceOf(bidder), 0);
         vm.stopPrank();
@@ -104,7 +96,7 @@ contract CrowdSaleVestedTest is Test {
         vm.startPrank(emitter);
         Sale memory _sale = CrowdSaleHelpers.makeSale(emitter, auctionToken, biddingToken);
         auctionToken.approve(address(crowdSale), 400_000 ether);
-        uint256 saleId = crowdSale.startSale(_sale, TokenVesting(address(0)), 60 days);
+        uint256 saleId = crowdSale.startSale(_sale, TimelockedToken(address(0)), 60 days);
         vm.stopPrank();
 
         vm.startPrank(bidder);
@@ -128,33 +120,20 @@ contract CrowdSaleVestedTest is Test {
 
         assertEq(biddingToken.balanceOf(bidder), 1_000_000 ether);
         assertEq(auctionToken.balanceOf(bidder), 0);
-        (TokenVesting auctionTokenVesting,) = crowdSale.salesVesting(saleId);
+        (TimelockedToken auctionTokenVesting,) = crowdSale.salesVesting(saleId);
 
         assertEq(auctionTokenVesting.balanceOf(bidder), 0);
     }
 
     function testBringYourOwnVestingContract() public {
         vm.startPrank(anyone);
-        TokenVesting vestingContract = new TokenVesting(auctionToken, "Selfmade vMOL", "vMOLE");
-        bytes32 ROLE_CREATE_SCHEDULE = vestingContract.ROLE_CREATE_SCHEDULE();
+        TimelockedToken vestingContract = new TimelockedToken();
+        vestingContract.initialize(auctionToken);
         vm.stopPrank();
 
         vm.startPrank(emitter);
         Sale memory _sale = CrowdSaleHelpers.makeSale(emitter, auctionToken, biddingToken);
         auctionToken.approve(address(crowdSale), 400_000 ether);
-
-        vm.expectRevert(UnmanageableVestingContract.selector);
-        crowdSale.startSale(_sale, vestingContract, 60 days);
-
-        vm.expectRevert(
-            "AccessControl: account 0x5b82c2eec3e5e731e21c7fdea9c4e74c49b74093 is missing role 0x0000000000000000000000000000000000000000000000000000000000000000"
-        );
-        vestingContract.grantRole(ROLE_CREATE_SCHEDULE, address(crowdSale));
-        vm.stopPrank();
-
-        vm.startPrank(anyone);
-        vestingContract.grantRole(ROLE_CREATE_SCHEDULE, address(crowdSale));
-        vm.stopPrank();
 
         vm.startPrank(emitter);
         uint256 saleId = crowdSale.startSale(_sale, vestingContract, 60 days);
@@ -174,20 +153,23 @@ contract CrowdSaleVestedTest is Test {
         assertEq(info.surplus, 0);
 
         vm.startPrank(bidder);
+        vm.recordLogs();
         crowdSale.claim(saleId);
+        Vm.Log[] memory entries = vm.getRecordedLogs();
+        assertEq(entries[1].topics[0], keccak256("ScheduleCreated(bytes32,address,address,uint256,uint64)"));
+        assertEq(bidder, address(uint160(uint256((entries[1].topics[2])))));
+        bytes32 scheduleId = entries[1].topics[1];
         vm.stopPrank();
 
-        (TokenVesting auctionTokenVesting,) = crowdSale.salesVesting(saleId);
-
-        assertEq(auctionTokenVesting.balanceOf(bidder), _sale.salesAmount);
+        assertEq(vestingContract.balanceOf(bidder), _sale.salesAmount);
 
         vm.warp(_sale.closingTime + 60 days);
-
-        vm.startPrank(bidder); //actually, only the vesting subject may call that.
-        auctionTokenVesting.releaseAvailableTokensForHolder(bidder);
-        assertEq(auctionToken.balanceOf(bidder), _sale.salesAmount);
-        assertEq(auctionTokenVesting.balanceOf(bidder), 0);
+        vm.startPrank(anyone);
+        vestingContract.release(scheduleId);
         vm.stopPrank();
+
+        assertEq(auctionToken.balanceOf(bidder), _sale.salesAmount);
+        assertEq(vestingContract.balanceOf(bidder), 0);
     }
 
     function testClaimLongAfterVestingPeriod() public {
@@ -196,7 +178,7 @@ contract CrowdSaleVestedTest is Test {
         _sale.closingTime = uint64(block.timestamp + 7 days);
 
         auctionToken.approve(address(crowdSale), 400_000 ether);
-        uint256 saleId = crowdSale.startSale(_sale, TokenVesting(address(0)), 60 days);
+        uint256 saleId = crowdSale.startSale(_sale, TimelockedToken(address(0)), 60 days);
         vm.stopPrank();
 
         vm.startPrank(bidder);
@@ -213,7 +195,7 @@ contract CrowdSaleVestedTest is Test {
         crowdSale.claim(saleId);
 
         //skips the vesting contract
-        (TokenVesting auctionTokenVesting,) = crowdSale.salesVesting(saleId);
+        (TimelockedToken auctionTokenVesting,) = crowdSale.salesVesting(saleId);
         assertEq(auctionTokenVesting.balanceOf(bidder), 0);
 
         assertEq(auctionToken.balanceOf(bidder), 400_000 ether);

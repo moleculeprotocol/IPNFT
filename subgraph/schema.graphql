@@ -42,6 +42,27 @@ type ERC20Token @entity {
   name: String
 }
 
+type TimelockedToken @entity {
+  id: Bytes!
+  decimals: BigInt!
+  symbol: String!
+  name: String
+  schedules: [LockedSchedule!] @derivedFrom(field: "tokenContract")
+}
+
+# type Locked @entity {
+
+# }
+
+type LockedSchedule @entity {
+  id: Bytes!
+  tokenContract: TimelockedToken!
+  beneficiary: Bytes!
+  amount: BigInt!
+  expiresAt: BigInt!
+  claimedAt: BigInt
+}
+
 type Listing @entity {
   id: ID!
   ipnft: Ipnft!
@@ -108,7 +129,7 @@ type CrowdSale @entity {
   state: SaleState!
   auctionToken: ERC20Token # could also use FractionalizedToken
   salesAmount: BigInt! #the amount of tokens to be auctioned
-  vestedAuctionToken: ERC20Token #the vested auction token that bidders partially receive when claiming
+  vestedAuctionToken: TimelockedToken #the vested auction token that bidders partially receive when claiming
   auctionCliff: BigInt # The auction token cliff
   biddingToken: ERC20Token
   fundingGoal: BigInt! #the amount of tokens to be raised

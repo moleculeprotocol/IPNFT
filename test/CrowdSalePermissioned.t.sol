@@ -15,6 +15,7 @@ import { StakedVestedCrowdSale, IncompatibleVestingContract, BadPrice } from "..
 import { IPermissioner, TermsAcceptedPermissioner, InvalidSignature } from "../src/Permissioner.sol";
 
 import { TokenVesting } from "@moleculeprotocol/token-vesting/TokenVesting.sol";
+import { TimelockedToken } from "../src/TimelockedToken.sol";
 import { FakeERC20 } from "../src/helpers/FakeERC20.sol";
 //import { BioPriceFeed, IPriceFeedConsumer } from "../src/BioPriceFeed.sol";
 import { CrowdSaleHelpers } from "./helpers/CrowdSaleHelpers.sol";
@@ -77,7 +78,7 @@ contract CrowdSalePermissionedTest is Test {
         _sale.permissioner = permissioner;
         auctionToken.approve(address(crowdSale), 400_000 ether);
 
-        uint256 saleId = crowdSale.startSale(_sale, daoToken, vestedDao, 1e18, TokenVesting(address(0)), 60 days);
+        uint256 saleId = crowdSale.startSale(_sale, daoToken, vestedDao, 1e18, TimelockedToken(address(0)), 60 days);
         vm.stopPrank();
 
         string memory terms = permissioner.specificTermsV1(auctionToken);
@@ -111,7 +112,7 @@ contract CrowdSalePermissionedTest is Test {
         crowdSale.claim(saleId, xsignature);
         vm.stopPrank();
 
-        (TokenVesting auctionTokenVesting,) = crowdSale.salesVesting(saleId);
+        (TimelockedToken auctionTokenVesting,) = crowdSale.salesVesting(saleId);
         assertEq(auctionTokenVesting.balanceOf(bidder), _sale.salesAmount);
         assertEq(daoToken.balanceOf(bidder), 800_000 ether);
         assertEq(vestedDao.balanceOf(bidder), 200_000 ether);

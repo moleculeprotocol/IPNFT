@@ -11,7 +11,7 @@ import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
 import { TokenVesting } from "@moleculeprotocol/token-vesting/TokenVesting.sol";
-
+import { TimelockedToken } from "../../src/TimelockedToken.sol";
 import { IPermissioner, TermsAcceptedPermissioner } from "../../src/Permissioner.sol";
 import { CrowdSale, Sale, SaleInfo } from "../../src/crowdsale/CrowdSale.sol";
 import { VestingConfig } from "../../src/crowdsale/VestedCrowdSale.sol";
@@ -50,7 +50,7 @@ contract FixtureCrowdSale is CommonScript {
     TokenVesting vestedDaoToken;
 
     FractionalizedToken internal auctionToken;
-    TokenVesting vestedMolToken;
+    TimelockedToken vestedMolToken;
 
     StakedVestedCrowdSale stakedVestedCrowdSale;
     TermsAcceptedPermissioner permissioner;
@@ -70,12 +70,8 @@ contract FixtureCrowdSale is CommonScript {
     function setupVestedMolToken() internal {
         vm.startBroadcast(deployer);
         auctionToken = FractionalizedToken(vm.envAddress("FRACTIONALIZED_TOKEN_ADDRESS"));
-        vestedMolToken = new TokenVesting(
-            IERC20Metadata(address(auctionToken)),
-            string(abi.encodePacked("Vested ", auctionToken.name())),
-            string(abi.encodePacked("v", auctionToken.symbol()))
-        );
-        vestedMolToken.grantRole(vestedMolToken.ROLE_CREATE_SCHEDULE(), address(stakedVestedCrowdSale));
+        vestedMolToken = new TimelockedToken();
+        vestedMolToken.initialize(IERC20Metadata(address(auctionToken)));
         console.log("VESTED_FRACTIONALIZED_TOKEN_ADDRESS=%s", address(vestedMolToken));
 
         vestedDaoToken.grantRole(vestedDaoToken.ROLE_CREATE_SCHEDULE(), address(stakedVestedCrowdSale));

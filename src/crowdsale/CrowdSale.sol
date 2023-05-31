@@ -174,10 +174,12 @@ contract CrowdSale is ReentrancyGuard {
         saleInfo.surplus = saleInfo.total - sale.fundingGoal;
 
         emit Settled(saleId, saleInfo.total, saleInfo.surplus);
-
+        _afterSaleSettled(saleId);
         //transfer funds to issuer / beneficiary
         sale.biddingToken.safeTransfer(sale.beneficiary, sale.fundingGoal);
     }
+
+    function _afterSaleSettled(uint256 saleId) internal virtual { }
 
     /**
      * @dev computes commitment ratio of bidder
