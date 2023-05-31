@@ -3,18 +3,17 @@ pragma solidity ^0.8.17;
 
 import "forge-std/Script.sol";
 import "forge-std/console.sol";
-
+import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import { IPNFT } from "../src/IPNFT.sol";
 import { SchmackoSwap } from "../src/SchmackoSwap.sol";
 import { Mintpass } from "../src/Mintpass.sol";
-import { UUPSProxy } from "../src/UUPSProxy.sol";
 
 contract DeployScript is Script {
     function run() public {
         address moderator = vm.envAddress("MODERATOR_ADDRESS");
         vm.startBroadcast();
         IPNFT implementationV2 = new IPNFT();
-        UUPSProxy proxy = new UUPSProxy(address(implementationV2), "");
+        ERC1967Proxy proxy = new ERC1967Proxy(address(implementationV2), "");
         IPNFT ipnft = IPNFT(address(proxy));
         ipnft.initialize();
 

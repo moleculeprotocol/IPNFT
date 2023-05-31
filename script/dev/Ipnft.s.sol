@@ -4,22 +4,20 @@ pragma solidity ^0.8.13;
 import "forge-std/Script.sol";
 import "forge-std/console.sol";
 
+import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+import { IERC721 } from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IPNFT } from "../../src/IPNFT.sol";
 import { SchmackoSwap } from "../../src/SchmackoSwap.sol";
 import { Mintpass } from "../../src/Mintpass.sol";
-import { UUPSProxy } from "../../src/UUPSProxy.sol";
 import { FakeERC20 } from "../../src/helpers/FakeERC20.sol";
-import { IERC1155Supply } from "../../src/IERC1155Supply.sol";
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { CommonScript } from "./Common.sol";
 
 contract DeployIpnftSuite is CommonScript {
     function run() public {
         prepareAddresses();
         vm.startBroadcast(deployer);
-        IPNFT implementationV2 = new IPNFT();
-        UUPSProxy proxy = new UUPSProxy(address(implementationV2), "");
-        IPNFT ipnft = IPNFT(address(proxy));
+        IPNFT ipnft = IPNFT(address(new ERC1967Proxy(address(new IPNFT()), "")));
         ipnft.initialize();
 
         SchmackoSwap swap = new SchmackoSwap();
@@ -68,7 +66,7 @@ contract FixtureIpnft is CommonScript {
     function createListing(address seller, uint256 tokenId, uint256 price, FakeERC20 erc20) internal returns (uint256) {
         vm.startBroadcast(seller);
         ipnft.setApprovalForAll(address(schmackoSwap), true);
-        uint256 listingId = schmackoSwap.list(IERC1155Supply(address(ipnft)), tokenId, IERC20(address(erc20)), price);
+        uint256 listingId = schmackoSwap.list(IERC721(address(ipnft)), tokenId, IERC20(address(erc20)), price);
         vm.stopBroadcast();
         return listingId;
     }

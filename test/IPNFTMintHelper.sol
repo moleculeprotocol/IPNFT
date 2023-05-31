@@ -2,11 +2,10 @@
 pragma solidity ^0.8.18;
 
 import "forge-std/Test.sol";
-import { console } from "forge-std/console.sol";
+import "forge-std/console.sol";
 
 import { Mintpass } from "../src/Mintpass.sol";
 import { IReservable } from "../src/IReservable.sol";
-import { UUPSProxy } from "../src/UUPSProxy.sol";
 
 abstract contract IPNFTMintHelper is Test {
     string ipfsUri = "ipfs://QmYwAPJzv5CZsnA9LqYKXfutJzBg68";

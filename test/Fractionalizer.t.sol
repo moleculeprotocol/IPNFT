@@ -15,7 +15,6 @@ import { Enum } from "safe-global/safe-contracts/common/Enum.sol";
 import "./helpers/MakeGnosisWallet.sol";
 import { IPNFT } from "../src/IPNFT.sol";
 import { Mintpass } from "../src/Mintpass.sol";
-import { UUPSProxy } from "../src/UUPSProxy.sol";
 
 import { FakeERC20 } from "../src/helpers/FakeERC20.sol";
 import { Fractionalizer } from "../src/Fractionalizer.sol";
@@ -24,7 +23,6 @@ import { MustOwnIpnft, NoSymbol, AlreadyFractionalized } from "../src/Fractional
 import { FractionalizedToken, OnlyIssuerOrOwner, TokenCapped } from "../src/FractionalizedToken.sol";
 import { FractionalizerNext, FractionalizedTokenNext } from "../src/helpers/upgrades/FractionalizerNext.sol";
 
-import { IERC1155Supply } from "../src/IERC1155Supply.sol";
 import { SchmackoSwap, ListingState } from "../src/SchmackoSwap.sol";
 
 contract FractionalizerTest is Test {
@@ -117,7 +115,7 @@ contract FractionalizerTest is Test {
 
         assertEq(tokenContract.balanceOf(originalOwner), 100_000);
         //the original nft *stays* at the owner
-        assertEq(ipnft.balanceOf(originalOwner, 1), 1);
+        assertEq(ipnft.ownerOf(1), originalOwner);
 
         assertEq(tokenContract.totalIssued(), 100_000);
         assertEq(tokenContract.symbol(), "MOL-0001-MOL");

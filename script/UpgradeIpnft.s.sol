@@ -7,7 +7,6 @@ import "forge-std/console.sol";
 import { IPNFT } from "../src/IPNFT.sol";
 import { SchmackoSwap } from "../src/SchmackoSwap.sol";
 import { Mintpass } from "../src/Mintpass.sol";
-import { UUPSProxy } from "../src/UUPSProxy.sol";
 
 contract UpgradeIpnft is Script {
     function run() public {

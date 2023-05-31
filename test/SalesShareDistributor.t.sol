@@ -3,8 +3,9 @@ pragma solidity ^0.8.18;
 
 import "forge-std/Test.sol";
 
-//import { IERC20Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { IERC721 } from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import { SafeERC20Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
@@ -28,7 +29,6 @@ import {
 } from "../src/SalesShareDistributor.sol";
 
 import { FractionalizedToken, OnlyIssuerOrOwner } from "../src/FractionalizedToken.sol";
-import { IERC1155Supply } from "../src/IERC1155Supply.sol";
 import { SchmackoSwap, ListingState } from "../src/SchmackoSwap.sol";
 import { FakeERC20 } from "../src/helpers/FakeERC20.sol";
 
@@ -115,7 +115,7 @@ contract SalesShareDistributorTest is Test {
 
     function helpCreateListing(uint256 price, address beneficiary) public returns (uint256 listingId) {
         ipnft.setApprovalForAll(address(schmackoSwap), true);
-        listingId = schmackoSwap.list(IERC1155Supply(address(ipnft)), 1, erc20, price, beneficiary);
+        listingId = schmackoSwap.list(IERC721(address(ipnft)), 1, erc20, price, beneficiary);
 
         schmackoSwap.changeBuyerAllowance(listingId, ipnftBuyer, true);
         return listingId;
@@ -128,7 +128,7 @@ contract SalesShareDistributorTest is Test {
         uint256 listingId = helpCreateListing(1_000_000 ether, address(tokenContract));
         vm.stopPrank();
 
-        (,,,,,,, ListingState listingState) = schmackoSwap.listings(listingId);
+        (,,,,,, ListingState listingState) = schmackoSwap.listings(listingId);
         assertEq(uint256(listingState), uint256(ListingState.LISTED));
 
         //todo: prove we cannot start withdrawals at this point ;)
@@ -137,12 +137,12 @@ contract SalesShareDistributorTest is Test {
         schmackoSwap.fulfill(listingId);
         vm.stopPrank();
 
-        assertEq(ipnft.balanceOf(ipnftBuyer, 1), 1);
-        assertEq(ipnft.balanceOf(originalOwner, 1), 0);
+        assertEq(ipnft.ownerOf(1), ipnftBuyer);
+        assertEq(ipnft.balanceOf(originalOwner), 0);
         assertEq(erc20.balanceOf(originalOwner), 0);
         assertEq(erc20.balanceOf(address(tokenContract)), 1_000_000 ether);
 
-        (,,,,,,, ListingState listingState2) = schmackoSwap.listings(listingId);
+        (,,,,,, ListingState listingState2) = schmackoSwap.listings(listingId);
         assertEq(uint256(listingState2), uint256(ListingState.FULFILLED));
     }
 
@@ -182,7 +182,7 @@ contract SalesShareDistributorTest is Test {
     function testManuallyStartClaimingPhase() public {
         vm.startPrank(originalOwner);
         FractionalizedToken tokenContract = fractionalizer.fractionalizeIpnft(1, 100_000, agreementCid);
-        ipnft.safeTransferFrom(originalOwner, ipnftBuyer, 1, 1, "");
+        ipnft.safeTransferFrom(originalOwner, ipnftBuyer, 1);
         assertEq(tokenContract.issuer(), originalOwner);
         tokenContract.cap();
         vm.stopPrank();
@@ -226,7 +226,7 @@ contract SalesShareDistributorTest is Test {
         vm.stopPrank();
 
         vm.startPrank(originalOwner);
-        ipnft.safeTransferFrom(originalOwner, ipnftBuyer, 1, 1, "");
+        ipnft.safeTransferFrom(originalOwner, ipnftBuyer, 1);
         vm.stopPrank();
 
         (uint8 v, bytes32 r, bytes32 s) =
@@ -349,7 +349,7 @@ contract SalesShareDistributorTest is Test {
         FractionalizedToken tokenContract1 = fractionalizer.fractionalizeIpnft(1, 100_000, agreementCid);
         tokenContract1.cap();
         ipnft.setApprovalForAll(address(schmackoSwap), true);
-        uint256 listingId1 = schmackoSwap.list(IERC1155Supply(address(ipnft)), 1, erc20, 1000 ether, address(distributor));
+        uint256 listingId1 = schmackoSwap.list(IERC721(address(ipnft)), 1, erc20, 1000 ether, address(distributor));
         schmackoSwap.changeBuyerAllowance(listingId1, ipnftBuyer, true);
 
         vm.stopPrank();
@@ -365,7 +365,7 @@ contract SalesShareDistributorTest is Test {
         ipnft.setApprovalForAll(address(schmackoSwap), true);
         FractionalizedToken tokenContract2 = fractionalizer.fractionalizeIpnft(2, 70_000, agreementCid);
         tokenContract2.cap();
-        uint256 listingId2 = schmackoSwap.list(IERC1155Supply(address(ipnft)), 2, erc20, 700 ether, address(originalOwner));
+        uint256 listingId2 = schmackoSwap.list(IERC721(address(ipnft)), 2, erc20, 700 ether, address(originalOwner));
         schmackoSwap.changeBuyerAllowance(listingId2, ipnftBuyer, true);
         vm.stopPrank();
 

@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.17;
 
-import { ERC20 as SolERC20 } from "solmate/tokens/ERC20.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { ReentrancyGuard } from "solmate/utils/ReentrancyGuard.sol";
 import { SafeTransferLib } from "solmate/utils/SafeTransferLib.sol";
 // import { ERC1155Supply } from "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Supply.sol";
 import { ERC165 } from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 import { IERC165 } from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
-import { IERC1155Supply } from "./IERC1155Supply.sol";
+import { IERC721 } from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 enum ListingState {
     LISTED,
@@ -20,6 +20,7 @@ enum ListingState {
 /// @author molecule.to
 /// @notice a sales contract that lets NFT holders list items with an ask price and control who can fulfill their offers. Accepts arbitrary ERC20 tokens as payment.
 contract SchmackoSwap is ERC165, ReentrancyGuard {
+    using SafeERC20 for IERC20;
     /// ERRORS ///
 
     /// @notice Thrown when user tries to initiate an action without being authorized
@@ -33,9 +34,6 @@ contract SchmackoSwap is ERC165, ReentrancyGuard {
 
     /// @notice Thrown when the buyer hasn't approved the marketplace to transfer their payment tokens
     error InsufficientAllowance();
-
-    /// @notice Thrown when the buyer has insufficient funds to purchase the listing or when the seller doesn't own all instances of the ERC1155 token
-    error InsufficientBalance();
 
     /// EVENTS ///
 
@@ -66,15 +64,14 @@ contract SchmackoSwap is ERC165, ReentrancyGuard {
     uint256 internal saleCounter = 1;
 
     /// @dev Parameters for listings
-    /// @param tokenContract The ERC1155 contract for the listed token
+    /// @param tokenContract The IERC721 contract for the listed token
     /// @param tokenId The ID of the listed token
     /// @param creator The address of the seller
     /// @param askPrice The amount the seller is asking for in exchange for the token
     struct Listing {
-        IERC1155Supply tokenContract;
+        IERC721 tokenContract;
         uint256 tokenId;
         address creator;
-        uint256 tokenAmount;
         IERC20 paymentToken;
         uint256 askPrice;
         address beneficiary;
@@ -95,7 +92,7 @@ contract SchmackoSwap is ERC165, ReentrancyGuard {
     /// @param askPrice How much you want to receive in exchange for the token
     /// @return The ID of the created listing
     /// @dev Remember to call `setApprovalForAll(<address of this contract>, true)` on the ERC1155's contract before calling this function
-    function list(IERC1155Supply tokenContract, uint256 tokenId, IERC20 paymentToken, uint256 askPrice) public returns (uint256) {
+    function list(IERC721 tokenContract, uint256 tokenId, IERC20 paymentToken, uint256 askPrice) public returns (uint256) {
         return list(tokenContract, tokenId, paymentToken, askPrice, msg.sender);
     }
 
@@ -103,10 +100,7 @@ contract SchmackoSwap is ERC165, ReentrancyGuard {
      * {inheritDoc list}
      * @param beneficiary address the account that will receive the funds after fulfillment. In case of fractionalization this should be the FractionalizerL2Dispatcher
      */
-    function list(IERC1155Supply tokenContract, uint256 tokenId, IERC20 paymentToken, uint256 askPrice, address beneficiary)
-        public
-        returns (uint256)
-    {
+    function list(IERC721 tokenContract, uint256 tokenId, IERC20 paymentToken, uint256 askPrice, address beneficiary) public returns (uint256) {
         if (!tokenContract.isApprovedForAll(msg.sender, address(this))) {
             revert InsufficientAllowance();
         }
@@ -115,7 +109,6 @@ contract SchmackoSwap is ERC165, ReentrancyGuard {
             tokenContract: tokenContract,
             tokenId: tokenId,
             paymentToken: paymentToken,
-            tokenAmount: tokenContract.totalSupply(tokenId),
             askPrice: askPrice,
             creator: msg.sender,
             beneficiary: beneficiary,
@@ -157,17 +150,10 @@ contract SchmackoSwap is ERC165, ReentrancyGuard {
 
         IERC20 paymentToken = listing.paymentToken;
 
-        uint256 allowance = paymentToken.allowance(msg.sender, address(this));
-        if (allowance < listing.askPrice) revert InsufficientAllowance();
-
-        uint256 buyerBalance = paymentToken.balanceOf(msg.sender);
-        if (buyerBalance < listing.askPrice) revert InsufficientBalance();
-
         listings[listingId].listingState = ListingState.FULFILLED;
 
-        listing.tokenContract.safeTransferFrom(listing.creator, msg.sender, listing.tokenId, listing.tokenAmount, "");
-
-        SafeTransferLib.safeTransferFrom(SolERC20(address(paymentToken)), msg.sender, listing.beneficiary, listing.askPrice);
+        listing.tokenContract.safeTransferFrom(listing.creator, msg.sender, listing.tokenId);
+        paymentToken.safeTransferFrom(msg.sender, listing.beneficiary, listing.askPrice);
 
         emit Purchased(listingId, msg.sender, listings[listingId]);
     }
