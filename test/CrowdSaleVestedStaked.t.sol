@@ -83,7 +83,7 @@ contract CrowdSaleVestedStakedTest is Test {
         vm.expectRevert(); //cannot call .decimals() on 0x0
         crowdSale.startSale(_sale, IERC20Metadata(address(0)), TokenVesting(address(0)), 0, TimelockedToken(address(0)), 60 days);
 
-        vm.expectRevert();
+        vm.expectRevert(); //need to bring a stake vesting contract
         crowdSale.startSale(_sale, daoToken, TokenVesting(address(0)), 0, TimelockedToken(address(0)), 60 days);
 
         TokenVesting wrongStakeVestingContract = new TokenVesting(auctionToken, "vested mol", "vmol");

@@ -9,7 +9,7 @@ import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/I
 import { CrowdSale, SaleState, Sale, SaleInfo } from "../src/crowdsale/CrowdSale.sol";
 import { VestedCrowdSale, VestingConfig, UnmanageableVestingContract, InvalidDuration } from "../src/crowdsale/VestedCrowdSale.sol";
 import { TokenVesting } from "@moleculeprotocol/token-vesting/TokenVesting.sol";
-import { TimelockedToken } from "../src/TimelockedToken.sol";
+import { TimelockedToken, StillLocked } from "../src/TimelockedToken.sol";
 import { FakeERC20 } from "../src/helpers/FakeERC20.sol";
 import { CrowdSaleHelpers } from "./helpers/CrowdSaleHelpers.sol";
 
@@ -67,25 +67,29 @@ contract CrowdSaleVestedTest is Test {
         assertEq(info.surplus, 0);
 
         vm.startPrank(bidder);
+        vm.recordLogs();
         crowdSale.claim(saleId);
+        Vm.Log[] memory entries = vm.getRecordedLogs();
+        assertEq(entries[1].topics[0], keccak256("ScheduleCreated(bytes32,address,address,uint256,uint64)"));
+        bytes32 scheduleId = entries[1].topics[1];
         vm.stopPrank();
 
         (TimelockedToken auctionTokenVesting,) = crowdSale.salesVesting(saleId);
 
         assertEq(auctionTokenVesting.balanceOf(bidder), _sale.salesAmount);
 
-        //todo: track schedule ids to release those
-        // vm.startPrank(bidder);
-        // vm.warp(_sale.closingTime + 10 days);
-        // auctionTokenVesting.release(bidder);
-        // assertEq(auctionTokenVesting.balanceOf(bidder), _sale.salesAmount);
-        // assertEq(auctionToken.balanceOf(bidder), 0);
+        vm.startPrank(bidder);
+        vm.warp(_sale.closingTime + 10 days);
+        vm.expectRevert(StillLocked.selector);
+        auctionTokenVesting.release(scheduleId);
+        assertEq(auctionTokenVesting.balanceOf(bidder), _sale.salesAmount);
+        assertEq(auctionToken.balanceOf(bidder), 0);
 
-        // vm.warp(_sale.closingTime + 60 days);
-        // auctionTokenVesting.releaseAvailableTokensForHolder(bidder);
-        // assertEq(auctionToken.balanceOf(bidder), _sale.salesAmount);
-        // assertEq(auctionTokenVesting.balanceOf(bidder), 0);
-        // vm.stopPrank();
+        vm.warp(_sale.closingTime + 60 days);
+        auctionTokenVesting.release(scheduleId);
+        assertEq(auctionToken.balanceOf(bidder), _sale.salesAmount);
+        assertEq(auctionTokenVesting.balanceOf(bidder), 0);
+        vm.stopPrank();
     }
 
     function testUnsuccessfulSaleClaims() public {
@@ -150,23 +154,22 @@ contract CrowdSaleVestedTest is Test {
 
         vm.startPrank(bidder);
         vm.recordLogs();
-        (uint256 auctionTokenAmount,) = crowdSale.claim(saleId);
+        crowdSale.claim(saleId);
         Vm.Log[] memory entries = vm.getRecordedLogs();
-        // --- here
+        assertEq(entries[1].topics[0], keccak256("ScheduleCreated(bytes32,address,address,uint256,uint64)"));
+        assertEq(bidder, address(uint160(uint256((entries[1].topics[2])))));
+        bytes32 scheduleId = entries[1].topics[1];
         vm.stopPrank();
 
-        (TimelockedToken auctionTokenVesting,) = crowdSale.salesVesting(saleId);
-
-        assertEq(auctionTokenVesting.balanceOf(bidder), _sale.salesAmount);
+        assertEq(vestingContract.balanceOf(bidder), _sale.salesAmount);
 
         vm.warp(_sale.closingTime + 60 days);
-
-        vm.startPrank(bidder);
-        //todo: track schedule id to test that
-        auctionTokenVesting.release(bidder);
-        // assertEq(auctionToken.balanceOf(bidder), _sale.salesAmount);
-        // assertEq(auctionTokenVesting.balanceOf(bidder), 0);
+        vm.startPrank(anyone);
+        vestingContract.release(scheduleId);
         vm.stopPrank();
+
+        assertEq(auctionToken.balanceOf(bidder), _sale.salesAmount);
+        assertEq(vestingContract.balanceOf(bidder), 0);
     }
 
     function testClaimLongAfterVestingPeriod() public {

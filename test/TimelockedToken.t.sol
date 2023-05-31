@@ -7,7 +7,7 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 import { FakeERC20 } from "../src/helpers/FakeERC20.sol";
-import { TimelockedToken, NotSupported, StillLocked, DuplicateSchedule } from "../src/TimelockedToken.sol";
+import { TimelockedToken, NotSupported, ScheduleTooShort, StillLocked, DuplicateSchedule } from "../src/TimelockedToken.sol";
 
 contract TimelockedTokenTest is Test {
     address bene = makeAddr("beneficiary");
@@ -30,7 +30,12 @@ contract TimelockedTokenTest is Test {
 
     function testCanLock() public {
         vm.startPrank(locker);
-        lockedToken.lock(bene, 50_000 ether, uint64(block.timestamp + 30 minutes));
+        vm.expectRevert(ScheduleTooShort.selector);
+        lockedToken.lock(bene, 50_000 ether, 0);
+        vm.expectRevert(ScheduleTooShort.selector);
+        lockedToken.lock(bene, 50_000 ether, uint64(block.timestamp + 1));
+
+        lockedToken.lock(bene, 50_000 ether, uint64(block.timestamp + 15 minutes));
         vm.stopPrank();
 
         assertEq(lockedToken.balanceOf(locker), 0);
@@ -40,7 +45,7 @@ contract TimelockedTokenTest is Test {
 
     function testCannotTransferOrApprove() public {
         vm.startPrank(locker);
-        lockedToken.lock(bene, 50_000 ether, uint64(block.timestamp + 30 minutes));
+        lockedToken.lock(bene, 50_000 ether, uint64(block.timestamp + 15 minutes));
         vm.stopPrank();
 
         vm.startPrank(bene);
@@ -54,7 +59,7 @@ contract TimelockedTokenTest is Test {
 
     function testCanWithdrawAfterLockingPeriod() public {
         vm.startPrank(locker);
-        bytes32 scheduleId = lockedToken.lock(bene, 50_000 ether, uint64(block.timestamp + 30 minutes));
+        bytes32 scheduleId = lockedToken.lock(bene, 50_000 ether, uint64(block.timestamp + 15 minutes));
         vm.stopPrank();
 
         vm.startPrank(bene);
@@ -76,8 +81,8 @@ contract TimelockedTokenTest is Test {
 
     function testCanWithdrawSeveralSchedules() public {
         vm.startPrank(locker);
-        bytes32 schedule1 = lockedToken.lock(bene, 20_000 ether, uint64(block.timestamp + 30 minutes));
-        bytes32 schedule2 = lockedToken.lock(bene, 20_000 ether, uint64(block.timestamp + 60 minutes));
+        bytes32 schedule1 = lockedToken.lock(bene, 20_000 ether, uint64(block.timestamp + 15 minutes));
+        bytes32 schedule2 = lockedToken.lock(bene, 20_000 ether, uint64(block.timestamp + 30 minutes));
         bytes32 schedule3 = lockedToken.lock(bene, 20_000 ether, uint64(block.timestamp + 90 minutes));
         vm.stopPrank();
 
@@ -100,7 +105,7 @@ contract TimelockedTokenTest is Test {
         assertEq(lockedToken.totalSupply(), 20_000 ether);
     }
 
-    function testThatCannotCreateTheSameSchedule() public {
+    function testCannotCreateTheSameSchedule() public {
         uint64 nowPlusHalfAnHour = uint64(block.timestamp + 30 minutes);
         vm.startPrank(locker);
         lockedToken.lock(bene, 50_000 ether, nowPlusHalfAnHour);
