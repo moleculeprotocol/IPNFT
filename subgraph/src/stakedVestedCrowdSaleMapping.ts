@@ -1,4 +1,4 @@
-import { BigInt, log } from '@graphprotocol/graph-ts'
+import { BigInt, DataSourceContext, log } from '@graphprotocol/graph-ts'
 import { IERC20Metadata } from '../generated/StakedVestedCrowdSale/IERC20Metadata'
 import {
   Bid as BidEvent,
@@ -6,15 +6,19 @@ import {
   Settled as SettledEvent,
   Started as StartedEvent,
   Failed as FailedEvent,
-  Claimed as ClaimedEvent
+  Claimed as ClaimedEvent,
+  VestingContractCreated as VestingContractCreatedEvent
 } from '../generated/StakedVestedCrowdSale/StakedVestedCrowdSale'
 
 import {
   Contribution,
   CrowdSale,
   ERC20Token,
-  Fractionalized
+  Fractionalized,
+  TimelockedToken
 } from '../generated/schema'
+
+import { TimelockedToken as TimelockedTokenTemplate } from '../generated/templates'
 
 function makeERC20Token(_contract: IERC20Metadata): ERC20Token {
   let token = ERC20Token.load(_contract._address)
@@ -25,9 +29,24 @@ function makeERC20Token(_contract: IERC20Metadata): ERC20Token {
     token.decimals = BigInt.fromI32(_contract.decimals())
     token.symbol = _contract.symbol()
     token.name = _contract.name()
+    token.save()
   }
 
-  token.save()
+  return token
+}
+
+function makeTimelockedToken(_contract: IERC20Metadata): TimelockedToken {
+  let token = TimelockedToken.load(_contract._address)
+
+  if (!token) {
+    token = new TimelockedToken(_contract._address)
+    token.id = _contract._address
+    token.decimals = BigInt.fromI32(_contract.decimals())
+    token.symbol = _contract.symbol()
+    token.name = _contract.name()
+    token.save()
+  }
+
   return token
 }
 
@@ -54,7 +73,7 @@ export function handleStarted(event: StartedEvent): void {
     IERC20Metadata.bind(event.params.sale.auctionToken)
   ).id
   crowdSale.salesAmount = event.params.sale.salesAmount
-  crowdSale.vestedAuctionToken = makeERC20Token(
+  crowdSale.vestedAuctionToken = makeTimelockedToken(
     IERC20Metadata.bind(event.params.vesting.vestingContract)
   ).id
 
@@ -150,6 +169,20 @@ export function handleFailed(event: FailedEvent): void {
   crowdSale.save()
 }
 
+export function handleVestingContractCreated(
+  event: VestingContractCreatedEvent
+): void {
+  let context = new DataSourceContext()
+  context.setBytes('underlyingToken', event.params.underlyingToken)
+  context.setBytes('lockingContract', event.params.lockingContract)
+  TimelockedTokenTemplate.createWithContext(
+    event.params.lockingContract,
+    context
+  )
+  makeTimelockedToken(IERC20Metadata.bind(event.params.lockingContract))
+}
+
+//todo: implement
 export function handleClaimed(event: ClaimedEvent): void {
   let crowdSale = CrowdSale.load(event.params.saleId.toString())
   if (!crowdSale) {
