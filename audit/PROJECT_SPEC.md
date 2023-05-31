@@ -1,9 +1,5 @@
 # Project Spec
 
-## IPNFT as ERC1155
-
-IPNFTs are modeled as ERC1155 tokens with a supply of 1 where they simply could be an ERC721. This has historical reasons.
-
 ## Fractionalizer
 
 ### Increasing Shares (Fraction Tokens)

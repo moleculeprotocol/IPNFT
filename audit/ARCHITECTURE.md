@@ -4,7 +4,7 @@ see [SEQUENCE.md](../SEQUENCE.md) for a sequence diagram of the following flow
 
 ## IPNFTs
 
-- IPNFTs are ERC1155 tokens with 1 instance each. The decision to not go with ERC721 here was a historical one.
+- IPNFTs are a plain ERC721 token.
 - IPNFTs carry metadata that describes the underlying intellectual property and link to partly token gated legal pdf documents. So called Assignment Agreements assign certain usage rights to the holder of an IPNFT.
 - IPNFTs are usually owned by multisig wallets that are controlled by an offchain governance process. The governance token that controls decisions about the IPFNT asset is external / unrelated to the IPNFT protocol.
 - The IPNFT contract is deployed behind an ERC1967 UUPSProxy contract and can be upgraded at any time. It's currently owned by the Molecule Dev Team's multisig (2/3).
@@ -41,8 +41,8 @@ Technically speaking,
 - a sale initiator starts a sale by locking `salesAmount` of `auctionTokens` into the CrowdSale contract and defining a `fundingGoal` of `biddingTokens` to reach the sale's goal and providing a non-extendable `closingTime`.
 - a sale can be settled by _anyone_ observing the blockchain
 - any sale that hasn't raised `fundingGoal` bidding tokens until `closingTime` can be `settle`d as `FAILED`. In that case all bidders can claim back all their contributions without any vesting restrictions.
-- a `VestedCrowdSale` will create a new `TokenVesting` contract to create vesting schedules for the auction tokens that are claimed by the user. They will be able to unwrap these tokens after `cliff` duration has passed from the respective token vesting contract. Vesting contracts can also be provided and reused. If a user claims their share after the cliff has passed, the vesting schedule creation will be skipped, thus saving a significant amount of gas for the claimer
-- a `StakedVestedCrowdSale` will require bidders to lock `stakedToken`s into the crowd sale contract to participate. The amount of staked tokens required is determined by a fixed price (`wadFixedStakedPerBidPrice`) that's provided as fractional number with 18 decimals (wad) when the sale is initiated. We're abiding from using a price oracle here since price sources for our staked tokens might be too unreliable. Instead the sale initiator decides the price point (and will be supported by our frontend). When claiming on a settled sale, bidders will receive the active share of staked tokens back wrapped in another vesting token contract that had to be configured when initiating the sale (it's a common vesting schedule contract used by the DAO for various purposes)
+- a `VestedCrowdSale` will create a new `TimelockedToken` contract that locks acquired auction tokens for the user in a way that they still show up in their wallet. Users will be able to unwrap these tokens after `cliff` duration has passed by calling `TimelockedToken:release(scheduleId)`. These token locking contracts can (and are supposed to be) reused after their initiation. If a user claims their share after the cliff has passed, the vested crowdsale contract will skip lock creation and send tokens directly to the claimer, thus saving a significant amount of gas.
+- a `StakedVestedCrowdSale` will additionally require bidders to lock `stakedToken`s into the crowd sale contract to participate. The amount of staked tokens required is determined by a fixed price (`wadFixedStakedPerBidPrice`) that's provided as fractional number with 18 decimals (wad) when the sale is initiated. We're abiding from using a price oracle here since price sources for our staked tokens might be too unreliable. Instead the sale initiator decides the price point (and will be supported by our frontend). When claiming on a settled sale, bidders will receive the active share of staked tokens back wrapped in another vesting token contract that had to be configured when initiating the sale (it's a common vesting schedule contract used by the DAO for various purposes)
 
 ## Permissioner
 
@@ -56,7 +56,7 @@ Smart contracts can utilize a `FractionalizedToken:Metadata`'s `agreementCid` to
 ## Schmackoswap
 
 - IPNFTs can be traded on the open market.
-- `Schmackoswap` is an optional contract that allows selling off IPNFTs at a fixed ask price. It works with any ERC1155 token with a supply of 1.
+- `Schmackoswap` is an optional contract that allows selling off IPNFTs at a fixed ask price.
 - The IPFNT owner can `list` an IPNFT at an `askPrice` denoted by an ERC20 `paymentToken`.
 - A `listing` can optionally have a `beneficiary` address that can be different from the listing creator.
 - Any buyer who'd like to fulfill the ask must be added to a whitelist, managed by the listing creator.
