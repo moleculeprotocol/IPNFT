@@ -60,7 +60,10 @@ contract VestedCrowdSale is CrowdSale {
 
     function _afterSaleSettled(uint256 saleId) internal override {
         Sale storage sale = _sales[saleId];
-        sale.auctionToken.approve(address(salesVesting[saleId].vestingContract), sale.salesAmount);
+        uint256 currentAllowance = sale.auctionToken.allowance(address(this), address(salesVesting[saleId].vestingContract));
+
+        //the poor man's `increaseAllowance`
+        sale.auctionToken.approve(address(salesVesting[saleId].vestingContract), currentAllowance + sale.salesAmount);
     }
 
     /**
@@ -77,8 +80,6 @@ contract VestedCrowdSale is CrowdSale {
             //no need for vesting when cliff already expired.
             _sales[saleId].auctionToken.safeTransfer(msg.sender, tokenAmount);
         } else {
-            //_sales[saleId].auctionToken.safeTransfer(address(vesting.lockingContract), tokenAmount);
-
             vestingConfig.vestingContract.lock(msg.sender, tokenAmount, uint64(_sales[saleId].closingTime + vestingConfig.cliff));
         }
     }
