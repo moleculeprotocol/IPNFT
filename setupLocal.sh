@@ -36,8 +36,8 @@ if [ "$fixture" -eq "1" ]; then
 
     forge script script/dev/Ipnft.s.sol:FixtureIpnft -f $RPC_URL --broadcast
     forge script script/dev/Fractionalizer.s.sol:FixtureFractionalizer -f $RPC_URL --broadcast
-    #forge script script/dev/CrowdSale.s.sol:FixtureCrowdSale -f $RPC_URL --broadcast
-    forge script script/dev/CrowdSale.s.sol:OpenEmptySimpleWethCrowdSale -f $RPC_URL --broadcast
+    forge script script/dev/CrowdSale.s.sol:FixtureCrowdSale -f $RPC_URL --broadcast
+    #forge script script/dev/CrowdSale.s.sol:OpenEmptySimpleWethCrowdSale -f $RPC_URL --broadcast
     sleep 5
     echo "SALE_ID= forge script script/dev/CrowdSale.s.sol:ClaimSale -f $RPC_URL --broadcast" 
 fi

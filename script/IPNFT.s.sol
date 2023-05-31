@@ -1,22 +1,44 @@
-// SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.13;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.18;
 
 import "forge-std/Script.sol";
 import "forge-std/console.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import "../src/IPNFT.sol";
 
-contract IPNFTScript is Script {
-    function setUp() public { }
-
+contract Deploy is Script {
     function run() public {
         vm.startBroadcast();
-        IPNFT implementationV21 = new IPNFT();
-        ERC1967Proxy proxy = new ERC1967Proxy(address(implementationV21), "");
-        IPNFT ipnftV2 = IPNFT(address(proxy));
-        ipnftV2.initialize();
+        IPNFT ipnft = IPNFT(address(new ERC1967Proxy(address(new IPNFT()), "")));
+        ipnft.initialize();
         vm.stopBroadcast();
 
-        console.log("ipnftV2 address %s", address(implementationV21));
+        console.log("IPNFT_ADDRESS=%s", address(ipnft));
+    }
+}
+
+contract Upgrade is Script {
+    function run() public {
+        vm.startBroadcast();
+        address proxyAddr = vm.envAddress("IPNFT_ADDRESS");
+
+        //this is not exactly an "IPNFT", it's rather the old implementation that we don't know here anymore
+        //see IPNFTUpgrades.t.sol:testUpgradeContract
+        IPNFT proxyIpnft = IPNFT(address(proxyAddr));
+        //create a new implementation
+        IPNFT newImpl = new IPNFT();
+        proxyIpnft.upgradeTo(address(newImpl));
+
+        console.log("new impl %s", address(newImpl));
+        vm.stopBroadcast();
+    }
+}
+
+contract DeployIpnftImpl is Script {
+    function run() public {
+        vm.startBroadcast();
+        IPNFT newImpl = new IPNFT();
+        console.log("new impl %s", address(newImpl));
+        vm.stopBroadcast();
     }
 }
