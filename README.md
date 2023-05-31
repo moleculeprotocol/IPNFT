@@ -20,16 +20,16 @@ IP-NFTs allow their users to tokenize intellectual property. This repo contains 
 
 | Contract     | Address                                                                                                                            | Actions                                                                                                                                                                                                                                                                                               |
 | ------------ | ---------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| IP-NFT       | [0x36444254795ce6E748cf0317EEE4c4271325D92A](https://goerli.etherscan.io/address/0x36444254795ce6E748cf0317EEE4c4271325D92A#code>) | <a href="https://thirdweb.com/goerli/0x36444254795ce6E748cf0317EEE4c4271325D92A?utm_source=contract_badge" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0x36444254795ce6E748cf0317EEE4c4271325D92A&theme=dark&chainId=5" alt="View contract" /></a> |
-| SchmackoSwap | [0x2b3e3F64bEe5E184981836d0599d51935d669701](https://goerli.etherscan.io/address/0x2b3e3F64bEe5E184981836d0599d51935d669701#code)  | <a href="https://thirdweb.com/goerli/0x2b3e3F64bEe5E184981836d0599d51935d669701?utm_source=contract_badge" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0x2b3e3F64bEe5E184981836d0599d51935d669701&theme=dark&chainId=5" alt="View contract" /></a> |
+| IP-NFT       | [0xaf7358576C9F7cD84696D28702fC5ADe33cce0e9](https://goerli.etherscan.io/address/0xaf7358576C9F7cD84696D28702fC5ADe33cce0e9#code>) | <a href="https://thirdweb.com/goerli/0xaf7358576C9F7cD84696D28702fC5ADe33cce0e9?utm_source=contract_badge" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0xaf7358576C9F7cD84696D28702fC5ADe33cce0e9&theme=dark&chainId=5" alt="View contract" /></a> |
+| SchmackoSwap | [0x67D8ed102E2168A46FA342e39A5f7D16c103Bd0d](https://goerli.etherscan.io/address/0x67D8ed102E2168A46FA342e39A5f7D16c103Bd0d#code)  | <a href="https://thirdweb.com/goerli/0x67D8ed102E2168A46FA342e39A5f7D16c103Bd0d?utm_source=contract_badge" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0x67D8ed102E2168A46FA342e39A5f7D16c103Bd0d&theme=dark&chainId=5" alt="View contract" /></a> |
 | Mintpass     | [0xaf0f99dcc64e8a6549d32013ac9f2c3fa7834688](https://goerli.etherscan.io/address/0xaf0f99dcc64e8a6549d32013ac9f2c3fa7834688#code)  | <a href="https://thirdweb.com/goerli/0xaf0f99dcc64e8a6549d32013ac9f2c3fa7834688?utm_source=contract_badge" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0xaf0f99dcc64e8a6549d32013ac9f2c3fa7834688&theme=dark&chainId=5" alt="View contract" /></a> |
 
 - HeadlessDispenser <https://goerli.etherscan.io/address/0x0F1Bd197c5dCC6bC7E8025037a7780010E2Cd22A#code>
 - Subgraph: <https://api.thegraph.com/subgraphs/name/dorianwilhelm/ip-nft-subgraph-goerli/graphql>
 
-- Fractionalizer: 0x00214fbB81820fEc544A9cF318CF87eDA432F5e3  
-  (Impl no 1 0x8a8bcc23e4386586f692cefff0d7425bde289a54)
-  <https://goerli.etherscan.io/address/0x00214fbB81820fEc544A9cF318CF87eDA432F5e3#code>
+- Fractionalizer: 0x593ED28cb4E8d143e16D83D151a2CC01fDa10B0A  
+  (Impl no 1 0x2c67338c5db1b4da457e6ed4132ae0745fd2a12e)
+  <https://goerli.etherscan.io/address/0x593ED28cb4E8d143e16D83D151a2CC01fDa10B0A#code>
 
 - Terms Accepted Permissioner: 0xaC17101C598e8D8567a158b773bF76d9CDDdCE31
   <https://goerli.etherscan.io/address/0xac17101c598e8d8567a158b773bf76d9cdddce31#code>
@@ -37,8 +37,8 @@ IP-NFTs allow their users to tokenize intellectual property. This repo contains 
 - Bio pricefeed: 0x8647dEFdEAAdF5448d021B364B2F17815aba4360
   <https://goerli.etherscan.io/address/0x8647defdeaadf5448d021b364b2f17815aba4360#code>
 
-- Staked/Vested Crowdsale: 0x04A44702Bc07De65EA721aEb32d836D9C2d1d2a9
-  <https://goerli.etherscan.io/address/0x04a44702bc07de65ea721aeb32d836d9c2d1d2a9#code>
+- Staked/Vested Crowdsale: 0xFa7e83f13a833E688c7b45c7380D72c97133e16F
+  <https://goerli.etherscan.io/address/0xFa7e83f13a833E688c7b45c7380D72c97133e16F#code>
 
 #### some test tokens
 
