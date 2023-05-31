@@ -57,8 +57,6 @@ contract IPNFT is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IReser
     event IPNFTMinted(address indexed owner, uint256 indexed tokenId, string tokenURI, string symbol);
     event ReadAccessGranted(uint256 indexed tokenId, address indexed reader, uint256 until);
 
-    //    event SymbolUpdated(uint256 indexed tokenId, string symbol);
-
     /*
      *
      * ERRORS
@@ -153,7 +151,6 @@ contract IPNFT is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IReser
         symbol[reservationId] = _symbol;
         mintAuthorizer.redeem(abi.encode(mintPassId));
 
-        //_mint(to, reservationId, 1, "");
         _safeMint(to, reservationId);
         _setTokenURI(reservationId, _tokenURI);
         emit IPNFTMinted(to, reservationId, _tokenURI, _symbol);

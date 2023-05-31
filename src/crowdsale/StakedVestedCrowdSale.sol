@@ -21,6 +21,7 @@ struct StakingInfo {
 }
 
 error BadPrice();
+error InvalidDuration();
 
 /**
  * @title StakedVestedCrowdSale
@@ -66,6 +67,11 @@ contract StakedVestedCrowdSale is VestedCrowdSale {
 
         if (address(stakesVestingContract.nativeToken()) != address(stakedToken)) {
             revert IncompatibleVestingContract();
+        }
+
+        // cliff duration must follow the same rules as `TokenVesting`
+        if (cliff < 7 days || cliff > 50 * (365 days)) {
+            revert InvalidDuration();
         }
 
         if (wadFixedStakedPerBidPrice == 0) {

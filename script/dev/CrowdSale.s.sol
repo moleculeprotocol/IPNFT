@@ -105,13 +105,13 @@ contract FixtureCrowdSale is CommonScript {
             beneficiary: bob,
             fundingGoal: 200 ether,
             salesAmount: 400 ether,
-            closingTime: uint64(block.timestamp + 2 hours + 5 minutes),
+            closingTime: uint64(block.timestamp + 15),
             permissioner: permissioner
         });
 
         vm.startBroadcast(bob);
         auctionToken.approve(address(stakedVestedCrowdSale), 400 ether);
-        uint256 saleId = stakedVestedCrowdSale.startSale(_sale, daoToken, vestedDaoToken, 1e18, vestedMolToken, 60 days);
+        uint256 saleId = stakedVestedCrowdSale.startSale(_sale, daoToken, vestedDaoToken, 1e18, vestedMolToken, 7 days);
         vm.stopBroadcast();
 
         string memory terms = permissioner.specificTermsV1(auctionToken);
