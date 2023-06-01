@@ -129,7 +129,7 @@ contract IPNFT is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IReser
      * @param _symbol a symbol that represents the IPNFT's derivatives. Can be changed by the owner
      */
     function mintReservation(address to, uint256 reservationId, uint256 mintPassId, string memory _tokenURI, string memory _symbol)
-        public
+        external
         payable
         override
         whenNotPaused
@@ -151,10 +151,9 @@ contract IPNFT is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IReser
         symbol[reservationId] = _symbol;
         mintAuthorizer.redeem(abi.encode(mintPassId));
 
-        _safeMint(to, reservationId);
+        _mint(to, reservationId);
         _setTokenURI(reservationId, _tokenURI);
         emit IPNFTMinted(to, reservationId, _tokenURI, _symbol);
-
         return reservationId;
     }
 

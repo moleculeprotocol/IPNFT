@@ -94,14 +94,15 @@ contract ContractReceiverTest is IPNFTMintHelper {
         vm.stopPrank();
     }
 
-    function testCanOnlyMintToERC1155Receiver() public {
+    function testCanMintToERC721Receiver() public {
         dealMintpass(owner);
         vm.startPrank(owner);
 
         uint256 reservationId = ipnft.reserve();
-        BoringContractWallet boringWallet = new BoringContractWallet();
-        vm.expectRevert(bytes("ERC721: transfer to non ERC721Receiver implementer"));
-        ipnft.mintReservation{ value: MINTING_FEE }(address(boringWallet), reservationId, 1, arUri, DEFAULT_SYMBOL);
+        //this is obsolete now, we decided to mint using _mint, not _safeMint
+        //BoringContractWallet boringWallet = new BoringContractWallet();
+        //vm.expectRevert(bytes("ERC721: transfer to non ERC721Receiver implementer"));
+        //ipnft.mintReservation{ value: MINTING_FEE }(address(boringWallet), reservationId, 1, arUri, DEFAULT_SYMBOL);
         CleverContractWallet wallet = new CleverContractWallet();
         ipnft.mintReservation{ value: MINTING_FEE }(address(wallet), reservationId, 1, arUri, DEFAULT_SYMBOL);
         vm.stopPrank();
