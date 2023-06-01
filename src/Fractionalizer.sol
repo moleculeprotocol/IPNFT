@@ -74,20 +74,14 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable {
      * @param agreementCid a content hash that contains legal terms for fraction owners
      * @return fractionalizedToken a new created ERC20 token contract that represents the fractions
      */
-
-    //todo: remove the supply & symbol checks after upgrading IPNFT
     function fractionalizeIpnft(uint256 ipnftId, uint256 fractionsAmount, string calldata agreementCid)
         external
         returns (FractionalizedToken fractionalizedToken)
     {
-        if (ipnft.balanceOf(_msgSender(), ipnftId) != 1) {
+        if (ipnft.ownerOf(ipnftId) != _msgSender()) {
             revert MustOwnIpnft();
         }
         string memory ipnftSymbol = ipnft.symbol(ipnftId);
-        if (bytes(ipnftSymbol).length == 0) {
-            revert NoSymbol();
-        }
-
         // https://github.com/OpenZeppelin/workshops/tree/master/02-contracts-clone
         fractionalizedToken = FractionalizedToken(Clones.clone(tokenImplementation));
         string memory name = string.concat("Fractions of IPNFT #", Strings.toString(ipnftId));

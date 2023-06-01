@@ -1,42 +1,31 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.18;
+pragma solidity 0.8.18;
 
-import { ERC1155Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
+import { ERC721Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
+import { ERC721BurnableUpgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721BurnableUpgradeable.sol";
+import { ERC721URIStorageUpgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721URIStorageUpgradeable.sol";
 import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import { PausableUpgradeable } from "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
-import { ERC1155URIStorageUpgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC1155/extensions/ERC1155URIStorageUpgradeable.sol";
-import { ERC1155BurnableUpgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC1155/extensions/ERC1155BurnableUpgradeable.sol";
-import { ERC1155SupplyUpgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC1155/extensions/ERC1155SupplyUpgradeable.sol";
 import { CountersUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/CountersUpgradeable.sol";
 import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import { IAuthorizeMints } from "./IAuthorizeMints.sol";
-import { IReservable } from "./IReservable.sol";
+import { IAuthorizeMints } from "../../IAuthorizeMints.sol";
+import { IReservable } from "../../IReservable.sol";
 
 /*
-.___ __________ _______  ______________________       ________    ________   
-|   |\______   \\      \ \_   _____/\__    ___/___  __\_____  \   \_____  \  
-|   | |     ___//   |   \ |    __)    |    |   \  \/ / /  ____/     _(__  <  
-|   | |    |   /    |    \|     \     |    |    \   / /       \    /       \ 
-|___| |____|   \____|__  /\___  /     |____|     \_/  \_______ \/\/______  / 
-                       \/     \/                              \/\/       \/  
-                                                                               
-                                                                               */
+ ▄▄▄ ▄▄▄▄▄▄▄ ▄▄    ▄ ▄▄▄▄▄▄▄ ▄▄▄▄▄▄▄ ▄▄   ▄▄ ▄▄▄▄▄▄▄ ▄   ▄▄▄ 
+█   █       █  █  █ █       █       █  █ █  █       █ █ █   █
+█   █    ▄  █   █▄█ █    ▄▄▄█▄     ▄█  █▄█  █▄▄▄▄   █ █▄█   █
+█   █   █▄█ █       █   █▄▄▄  █   █ █       █▄▄▄▄█  █       █
+█   █    ▄▄▄█  ▄    █    ▄▄▄█ █   █ █       █ ▄▄▄▄▄▄█▄▄▄    █
+█   █   █   █ █ █   █   █     █   █  █     ██ █▄▄▄▄▄    █   █
+█▄▄▄█▄▄▄█   █▄█  █▄▄█▄▄▄█     █▄▄▄█   █▄▄▄█ █▄▄▄▄▄▄▄█   █▄▄▄█
+ */
 
-/// @title IPNFTV2.3 Demo for Testing Upgrades
+/// @title IPNFTV2.4 Demo for Testing Upgrades
 /// @author molecule.to
 /// @notice Demo contract to test upgrades. Don't use like this
-/// @dev Don't use this.
-contract IPNFTV23 is
-    IReservable,
-    ERC1155Upgradeable,
-    ERC1155BurnableUpgradeable,
-    ERC1155SupplyUpgradeable,
-    ERC1155URIStorageUpgradeable,
-    UUPSUpgradeable,
-    OwnableUpgradeable,
-    PausableUpgradeable
-{
+/// @dev Don't use this for anything other than testing.
+contract IPNFTV24 is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IReservable, UUPSUpgradeable, OwnableUpgradeable, PausableUpgradeable {
     using CountersUpgradeable for CountersUpgradeable.Counter;
 
     CountersUpgradeable.Counter private _reservationCounter;
@@ -67,7 +56,10 @@ contract IPNFTV23 is
      */
 
     event Reserved(address indexed reserver, uint256 indexed reservationId);
-    event IPNFTMinted(address indexed owner, uint256 indexed tokenId, string tokenURI);
+    event IPNFTMinted(address indexed owner, uint256 indexed tokenId, string tokenURI, string symbol);
+    event ReadAccessGranted(uint256 indexed tokenId, address indexed reader, uint256 until);
+
+    // A NEW EVENT FOR UPDATES
     event SymbolUpdated(uint256 indexed tokenId, string symbol);
 
     /*
@@ -75,17 +67,12 @@ contract IPNFTV23 is
      * ERRORS
      *
      */
+
     error NotOwningReservation(uint256 id);
     error ToZeroAddress();
     error NeedsMintpass();
     error InsufficientBalance();
     error MintingFeeTooLow();
-
-    /*
-     *
-     * DEPLOY
-     *
-     */
 
     /// @notice Contract constructor logic
     /// @custom:oz-upgrades-unsafe-allow constructor
@@ -98,11 +85,7 @@ contract IPNFTV23 is
         __UUPSUpgradeable_init();
         __Ownable_init();
         __Pausable_init();
-        __ERC1155_init("");
-        __ERC1155Burnable_init();
-        __ERC1155Supply_init();
-        __ERC1155URIStorage_init();
-
+        __ERC721_init("IPNFT", "IPNFT");
         _reservationCounter.increment(); //start at 1.
     }
 
@@ -132,7 +115,7 @@ contract IPNFTV23 is
     }
 
     /// @notice reserves a new token id. Checks that the caller is authorized, according to the current implementation of IAuthorizeMints.
-    function reserve() public returns (uint256) {
+    function reserve() public whenNotPaused returns (uint256) {
         if (!mintAuthorizer.authorizeReservation(_msgSender())) {
             revert NeedsMintpass();
         }
@@ -147,13 +130,13 @@ contract IPNFTV23 is
     /**
      * @notice deprecated: the old interface without a symbol.
      */
-    function mintReservation(address to, uint256 reservationId, uint256 mintPassId, string memory tokenURI)
+    function mintReservation(address to, uint256 reservationId, uint256 mintPassId, string memory _tokenURI)
         public
         payable
         whenNotPaused
         returns (uint256)
     {
-        return mintReservation(to, reservationId, mintPassId, tokenURI, "");
+        return mintReservation(to, reservationId, mintPassId, _tokenURI, "");
     }
 
     /**
@@ -163,10 +146,10 @@ contract IPNFTV23 is
      * @param to address the recipient of the NFT
      * @param reservationId the reserved token id that has been reserved with `reserve()`
      * @param mintPassId an id that's handed over to the `IAuthorizeMints` interface
-     * @param tokenURI a location that resolves to a valid IP-NFT metadata structure
+     * @param _tokenURI a location that resolves to a valid IP-NFT metadata structure
      * @param _symbol a symbol that represents the IPNFT's derivatives. Can be changed by the owner
      */
-    function mintReservation(address to, uint256 reservationId, uint256 mintPassId, string memory tokenURI, string memory _symbol)
+    function mintReservation(address to, uint256 reservationId, uint256 mintPassId, string memory _tokenURI, string memory _symbol)
         public
         payable
         override
@@ -186,14 +169,32 @@ contract IPNFTV23 is
         }
 
         delete reservations[reservationId];
+        symbol[reservationId] = _symbol;
         mintAuthorizer.redeem(abi.encode(mintPassId));
 
-        _mint(to, reservationId, 1, "");
-        _setURI(reservationId, tokenURI);
-        emit IPNFTMinted(to, reservationId, tokenURI);
+        //_mint(to, reservationId, 1, "");
+        _safeMint(to, reservationId);
+        _setTokenURI(reservationId, _tokenURI);
+        emit IPNFTMinted(to, reservationId, _tokenURI, _symbol);
 
-        _updateSymbol(reservationId, _symbol);
         return reservationId;
+    }
+
+    /**
+     * A NEW METHOD TO TEST UPGRADEABILITY
+     * @param tokenId ipnft token id
+     * @param newSymbol the new symbol for this ipnft
+     */
+    function updateSymbol(uint256 tokenId, string memory newSymbol) external {
+        if (ownerOf(tokenId) != _msgSender()) {
+            revert InsufficientBalance();
+        }
+        _updateSymbol(tokenId, newSymbol);
+    }
+
+    function _updateSymbol(uint256 tokenId, string memory newSymbol) internal {
+        symbol[tokenId] = newSymbol;
+        emit SymbolUpdated(tokenId, newSymbol);
     }
 
     /**
@@ -203,13 +204,14 @@ contract IPNFTV23 is
      * @param until the timestamp when read access expires (unsafe but good enough for this use case)
      */
     function grantReadAccess(address reader, uint256 tokenId, uint256 until) public {
-        if (balanceOf(_msgSender(), tokenId) == 0) {
+        if (ownerOf(tokenId) != _msgSender()) {
             revert InsufficientBalance();
         }
 
         require(until > block.timestamp, "until in the past");
 
         readAllowances[tokenId][reader] = until;
+        emit ReadAccessGranted(tokenId, reader, until);
     }
 
     /**
@@ -219,26 +221,10 @@ contract IPNFTV23 is
      * @return bool current read allowance
      */
     function canRead(address reader, uint256 tokenId) public view returns (bool) {
-        if (balanceOf(reader, tokenId) > 0) {
+        if (ownerOf(tokenId) == reader) {
             return true;
         }
         return readAllowances[tokenId][reader] > block.timestamp;
-    }
-
-    /**
-     * @param tokenId ipnft token id
-     * @param newSymbol the new symbol for this ipnft
-     */
-    function updateSymbol(uint256 tokenId, string memory newSymbol) external {
-        if (balanceOf(_msgSender(), tokenId) == 0) {
-            revert InsufficientBalance();
-        }
-        _updateSymbol(tokenId, newSymbol);
-    }
-
-    function _updateSymbol(uint256 tokenId, string memory newSymbol) internal {
-        symbol[tokenId] = newSymbol;
-        emit SymbolUpdated(tokenId, newSymbol);
     }
 
     /// @notice in case someone sends Eth to this contract, this function gets it out again
@@ -256,16 +242,15 @@ contract IPNFTV23 is
     }
 
     /// @dev override required by Solidity.
-    function _beforeTokenTransfer(address operator, address from, address to, uint256[] memory ids, uint256[] memory amounts, bytes memory data)
-        internal
-        override(ERC1155Upgradeable, ERC1155SupplyUpgradeable)
-    {
-        super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
+    // function _beforeTokenTransfer(address from, address to, uint256, /* firstTokenId */ uint256 batchSize) internal override() {
+    //     super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
+    // }
+    function _burn(uint256 tokenId) internal virtual override(ERC721URIStorageUpgradeable, ERC721Upgradeable) {
+        super._burn(tokenId);
     }
 
-    /// @dev override required by Solidity.
-    function uri(uint256 tokenId) public view virtual override(ERC1155Upgradeable, ERC1155URIStorageUpgradeable) returns (string memory) {
-        return ERC1155URIStorageUpgradeable.uri(tokenId);
+    function tokenURI(uint256 tokenId) public view virtual override(ERC721URIStorageUpgradeable, ERC721Upgradeable) returns (string memory) {
+        return super.tokenURI(tokenId);
     }
 
     /// @notice https://docs.opensea.io/docs/contract-level-metadata

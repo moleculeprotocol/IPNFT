@@ -7,24 +7,24 @@ require('dotenv').config({
 module.exports = {
   network: 'goerli',
   ipnft: {
-    address: '0x36444254795ce6E748cf0317EEE4c4271325D92A',
-    startBlock: 8151797
+    address: '0xaf7358576C9F7cD84696D28702fC5ADe33cce0e9',
+    startBlock: 9099302
   },
   schmackoSwap: {
-    address: '0x2b3e3F64bEe5E184981836d0599d51935d669701',
-    startBlock: 8811319
+    address: '0x67D8ed102E2168A46FA342e39A5f7D16c103Bd0d',
+    startBlock: 9099302
   },
   mintpass: {
     address: '0xAf0f99dcC64E8a6549d32013AC9f2C3FA7834688',
     startBlock: 8151797
   },
   fractionalizer: {
-    address: '0x00214fbB81820fEc544A9cF318CF87eDA432F5e3',
-    startBlock: 9044965
+    address: '0x593ED28cb4E8d143e16D83D151a2CC01fDa10B0A',
+    startBlock: 9099340
   },
   stakedVestedCrowdSale: {
-    address: '0x04A44702Bc07De65EA721aEb32d836D9C2d1d2a9',
-    startBlock: 9087462
+    address: '0xFa7e83f13a833E688c7b45c7380D72c97133e16F',
+    startBlock: 9099340
   },
   termsAcceptedPermissioner: {
     address: '0xaC17101C598e8D8567a158b773bF76d9CDDdCE31',

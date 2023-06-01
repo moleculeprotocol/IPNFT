@@ -81,6 +81,7 @@ contract CrowdSaleTest is Test {
 
     function testCannotInitializeSaleWithBadParams() public {
         vm.startPrank(emitter);
+        auctionToken.approve(address(crowdSale), 1 ether);
         Sale memory _sale = Sale({
             auctionToken: IERC20Metadata(address(0)),
             biddingToken: IERC20Metadata(address(0)),
@@ -106,13 +107,19 @@ contract CrowdSaleTest is Test {
         vm.expectRevert(BadSalesAmount.selector);
         crowdSale.startSale(_sale);
 
-        _sale.fundingGoal = 1 ether;
+        //check minimum sales amounts
+        _sale.fundingGoal = 0.009 ether;
+        _sale.salesAmount = 0.5 ether;
         vm.expectRevert(BadSalesAmount.selector);
         crowdSale.startSale(_sale);
 
-        _sale.salesAmount = 1 ether;
-        auctionToken.approve(address(crowdSale), 1 ether);
+        _sale.fundingGoal = 0.01 ether;
+        _sale.salesAmount = 0.49 ether;
+        vm.expectRevert(BadSalesAmount.selector);
+        crowdSale.startSale(_sale);
 
+        _sale.fundingGoal = 0.01 ether;
+        _sale.salesAmount = 0.5 ether;
         crowdSale.startSale(_sale);
 
         vm.stopPrank();

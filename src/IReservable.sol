@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.17;
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.18;
 
 interface IReservable {
     function reserve() external returns (uint256);

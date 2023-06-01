@@ -6,7 +6,6 @@ import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.s
 import { FixedPointMathLib } from "solmate/utils/FixedPointMathLib.sol";
 import { TokenVesting } from "@moleculeprotocol/token-vesting/TokenVesting.sol";
 import { TimelockedToken } from "../TimelockedToken.sol";
-
 import { VestedCrowdSale, VestingConfig, IncompatibleVestingContract, UnmanageableVestingContract } from "./VestedCrowdSale.sol";
 import { CrowdSale, Sale, BadDecimals } from "./CrowdSale.sol";
 
@@ -21,6 +20,7 @@ struct StakingInfo {
 }
 
 error BadPrice();
+error InvalidDuration();
 
 /**
  * @title StakedVestedCrowdSale
@@ -66,6 +66,11 @@ contract StakedVestedCrowdSale is VestedCrowdSale {
 
         if (address(stakesVestingContract.nativeToken()) != address(stakedToken)) {
             revert IncompatibleVestingContract();
+        }
+
+        // cliff duration must follow the same rules as `TokenVesting`
+        if (cliff < 7 days || cliff > 50 * (365 days)) {
+            revert InvalidDuration();
         }
 
         if (wadFixedStakedPerBidPrice == 0) {

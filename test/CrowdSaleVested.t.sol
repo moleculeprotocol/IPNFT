@@ -7,7 +7,7 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 import { CrowdSale, SaleState, Sale, SaleInfo } from "../src/crowdsale/CrowdSale.sol";
-import { VestedCrowdSale, VestingConfig, UnmanageableVestingContract, InvalidDuration } from "../src/crowdsale/VestedCrowdSale.sol";
+import { VestedCrowdSale, VestingConfig, UnmanageableVestingContract } from "../src/crowdsale/VestedCrowdSale.sol";
 import { TokenVesting } from "@moleculeprotocol/token-vesting/TokenVesting.sol";
 import { TimelockedToken, StillLocked } from "../src/TimelockedToken.sol";
 import { FakeERC20 } from "../src/helpers/FakeERC20.sol";
@@ -134,8 +134,6 @@ contract CrowdSaleVestedTest is Test {
         vm.startPrank(emitter);
         Sale memory _sale = CrowdSaleHelpers.makeSale(emitter, auctionToken, biddingToken);
         auctionToken.approve(address(crowdSale), 400_000 ether);
-
-        vm.startPrank(emitter);
         uint256 saleId = crowdSale.startSale(_sale, vestingContract, 60 days);
         vm.stopPrank();
 

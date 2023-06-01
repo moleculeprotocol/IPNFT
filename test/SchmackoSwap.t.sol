@@ -2,30 +2,25 @@
 pragma solidity ^0.8.18;
 
 import "forge-std/Test.sol";
-import { SchmackoSwap, ListingState } from "../src/SchmackoSwap.sol";
+import "forge-std/console.sol";
+
+import { IERC721 } from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
 import { IPNFT } from "../src/IPNFT.sol";
-import { IERC1155Supply } from "../src/IERC1155Supply.sol";
-
 import { Mintpass } from "../src/Mintpass.sol";
-
-import { ERC20 } from "solmate/tokens/ERC20.sol";
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-
-import { UUPSProxy } from "../src/UUPSProxy.sol";
-import { console } from "forge-std/console.sol";
-
-contract TestToken is ERC20("USD Coin", "USDC", 18) {
-    function mintTo(address recipient, uint256 amount) public payable {
-        _mint(recipient, amount);
-    }
-}
+import { SchmackoSwap, ListingState } from "../src/SchmackoSwap.sol";
+import { FakeERC20 } from "../src/helpers/FakeERC20.sol";
 
 contract SchmackoSwapTest is Test {
     string arUri = "ar://tNbdHqh3AVDHVD06P0OPUXSProI5kGcZZw8IvLkekSY";
+    uint256 constant MINTING_FEE = 0.001 ether;
+    string DEFAULT_SYMBOL = "MOL-0001";
+
     Mintpass mintpass;
     IPNFT internal ipnft;
-    IERC1155Supply internal erc1155Supply;
+    IERC721 internal ierc721;
 
     IERC20 internal testToken;
     SchmackoSwap internal schmackoSwap;
@@ -42,20 +37,17 @@ contract SchmackoSwapTest is Test {
 
     function setUp() public {
         vm.startPrank(deployer);
-        IPNFT implementationV2 = new IPNFT();
-        UUPSProxy proxy = new UUPSProxy(address(implementationV2), "");
-        ipnft = IPNFT(address(proxy));
+        ipnft = IPNFT(address(new ERC1967Proxy(address(new IPNFT()), "")));
         ipnft.initialize();
-
-        erc1155Supply = IERC1155Supply(address(ipnft));
+        ierc721 = IERC721(address(ipnft));
 
         mintpass = new Mintpass(address(ipnft));
         mintpass.grantRole(mintpass.MODERATOR(), deployer);
         ipnft.setAuthorizer(address(mintpass));
         mintpass.batchMint(seller, 1);
 
-        TestToken _testToken = new TestToken();
-        _testToken.mintTo(buyer, 1 ether);
+        FakeERC20 _testToken = new FakeERC20("Fakium", "FAKE20");
+        _testToken.mint(buyer, 1 ether);
         testToken = IERC20(address(_testToken));
 
         schmackoSwap = new SchmackoSwap();
@@ -66,14 +58,13 @@ contract SchmackoSwapTest is Test {
         // Ensure marketplace can access sellers's tokens
         ipnft.setApprovalForAll(address(schmackoSwap), true);
         ipnft.reserve();
-        ipnft.mintReservation{ value: 0.001 ether }(seller, 1, 1, arUri);
+        ipnft.mintReservation{ value: 0.001 ether }(seller, 1, 1, arUri, DEFAULT_SYMBOL);
         vm.stopPrank();
     }
 
     function testGeneralBalancesAndSupplies() public {
-        assertEq(ipnft.balanceOf(seller, 1), 1);
-        assertEq(ipnft.balanceOf(buyer, 1), 0);
-        assertEq(ipnft.totalSupply(1), 1);
+        assertEq(ipnft.balanceOf(seller), 1);
+        assertEq(ipnft.balanceOf(buyer), 0);
         assertEq(testToken.balanceOf(buyer), 1 ether);
         assertEq(testToken.balanceOf(seller), 0);
         assertEq(testToken.balanceOf(address(schmackoSwap)), 0);
@@ -84,10 +75,9 @@ contract SchmackoSwapTest is Test {
             keccak256(
                 abi.encode(
                     SchmackoSwap.Listing({
-                        tokenContract: erc1155Supply,
+                        tokenContract: ierc721,
                         tokenId: 1,
                         paymentToken: testToken,
-                        tokenAmount: erc1155Supply.totalSupply(1),
                         askPrice: 1 ether,
                         creator: address(seller),
                         beneficiary: address(seller),
@@ -104,10 +94,9 @@ contract SchmackoSwapTest is Test {
         emit Listed(
             listingId,
             SchmackoSwap.Listing({
-                tokenContract: erc1155Supply,
+                tokenContract: ierc721,
                 tokenId: 1,
                 paymentToken: testToken,
-                tokenAmount: erc1155Supply.totalSupply(1),
                 askPrice: 1 ether,
                 creator: address(seller),
                 beneficiary: address(seller),
@@ -115,16 +104,15 @@ contract SchmackoSwapTest is Test {
             })
         );
 
-        schmackoSwap.list(erc1155Supply, 1, testToken, 1 ether);
+        schmackoSwap.list(ierc721, 1, testToken, 1 ether);
         vm.stopPrank();
 
         //assertEq(ipnft.balanceOf(address(schmackoSwap), 1), 1);
 
         (
-            IERC1155Supply tokenContract,
+            IERC721 tokenContract,
             uint256 tokenId,
             address creator,
-            uint256 tokenAmount,
             IERC20 paymentToken,
             uint256 askPrice,
             address beneficiary,
@@ -133,21 +121,20 @@ contract SchmackoSwapTest is Test {
 
         assertEq(address(tokenContract), address(ipnft));
         assertEq(tokenId, 1);
-        assertEq(tokenAmount, 1);
         assertEq(creator, address(seller));
         assertEq(beneficiary, address(seller));
         assertEq(askPrice, 1 ether);
         assertEq(address(paymentToken), address(testToken));
         assertEq(uint256(listingState), 0);
-        assertEq(ipnft.balanceOf(address(seller), 1), 1);
+        assertEq(ipnft.ownerOf(1), seller);
     }
 
     function testNonOwnerCannotCreateSale() public {
         vm.prank(otherUser);
         vm.expectRevert(SchmackoSwap.InsufficientAllowance.selector);
-        schmackoSwap.list(erc1155Supply, 1, testToken, 1 ether);
+        schmackoSwap.list(ierc721, 1, testToken, 1 ether);
 
-        assertEq(ipnft.balanceOf(seller, 1), 1);
+        assertEq(ipnft.ownerOf(1), seller);
     }
 
     function testCannotListWhenTokenIsNotApproved() public {
@@ -155,23 +142,22 @@ contract SchmackoSwapTest is Test {
         ipnft.setApprovalForAll(address(schmackoSwap), false);
 
         vm.expectRevert(SchmackoSwap.InsufficientAllowance.selector);
-        schmackoSwap.list(erc1155Supply, 1, testToken, 1 ether);
+        schmackoSwap.list(ierc721, 1, testToken, 1 ether);
 
-        assertEq(ipnft.balanceOf(seller, 1), 1);
+        assertEq(ipnft.ownerOf(1), seller);
     }
 
     function testCanCancelSale() public {
         vm.startPrank(seller);
-        uint256 listingId = schmackoSwap.list(erc1155Supply, 1, testToken, 1 ether);
+        uint256 listingId = schmackoSwap.list(ierc721, 1, testToken, 1 ether);
 
         //todo test this emission
         vm.expectEmit(true, false, false, true);
         emit Unlisted(
             listingId,
             SchmackoSwap.Listing({
-                tokenContract: erc1155Supply,
+                tokenContract: ierc721,
                 tokenId: 1,
-                tokenAmount: 1,
                 paymentToken: testToken,
                 askPrice: 1 ether,
                 creator: address(seller),
@@ -182,30 +168,30 @@ contract SchmackoSwapTest is Test {
 
         schmackoSwap.cancel(listingId);
 
-        assertEq(ipnft.balanceOf(address(seller), 1), 1);
-        (,, address newCreator,,,,, ListingState listingState) = schmackoSwap.listings(listingId);
+        assertEq(ipnft.ownerOf(1), seller);
+        (,, address newCreator,,,, ListingState listingState) = schmackoSwap.listings(listingId);
         assertEq(uint256(listingState), 1);
         assertEq(newCreator, seller);
     }
 
     function testNonOwnerCannotCancelSale() public {
         vm.startPrank(seller);
-        uint256 listingId = schmackoSwap.list(erc1155Supply, 1, testToken, 1 ether);
+        uint256 listingId = schmackoSwap.list(ierc721, 1, testToken, 1 ether);
         vm.stopPrank();
 
         vm.prank(otherUser);
         vm.expectRevert(SchmackoSwap.Unauthorized.selector);
         schmackoSwap.cancel(listingId);
 
-        assertEq(ipnft.balanceOf(address(seller), 1), 1);
+        assertEq(ipnft.ownerOf(1), seller);
 
-        (,, address creator,,,,,) = schmackoSwap.listings(listingId);
+        (,, address creator,,,,) = schmackoSwap.listings(listingId);
         assertEq(creator, address(seller));
     }
 
     function testSellerCanManageAllowlist() public {
         vm.startPrank(seller);
-        uint256 listingId = schmackoSwap.list(erc1155Supply, 1, testToken, 1 ether);
+        uint256 listingId = schmackoSwap.list(ierc721, 1, testToken, 1 ether);
         assertEq(schmackoSwap.isAllowed(listingId, buyer), false);
         vm.stopPrank();
 
@@ -227,30 +213,29 @@ contract SchmackoSwapTest is Test {
 
     function testCanOnlyBuyWithSufficientBalance() public {
         vm.startPrank(seller);
-        uint256 listingId = schmackoSwap.list(erc1155Supply, 1, testToken, 1 ether);
-        schmackoSwap.changeBuyerAllowance(listingId, buyer, true);
+        uint256 listingId = schmackoSwap.list(ierc721, 1, testToken, 1 ether);
+        schmackoSwap.changeBuyerAllowance(listingId, otherUser, true);
         vm.stopPrank();
 
-        vm.startPrank(buyer);
-        vm.expectRevert(SchmackoSwap.InsufficientAllowance.selector);
+        vm.startPrank(otherUser);
+        vm.expectRevert("ERC20: insufficient allowance");
         schmackoSwap.fulfill(listingId);
         vm.stopPrank();
 
-        assertEq(ipnft.balanceOf(address(seller), 1), 1);
+        assertEq(ipnft.ownerOf(1), seller);
 
-        vm.startPrank(buyer);
+        vm.startPrank(otherUser);
         testToken.approve(address(schmackoSwap), 1 ether);
-        testToken.transfer(address(0), 1 ether);
-        vm.expectRevert(SchmackoSwap.InsufficientBalance.selector);
+        vm.expectRevert("ERC20: transfer amount exceeds balance");
         schmackoSwap.fulfill(listingId);
 
-        assertEq(ipnft.balanceOf(address(seller), 1), 1);
+        assertEq(ipnft.ownerOf(1), seller);
         vm.stopPrank();
     }
 
     function testCanBuyListing() public {
         vm.startPrank(seller);
-        uint256 listingId = schmackoSwap.list(erc1155Supply, 1, testToken, 1 ether);
+        uint256 listingId = schmackoSwap.list(ierc721, 1, testToken, 1 ether);
         schmackoSwap.changeBuyerAllowance(listingId, buyer, true);
         vm.stopPrank();
 
@@ -262,10 +247,9 @@ contract SchmackoSwapTest is Test {
             listingId,
             address(buyer),
             SchmackoSwap.Listing({
-                tokenContract: erc1155Supply,
+                tokenContract: ierc721,
                 tokenId: 1,
                 creator: address(seller),
-                tokenAmount: 1,
                 paymentToken: testToken,
                 askPrice: 1 ether,
                 beneficiary: address(seller),
@@ -276,27 +260,27 @@ contract SchmackoSwapTest is Test {
         schmackoSwap.fulfill(listingId);
         vm.stopPrank();
 
-        assertEq(ipnft.balanceOf(address(buyer), 1), 1);
+        assertEq(ipnft.ownerOf(1), buyer);
         assertEq(testToken.balanceOf(buyer), 0);
         assertEq(testToken.balanceOf(seller), 1 ether);
 
         // listing has been removed during sale
-        (,, address creator,,,,, ListingState listingState) = schmackoSwap.listings(listingId);
+        (,, address creator,,,, ListingState listingState) = schmackoSwap.listings(listingId);
         assertEq(uint256(listingState), 2);
         assertEq(creator, seller);
     }
 
     function testCannotFulfillWhenSellerHasMovedTheNft() public {
         vm.startPrank(seller);
-        uint256 listingId = schmackoSwap.list(erc1155Supply, 1, testToken, 1 ether);
+        uint256 listingId = schmackoSwap.list(ierc721, 1, testToken, 1 ether);
         schmackoSwap.changeBuyerAllowance(listingId, buyer, true);
-        ipnft.safeTransferFrom(seller, otherUser, 1, 1, "");
-        assertEq(ipnft.balanceOf(otherUser, 1), 1);
+        ipnft.safeTransferFrom(seller, otherUser, 1);
+        assertEq(ipnft.ownerOf(1), otherUser);
         vm.stopPrank();
 
         vm.startPrank(buyer);
         testToken.approve(address(schmackoSwap), 1 ether);
-        vm.expectRevert("ERC1155: insufficient balance for transfer");
+        vm.expectRevert("ERC721: caller is not token owner or approved");
         schmackoSwap.fulfill(listingId);
         vm.stopPrank();
     }
@@ -314,7 +298,7 @@ contract SchmackoSwapTest is Test {
         vm.expectRevert(SchmackoSwap.ListingNotFound.selector);
         schmackoSwap.changeBuyerAllowance(1, buyer, false);
 
-        uint256 listingId = schmackoSwap.list(erc1155Supply, 1, testToken, 1 ether);
+        uint256 listingId = schmackoSwap.list(ierc721, 1, testToken, 1 ether);
         vm.expectRevert("Can't add ZERO address to allowlist");
         schmackoSwap.changeBuyerAllowance(listingId, address(0), true);
 
@@ -323,8 +307,8 @@ contract SchmackoSwapTest is Test {
 
     function testCannotSendNftsToSchmackoswap() public {
         vm.startPrank(seller);
-        vm.expectRevert(bytes("ERC1155: transfer to non-ERC1155Receiver implementer"));
-        ipnft.safeTransferFrom(seller, address(schmackoSwap), 1, 1, "");
+        vm.expectRevert(bytes("ERC721: transfer to non ERC721Receiver implementer"));
+        ipnft.safeTransferFrom(seller, address(schmackoSwap), 1);
         vm.stopPrank();
     }
 }

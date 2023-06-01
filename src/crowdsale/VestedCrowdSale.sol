@@ -14,7 +14,6 @@ struct VestingConfig {
 }
 
 error UnmanageableVestingContract();
-error InvalidDuration();
 error IncompatibleVestingContract();
 
 /**

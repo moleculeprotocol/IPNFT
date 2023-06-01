@@ -55,7 +55,7 @@ contract FractionalizerNext is UUPSUpgradeable, OwnableUpgradeable {
         external
         returns (FractionalizedTokenNext token)
     {
-        if (ipnft.balanceOf(_msgSender(), ipnftId) != 1) {
+        if (ipnft.ownerOf(ipnftId) != _msgSender()) {
             revert MustOwnIpnft();
         }
         string memory ipnftSymbol = ipnft.symbol(ipnftId);

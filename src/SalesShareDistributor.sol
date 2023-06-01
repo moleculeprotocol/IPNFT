@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.18;
 
+import { IERC721 } from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import { ReentrancyGuardUpgradeable } from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import { IERC1155Supply } from "./IERC1155Supply.sol";
 import { FractionalizedToken, Metadata } from "./FractionalizedToken.sol";
 import { SchmackoSwap, ListingState } from "./SchmackoSwap.sol";
 import { IPermissioner, TermsAcceptedPermissioner } from "./Permissioner.sol";
@@ -98,7 +98,7 @@ contract SalesShareDistributor is UUPSUpgradeable, OwnableUpgradeable, Reentranc
         }
 
         Metadata memory metadata = tokenContract.metadata();
-        (, uint256 ipnftId,,, IERC20 _paymentToken, uint256 askPrice, address beneficiary, ListingState listingState) =
+        (, uint256 ipnftId,, IERC20 _paymentToken, uint256 askPrice, address beneficiary, ListingState listingState) =
             schmackoSwap.listings(listingId);
 
         if (listingState != ListingState.FULFILLED) {
@@ -141,10 +141,9 @@ contract SalesShareDistributor is UUPSUpgradeable, OwnableUpgradeable, Reentranc
             keccak256(
                 abi.encode(
                     SchmackoSwap.Listing(
-                        IERC1155Supply(address(0)), //this should be the IPNFT address
+                        IERC721(address(0)), //this should be the IPNFT address
                         metadata.ipnftId,
                         _msgSender(),
-                        uint256(1),
                         paymentToken,
                         paidPrice,
                         address(this),
