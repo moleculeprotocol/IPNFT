@@ -33,27 +33,18 @@ contract IPNFTV24 is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IRe
     /// @notice by reserving a mint an user captures a new token id
     mapping(uint256 => address) public reservations;
 
-    /// @notice Current version of the contract
-    uint16 internal _version;
-
-    /// @notice e.g. a mintpass contract
+    /// @notice an authorizer that checks whether a mint operation is allowed, e.g. a mintpass contract
     IAuthorizeMints mintAuthorizer;
 
     mapping(uint256 => mapping(address => uint256)) internal readAllowances;
 
     uint256 constant SYMBOLIC_MINT_FEE = 0.001 ether;
 
-    /// @notice an IPNFT's base symbol, to be determined by the minter / owner. E.g. BIO-00001
+    /// @notice an IPNFT's base symbol, to be determined by the minter / owner, e.g. BIO-00001
     mapping(uint256 => string) public symbol;
 
     /// @notice musnt't take the minting fee property gap
     string public aNewProperty;
-
-    /*
-     *
-     * EVENTS
-     *
-     */
 
     event Reserved(address indexed reserver, uint256 indexed reservationId);
     event IPNFTMinted(address indexed owner, uint256 indexed tokenId, string tokenURI, string symbol);
@@ -62,19 +53,13 @@ contract IPNFTV24 is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IRe
     // A NEW EVENT FOR UPDATES
     event SymbolUpdated(uint256 indexed tokenId, string symbol);
 
-    /*
-     *
-     * ERRORS
-     *
-     */
-
     error NotOwningReservation(uint256 id);
     error ToZeroAddress();
     error NeedsMintpass();
     error InsufficientBalance();
+    error BadDuration();
     error MintingFeeTooLow();
 
-    /// @notice Contract constructor logic
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
         _disableInitializers();
@@ -101,12 +86,6 @@ contract IPNFTV24 is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IRe
         aNewProperty = "some property";
     }
 
-    /*
-     *
-     * PUBLIC
-     *
-     */
-
     function setAuthorizer(address authorizer_) public onlyOwner {
         if (authorizer_ == address(0)) {
             revert ToZeroAddress();
@@ -114,24 +93,30 @@ contract IPNFTV24 is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IRe
         mintAuthorizer = IAuthorizeMints(authorizer_);
     }
 
-    /// @notice reserves a new token id. Checks that the caller is authorized, according to the current implementation of IAuthorizeMints.
-    function reserve() public whenNotPaused returns (uint256) {
+    /// @notice https://docs.opensea.io/docs/contract-level-metadata
+    function contractURI() public pure returns (string memory) {
+        return "https://mint.molecule.to/contract-metadata/ipnft.json";
+    }
+
+    /**
+     * @notice reserves a new token id. Checks that the caller is authorized, according to the current implementation of IAuthorizeMints.
+     * @return reservationId a new reservation id
+     */
+    function reserve() external whenNotPaused returns (uint256 reservationId) {
         if (!mintAuthorizer.authorizeReservation(_msgSender())) {
             revert NeedsMintpass();
         }
-
-        uint256 reservationId = _reservationCounter.current();
+        reservationId = _reservationCounter.current();
         _reservationCounter.increment();
         reservations[reservationId] = _msgSender();
         emit Reserved(_msgSender(), reservationId);
-        return reservationId;
     }
 
     /**
      * @notice deprecated: the old interface without a symbol.
      */
     function mintReservation(address to, uint256 reservationId, uint256 mintPassId, string memory _tokenURI)
-        public
+        external
         payable
         whenNotPaused
         returns (uint256)
@@ -143,11 +128,12 @@ contract IPNFTV24 is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IRe
      * @notice mints an IPNFT with `tokenURI` as source of metadata. Invalidates the reservation. Redeems `mintpassId` on the authorizer contract
      * @notice We are charging a nominal fee to symbolically represent the transfer of ownership rights, for a price of .001 ETH (<$2USD at current prices). This helps the ensure the protocol is affordable to almost all projects, but discourages frivolous IP-NFT minting.
      *
-     * @param to address the recipient of the NFT
+     * @param to the recipient of the NFT
      * @param reservationId the reserved token id that has been reserved with `reserve()`
      * @param mintPassId an id that's handed over to the `IAuthorizeMints` interface
      * @param _tokenURI a location that resolves to a valid IP-NFT metadata structure
      * @param _symbol a symbol that represents the IPNFT's derivatives. Can be changed by the owner
+     * @return the `reservationId`
      */
     function mintReservation(address to, uint256 reservationId, uint256 mintPassId, string memory _tokenURI, string memory _symbol)
         public
@@ -172,11 +158,9 @@ contract IPNFTV24 is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IRe
         symbol[reservationId] = _symbol;
         mintAuthorizer.redeem(abi.encode(mintPassId));
 
-        //_mint(to, reservationId, 1, "");
-        _safeMint(to, reservationId);
+        _mint(to, reservationId);
         _setTokenURI(reservationId, _tokenURI);
         emit IPNFTMinted(to, reservationId, _tokenURI, _symbol);
-
         return reservationId;
     }
 
@@ -203,24 +187,26 @@ contract IPNFTV24 is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IRe
      * @param tokenId token id
      * @param until the timestamp when read access expires (unsafe but good enough for this use case)
      */
-    function grantReadAccess(address reader, uint256 tokenId, uint256 until) public {
+    function grantReadAccess(address reader, uint256 tokenId, uint256 until) external {
         if (ownerOf(tokenId) != _msgSender()) {
             revert InsufficientBalance();
         }
 
-        require(until > block.timestamp, "until in the past");
+        if (block.timestamp >= until) {
+            revert BadDuration();
+        }
 
         readAllowances[tokenId][reader] = until;
         emit ReadAccessGranted(tokenId, reader, until);
     }
 
     /**
-     * @notice check whether `reader` shall be able to access gated content behind `tokenId`
+     * @notice check whether `reader` currently is able to access gated content behind `tokenId`
      * @param reader the address in question
-     * @param tokenId token id
+     * @param tokenId the ipnft id
      * @return bool current read allowance
      */
-    function canRead(address reader, uint256 tokenId) public view returns (bool) {
+    function canRead(address reader, uint256 tokenId) external view returns (bool) {
         if (ownerOf(tokenId) == reader) {
             return true;
         }
@@ -228,33 +214,24 @@ contract IPNFTV24 is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IRe
     }
 
     /// @notice in case someone sends Eth to this contract, this function gets it out again
-    function withdrawAll() public payable whenNotPaused onlyOwner {
+    function withdrawAll() public whenNotPaused onlyOwner {
         require(payable(_msgSender()).send(address(this).balance), "transfer failed");
     }
 
-    /// @notice upgrade authorization logic
+    /// @inheritdoc UUPSUpgradeable
     function _authorizeUpgrade(address /*newImplementation*/ )
         internal
         override
         onlyOwner // solhint-disable-next-line no-empty-blocks
-    {
-        //empty block
-    }
+    { }
 
-    /// @dev override required by Solidity.
-    // function _beforeTokenTransfer(address from, address to, uint256, /* firstTokenId */ uint256 batchSize) internal override() {
-    //     super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
-    // }
+    /// @inheritdoc ERC721Upgradeable
     function _burn(uint256 tokenId) internal virtual override(ERC721URIStorageUpgradeable, ERC721Upgradeable) {
         super._burn(tokenId);
     }
 
+    /// @inheritdoc ERC721Upgradeable
     function tokenURI(uint256 tokenId) public view virtual override(ERC721URIStorageUpgradeable, ERC721Upgradeable) returns (string memory) {
         return super.tokenURI(tokenId);
-    }
-
-    /// @notice https://docs.opensea.io/docs/contract-level-metadata
-    function contractURI() public pure returns (string memory) {
-        return "https://mint.molecule.to/contract-metadata/ipnft.json";
     }
 }
