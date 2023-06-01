@@ -21,7 +21,7 @@ import { Fractionalizer } from "../src/Fractionalizer.sol";
 import { MustOwnIpnft, NoSymbol, AlreadyFractionalized } from "../src/Fractionalizer.sol";
 
 import { FractionalizedToken, OnlyIssuerOrOwner, TokenCapped } from "../src/FractionalizedToken.sol";
-import { FractionalizerNext, FractionalizedTokenNext } from "../src/helpers/upgrades/FractionalizerNext.sol";
+import { FractionalizerNext, FractionalizedTokenNext } from "../src/helpers/test-upgrades/FractionalizerNext.sol";
 
 import { SchmackoSwap, ListingState } from "../src/SchmackoSwap.sol";
 

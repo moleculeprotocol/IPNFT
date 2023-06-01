@@ -26,7 +26,7 @@ contract BlindPermissioner is IPermissioner {
 }
 
 contract ForbidAllPermissioner is IPermissioner {
-    function accept(FractionalizedToken, address, bytes calldata) external {
+    function accept(FractionalizedToken, address, bytes calldata) external pure {
         revert Denied();
     }
 }

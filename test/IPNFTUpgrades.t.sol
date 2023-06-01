@@ -7,7 +7,7 @@ import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy
 import { Mintpass } from "../src/Mintpass.sol";
 import { IPNFTMintHelper } from "./IPNFTMintHelper.sol";
 import { IPNFT } from "../src/IPNFT.sol";
-import { IPNFTV24 } from "../src/helpers/upgrades/IPNFTV24.sol";
+import { IPNFTV24 } from "../src/helpers/test-upgrades/IPNFTV24.sol";
 
 contract IPNFTUpgrades is IPNFTMintHelper {
     event Reserved(address indexed reserver, uint256 indexed reservationId);

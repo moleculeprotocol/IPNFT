@@ -39,7 +39,7 @@ contract CleverContractWallet is BoringContractWallet, ERC165 {
 
     function buy(SchmackoSwap schmackoswap, address paymentToken, uint256 listingId) public returns (bool) {
         if (msg.sender != owner) revert("not owner");
-        (,, address creator_,, uint256 price_,,) = schmackoswap.listings(listingId);
+        (,,,, uint256 price_,,) = schmackoswap.listings(listingId);
 
         paymentToken.call(abi.encodeWithSignature("approve(address,uint256)", address(schmackoswap), price_));
         (bool success,) = address(schmackoswap).call(abi.encodeWithSignature("fulfill(uint256)", listingId));
