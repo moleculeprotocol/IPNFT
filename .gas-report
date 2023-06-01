@@ -4,7 +4,8 @@
 | 1575845                                                  | 7903            |        |        |        |         |
 | Function Name                                            | min             | avg    | median | max    | # calls |
 | allowance                                                | 2775            | 2775   | 2775   | 2775   | 1       |
-| approve                                                  | 22546           | 24226  | 24646  | 24646  | 5       |
+| approve(address,uint256)                                 | 24646           | 24646  | 24646  | 24646  | 3       |
+| approve(address,uint256)(bool)                           | 22546           | 23596  | 23596  | 24646  | 2       |
 | balanceOf                                                | 576             | 656    | 576    | 2576   | 25      |
 | burnFrom                                                 | 4444            | 4444   | 4444   | 4444   | 3       |
 | cap                                                      | 545             | 19327  | 21675  | 21675  | 9       |
@@ -39,29 +40,29 @@
 | src/IPNFT.sol:IPNFT contract                    |                 |        |        |        |         |
 |-------------------------------------------------|-----------------|--------|--------|--------|---------|
 | Deployment Cost                                 | Deployment Size |        |        |        |         |
-| 2465203                                         | 12482           |        |        |        |         |
+| 2443773                                         | 12375           |        |        |        |         |
 | Function Name                                   | min             | avg    | median | max    | # calls |
 | balanceOf                                       | 635             | 1301   | 635    | 2635   | 6       |
 | burn                                            | 5862            | 5862   | 5862   | 5862   | 1       |
 | canRead                                         | 833             | 1429   | 1079   | 3079   | 5       |
 | fallback                                        | 46              | 46     | 46     | 46     | 1       |
-| grantReadAccess                                 | 729             | 8083   | 823    | 22698  | 3       |
+| grantReadAccess                                 | 729             | 8059   | 751    | 22698  | 3       |
 | initialize                                      | 118499          | 118499 | 118499 | 118499 | 44      |
 | isApprovedForAll                                | 805             | 1930   | 2805   | 2805   | 16      |
-| mintReservation                                 | 1636            | 156885 | 156646 | 179164 | 40      |
+| mintReservation                                 | 1636            | 156869 | 156630 | 179148 | 40      |
 | ownerOf                                         | 624             | 1836   | 2624   | 2624   | 33      |
 | pause                                           | 23810           | 24810  | 24810  | 25810  | 2       |
 | paused                                          | 2382            | 2382   | 2382   | 2382   | 1       |
 | reservations                                    | 568             | 568    | 568    | 568    | 3       |
-| reserve                                         | 512             | 27494  | 25824  | 34624  | 44      |
+| reserve                                         | 512             | 27354  | 25678  | 34478  | 44      |
 | safeTransferFrom(address,address,uint256)       | 3904            | 28738  | 32057  | 37147  | 14      |
 | safeTransferFrom(address,address,uint256,bytes) | 21776           | 21776  | 21776  | 21776  | 1       |
 | setApprovalForAll                               | 6108            | 23803  | 24735  | 24735  | 20      |
-| setAuthorizer                                   | 22750           | 22750  | 22750  | 22750  | 44      |
+| setAuthorizer                                   | 22704           | 22704  | 22704  | 22704  | 44      |
 | symbol                                          | 1486            | 3015   | 3486   | 3486   | 17      |
 | tokenURI                                        | 2122            | 2122   | 2122   | 2122   | 1       |
 | upgradeTo                                       | 8390            | 9723   | 10390  | 10390  | 3       |
-| withdrawAll                                     | 4580            | 8432   | 9358   | 11358  | 3       |
+| withdrawAll                                     | 4604            | 8456   | 9382   | 11382  | 3       |
 
 
 | src/Mintpass.sol:Mintpass contract |                 |       |        |        |         |
@@ -121,10 +122,10 @@
 | Deployment Cost                                | Deployment Size |        |        |        |         |
 | 1212340                                        | 5982            |        |        |        |         |
 | Function Name                                  | min             | avg    | median | max    | # calls |
-| claim                                          | 4592            | 20879  | 24968  | 31734  | 23      |
+| claim                                          | 4592            | 21934  | 24968  | 31734  | 31      |
 | contribution                                   | 720             | 720    | 720    | 720    | 2       |
 | getSaleInfo                                    | 1125            | 1125   | 1125   | 1125   | 2       |
-| placeBid                                       | 516             | 41597  | 26700  | 84774  | 24      |
+| placeBid                                       | 516             | 37873  | 26700  | 84774  | 32      |
 | settle                                         | 4047            | 28813  | 28287  | 52458  | 9       |
 | startSale                                      | 487             | 116235 | 183792 | 189692 | 18      |
 
