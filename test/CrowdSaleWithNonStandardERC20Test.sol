@@ -78,9 +78,6 @@ contract CrowdSaleWithNonStandardERC20Test is Test {
         biddingToken.approve(address(crowdSale), 1_000_000e6);
         daoToken.approve(address(crowdSale), 1_000_000 ether);
         vm.stopPrank();
-
-        // _vestingConfig = VestingConfig({ vestingContract: TokenVesting(address(0)), cliff: 60 days });
-        // _stakingConfig = StakingConfig({ stakedToken: daoToken, stakesVestingContract: vestedDao, wadFixedStakedPerBidPrice: 1e18, stakeTotal: 0 });
     }
 
     function testSettlementAndSimpleClaims() public {
@@ -285,5 +282,76 @@ contract CrowdSaleWithNonStandardERC20Test is Test {
         (TimelockedToken auctionTokenVesting,) = crowdSale.salesVesting(saleId);
 
         assertEq(auctionTokenVesting.balanceOf(bidder), 0);
+    }
+
+    //todo: write dynamic decimals & invariant tests
+    function testWith2Decimals() public {
+        biddingToken = new FakeERC20("Euro token with 2 decimals", "EURS");
+        biddingToken.setDecimals(2);
+        biddingToken.mint(bidder, 1_000_000e2);
+        biddingToken.mint(bidder2, 1_000_000e2);
+
+        vm.startPrank(bidder);
+        biddingToken.approve(address(crowdSale), 1_000_000e2);
+        daoToken.approve(address(crowdSale), 1_000_000 ether);
+        vm.stopPrank();
+
+        vm.startPrank(bidder2);
+        biddingToken.approve(address(crowdSale), 1_000_000e2);
+        daoToken.approve(address(crowdSale), 1_000_000 ether);
+        vm.stopPrank();
+
+        vm.startPrank(emitter);
+        Sale memory _sale = CrowdSaleHelpers.makeSale(emitter, auctionToken, biddingToken);
+        _sale.fundingGoal = 200_000e2;
+        auctionToken.approve(address(crowdSale), 400_000 ether);
+        uint256 saleId = crowdSale.startSale(_sale, daoToken, vestedDao, 1e18, TimelockedToken(address(0)), 7 days);
+        vm.stopPrank();
+
+        vm.startPrank(bidder);
+        crowdSale.placeBid(saleId, 200_000e2, "");
+        vm.stopPrank();
+
+        vm.startPrank(bidder2);
+        crowdSale.placeBid(saleId, 200_000e2, "");
+        vm.stopPrank();
+
+        vm.startPrank(bidder);
+        crowdSale.placeBid(saleId, 400_000e2, "");
+        vm.stopPrank();
+
+        assertEq(biddingToken.balanceOf(bidder), 400_000e2);
+        assertEq(daoToken.balanceOf(bidder), 400_000 ether);
+        assertEq(biddingToken.balanceOf(address(crowdSale)), 800_000e2);
+        assertEq(daoToken.balanceOf(address(crowdSale)), 800_000 ether);
+
+        vm.startPrank(anyone);
+        vm.warp(block.timestamp + 3 hours);
+        crowdSale.settle(saleId);
+        vm.stopPrank();
+
+        vm.startPrank(bidder);
+        crowdSale.claim(saleId);
+        vm.stopPrank();
+
+        vm.startPrank(bidder2);
+        crowdSale.claim(saleId);
+        vm.stopPrank();
+
+        (TimelockedToken auctionTokenVesting,) = crowdSale.salesVesting(saleId);
+
+        assertEq(auctionTokenVesting.balanceOf(bidder), 300_000 ether);
+        assertEq(biddingToken.balanceOf(bidder), 850_000e2);
+        assertEq(vestedDao.balanceOf(bidder), 150_000 ether);
+        assertEq(daoToken.balanceOf(bidder), 850_000 ether);
+
+        assertEq(auctionTokenVesting.balanceOf(bidder2), 100_000 ether);
+        assertEq(biddingToken.balanceOf(bidder2), 950_000e2);
+        assertEq(vestedDao.balanceOf(bidder2), 50_000 ether);
+        assertEq(daoToken.balanceOf(bidder2), 950_000 ether);
+
+        assertEq(auctionToken.balanceOf(address(crowdSale)), 0);
+        assertEq(biddingToken.balanceOf(address(crowdSale)), 0);
+        assertEq(daoToken.balanceOf(address(crowdSale)), 0);
     }
 }

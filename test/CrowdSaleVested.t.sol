@@ -134,8 +134,6 @@ contract CrowdSaleVestedTest is Test {
         vm.startPrank(emitter);
         Sale memory _sale = CrowdSaleHelpers.makeSale(emitter, auctionToken, biddingToken);
         auctionToken.approve(address(crowdSale), 400_000 ether);
-
-        vm.startPrank(emitter);
         uint256 saleId = crowdSale.startSale(_sale, vestingContract, 60 days);
         vm.stopPrank();
 
