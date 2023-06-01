@@ -198,7 +198,7 @@ contract IPNFTTest is IPNFTMintHelper {
         ipnft.grantReadAccess(bob, tokenId, block.timestamp + 60);
 
         vm.startPrank(alice);
-        vm.expectRevert(bytes("until in the past"));
+        vm.expectRevert(IPNFT.BadDuration.selector);
         ipnft.grantReadAccess(bob, tokenId, block.timestamp);
 
         vm.expectEmit(true, true, false, true);

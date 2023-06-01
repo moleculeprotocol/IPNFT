@@ -6,6 +6,11 @@
   },
   {
     "inputs": [],
+    "name": "BadDuration",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "InsufficientBalance",
     "type": "error"
   },
@@ -597,7 +602,7 @@
     "outputs": [
       {
         "internalType": "uint256",
-        "name": "",
+        "name": "reservationId",
         "type": "uint256"
       }
     ],
@@ -834,7 +839,7 @@
     "inputs": [],
     "name": "withdrawAll",
     "outputs": [],
-    "stateMutability": "payable",
+    "stateMutability": "nonpayable",
     "type": "function"
   }
 ]
