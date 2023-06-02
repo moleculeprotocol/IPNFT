@@ -80,7 +80,7 @@ contract StakedVestedCrowdSale is VestedCrowdSale {
         //if the bidding token (eg USDC) does not come with 18 decimals, we're adjusting the price here.
         //see https://github.com/moleculeprotocol/IPNFT/pull/100
         if (sale.biddingToken.decimals() != 18) {
-            wadFixedStakedPerBidPrice = wadFixedStakedPerBidPrice.mulWadDown(10 ** 18).divWadDown(10 ** sale.biddingToken.decimals());
+            wadFixedStakedPerBidPrice = (wadFixedStakedPerBidPrice * 10 ** 18) / 10 ** sale.biddingToken.decimals();
         }
 
         saleId = uint256(keccak256(abi.encode(sale)));
