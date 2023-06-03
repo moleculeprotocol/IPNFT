@@ -24,3 +24,16 @@ contract DeployTokens is CommonScript {
         console.log("VDAO_TOKEN_ADDRESS=%s", address(vestedDaoToken));
     }
 }
+
+contract Deploy6DecUsdc is CommonScript {
+    function run() public {
+        prepareAddresses();
+        vm.startBroadcast(deployer);
+        FakeERC20 usdc6 = new FakeERC20("USDC Token 6", "USDC6");
+        usdc6.setDecimals(6);
+        usdc6.mint(alice, 1_000_000e6);
+        vm.stopBroadcast();
+
+        console.log("USDC_ADDRESS=%s", address(usdc6));
+    }
+}

@@ -81,11 +81,11 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable {
         if (ipnft.ownerOf(ipnftId) != _msgSender()) {
             revert MustOwnIpnft();
         }
-        string memory ipnftSymbol = ipnft.symbol(ipnftId);
+        string memory tokenSymbol = string.concat(ipnft.symbol(ipnftId), "-MOL");
         // https://github.com/OpenZeppelin/workshops/tree/master/02-contracts-clone
         fractionalizedToken = FractionalizedToken(Clones.clone(tokenImplementation));
         string memory name = string.concat("Fractions of IPNFT #", Strings.toString(ipnftId));
-        fractionalizedToken.initialize(name, string.concat(ipnftSymbol, "-MOL"), FractionalizedTokenMetadata(ipnftId, _msgSender(), agreementCid));
+        fractionalizedToken.initialize(name, tokenSymbol, FractionalizedTokenMetadata(ipnftId, _msgSender(), agreementCid));
 
         uint256 fractionHash = fractionalizedToken.hash();
         // ensure we can only call this once per sales cycle
@@ -95,7 +95,7 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable {
 
         fractionalized[fractionHash] = fractionalizedToken;
 
-        emit FractionsCreated(fractionHash, ipnftId, address(fractionalizedToken), _msgSender(), fractionsAmount, agreementCid, name, ipnftSymbol);
+        emit FractionsCreated(fractionHash, ipnftId, address(fractionalizedToken), _msgSender(), fractionsAmount, agreementCid, name, tokenSymbol);
 
         //if we want to take a protocol fee, this might be a good point of doing so.
         fractionalizedToken.issue(_msgSender(), fractionsAmount);
