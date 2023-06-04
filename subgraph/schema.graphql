@@ -47,6 +47,7 @@ type TimelockedToken @entity {
   decimals: BigInt!
   symbol: String!
   name: String
+  underlyingToken: ERC20Token
   schedules: [LockedSchedule!] @derivedFrom(field: "tokenContract")
 }
 
