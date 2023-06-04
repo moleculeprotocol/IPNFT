@@ -8,7 +8,7 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 import { CrowdSale, Sale, SaleInfo, SaleState, BadDecimals } from "../src/crowdsale/CrowdSale.sol";
-import { VestingConfig } from "../src/crowdsale/VestedCrowdSale.sol";
+import { VestingConfig, UnsupportedInitializer } from "../src/crowdsale/VestedCrowdSale.sol";
 import { StakedVestedCrowdSale, IncompatibleVestingContract, BadPrice, InvalidDuration } from "../src/crowdsale/StakedVestedCrowdSale.sol";
 import { TokenVesting } from "@moleculeprotocol/token-vesting/TokenVesting.sol";
 import { TimelockedToken } from "../src/TimelockedToken.sol";
@@ -103,6 +103,19 @@ contract CrowdSaleVestedStakedTest is Test {
         (,,, uint256 stakeTotal) = crowdSale.salesStaking(saleId);
         //the total stakes are set to 0 upon initialization
         assertEq(stakeTotal, 0);
+    }
+
+    function testCannotSetupCrowdSaleWithParentFunctions() public {
+        vm.startPrank(emitter);
+        Sale memory _sale = CrowdSaleHelpers.makeSale(emitter, auctionToken, biddingToken);
+
+        auctionToken.approve(address(crowdSale), 400_000 ether);
+        vm.expectRevert(UnsupportedInitializer.selector);
+        crowdSale.startSale(_sale);
+
+        vm.expectRevert(UnsupportedInitializer.selector);
+        crowdSale.startSale(_sale, TimelockedToken(address(0)), 7 days);
+        vm.stopPrank();
     }
 
     function testSettlementAndSimpleClaims() public {

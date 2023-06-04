@@ -73,7 +73,7 @@ contract CrowdSale is ReentrancyGuard {
      * @param sale the sale's base configuration.
      * @return saleId
      */
-    function startSale(Sale calldata sale) public returns (uint256 saleId) {
+    function startSale(Sale calldata sale) public virtual returns (uint256 saleId) {
         if (sale.closingTime < block.timestamp) {
             revert BadSaleDuration();
         }
