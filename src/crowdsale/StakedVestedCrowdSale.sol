@@ -103,18 +103,17 @@ contract StakedVestedCrowdSale is VestedCrowdSale {
     }
 
     /**
-     * @dev computes stake returns for a bidder
+     * @dev computes stake returns
      *
-     * @param saleId sale id
+     * @param _stakes the amount of staking tokens bid to the sale
      * @param refunds amount of bidding tokens being refunded
+     * @param price the 1e18 based float price of stake per bid (`wadFixedStakedPerBidPrice`)
      * @return refundedStakes wei value of refunded staking tokens
      * @return vestedStakes wei value of staking tokens returned wrapped as vesting tokens
      */
-    function getClaimableStakes(uint256 saleId, uint256 refunds) public view virtual returns (uint256 refundedStakes, uint256 vestedStakes) {
-        StakingInfo storage staking = salesStaking[saleId];
-
-        refundedStakes = refunds.mulWadDown(staking.wadFixedStakedPerBidPrice);
-        vestedStakes = stakes[saleId][msg.sender] - refundedStakes;
+    function getClaimableStakes(uint256 _stakes, uint256 refunds, uint256 price) public pure returns (uint256 refundedStakes, uint256 vestedStakes) {
+        refundedStakes = refunds.mulWadDown(price);
+        vestedStakes = _stakes - refundedStakes;
     }
 
     /**
@@ -143,7 +142,8 @@ contract StakedVestedCrowdSale is VestedCrowdSale {
     function claim(uint256 saleId, uint256 tokenAmount, uint256 refunds) internal virtual override {
         VestingConfig storage vestingConfig = salesVesting[saleId];
         StakingInfo storage staking = salesStaking[saleId];
-        (uint256 refundedStakes, uint256 vestedStakes) = getClaimableStakes(saleId, refunds);
+
+        (uint256 refundedStakes, uint256 vestedStakes) = getClaimableStakes(stakes[saleId][msg.sender], refunds, staking.wadFixedStakedPerBidPrice);
 
         //EFFECTS
         //this prevents msg.sender to claim twice
