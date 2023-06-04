@@ -124,46 +124,6 @@ contract FixtureCrowdSale is CommonScript {
     }
 }
 
-contract OpenEmptySimpleWethCrowdSale is FixtureCrowdSale {
-    function run() public override {
-        prepareAddresses();
-
-        setupVestedMolToken();
-        vm.startBroadcast(deployer);
-        FakeERC20 weth = new FakeERC20("wrapped Fakethereum", "WFETH");
-        // weth.setDecimals(18);
-        weth.mint(alice, 50 ether);
-        weth.mint(charlie, 50 ether);
-        vm.stopBroadcast();
-
-        dealERC20(alice, 1_000_000 ether, daoToken);
-        dealERC20(charlie, 1_000_000 ether, daoToken);
-        // https://api.coingecko.com/api/v3/simple/price?ids=vitadao&vs_currencies=eth
-        // 1 Vita = 0.00103384 ETH => VITA/ETH = 1 / 0.00103384
-        uint256 wadFixedStakedPerBidPrice = 967.267662308 ether;
-
-        Sale memory _sale = Sale({
-            auctionToken: IERC20Metadata(address(auctionToken)),
-            biddingToken: IERC20Metadata(address(weth)),
-            beneficiary: bob,
-            fundingGoal: 20 ether,
-            salesAmount: 400_000 ether,
-            closingTime: uint64(block.timestamp + 2 hours + 5 minutes),
-            permissioner: IPermissioner(address(0))
-        });
-
-        vm.startBroadcast(bob);
-        auctionToken.approve(address(stakedVestedCrowdSale), 400_000 ether);
-
-        uint256 saleId = stakedVestedCrowdSale.startSale(_sale, daoToken, vestedDaoToken, wadFixedStakedPerBidPrice, vestedMolToken, 60 days);
-
-        vm.stopBroadcast();
-
-        console.log("WETH_ADDRESS=%s", address(weth));
-        console.log("SALE_ID=%s", saleId);
-    }
-}
-
 contract ClaimSale is CommonScript {
     function run() public {
         prepareAddresses();

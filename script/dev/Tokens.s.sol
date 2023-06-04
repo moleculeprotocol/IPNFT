@@ -25,15 +25,22 @@ contract DeployTokens is CommonScript {
     }
 }
 
-contract Deploy6DecUsdc is CommonScript {
+contract DeployFakeTokens is CommonScript {
     function run() public {
         prepareAddresses();
         vm.startBroadcast(deployer);
         FakeERC20 usdc6 = new FakeERC20("USDC Token 6", "USDC6");
         usdc6.setDecimals(6);
         usdc6.mint(alice, 1_000_000e6);
+        usdc6.mint(charlie, 100_000e6);
+
+        FakeERC20 weth = new FakeERC20("wrapped Fakethereum", "WFETH");
+        weth.setDecimals(18);
+        weth.mint(alice, 100 ether);
+        weth.mint(charlie, 100 ether);
         vm.stopBroadcast();
 
-        console.log("USDC_ADDRESS=%s", address(usdc6));
+        console.log("USDC6_ADDRESS=%s", address(usdc6));
+        console.log("WETH_ADDRESS=%s", address(weth));
     }
 }
