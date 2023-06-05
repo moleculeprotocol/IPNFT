@@ -82,20 +82,13 @@ contract FractionalizerTest is Test {
             )
         );
         fractionalizer.initialize(ipnft);
-        fractionalizer.setFeeReceiver(protocolOwner);
+
         vm.stopPrank();
 
         vm.deal(originalOwner, MINTING_FEE);
         vm.startPrank(originalOwner);
         uint256 reservationId = ipnft.reserve();
         ipnft.mintReservation{ value: MINTING_FEE }(originalOwner, reservationId, 1, ipfsUri, DEFAULT_SYMBOL);
-        vm.stopPrank();
-    }
-
-    function testCannotSetInfraToZero() public {
-        vm.startPrank(alice);
-        vm.expectRevert("Ownable: caller is not the owner");
-        fractionalizer.setReceiverPercentage(10);
         vm.stopPrank();
     }
 
