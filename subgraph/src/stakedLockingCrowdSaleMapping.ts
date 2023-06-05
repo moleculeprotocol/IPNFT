@@ -201,7 +201,6 @@ export function handlelockingContractCreated(
   )
 }
 
-//todo: implement
 export function handleClaimed(event: ClaimedEvent): void {
   let crowdSale = CrowdSale.load(event.params.saleId.toString())
   if (!crowdSale) {
@@ -209,5 +208,19 @@ export function handleClaimed(event: ClaimedEvent): void {
       event.params.saleId.toString()
     ])
     return
+  }
+
+  if (!crowdSale.contributions) {
+    return
+  }
+
+  for (let i = 0; i < crowdSale.contributions.length; i++) {
+    let contribution = Contribution.load(crowdSale.contributions[i])
+    if (!contribution) continue
+
+    if (contribution.contributor == event.params.claimer) {
+      contribution.claimedAt = event.block.timestamp
+      contribution.save()
+    }
   }
 }
