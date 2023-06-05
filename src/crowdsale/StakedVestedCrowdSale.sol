@@ -36,6 +36,7 @@ contract StakedVestedCrowdSale is VestedCrowdSale {
 
     event Started(uint256 indexed saleId, address indexed issuer, Sale sale, VestingConfig vesting, StakingInfo staking);
     event Staked(uint256 indexed saleId, address indexed bidder, uint256 stakedAmount, uint256 price);
+    event ClaimedStakes(uint256 indexed saleId, address indexed claimer, uint256 stakesClaimed, uint256 stakesRefunded);
 
     /// @dev disable parent sale starting functions
     function startSale(Sale calldata, TimelockedToken, uint256) public pure override returns (uint256) {
@@ -160,6 +161,8 @@ contract StakedVestedCrowdSale is VestedCrowdSale {
             staking.stakedToken.safeTransfer(msg.sender, refundedStakes);
         }
 
+        emit ClaimedStakes(saleId, msg.sender, vestedStakes, refundedStakes);
+
         if (vestedStakes == 0) {
             return;
         }
@@ -184,6 +187,8 @@ contract StakedVestedCrowdSale is VestedCrowdSale {
         stakes[saleId][msg.sender] = 0;
 
         (auctionTokens, refunds) = super.claimFailed(saleId);
+        emit ClaimedStakes(saleId, msg.sender, 0, refundableStakes);
+
         salesStaking[saleId].stakedToken.safeTransfer(msg.sender, refundableStakes);
     }
 }
