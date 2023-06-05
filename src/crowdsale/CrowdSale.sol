@@ -203,12 +203,15 @@ contract CrowdSale is ReentrancyGuard {
      * @param permission. bytes are handed over to a configured permissioner contract
      */
     function claim(uint256 saleId, bytes memory permission) external nonReentrant returns (uint256 auctionTokens, uint256 refunds) {
-        if (_saleInfo[saleId].state == SaleState.RUNNING) {
-            revert BadSaleState(SaleState.SETTLED, SaleState.RUNNING);
-        }
-        if (_saleInfo[saleId].state == SaleState.FAILED) {
+        SaleState currentState = _saleInfo[saleId].state;
+        if (currentState == SaleState.FAILED) {
             return claimFailed(saleId);
         }
+        //[L-05]
+        if (currentState != SaleState.SETTLED) {
+            revert BadSaleState(SaleState.SETTLED, currentState);
+        }
+
         Sale storage sales = _sales[saleId];
         //we're not querying the permissioner if the sale has failed.
         if (address(sales.permissioner) != address(0)) {
