@@ -15,8 +15,8 @@ contract DeployTokens is CommonScript {
         vm.startBroadcast(deployer);
         FakeERC20 usdc = new FakeERC20("USDC Token", "USDC");
 
-        FakeERC20 daoToken = new FakeERC20("DAO Token", "DAO");
-        TokenVesting vestedDaoToken = new TokenVesting(IERC20Metadata(address(daoToken)), "VDAO Token", "VDAO");
+        FakeERC20 daoToken = new FakeERC20("BIO DAO Token", "BIO");
+        TokenVesting vestedDaoToken = new TokenVesting(IERC20Metadata(address(daoToken)), "Vested BIODAO Token", "VBIO");
         vm.stopBroadcast();
 
         console.log("USDC_ADDRESS=%s", address(usdc));

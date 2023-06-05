@@ -82,6 +82,11 @@
     "type": "error"
   },
   {
+    "inputs": [],
+    "name": "UnsupportedInitializer",
+    "type": "error"
+  },
+  {
     "anonymous": false,
     "inputs": [
       {
@@ -298,11 +303,6 @@
             "internalType": "uint256",
             "name": "wadFixedStakedPerBidPrice",
             "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "stakeTotal",
-            "type": "uint256"
           }
         ],
         "indexed": false,
@@ -474,30 +474,6 @@
     ],
     "name": "VestingContractCreated",
     "type": "event"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "saleId",
-        "type": "uint256"
-      }
-    ],
-    "name": "claim",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "auctionTokens",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "refunds",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "nonpayable",
-    "type": "function"
   },
   {
     "inputs": [
@@ -693,11 +669,6 @@
         "internalType": "uint256",
         "name": "wadFixedStakedPerBidPrice",
         "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "stakeTotal",
-        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -805,17 +776,17 @@
           }
         ],
         "internalType": "struct Sale",
-        "name": "sale",
+        "name": "",
         "type": "tuple"
       },
       {
         "internalType": "contract TimelockedToken",
-        "name": "lockedTokenContract",
+        "name": "",
         "type": "address"
       },
       {
         "internalType": "uint256",
-        "name": "cliff",
+        "name": "",
         "type": "uint256"
       }
     ],
@@ -823,11 +794,11 @@
     "outputs": [
       {
         "internalType": "uint256",
-        "name": "saleId",
+        "name": "",
         "type": "uint256"
       }
     ],
-    "stateMutability": "nonpayable",
+    "stateMutability": "pure",
     "type": "function"
   },
   {
@@ -952,7 +923,7 @@
           }
         ],
         "internalType": "struct Sale",
-        "name": "sale",
+        "name": "",
         "type": "tuple"
       }
     ],
@@ -960,11 +931,11 @@
     "outputs": [
       {
         "internalType": "uint256",
-        "name": "saleId",
+        "name": "",
         "type": "uint256"
       }
     ],
-    "stateMutability": "nonpayable",
+    "stateMutability": "pure",
     "type": "function"
   }
 ]

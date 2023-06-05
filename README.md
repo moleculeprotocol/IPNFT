@@ -42,10 +42,10 @@ IP-NFTs allow their users to tokenize intellectual property. This repo contains 
 
 #### some test tokens
 
-| Token name                | Symbol  | address                                                                                                                           |
-| ------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| MoleDao Test token        | MOLDAO  | [0x3110a768DC64f7aAB92F7Ae6E1371e5CE581F95F](https://goerli.etherscan.io/address/0x3110a768dc64f7aab92f7ae6e1371e5ce581f95f#code) |
-| Vested MoleDao Test token | vMOLDAO | [0x6FFBd6325B2102F5f9AaB74d7418A27F9174c92f](https://goerli.etherscan.io/address/0x6FFBd6325B2102F5f9AaB74d7418A27F9174c92f)      |
+| Token name               | Symbol  | address                                                                                                                           |
+| ------------------------ | ------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| BioDao Test token        | BIODAO  | [0x3110a768DC64f7aAB92F7Ae6E1371e5CE581F95F](https://goerli.etherscan.io/address/0x3110a768dc64f7aab92f7ae6e1371e5ce581f95f#code) |
+| Vested BioDao Test token | vBIODAO | [0x6FFBd6325B2102F5f9AaB74d7418A27F9174c92f](https://goerli.etherscan.io/address/0x6FFBd6325B2102F5f9AaB74d7418A27F9174c92f)      |
 
 ## Prerequisites
 

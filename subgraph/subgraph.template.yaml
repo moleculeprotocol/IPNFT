@@ -124,7 +124,7 @@ dataSources:
         - name: IERC20Metadata
           file: ./abis/IERC20Metadata.json
       eventHandlers:
-        - event: Started(indexed uint256,indexed address,(address,address,address,uint256,uint256,uint64,address),(address,uint256),(address,address,uint256,uint256))
+        - event: Started(indexed uint256,indexed address,(address,address,address,uint256,uint256,uint64,address),(address,uint256),(address,address,uint256))
           handler: handleStarted
         - event: Settled(indexed uint256,uint256,uint256)
           handler: handleSettled

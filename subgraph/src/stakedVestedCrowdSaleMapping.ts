@@ -103,12 +103,13 @@ export function handleStarted(event: StartedEvent): void {
   crowdSale.wadFixedStakedPerBidPrice =
     event.params.staking.wadFixedStakedPerBidPrice
   crowdSale.save()
+  log.info('[handleStarted] crowdsale {}', [crowdSale.id])
 }
 
 export function handleBid(event: BidEvent): void {
   let crowdSale = CrowdSale.load(event.params.saleId.toString())
   if (!crowdSale) {
-    log.error('CrowdSale not found for id: {}', [
+    log.error('[handleBid] CrowdSale not found for id: {}', [
       event.params.saleId.toString()
     ])
     return
@@ -132,7 +133,7 @@ export function handleBid(event: BidEvent): void {
 export function handleStaked(event: StakedEvent): void {
   let crowdSale = CrowdSale.load(event.params.saleId.toString())
   if (!crowdSale) {
-    log.error('CrowdSale not found for id: {}', [
+    log.error('[handleStaked] CrowdSale not found for id: {}', [
       event.params.saleId.toString()
     ])
     return
@@ -144,9 +145,10 @@ export function handleStaked(event: StakedEvent): void {
 
   let contribution = Contribution.load(event.transaction.hash.toHexString())
   if (!contribution) {
-    log.error('cannot associate contribution for stake handler {}', [
-      event.transaction.hash.toHexString()
-    ])
+    log.error(
+      '[handleStaked] cannot associate contribution for stake handler {}',
+      [event.transaction.hash.toHexString()]
+    )
     return
   }
   contribution.stakedAmount = event.params.stakedAmount
@@ -157,7 +159,7 @@ export function handleStaked(event: StakedEvent): void {
 export function handleSettled(event: SettledEvent): void {
   let crowdSale = CrowdSale.load(event.params.saleId.toString())
   if (!crowdSale) {
-    return log.error('CrowdSale not found for id: {}', [
+    return log.error('[handleSettled] CrowdSale not found for id: {}', [
       event.params.saleId.toString()
     ])
   }
@@ -168,7 +170,7 @@ export function handleSettled(event: SettledEvent): void {
 export function handleFailed(event: FailedEvent): void {
   let crowdSale = CrowdSale.load(event.params.saleId.toString())
   if (!crowdSale) {
-    return log.error('CrowdSale not found for id: {}', [
+    return log.error('[handleFailed] CrowdSale not found for id: {}', [
       event.params.saleId.toString()
     ])
   }
@@ -203,7 +205,7 @@ export function handleVestingContractCreated(
 export function handleClaimed(event: ClaimedEvent): void {
   let crowdSale = CrowdSale.load(event.params.saleId.toString())
   if (!crowdSale) {
-    log.error('CrowdSale not found for id: {}', [
+    log.error('[handleClaimed] CrowdSale not found for id: {}', [
       event.params.saleId.toString()
     ])
     return
