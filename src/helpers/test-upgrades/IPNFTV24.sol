@@ -222,4 +222,8 @@ contract IPNFTV24 is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IRe
     function tokenURI(uint256 tokenId) public view virtual override(ERC721URIStorageUpgradeable, ERC721Upgradeable) returns (string memory) {
         return super.tokenURI(tokenId);
     }
+
+    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC721Upgradeable, ERC721URIStorageUpgradeable) returns (bool) {
+        return super.supportsInterface(interfaceId);
+    }
 }

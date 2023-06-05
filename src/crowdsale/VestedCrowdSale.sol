@@ -67,9 +67,7 @@ contract VestedCrowdSale is CrowdSale {
     function _afterSaleSettled(uint256 saleId) internal override {
         Sale storage sale = _sales[saleId];
         uint256 currentAllowance = sale.auctionToken.allowance(address(this), address(salesVesting[saleId].vestingContract));
-
-        //the poor man's `increaseAllowance`
-        sale.auctionToken.approve(address(salesVesting[saleId].vestingContract), currentAllowance + sale.salesAmount);
+        sale.auctionToken.forceApprove(address(salesVesting[saleId].vestingContract), currentAllowance + sale.salesAmount);
     }
 
     /**
