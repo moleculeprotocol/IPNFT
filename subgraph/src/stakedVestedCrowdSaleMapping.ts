@@ -35,7 +35,10 @@ function makeERC20Token(_contract: IERC20Metadata): ERC20Token {
   return token
 }
 
-function makeTimelockedToken(_contract: IERC20Metadata): TimelockedToken {
+function makeTimelockedToken(
+  _contract: IERC20Metadata,
+  underlyingToken: ERC20Token
+): TimelockedToken {
   let token = TimelockedToken.load(_contract._address)
 
   if (!token) {
@@ -44,6 +47,7 @@ function makeTimelockedToken(_contract: IERC20Metadata): TimelockedToken {
     token.decimals = BigInt.fromI32(_contract.decimals())
     token.symbol = _contract.symbol()
     token.name = _contract.name()
+    token.underlyingToken = underlyingToken.id
     token.save()
   }
 
@@ -69,12 +73,15 @@ export function handleStarted(event: StartedEvent): void {
   crowdSale.createdAt = event.block.timestamp
   crowdSale.state = 'RUNNING'
 
-  crowdSale.auctionToken = makeERC20Token(
+  const auctionToken: ERC20Token = makeERC20Token(
     IERC20Metadata.bind(event.params.sale.auctionToken)
-  ).id
+  )
+  crowdSale.auctionToken = auctionToken.id
+
   crowdSale.salesAmount = event.params.sale.salesAmount
   crowdSale.vestedAuctionToken = makeTimelockedToken(
-    IERC20Metadata.bind(event.params.vesting.vestingContract)
+    IERC20Metadata.bind(event.params.vesting.vestingContract),
+    auctionToken
   ).id
 
   crowdSale.auctionCliff = event.params.vesting.cliff
@@ -179,7 +186,17 @@ export function handleVestingContractCreated(
     event.params.lockingContract,
     context
   )
-  makeTimelockedToken(IERC20Metadata.bind(event.params.lockingContract))
+  const _underlyingTokenContract: IERC20Metadata = IERC20Metadata.bind(
+    event.params.underlyingToken
+  )
+  const underlyingErc20Token: ERC20Token = makeERC20Token(
+    _underlyingTokenContract
+  )
+
+  makeTimelockedToken(
+    IERC20Metadata.bind(event.params.lockingContract),
+    underlyingErc20Token
+  )
 }
 
 //todo: implement
