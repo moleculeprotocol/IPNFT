@@ -15,6 +15,7 @@ struct VestingConfig {
 
 error UnmanageableVestingContract();
 error IncompatibleVestingContract();
+error UnsupportedInitializer();
 
 /**
  * @title VestedCrowdSale
@@ -30,6 +31,11 @@ contract VestedCrowdSale is CrowdSale {
     event Started(uint256 indexed saleId, address indexed issuer, Sale sale, VestingConfig locking);
     event VestingContractCreated(TimelockedToken indexed lockingContract, IERC20Metadata indexed underlyingToken);
 
+    /// @dev disable parent sale starting functions
+    function startSale(Sale calldata) public pure override returns (uint256) {
+        revert UnsupportedInitializer();
+    }
+
     /**
      * @notice if vestingContract is 0x0, a new vesting contract is automatically created
      *
@@ -38,7 +44,7 @@ contract VestedCrowdSale is CrowdSale {
      * @param cliff a duration after that the receiver can redeem their tokens
      * @return saleId the newly created sale's id
      */
-    function startSale(Sale calldata sale, TimelockedToken lockedTokenContract, uint256 cliff) public returns (uint256 saleId) {
+    function startSale(Sale calldata sale, TimelockedToken lockedTokenContract, uint256 cliff) public virtual returns (uint256 saleId) {
         saleId = uint256(keccak256(abi.encode(sale)));
 
         if (address(lockedTokenContract) == address(0)) {

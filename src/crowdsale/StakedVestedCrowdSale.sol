@@ -6,7 +6,9 @@ import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.s
 import { FixedPointMathLib } from "solmate/utils/FixedPointMathLib.sol";
 import { TokenVesting } from "@moleculeprotocol/token-vesting/TokenVesting.sol";
 import { TimelockedToken } from "../TimelockedToken.sol";
-import { VestedCrowdSale, VestingConfig, IncompatibleVestingContract, UnmanageableVestingContract } from "./VestedCrowdSale.sol";
+import {
+    VestedCrowdSale, VestingConfig, IncompatibleVestingContract, UnmanageableVestingContract, UnsupportedInitializer
+} from "./VestedCrowdSale.sol";
 import { CrowdSale, Sale, BadDecimals } from "./CrowdSale.sol";
 
 struct StakingInfo {
@@ -36,6 +38,11 @@ contract StakedVestedCrowdSale is VestedCrowdSale {
 
     event Started(uint256 indexed saleId, address indexed issuer, Sale sale, VestingConfig vesting, StakingInfo staking);
     event Staked(uint256 indexed saleId, address indexed bidder, uint256 stakedAmount, uint256 price);
+
+    /// @dev disable parent sale starting functions
+    function startSale(Sale calldata, TimelockedToken, uint256) public pure override returns (uint256) {
+        revert UnsupportedInitializer();
+    }
 
     /**
      * @notice if vestingContract is 0x0, a new timelocked token vesting contract clone is automatically created
