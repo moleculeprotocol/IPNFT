@@ -81,21 +81,21 @@ contract CrowdSaleLockedStakedTest is Test {
         auctionToken.approve(address(crowdSale), 400_000 ether);
 
         vm.expectRevert(); //cannot call .decimals() on 0x0
-        crowdSale.startSale(_sale, IERC20Metadata(address(0)), TokenVesting(address(0)), 0, TimelockedToken(address(0)), 60 days);
+        crowdSale.startSale(_sale, IERC20Metadata(address(0)), TokenVesting(address(0)), 0, 60 days);
 
         vm.expectRevert(); //need to bring a stake vesting contract
-        crowdSale.startSale(_sale, daoToken, TokenVesting(address(0)), 0, TimelockedToken(address(0)), 60 days);
+        crowdSale.startSale(_sale, daoToken, TokenVesting(address(0)), 0, 60 days);
 
         TokenVesting wrongStakelockingContract = new TokenVesting(auctionToken, "vested mol", "vmol");
         wrongStakelockingContract.grantRole(wrongStakelockingContract.ROLE_CREATE_SCHEDULE(), address(crowdSale));
 
         vm.expectRevert(IncompatibleLockingContract.selector);
-        crowdSale.startSale(_sale, daoToken, wrongStakelockingContract, 0, TimelockedToken(address(0)), 60 days);
+        crowdSale.startSale(_sale, daoToken, wrongStakelockingContract, 0, 60 days);
 
         vm.expectRevert(BadPrice.selector);
-        crowdSale.startSale(_sale, daoToken, vestedDao, 0, TimelockedToken(address(0)), 60 days);
+        crowdSale.startSale(_sale, daoToken, vestedDao, 0, 60 days);
 
-        crowdSale.startSale(_sale, daoToken, vestedDao, 1e18, TimelockedToken(address(0)), 60 days);
+        crowdSale.startSale(_sale, daoToken, vestedDao, 1e18, 60 days);
     }
 
     function testCannotSetupCrowdSaleWithParentFunctions() public {
@@ -107,7 +107,7 @@ contract CrowdSaleLockedStakedTest is Test {
         crowdSale.startSale(_sale);
 
         vm.expectRevert(UnsupportedInitializer.selector);
-        crowdSale.startSale(_sale, TimelockedToken(address(0)), 7 days);
+        crowdSale.startSale(_sale, 7 days);
         vm.stopPrank();
     }
 
@@ -116,7 +116,7 @@ contract CrowdSaleLockedStakedTest is Test {
         Sale memory _sale = CrowdSaleHelpers.makeSale(emitter, auctionToken, biddingToken);
 
         auctionToken.approve(address(crowdSale), 400_000 ether);
-        uint256 saleId = crowdSale.startSale(_sale, daoToken, vestedDao, 1e18, TimelockedToken(address(0)), 60 days);
+        uint256 saleId = crowdSale.startSale(_sale, daoToken, vestedDao, 1e18, 60 days);
 
         vm.stopPrank();
 
@@ -152,7 +152,7 @@ contract CrowdSaleLockedStakedTest is Test {
         vm.startPrank(emitter);
         Sale memory _sale = CrowdSaleHelpers.makeSale(emitter, auctionToken, biddingToken);
         auctionToken.approve(address(crowdSale), 400_000 ether);
-        uint256 saleId = crowdSale.startSale(_sale, daoToken, vestedDao, 1e18, TimelockedToken(address(0)), 60 days);
+        uint256 saleId = crowdSale.startSale(_sale, daoToken, vestedDao, 1e18, 60 days);
 
         vm.stopPrank();
 
@@ -261,7 +261,7 @@ contract CrowdSaleLockedStakedTest is Test {
         Sale memory _sale = CrowdSaleHelpers.makeSale(emitter, auctionToken, biddingToken);
         auctionToken.approve(address(crowdSale), 400_000 ether);
         // 1 DAO = 4 $
-        uint256 saleId = crowdSale.startSale(_sale, daoToken, vestedDao, 25e16, TimelockedToken(address(0)), 60 days);
+        uint256 saleId = crowdSale.startSale(_sale, daoToken, vestedDao, 25e16, 60 days);
 
         vm.stopPrank();
 
@@ -320,7 +320,7 @@ contract CrowdSaleLockedStakedTest is Test {
         Sale memory _sale = CrowdSaleHelpers.makeSale(emitter, auctionToken, biddingToken);
         auctionToken.approve(address(crowdSale), 400_000 ether);
 
-        uint256 saleId = crowdSale.startSale(_sale, daoToken, vestedDao, 25e16, TimelockedToken(address(0)), 60 days);
+        uint256 saleId = crowdSale.startSale(_sale, daoToken, vestedDao, 25e16, 60 days);
         vm.stopPrank();
 
         vm.startPrank(bidder);
@@ -364,7 +364,7 @@ contract CrowdSaleLockedStakedTest is Test {
         Sale memory _sale = CrowdSaleHelpers.makeSale(emitter, auctionToken, biddingToken);
         _sale.closingTime = uint64(block.timestamp + 3 days);
         auctionToken.approve(address(crowdSale), 400_000 ether);
-        uint256 saleId = crowdSale.startSale(_sale, daoToken, vestedDao, 1e18, TimelockedToken(address(0)), 3 days);
+        uint256 saleId = crowdSale.startSale(_sale, daoToken, vestedDao, 1e18, 3 days);
 
         vm.stopPrank();
 

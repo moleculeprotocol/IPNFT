@@ -50,7 +50,6 @@ contract FixtureCrowdSale is CommonScript {
     TokenVesting vestedDaoToken;
 
     FractionalizedToken internal auctionToken;
-    TimelockedToken vestedMolToken;
 
     StakedLockingCrowdSale stakedLockingCrowdSale;
     TermsAcceptedPermissioner permissioner;
@@ -70,9 +69,6 @@ contract FixtureCrowdSale is CommonScript {
     function setupVestedMolToken() internal {
         vm.startBroadcast(deployer);
         auctionToken = FractionalizedToken(vm.envAddress("FRACTIONALIZED_TOKEN_ADDRESS"));
-        vestedMolToken = new TimelockedToken();
-        vestedMolToken.initialize(IERC20Metadata(address(auctionToken)));
-        console.log("VESTED_FRACTIONALIZED_TOKEN_ADDRESS=%s", address(vestedMolToken));
 
         vestedDaoToken.grantRole(vestedDaoToken.ROLE_CREATE_SCHEDULE(), address(stakedLockingCrowdSale));
         vm.stopBroadcast();
@@ -111,7 +107,8 @@ contract FixtureCrowdSale is CommonScript {
 
         vm.startBroadcast(bob);
         auctionToken.approve(address(stakedLockingCrowdSale), 400 ether);
-        uint256 saleId = stakedLockingCrowdSale.startSale(_sale, daoToken, vestedDaoToken, 1e18, vestedMolToken, 7 days);
+        uint256 saleId = stakedLockingCrowdSale.startSale(_sale, daoToken, vestedDaoToken, 1e18, 7 days);
+        TimelockedToken lockedMolToken = stakedLockingCrowdSale.lockingContracts(address(auctionToken));
         vm.stopBroadcast();
 
         string memory terms = permissioner.specificTermsV1(auctionToken);
@@ -120,6 +117,7 @@ contract FixtureCrowdSale is CommonScript {
         placeBid(alice, 600 ether, saleId, abi.encodePacked(r, s, v));
         (v, r, s) = vm.sign(charliePk, ECDSA.toEthSignedMessageHash(abi.encodePacked(terms)));
         placeBid(charlie, 200 ether, saleId, abi.encodePacked(r, s, v));
+        console.log("LOCKED_FRACTIONALIZED_TOKEN_ADDRESS=%s", address(lockedMolToken));
         console.log("SALE_ID=%s", saleId);
     }
 }

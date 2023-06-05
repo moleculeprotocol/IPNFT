@@ -15,7 +15,6 @@ struct LockingConfig {
     uint256 duration;
 }
 
-error IncompatibleLockingContract();
 error UnsupportedInitializer();
 error InvalidDuration();
 
@@ -28,10 +27,14 @@ contract LockingCrowdSale is CrowdSale {
     using SafeERC20 for IERC20Metadata;
 
     mapping(uint256 => LockingConfig) public salesLocking;
+
+    /// @notice map from token address to locked token contracts for reusability
+    mapping(address => TimelockedToken) public lockingContracts;
+
     address immutable lockingTokenImplementation = address(new TimelockedToken());
 
     event Started(uint256 indexed saleId, address indexed issuer, Sale sale, LockingConfig locking);
-    event lockingContractCreated(TimelockedToken indexed lockingContract, IERC20Metadata indexed underlyingToken);
+    event LockingContractCreated(TimelockedToken indexed lockingContract, IERC20Metadata indexed underlyingToken);
 
     /// @dev disable parent sale starting functions
     function startSale(Sale calldata) public pure override returns (uint256) {
@@ -39,26 +42,23 @@ contract LockingCrowdSale is CrowdSale {
     }
 
     /**
-     * @notice if lockingContract is 0x0, a new locking contract is automatically created
+     * @notice will instantiate a new TimelockedToken when none exists yet
      *
      * @param sale sale configuration
-     * @param lockedTokenContract the timelock contract to use or address(0) to spawn a new one
      * @param lockingDuration duration after which the receiver can redeem their tokens
      * @return saleId the newly created sale's id
      */
-    function startSale(Sale calldata sale, TimelockedToken lockedTokenContract, uint256 lockingDuration) public virtual returns (uint256 saleId) {
+    function startSale(Sale calldata sale, uint256 lockingDuration) public virtual returns (uint256 saleId) {
         saleId = uint256(keccak256(abi.encode(sale)));
 
         if (lockingDuration > 366 days) {
             revert InvalidDuration();
         }
+        TimelockedToken lockedTokenContract = lockingContracts[address(sale.auctionToken)];
 
         if (address(lockedTokenContract) == address(0)) {
             lockedTokenContract = _makeNewLockedTokenContract(sale.auctionToken);
-        } else {
-            if (address(lockedTokenContract.underlyingToken()) != address(sale.auctionToken)) {
-                revert IncompatibleLockingContract();
-            }
+            lockingContracts[address(sale.auctionToken)] = lockedTokenContract;
         }
 
         salesLocking[saleId] = LockingConfig(lockedTokenContract, lockingDuration);
@@ -103,6 +103,6 @@ contract LockingCrowdSale is CrowdSale {
     function _makeNewLockedTokenContract(IERC20Metadata auctionToken) private returns (TimelockedToken lockedTokenContract) {
         lockedTokenContract = TimelockedToken(Clones.clone(lockingTokenImplementation));
         lockedTokenContract.initialize(auctionToken);
-        emit lockingContractCreated(lockedTokenContract, auctionToken);
+        emit LockingContractCreated(lockedTokenContract, auctionToken);
     }
 }

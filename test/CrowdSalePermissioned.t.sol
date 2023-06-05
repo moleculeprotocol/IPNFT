@@ -11,7 +11,7 @@ import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import { FractionalizedToken, Metadata } from "../src/FractionalizedToken.sol";
 import { CrowdSale, Sale, SaleInfo, SaleState, BadDecimals } from "../src/crowdsale/CrowdSale.sol";
 import { LockingConfig } from "../src/crowdsale/LockingCrowdSale.sol";
-import { StakedLockingCrowdSale, IncompatibleLockingContract, BadPrice } from "../src/crowdsale/StakedLockingCrowdSale.sol";
+import { StakedLockingCrowdSale, BadPrice } from "../src/crowdsale/StakedLockingCrowdSale.sol";
 import { IPermissioner, TermsAcceptedPermissioner, InvalidSignature } from "../src/Permissioner.sol";
 
 import { TokenVesting } from "@moleculeprotocol/token-vesting/TokenVesting.sol";
@@ -78,7 +78,7 @@ contract CrowdSalePermissionedTest is Test {
         _sale.permissioner = permissioner;
         auctionToken.approve(address(crowdSale), 400_000 ether);
 
-        uint256 saleId = crowdSale.startSale(_sale, daoToken, vestedDao, 1e18, TimelockedToken(address(0)), 60 days);
+        uint256 saleId = crowdSale.startSale(_sale, daoToken, vestedDao, 1e18, 60 days);
         vm.stopPrank();
 
         string memory terms = permissioner.specificTermsV1(auctionToken);

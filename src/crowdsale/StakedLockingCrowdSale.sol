@@ -6,7 +6,7 @@ import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.s
 import { FixedPointMathLib } from "solmate/utils/FixedPointMathLib.sol";
 import { TokenVesting } from "@moleculeprotocol/token-vesting/TokenVesting.sol";
 import { TimelockedToken } from "../TimelockedToken.sol";
-import { LockingCrowdSale, LockingConfig, IncompatibleLockingContract, UnsupportedInitializer, InvalidDuration } from "./LockingCrowdSale.sol";
+import { LockingCrowdSale, LockingConfig, UnsupportedInitializer, InvalidDuration } from "./LockingCrowdSale.sol";
 import { CrowdSale, Sale, BadDecimals } from "./CrowdSale.sol";
 
 struct StakingInfo {
@@ -18,6 +18,7 @@ struct StakingInfo {
     uint256 wadFixedStakedPerBidPrice;
 }
 
+error IncompatibleLockingContract();
 error UnmanageablelockingContract();
 error BadPrice();
 
@@ -38,7 +39,7 @@ contract StakedLockingCrowdSale is LockingCrowdSale {
     event ClaimedStakes(uint256 indexed saleId, address indexed claimer, uint256 stakesClaimed, uint256 stakesRefunded);
 
     /// @dev disable parent sale starting functions
-    function startSale(Sale calldata, TimelockedToken, uint256) public pure override returns (uint256) {
+    function startSale(Sale calldata, uint256) public pure override returns (uint256) {
         revert UnsupportedInitializer();
     }
 
@@ -49,7 +50,6 @@ contract StakedLockingCrowdSale is LockingCrowdSale {
      * @param stakedToken the ERC20 contract for staking tokens
      * @param stakesVestingContract the TokenVesting contract for vested staking tokens
      * @param wadFixedStakedPerBidPrice the 10e18 based float price for stakes/bid tokens
-     * @param lockingContract contract that locks claimed auction tokens
      * @param lockingDuration duration in seconds until stakes and auction tokens are vested or locked after the sale has settled
      *        NOTE: If `lockingDuration` is < 7 days, the the vesting contract schedules will stil have a 7 days cliff as required by the underlying TokenVesting contract.
      *        timelocks for auction tokens can be >= 0
@@ -60,7 +60,6 @@ contract StakedLockingCrowdSale is LockingCrowdSale {
         IERC20Metadata stakedToken,
         TokenVesting stakesVestingContract,
         uint256 wadFixedStakedPerBidPrice,
-        TimelockedToken lockingContract,
         uint256 lockingDuration
     ) public returns (uint256 saleId) {
         if (IERC20Metadata(address(stakedToken)).decimals() != 18) {
@@ -87,7 +86,7 @@ contract StakedLockingCrowdSale is LockingCrowdSale {
 
         saleId = uint256(keccak256(abi.encode(sale)));
         salesStaking[saleId] = StakingInfo(stakedToken, stakesVestingContract, wadFixedStakedPerBidPrice);
-        super.startSale(sale, lockingContract, lockingDuration);
+        super.startSale(sale, lockingDuration);
     }
 
     /**

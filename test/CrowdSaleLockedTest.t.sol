@@ -48,7 +48,7 @@ contract CrowdSaleLockedTest is Test {
         auctionToken.approve(address(crowdSale), 400_000 ether);
 
         vm.expectRevert(InvalidDuration.selector);
-        crowdSale.startSale(_sale, TimelockedToken(address(0)), 367 days);
+        crowdSale.startSale(_sale, 367 days);
     }
 
     function testSettlementAndSimpleClaims() public {
@@ -56,7 +56,7 @@ contract CrowdSaleLockedTest is Test {
         Sale memory _sale = CrowdSaleHelpers.makeSale(emitter, auctionToken, biddingToken);
         auctionToken.approve(address(crowdSale), 400_000 ether);
 
-        uint256 saleId = crowdSale.startSale(_sale, TimelockedToken(address(0)), 3 days);
+        uint256 saleId = crowdSale.startSale(_sale, 3 days);
         vm.stopPrank();
 
         vm.startPrank(bidder);
@@ -102,7 +102,7 @@ contract CrowdSaleLockedTest is Test {
         vm.startPrank(emitter);
         Sale memory _sale = CrowdSaleHelpers.makeSale(emitter, auctionToken, biddingToken);
         auctionToken.approve(address(crowdSale), 400_000 ether);
-        uint256 saleId = crowdSale.startSale(_sale, TimelockedToken(address(0)), 60 days);
+        uint256 saleId = crowdSale.startSale(_sale, 60 days);
         vm.stopPrank();
 
         vm.startPrank(bidder);
@@ -131,16 +131,11 @@ contract CrowdSaleLockedTest is Test {
         assertEq(lokedAuctionToken.balanceOf(bidder), 0);
     }
 
-    function testBringYourOwnlockingContract() public {
-        vm.startPrank(anyone);
-        TimelockedToken lockingContract = new TimelockedToken();
-        lockingContract.initialize(auctionToken);
-        vm.stopPrank();
-
+    function testAutoCreateLockingContracts() public {
         vm.startPrank(emitter);
         Sale memory _sale = CrowdSaleHelpers.makeSale(emitter, auctionToken, biddingToken);
         auctionToken.approve(address(crowdSale), 400_000 ether);
-        uint256 saleId = crowdSale.startSale(_sale, lockingContract, 60 days);
+        uint256 saleId = crowdSale.startSale(_sale, 60 days);
         vm.stopPrank();
 
         vm.startPrank(bidder);
@@ -165,6 +160,7 @@ contract CrowdSaleLockedTest is Test {
         bytes32 scheduleId = entries[1].topics[1];
         vm.stopPrank();
 
+        TimelockedToken lockingContract = TimelockedToken(crowdSale.lockingContracts(address(auctionToken)));
         assertEq(lockingContract.balanceOf(bidder), _sale.salesAmount);
 
         vm.warp(_sale.closingTime + 60 days);
@@ -182,7 +178,7 @@ contract CrowdSaleLockedTest is Test {
         _sale.closingTime = uint64(block.timestamp + 7 days);
 
         auctionToken.approve(address(crowdSale), 400_000 ether);
-        uint256 saleId = crowdSale.startSale(_sale, TimelockedToken(address(0)), 60 days);
+        uint256 saleId = crowdSale.startSale(_sale, 60 days);
         vm.stopPrank();
 
         vm.startPrank(bidder);
