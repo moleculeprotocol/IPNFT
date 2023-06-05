@@ -104,12 +104,12 @@ dataSources:
         #   handler: handleTermsAccepted
       file: ./src/fractionalizerMapping.ts
   - kind: ethereum/contract
-    name: StakedVestedCrowdSale
+    name: StakedLockingCrowdSale
     network: {{network}}
     source:
-      address: '{{stakedVestedCrowdSale.address}}'
-      abi: StakedVestedCrowdSale
-      startBlock: {{stakedVestedCrowdSale.startBlock}}
+      address: '{{stakedLockingCrowdSale.address}}'
+      abi: StakedLockingCrowdSale
+      startBlock: {{stakedLockingCrowdSale.startBlock}}
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
@@ -119,8 +119,8 @@ dataSources:
         - Contribution
         - ERC20Token
       abis:
-        - name: StakedVestedCrowdSale
-          file: ./abis/StakedVestedCrowdSale.json
+        - name: StakedLockingCrowdSale
+          file: ./abis/StakedLockingCrowdSale.json
         - name: IERC20Metadata
           file: ./abis/IERC20Metadata.json
       eventHandlers:
@@ -136,10 +136,10 @@ dataSources:
           handler: handleStaked
         - event: Failed(indexed uint256)
           handler: handleFailed
-        - event: VestingContractCreated(indexed address,indexed address)
-          handler: handleVestingContractCreated
+        - event: lockingContractCreated(indexed address,indexed address)
+          handler: handlelockingContractCreated
 
-      file: ./src/stakedVestedCrowdSaleMapping.ts
+      file: ./src/stakedLockingCrowdSaleMapping.ts
   - kind: ethereum/contract
     name: TermsAcceptedPermissioner
     network: {{network}}

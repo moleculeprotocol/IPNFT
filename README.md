@@ -116,8 +116,8 @@ To issue a mintpass, reserve and mint a test IPNFT for the 1st user, run `forge 
 To deploy the Fractionalizer, run `forge script script/dev/Fractionalize.s.sol:DeployFractionalizer -f $RPC_URL --broadcast`
 To fractionalize the test IPNFT, run `forge script script/dev/Fractionalize.s.sol:FixtureFractionalizer -f $RPC_URL --broadcast`
 
-To deploy the StakedVestedCrowdSale contract, run `forge script script/dev/CrowdSale.s.sol:DeployCrowdSale -f $RPC_URL --broadcast`
-To test a simple StakedVestedCrowdSale with a fractionalized IPNFT, run `forge script script/dev/CrowdSale.s.sol:FixtureCrowdSale -f $RPC_URL --broadcast`
+To deploy the StakedLockingCrowdSale contract, run `forge script script/dev/CrowdSale.s.sol:DeployCrowdSale -f $RPC_URL --broadcast`
+To test a simple StakedLockingCrowdSale with a fractionalized IPNFT, run `forge script script/dev/CrowdSale.s.sol:FixtureCrowdSale -f $RPC_URL --broadcast`
 
 To approve and finalize the sales listing, run `forge script script/dev/ApproveAndBuy.s.sol -f $RPC_URL --broadcast`. See the inline comment on why this is a separate script.
 
@@ -139,7 +139,7 @@ You can deploy the fractionlizer individually, but we created a deployment scrip
 - BioPriceFeed
 - TermsAcceptedPermissioner
 - Fractionalizer
-- StakedVestedCrowdsale
+- StakedLockingCrowdSale
 
 You can deploy them all in one go (requires the current network's IPNFT address):
 
@@ -148,7 +148,7 @@ You can deploy them all in one go (requires the current network's IPNFT address)
 The crowdsale computation model can be tried out here: https://docs.google.com/spreadsheets/d/1vvGzs6n0nGqSBewJFKPsX4umMDCwNhKVqqhGELY543g/edit?usp=sharing
 
 Deploying and verifying a single contract without the help of any script
-`forge create --rpc-url $RPC_URL --private-key $PRIVATE_KEY --chain 5 --etherscan-api-key $ETHERSCAN_API_KEY --verify src/crowdsale/StakedVestedCrowdSale.sol:StakedVestedCrowdSale`
+`forge create --rpc-url $RPC_URL --private-key $PRIVATE_KEY --chain 5 --etherscan-api-key $ETHERSCAN_API_KEY --verify src/crowdsale/StakedLockingCrowdSale.sol:StakedLockingCrowdSale`
 
 ### Deploying (vested) test tokens
 

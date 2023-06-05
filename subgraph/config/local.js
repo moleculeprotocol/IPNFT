@@ -1,8 +1,8 @@
-const path = require('node:path');
+const path = require('node:path')
 require('dotenv').config({
   debug: true,
   path: path.resolve(process.cwd(), '../.env.example')
-});
+})
 
 module.exports = {
   network: 'mainnet',
@@ -22,12 +22,12 @@ module.exports = {
     address: process.env.FRACTIONALIZER_ADDRESS,
     startBlock: 0
   },
-  stakedVestedCrowdSale: {
-    address: process.env.STAKED_VESTED_CROWDSALE_ADDRESS,
+  stakedLockingCrowdSale: {
+    address: process.env.STAKED_LOCKING_CROWDSALE_ADDRESS,
     startBlock: 0
   },
   termsAcceptedPermissioner: {
     address: process.env.TERMS_ACCEPTED_PERMISSIONER_ADDRESS,
     startBlock: 0
   }
-};
+}

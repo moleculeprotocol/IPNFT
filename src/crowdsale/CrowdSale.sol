@@ -272,7 +272,7 @@ contract CrowdSale is ReentrancyGuard {
     }
 
     /**
-     * @dev overridden in VestedCrowdSale (will lock auction tokens in vested contract)
+     * @dev overridden in LockingCrowdSale (will lock auction tokens in vested contract)
      */
     function _claimAuctionTokens(uint256 saleId, uint256 tokenAmount) internal virtual {
         _sales[saleId].auctionToken.safeTransfer(msg.sender, tokenAmount);

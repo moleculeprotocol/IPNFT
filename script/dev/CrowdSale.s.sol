@@ -14,8 +14,8 @@ import { TokenVesting } from "@moleculeprotocol/token-vesting/TokenVesting.sol";
 import { TimelockedToken } from "../../src/TimelockedToken.sol";
 import { IPermissioner, TermsAcceptedPermissioner } from "../../src/Permissioner.sol";
 import { CrowdSale, Sale, SaleInfo } from "../../src/crowdsale/CrowdSale.sol";
-import { VestingConfig } from "../../src/crowdsale/VestedCrowdSale.sol";
-import { StakedVestedCrowdSale } from "../../src/crowdsale/StakedVestedCrowdSale.sol";
+import { LockingConfig } from "../../src/crowdsale/LockingCrowdSale.sol";
+import { StakedLockingCrowdSale } from "../../src/crowdsale/StakedLockingCrowdSale.sol";
 import { FakeERC20 } from "../../src/helpers/FakeERC20.sol";
 import { FractionalizedToken } from "../../src/FractionalizedToken.sol";
 
@@ -29,13 +29,13 @@ contract DeployCrowdSale is CommonScript {
     function run() public {
         prepareAddresses();
         vm.startBroadcast(deployer);
-        StakedVestedCrowdSale stakedVestedCrowdSale = new StakedVestedCrowdSale();
+        StakedLockingCrowdSale stakedLockingCrowdSale = new StakedLockingCrowdSale();
         TokenVesting vestedDaoToken = TokenVesting(vm.envAddress("VDAO_TOKEN_ADDRESS"));
-        vestedDaoToken.grantRole(vestedDaoToken.ROLE_CREATE_SCHEDULE(), address(stakedVestedCrowdSale));
+        vestedDaoToken.grantRole(vestedDaoToken.ROLE_CREATE_SCHEDULE(), address(stakedLockingCrowdSale));
         vm.stopBroadcast();
 
         //console.log("vested fraction Token %s", address(vestedMolToken));
-        console.log("STAKED_VESTED_CROWDSALE_ADDRESS=%s", address(stakedVestedCrowdSale));
+        console.log("STAKED_LOCKING_CROWDSALE_ADDRESS=%s", address(stakedLockingCrowdSale));
     }
 }
 
@@ -52,7 +52,7 @@ contract FixtureCrowdSale is CommonScript {
     FractionalizedToken internal auctionToken;
     TimelockedToken vestedMolToken;
 
-    StakedVestedCrowdSale stakedVestedCrowdSale;
+    StakedLockingCrowdSale stakedLockingCrowdSale;
     TermsAcceptedPermissioner permissioner;
 
     function prepareAddresses() internal override {
@@ -63,7 +63,7 @@ contract FixtureCrowdSale is CommonScript {
         daoToken = FakeERC20(vm.envAddress("DAO_TOKEN_ADDRESS"));
         vestedDaoToken = TokenVesting(vm.envAddress("VDAO_TOKEN_ADDRESS"));
 
-        stakedVestedCrowdSale = StakedVestedCrowdSale(vm.envAddress("STAKED_VESTED_CROWDSALE_ADDRESS"));
+        stakedLockingCrowdSale = StakedLockingCrowdSale(vm.envAddress("STAKED_LOCKING_CROWDSALE_ADDRESS"));
         permissioner = TermsAcceptedPermissioner(vm.envAddress("TERMS_ACCEPTED_PERMISSIONER_ADDRESS"));
     }
 
@@ -74,15 +74,15 @@ contract FixtureCrowdSale is CommonScript {
         vestedMolToken.initialize(IERC20Metadata(address(auctionToken)));
         console.log("VESTED_FRACTIONALIZED_TOKEN_ADDRESS=%s", address(vestedMolToken));
 
-        vestedDaoToken.grantRole(vestedDaoToken.ROLE_CREATE_SCHEDULE(), address(stakedVestedCrowdSale));
+        vestedDaoToken.grantRole(vestedDaoToken.ROLE_CREATE_SCHEDULE(), address(stakedLockingCrowdSale));
         vm.stopBroadcast();
     }
 
     function placeBid(address bidder, uint256 amount, uint256 saleId, bytes memory permission) internal {
         vm.startBroadcast(bidder);
-        usdc.approve(address(stakedVestedCrowdSale), amount);
-        daoToken.approve(address(stakedVestedCrowdSale), amount);
-        stakedVestedCrowdSale.placeBid(saleId, amount, permission);
+        usdc.approve(address(stakedLockingCrowdSale), amount);
+        daoToken.approve(address(stakedLockingCrowdSale), amount);
+        stakedLockingCrowdSale.placeBid(saleId, amount, permission);
         vm.stopBroadcast();
     }
 
@@ -110,8 +110,8 @@ contract FixtureCrowdSale is CommonScript {
         });
 
         vm.startBroadcast(bob);
-        auctionToken.approve(address(stakedVestedCrowdSale), 400 ether);
-        uint256 saleId = stakedVestedCrowdSale.startSale(_sale, daoToken, vestedDaoToken, 1e18, vestedMolToken, 7 days);
+        auctionToken.approve(address(stakedLockingCrowdSale), 400 ether);
+        uint256 saleId = stakedLockingCrowdSale.startSale(_sale, daoToken, vestedDaoToken, 1e18, vestedMolToken, 7 days);
         vm.stopBroadcast();
 
         string memory terms = permissioner.specificTermsV1(auctionToken);
@@ -128,25 +128,25 @@ contract ClaimSale is CommonScript {
     function run() public {
         prepareAddresses();
         TermsAcceptedPermissioner permissioner = TermsAcceptedPermissioner(vm.envAddress("TERMS_ACCEPTED_PERMISSIONER_ADDRESS"));
-        StakedVestedCrowdSale stakedVestedCrowdSale = StakedVestedCrowdSale(vm.envAddress("STAKED_VESTED_CROWDSALE_ADDRESS"));
+        StakedLockingCrowdSale stakedLockingCrowdSale = StakedLockingCrowdSale(vm.envAddress("STAKED_LOCKING_CROWDSALE_ADDRESS"));
         FractionalizedToken auctionToken = FractionalizedToken(vm.envAddress("FRACTIONALIZED_TOKEN_ADDRESS"));
 
         uint256 saleId = vm.envUint("SALE_ID");
 
         vm.startBroadcast(anyone);
-        stakedVestedCrowdSale.settle(saleId);
+        stakedLockingCrowdSale.settle(saleId);
         vm.stopBroadcast();
 
         string memory terms = permissioner.specificTermsV1(auctionToken);
 
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(alicePk, ECDSA.toEthSignedMessageHash(abi.encodePacked(terms)));
         vm.startBroadcast(alice);
-        stakedVestedCrowdSale.claim(saleId, abi.encodePacked(r, s, v));
+        stakedLockingCrowdSale.claim(saleId, abi.encodePacked(r, s, v));
         vm.stopBroadcast();
 
         vm.startBroadcast(charlie);
         (v, r, s) = vm.sign(charliePk, ECDSA.toEthSignedMessageHash(abi.encodePacked(terms)));
-        stakedVestedCrowdSale.claim(saleId, abi.encodePacked(r, s, v));
+        stakedLockingCrowdSale.claim(saleId, abi.encodePacked(r, s, v));
         vm.stopBroadcast();
     }
 }

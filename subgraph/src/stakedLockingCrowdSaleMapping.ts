@@ -1,5 +1,5 @@
 import { BigInt, DataSourceContext, log } from '@graphprotocol/graph-ts'
-import { IERC20Metadata } from '../generated/StakedVestedCrowdSale/IERC20Metadata'
+import { IERC20Metadata } from '../generated/StakedLockingCrowdSale/IERC20Metadata'
 import {
   Bid as BidEvent,
   Staked as StakedEvent,
@@ -7,8 +7,8 @@ import {
   Started as StartedEvent,
   Failed as FailedEvent,
   Claimed as ClaimedEvent,
-  VestingContractCreated as VestingContractCreatedEvent
-} from '../generated/StakedVestedCrowdSale/StakedVestedCrowdSale'
+  lockingContractCreated as lockingContractCreatedEvent
+} from '../generated/StakedLockingCrowdSale/StakedLockingCrowdSale'
 
 import {
   Contribution,
@@ -79,12 +79,12 @@ export function handleStarted(event: StartedEvent): void {
   crowdSale.auctionToken = auctionToken.id
 
   crowdSale.salesAmount = event.params.sale.salesAmount
-  crowdSale.vestedAuctionToken = makeTimelockedToken(
-    IERC20Metadata.bind(event.params.vesting.vestingContract),
+  crowdSale.lockedAuctionToken = makeTimelockedToken(
+    IERC20Metadata.bind(event.params.lockingConfig.lockingContract),
     auctionToken
   ).id
 
-  crowdSale.auctionCliff = event.params.vesting.cliff
+  crowdSale.auctionLockingDuration = event.params.lockingConfig.duration
 
   crowdSale.biddingToken = makeERC20Token(
     IERC20Metadata.bind(event.params.sale.biddingToken)
@@ -99,7 +99,7 @@ export function handleStarted(event: StartedEvent): void {
   crowdSale.vestedStakingToken = makeERC20Token(
     IERC20Metadata.bind(event.params.staking.stakesVestingContract)
   ).id
-  crowdSale.stakingCliff = event.params.vesting.cliff
+  crowdSale.stakingCliff = event.params.lockingConfig.duration
   crowdSale.wadFixedStakedPerBidPrice =
     event.params.staking.wadFixedStakedPerBidPrice
   crowdSale.save()
@@ -178,8 +178,8 @@ export function handleFailed(event: FailedEvent): void {
   crowdSale.save()
 }
 
-export function handleVestingContractCreated(
-  event: VestingContractCreatedEvent
+export function handlelockingContractCreated(
+  event: lockingContractCreatedEvent
 ): void {
   let context = new DataSourceContext()
   context.setBytes('underlyingToken', event.params.underlyingToken)

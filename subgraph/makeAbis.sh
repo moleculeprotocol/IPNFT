@@ -9,4 +9,4 @@ cat ../out/FractionalizedToken.sol/FractionalizedToken.json | jq .abi > ./abis/F
 cat ../out/TimelockedToken.sol/TimelockedToken.json | jq .abi > ./abis/TimelockedToken.json
 cat ../out/SalesShareDistributor.sol/SalesShareDistributor.json | jq .abi > ./abis/SharedSalesDistributor.json
 cat ../out/Permissioner.sol/TermsAcceptedPermissioner.json | jq .abi > ./abis/TermsAcceptedPermissioner.json
-cat ../out/StakedVestedCrowdSale.sol/StakedVestedCrowdSale.json | jq .abi > ./abis/StakedVestedCrowdSale.json
+cat ../out/StakedLockingCrowdSale.sol/StakedLockingCrowdSale.json | jq .abi > ./abis/StakedLockingCrowdSale.json

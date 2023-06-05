@@ -6,7 +6,7 @@ import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.s
 import { FixedPointMathLib } from "solmate/utils/FixedPointMathLib.sol";
 import { TokenVesting } from "@moleculeprotocol/token-vesting/TokenVesting.sol";
 import { TimelockedToken } from "../TimelockedToken.sol";
-import { VestedCrowdSale, VestingConfig, IncompatibleVestingContract, UnsupportedInitializer } from "./VestedCrowdSale.sol";
+import { LockingCrowdSale, LockingConfig, IncompatibleLockingContract, UnsupportedInitializer } from "./LockingCrowdSale.sol";
 import { CrowdSale, Sale, BadDecimals } from "./CrowdSale.sol";
 
 struct StakingInfo {
@@ -18,23 +18,23 @@ struct StakingInfo {
     uint256 wadFixedStakedPerBidPrice;
 }
 
-error UnmanageableVestingContract();
+error UnmanageablelockingContract();
 error BadPrice();
 error InvalidDuration();
 
 /**
- * @title StakedVestedCrowdSale
+ * @title StakedLockingCrowdSale
  * @author molecule.to
- * @notice a fixed price sales base contract that locks the sold tokens in a configured vesting scheme and requires lock-vesting another ("dao") token for a certain period of time to participate
+ * @notice a fixed price sales base contract that locks the sold tokens in a configured locking contract and requires vesting another ("dao") token for a certain period of time to participate
  */
-contract StakedVestedCrowdSale is VestedCrowdSale {
+contract StakedLockingCrowdSale is LockingCrowdSale {
     using SafeERC20 for IERC20Metadata;
     using FixedPointMathLib for uint256;
 
     mapping(uint256 => StakingInfo) public salesStaking;
     mapping(uint256 => mapping(address => uint256)) internal stakes;
 
-    event Started(uint256 indexed saleId, address indexed issuer, Sale sale, VestingConfig vesting, StakingInfo staking);
+    event Started(uint256 indexed saleId, address indexed issuer, Sale sale, LockingConfig lockingConfig, StakingInfo staking);
     event Staked(uint256 indexed saleId, address indexed bidder, uint256 stakedAmount, uint256 price);
     event ClaimedStakes(uint256 indexed saleId, address indexed claimer, uint256 stakesClaimed, uint256 stakesRefunded);
 
@@ -44,14 +44,14 @@ contract StakedVestedCrowdSale is VestedCrowdSale {
     }
 
     /**
-     * @notice if vestingContract is 0x0, a new timelocked token vesting contract clone is automatically created
+     * @notice if lockingContract is 0x0, a new timelocked token vesting contract clone is automatically created
      *
      * @param sale sale configuration
      * @param stakedToken the ERC20 contract for staking tokens
      * @param stakesVestingContract the TokenVesting contract for vested staking tokens
      * @param wadFixedStakedPerBidPrice the 10e18 based float price for stakes/bid tokens
-     * @param vestingContract the vesting contract for vested auction tokens
-     * @param cliff duration until stakes and auction tokens are vested
+     * @param lockingContract contract that locks claimed auction tokens
+     * @param duration duration until stakes and auction tokens are locked or vested
      * @return saleId
      */
     function startSale(
@@ -59,23 +59,23 @@ contract StakedVestedCrowdSale is VestedCrowdSale {
         IERC20Metadata stakedToken,
         TokenVesting stakesVestingContract,
         uint256 wadFixedStakedPerBidPrice,
-        TimelockedToken vestingContract,
-        uint256 cliff
+        TimelockedToken lockingContract,
+        uint256 duration
     ) public returns (uint256 saleId) {
         if (IERC20Metadata(address(stakedToken)).decimals() != 18) {
             revert BadDecimals();
         }
 
         if (!stakesVestingContract.hasRole(stakesVestingContract.ROLE_CREATE_SCHEDULE(), address(this))) {
-            revert UnmanageableVestingContract();
+            revert UnmanageablelockingContract();
         }
 
         if (address(stakesVestingContract.nativeToken()) != address(stakedToken)) {
-            revert IncompatibleVestingContract();
+            revert IncompatibleLockingContract();
         }
 
-        // cliff duration must follow the same rules as `TokenVesting`
-        if (cliff < 7 days || cliff > 50 * (365 days)) {
+        // duration must follow the same rules as `TokenVesting` cliffs
+        if (duration < 7 days || duration > 50 * (365 days)) {
             revert InvalidDuration();
         }
 
@@ -91,7 +91,7 @@ contract StakedVestedCrowdSale is VestedCrowdSale {
 
         saleId = uint256(keccak256(abi.encode(sale)));
         salesStaking[saleId] = StakingInfo(stakedToken, stakesVestingContract, wadFixedStakedPerBidPrice);
-        super.startSale(sale, vestingContract, cliff);
+        super.startSale(sale, lockingContract, duration);
     }
 
     /**
@@ -105,7 +105,7 @@ contract StakedVestedCrowdSale is VestedCrowdSale {
      * @dev emits a custom event for this crowdsale class
      */
     function _afterSaleStarted(uint256 saleId) internal virtual override {
-        emit Started(saleId, msg.sender, _sales[saleId], salesVesting[saleId], salesStaking[saleId]);
+        emit Started(saleId, msg.sender, _sales[saleId], salesLocking[saleId], salesStaking[saleId]);
     }
 
     /**
@@ -142,11 +142,11 @@ contract StakedVestedCrowdSale is VestedCrowdSale {
 
     /**
      * @notice refunds stakes and locks active stakes in vesting contract
-     * @dev super.claim transitively calls VestedCrowdSale:_claimAuctionTokens
+     * @dev super.claim transitively calls LockingCrowdSale:_claimAuctionTokens
      * @inheritdoc CrowdSale
      */
     function claim(uint256 saleId, uint256 tokenAmount, uint256 refunds) internal virtual override {
-        VestingConfig storage vestingConfig = salesVesting[saleId];
+        LockingConfig storage lockingConfig = salesLocking[saleId];
         StakingInfo storage staking = salesStaking[saleId];
         (uint256 refundedStakes, uint256 vestedStakes) = getClaimableStakes(saleId, refunds);
 
@@ -167,13 +167,13 @@ contract StakedVestedCrowdSale is VestedCrowdSale {
             return;
         }
 
-        if (block.timestamp > _sales[saleId].closingTime + vestingConfig.cliff) {
-            //no need for vesting when cliff already expired.
+        if (block.timestamp > _sales[saleId].closingTime + lockingConfig.duration) {
+            //no need for vesting when duration already expired.
             staking.stakedToken.safeTransfer(msg.sender, vestedStakes);
         } else {
             staking.stakedToken.safeTransfer(address(staking.stakesVestingContract), vestedStakes);
             staking.stakesVestingContract.createVestingSchedule(
-                msg.sender, _sales[saleId].closingTime, vestingConfig.cliff, vestingConfig.cliff, 60, false, vestedStakes
+                msg.sender, _sales[saleId].closingTime, lockingConfig.duration, lockingConfig.duration, 60, false, vestedStakes
             );
         }
     }

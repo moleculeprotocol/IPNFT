@@ -22,7 +22,7 @@ module.exports = {
     address: '0x593ED28cb4E8d143e16D83D151a2CC01fDa10B0A',
     startBlock: 9099340
   },
-  stakedVestedCrowdSale: {
+  stakedLockingCrowdSale: {
     address: '0xFa7e83f13a833E688c7b45c7380D72c97133e16F',
     startBlock: 9099340
   },

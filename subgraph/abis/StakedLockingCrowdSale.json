@@ -42,7 +42,7 @@
   },
   {
     "inputs": [],
-    "name": "IncompatibleVestingContract",
+    "name": "IncompatibleLockingContract",
     "type": "error"
   },
   {
@@ -78,7 +78,7 @@
   },
   {
     "inputs": [],
-    "name": "UnmanageableVestingContract",
+    "name": "UnmanageablelockingContract",
     "type": "error"
   },
   {
@@ -140,6 +140,37 @@
       }
     ],
     "name": "Claimed",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "saleId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "claimer",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "stakesClaimed",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "stakesRefunded",
+        "type": "uint256"
+      }
+    ],
+    "name": "ClaimedStakes",
     "type": "event"
   },
   {
@@ -273,18 +304,18 @@
         "components": [
           {
             "internalType": "contract TimelockedToken",
-            "name": "vestingContract",
+            "name": "lockingContract",
             "type": "address"
           },
           {
             "internalType": "uint256",
-            "name": "cliff",
+            "name": "duration",
             "type": "uint256"
           }
         ],
         "indexed": false,
-        "internalType": "struct VestingConfig",
-        "name": "vesting",
+        "internalType": "struct LockingConfig",
+        "name": "lockingConfig",
         "type": "tuple"
       },
       {
@@ -376,17 +407,17 @@
         "components": [
           {
             "internalType": "contract TimelockedToken",
-            "name": "vestingContract",
+            "name": "lockingContract",
             "type": "address"
           },
           {
             "internalType": "uint256",
-            "name": "cliff",
+            "name": "duration",
             "type": "uint256"
           }
         ],
         "indexed": false,
-        "internalType": "struct VestingConfig",
+        "internalType": "struct LockingConfig",
         "name": "locking",
         "type": "tuple"
       }
@@ -472,7 +503,7 @@
         "type": "address"
       }
     ],
-    "name": "VestingContractCreated",
+    "name": "lockingContractCreated",
     "type": "event"
   },
   {
@@ -653,6 +684,30 @@
         "type": "uint256"
       }
     ],
+    "name": "salesLocking",
+    "outputs": [
+      {
+        "internalType": "contract TimelockedToken",
+        "name": "lockingContract",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "duration",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
     "name": "salesStaking",
     "outputs": [
       {
@@ -668,30 +723,6 @@
       {
         "internalType": "uint256",
         "name": "wadFixedStakedPerBidPrice",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "name": "salesVesting",
-    "outputs": [
-      {
-        "internalType": "contract TimelockedToken",
-        "name": "vestingContract",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "cliff",
         "type": "uint256"
       }
     ],
@@ -862,12 +893,12 @@
       },
       {
         "internalType": "contract TimelockedToken",
-        "name": "vestingContract",
+        "name": "lockingContract",
         "type": "address"
       },
       {
         "internalType": "uint256",
-        "name": "cliff",
+        "name": "duration",
         "type": "uint256"
       }
     ],

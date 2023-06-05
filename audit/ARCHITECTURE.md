@@ -33,16 +33,16 @@ Each fundraiser can now claim their share of auction tokens, wrapped in a vestin
 Depending on the seller's needs, there are three implementations that build upon each other:
 
 - `CrowdSale` contains basic functionality all others depend upon
-- `VestedCrowdSale` locks auction token for a defined of time as vested derivative
-- `StakedVestedCrowdSale` requires contributors to lock a staking token along their contibution
+- `LockingCrowdSale` locks auction token for a defined of time as vested derivative
+- `StakedLockingCrowdSale` requires contributors to lock a staking token along their contibution
 
 Technically speaking,
 
 - a sale initiator starts a sale by locking `salesAmount` of `auctionTokens` into the CrowdSale contract and defining a `fundingGoal` of `biddingTokens` to reach the sale's goal and providing a non-extendable `closingTime`.
 - a sale can be settled by _anyone_ observing the blockchain
 - any sale that hasn't raised `fundingGoal` bidding tokens until `closingTime` can be `settle`d as `FAILED`. In that case all bidders can claim back all their contributions without any vesting restrictions.
-- a `VestedCrowdSale` will create a new `TimelockedToken` contract that locks acquired auction tokens for the user in a way that they still show up in their wallet. Users will be able to unwrap these tokens after `cliff` duration has passed by calling `TimelockedToken:release(scheduleId)`. These token locking contracts can (and are supposed to be) reused after their initiation. If a user claims their share after the cliff has passed, the vested crowdsale contract will skip lock creation and send tokens directly to the claimer, thus saving a significant amount of gas.
-- a `StakedVestedCrowdSale` will additionally require bidders to lock `stakedToken`s into the crowd sale contract to participate. The amount of staked tokens required is determined by a fixed price (`wadFixedStakedPerBidPrice`) that's provided as fractional number with 18 decimals (wad) when the sale is initiated. We're abiding from using a price oracle here since price sources for our staked tokens might be too unreliable. Instead the sale initiator decides the price point (and will be supported by our frontend). When claiming on a settled sale, bidders will receive the active share of staked tokens back wrapped in another vesting token contract that had to be configured when initiating the sale (it's a common vesting schedule contract used by the DAO for various purposes)
+- a `LockingCrowdSale` will create a new `TimelockedToken` contract that locks acquired auction tokens for the user in a way that they still show up in their wallet. Users will be able to unwrap these tokens after `cliff` duration has passed by calling `TimelockedToken:release(scheduleId)`. These token locking contracts can (and are supposed to be) reused after their initiation. If a user claims their share after the cliff has passed, the vested crowdsale contract will skip lock creation and send tokens directly to the claimer, thus saving a significant amount of gas.
+- a `StakedLockingCrowdSale` will additionally require bidders to lock `stakedToken`s into the crowd sale contract to participate. The amount of staked tokens required is determined by a fixed price (`wadFixedStakedPerBidPrice`) that's provided as fractional number with 18 decimals (wad) when the sale is initiated. We're abiding from using a price oracle here since price sources for our staked tokens might be too unreliable. Instead the sale initiator decides the price point (and will be supported by our frontend). When claiming on a settled sale, bidders will receive the active share of staked tokens back wrapped in another vesting token contract that had to be configured when initiating the sale (it's a common vesting schedule contract used by the DAO for various purposes)
 
 ## Permissioner
 
