@@ -70,7 +70,7 @@ contract CrowdSaleFuzzTest is Test {
             address someone = _bidders[it];
 
             vm.startPrank(someone);
-            crowdSale.claim(saleId);
+            crowdSale.claim(saleId, "");
             vm.stopPrank();
         }
         //dust

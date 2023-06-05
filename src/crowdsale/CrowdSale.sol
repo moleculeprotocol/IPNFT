@@ -102,7 +102,7 @@ contract CrowdSale is ReentrancyGuard {
     /**
      * @return SaleInfo information about the sale
      */
-    function getSaleInfo(uint256 saleId) public view returns (SaleInfo memory) {
+    function getSaleInfo(uint256 saleId) external view returns (SaleInfo memory) {
         return _saleInfo[saleId];
     }
 
@@ -111,7 +111,7 @@ contract CrowdSale is ReentrancyGuard {
      * @param contributor address
      * @return uint256 the amount of bidding tokens `contributor` has bid into the sale
      */
-    function contribution(uint256 saleId, address contributor) public view returns (uint256) {
+    function contribution(uint256 saleId, address contributor) external view returns (uint256) {
         return _contributions[saleId][contributor];
     }
 
@@ -194,11 +194,6 @@ contract CrowdSale is ReentrancyGuard {
         if (_saleInfo[saleId].surplus != 0) {
             refunds = biddingRatio.mulWadDown(_saleInfo[saleId].surplus);
         }
-        //refunds = 0
-    }
-
-    function claim(uint256 saleId) public returns (uint256 auctionTokens, uint256 refunds) {
-        return claim(saleId, bytes(""));
     }
 
     /**
@@ -207,7 +202,7 @@ contract CrowdSale is ReentrancyGuard {
      * @param saleId the sale id
      * @param permission. bytes are handed over to a configured permissioner contract
      */
-    function claim(uint256 saleId, bytes memory permission) public nonReentrant returns (uint256 auctionTokens, uint256 refunds) {
+    function claim(uint256 saleId, bytes memory permission) external nonReentrant returns (uint256 auctionTokens, uint256 refunds) {
         if (_saleInfo[saleId].state == SaleState.RUNNING) {
             revert BadSaleState(SaleState.SETTLED, SaleState.RUNNING);
         }

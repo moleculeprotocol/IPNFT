@@ -18,7 +18,7 @@ import { Mintpass } from "../src/Mintpass.sol";
 
 import { FakeERC20 } from "../src/helpers/FakeERC20.sol";
 import { Fractionalizer } from "../src/Fractionalizer.sol";
-import { MustOwnIpnft, NoSymbol, AlreadyFractionalized } from "../src/Fractionalizer.sol";
+import { MustOwnIpnft, AlreadyFractionalized } from "../src/Fractionalizer.sol";
 
 import { FractionalizedToken, OnlyIssuerOrOwner, TokenCapped } from "../src/FractionalizedToken.sol";
 import { FractionalizerNext, FractionalizedTokenNext } from "../src/helpers/test-upgrades/FractionalizerNext.sol";

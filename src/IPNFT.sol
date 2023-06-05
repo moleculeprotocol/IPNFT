@@ -111,7 +111,7 @@ contract IPNFT is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IReser
      * @param _symbol a symbol that represents the IPNFT's derivatives. Can be changed by the owner
      * @return the `reservationId`
      */
-    function mintReservation(address to, uint256 reservationId, uint256 mintPassId, string memory _tokenURI, string memory _symbol)
+    function mintReservation(address to, uint256 reservationId, uint256 mintPassId, string calldata _tokenURI, string calldata _symbol)
         external
         payable
         override
@@ -166,10 +166,7 @@ contract IPNFT is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IReser
      * @return bool current read allowance
      */
     function canRead(address reader, uint256 tokenId) external view returns (bool) {
-        if (ownerOf(tokenId) == reader) {
-            return true;
-        }
-        return readAllowances[tokenId][reader] > block.timestamp;
+        return (ownerOf(tokenId) == reader || readAllowances[tokenId][reader] > block.timestamp);
     }
 
     /// @notice in case someone sends Eth to this contract, this function gets it out again

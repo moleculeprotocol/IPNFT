@@ -6,7 +6,7 @@ import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/O
 import { Base64 } from "@openzeppelin/contracts/utils/Base64.sol";
 import { Clones } from "@openzeppelin/contracts/proxy/Clones.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
-import { MustOwnIpnft, NoSymbol, AlreadyFractionalized } from "../../Fractionalizer.sol";
+import { MustOwnIpnft, AlreadyFractionalized } from "../../Fractionalizer.sol";
 import { FractionalizedToken, Metadata, TokenCapped } from "../../FractionalizedToken.sol";
 import { IPNFT } from "../../IPNFT.sol";
 
@@ -59,9 +59,6 @@ contract FractionalizerNext is UUPSUpgradeable, OwnableUpgradeable {
             revert MustOwnIpnft();
         }
         string memory ipnftSymbol = ipnft.symbol(ipnftId);
-        if (bytes(ipnftSymbol).length == 0) {
-            revert NoSymbol();
-        }
 
         // https://github.com/OpenZeppelin/workshops/tree/master/02-contracts-clone
         FractionalizedTokenNext fractionalizedToken = FractionalizedTokenNext(Clones.clone(tokenImplementation));

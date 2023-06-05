@@ -107,7 +107,7 @@ contract CrowdSalePermissionedTest is Test {
 
         vm.startPrank(bidder);
         vm.expectRevert(InvalidSignature.selector);
-        crowdSale.claim(saleId);
+        crowdSale.claim(saleId, "");
 
         crowdSale.claim(saleId, xsignature);
         vm.stopPrank();
