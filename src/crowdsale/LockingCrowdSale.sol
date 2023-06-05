@@ -17,6 +17,7 @@ struct LockingConfig {
 
 error IncompatibleLockingContract();
 error UnsupportedInitializer();
+error InvalidDuration();
 
 /**
  * @title LockingCrowdSale
@@ -42,11 +43,15 @@ contract LockingCrowdSale is CrowdSale {
      *
      * @param sale sale configuration
      * @param lockedTokenContract the timelock contract to use or address(0) to spawn a new one
-     * @param cliff a duration after that the receiver can redeem their tokens
+     * @param lockingDuration duration after which the receiver can redeem their tokens
      * @return saleId the newly created sale's id
      */
-    function startSale(Sale calldata sale, TimelockedToken lockedTokenContract, uint256 cliff) public virtual returns (uint256 saleId) {
+    function startSale(Sale calldata sale, TimelockedToken lockedTokenContract, uint256 lockingDuration) public virtual returns (uint256 saleId) {
         saleId = uint256(keccak256(abi.encode(sale)));
+
+        if (lockingDuration > 366 days) {
+            revert InvalidDuration();
+        }
 
         if (address(lockedTokenContract) == address(0)) {
             lockedTokenContract = _makeNewLockedTokenContract(sale.auctionToken);
@@ -56,7 +61,7 @@ contract LockingCrowdSale is CrowdSale {
             }
         }
 
-        salesLocking[saleId] = LockingConfig(lockedTokenContract, cliff);
+        salesLocking[saleId] = LockingConfig(lockedTokenContract, lockingDuration);
         saleId = super.startSale(sale);
     }
 

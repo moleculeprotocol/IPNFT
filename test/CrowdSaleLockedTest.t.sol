@@ -5,10 +5,10 @@ import "forge-std/Test.sol";
 import "forge-std/console.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import { TokenVesting } from "@moleculeprotocol/token-vesting/TokenVesting.sol";
 
 import { CrowdSale, SaleState, Sale, SaleInfo } from "../src/crowdsale/CrowdSale.sol";
-import { LockingCrowdSale, LockingConfig } from "../src/crowdsale/LockingCrowdSale.sol";
-import { TokenVesting } from "@moleculeprotocol/token-vesting/TokenVesting.sol";
+import { LockingCrowdSale, LockingConfig, InvalidDuration } from "../src/crowdsale/LockingCrowdSale.sol";
 import { TimelockedToken, StillLocked } from "../src/TimelockedToken.sol";
 import { FakeERC20 } from "../src/helpers/FakeERC20.sol";
 import { CrowdSaleHelpers } from "./helpers/CrowdSaleHelpers.sol";
@@ -23,7 +23,6 @@ contract CrowdSaleLockedTest is Test {
     FakeERC20 internal auctionToken;
     FakeERC20 internal biddingToken;
     LockingCrowdSale internal crowdSale;
-    LockingConfig internal _LockingConfig;
 
     function setUp() public {
         crowdSale = new LockingCrowdSale();
@@ -41,8 +40,15 @@ contract CrowdSaleLockedTest is Test {
         vm.startPrank(bidder2);
         biddingToken.approve(address(crowdSale), 1_000_000 ether);
         vm.stopPrank();
+    }
 
-        _LockingConfig = LockingConfig({ lockingContract: TimelockedToken(address(0)), duration: 60 days });
+    function testLockingCrowdSalesBadParameters() public {
+        vm.startPrank(emitter);
+        Sale memory _sale = CrowdSaleHelpers.makeSale(emitter, auctionToken, biddingToken);
+        auctionToken.approve(address(crowdSale), 400_000 ether);
+
+        vm.expectRevert(InvalidDuration.selector);
+        crowdSale.startSale(_sale, TimelockedToken(address(0)), 367 days);
     }
 
     function testSettlementAndSimpleClaims() public {
@@ -50,7 +56,7 @@ contract CrowdSaleLockedTest is Test {
         Sale memory _sale = CrowdSaleHelpers.makeSale(emitter, auctionToken, biddingToken);
         auctionToken.approve(address(crowdSale), 400_000 ether);
 
-        uint256 saleId = crowdSale.startSale(_sale, TimelockedToken(address(0)), 60 days);
+        uint256 saleId = crowdSale.startSale(_sale, TimelockedToken(address(0)), 3 days);
         vm.stopPrank();
 
         vm.startPrank(bidder);
@@ -79,13 +85,13 @@ contract CrowdSaleLockedTest is Test {
         assertEq(lokedAuctionToken.balanceOf(bidder), _sale.salesAmount);
 
         vm.startPrank(bidder);
-        vm.warp(_sale.closingTime + 10 days);
+        vm.warp(_sale.closingTime + 2 days);
         vm.expectRevert(StillLocked.selector);
         lokedAuctionToken.release(scheduleId);
         assertEq(lokedAuctionToken.balanceOf(bidder), _sale.salesAmount);
         assertEq(auctionToken.balanceOf(bidder), 0);
 
-        vm.warp(_sale.closingTime + 60 days);
+        vm.warp(_sale.closingTime + 3 days);
         lokedAuctionToken.release(scheduleId);
         assertEq(auctionToken.balanceOf(bidder), _sale.salesAmount);
         assertEq(lokedAuctionToken.balanceOf(bidder), 0);

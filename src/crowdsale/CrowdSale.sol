@@ -74,7 +74,8 @@ contract CrowdSale is ReentrancyGuard {
      * @return saleId
      */
     function startSale(Sale calldata sale) public virtual returns (uint256 saleId) {
-        if (sale.closingTime < block.timestamp) {
+        //[M-02]
+        if (sale.closingTime < block.timestamp || sale.closingTime > block.timestamp + 180 days) {
             revert BadSaleDuration();
         }
 

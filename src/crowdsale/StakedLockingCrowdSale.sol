@@ -6,7 +6,7 @@ import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.s
 import { FixedPointMathLib } from "solmate/utils/FixedPointMathLib.sol";
 import { TokenVesting } from "@moleculeprotocol/token-vesting/TokenVesting.sol";
 import { TimelockedToken } from "../TimelockedToken.sol";
-import { LockingCrowdSale, LockingConfig, IncompatibleLockingContract, UnsupportedInitializer } from "./LockingCrowdSale.sol";
+import { LockingCrowdSale, LockingConfig, IncompatibleLockingContract, UnsupportedInitializer, InvalidDuration } from "./LockingCrowdSale.sol";
 import { CrowdSale, Sale, BadDecimals } from "./CrowdSale.sol";
 
 struct StakingInfo {
@@ -20,7 +20,6 @@ struct StakingInfo {
 
 error UnmanageablelockingContract();
 error BadPrice();
-error InvalidDuration();
 
 /**
  * @title StakedLockingCrowdSale
@@ -51,7 +50,9 @@ contract StakedLockingCrowdSale is LockingCrowdSale {
      * @param stakesVestingContract the TokenVesting contract for vested staking tokens
      * @param wadFixedStakedPerBidPrice the 10e18 based float price for stakes/bid tokens
      * @param lockingContract contract that locks claimed auction tokens
-     * @param duration duration until stakes and auction tokens are locked or vested
+     * @param lockingDuration duration in seconds until stakes and auction tokens are vested or locked after the sale has settled
+     *        NOTE: If `lockingDuration` is < 7 days, the the vesting contract schedules will stil have a 7 days cliff as required by the underlying TokenVesting contract.
+     *        timelocks for auction tokens can be >= 0
      * @return saleId
      */
     function startSale(
@@ -60,7 +61,7 @@ contract StakedLockingCrowdSale is LockingCrowdSale {
         TokenVesting stakesVestingContract,
         uint256 wadFixedStakedPerBidPrice,
         TimelockedToken lockingContract,
-        uint256 duration
+        uint256 lockingDuration
     ) public returns (uint256 saleId) {
         if (IERC20Metadata(address(stakedToken)).decimals() != 18) {
             revert BadDecimals();
@@ -72,11 +73,6 @@ contract StakedLockingCrowdSale is LockingCrowdSale {
 
         if (address(stakesVestingContract.nativeToken()) != address(stakedToken)) {
             revert IncompatibleLockingContract();
-        }
-
-        // duration must follow the same rules as `TokenVesting` cliffs
-        if (duration < 7 days || duration > 50 * (365 days)) {
-            revert InvalidDuration();
         }
 
         if (wadFixedStakedPerBidPrice == 0) {
@@ -91,7 +87,7 @@ contract StakedLockingCrowdSale is LockingCrowdSale {
 
         saleId = uint256(keccak256(abi.encode(sale)));
         salesStaking[saleId] = StakingInfo(stakedToken, stakesVestingContract, wadFixedStakedPerBidPrice);
-        super.startSale(sale, lockingContract, duration);
+        super.startSale(sale, lockingContract, lockingDuration);
     }
 
     /**
@@ -167,14 +163,14 @@ contract StakedLockingCrowdSale is LockingCrowdSale {
             return;
         }
 
-        if (block.timestamp > _sales[saleId].closingTime + lockingConfig.duration) {
+        //the minimum vesting duration of `TokenVesting` is 7 days
+        uint256 _duration = lockingConfig.duration < 7 days ? 7 days : lockingConfig.duration;
+        if (block.timestamp > _sales[saleId].closingTime + _duration) {
             //no need for vesting when duration already expired.
             staking.stakedToken.safeTransfer(msg.sender, vestedStakes);
         } else {
             staking.stakedToken.safeTransfer(address(staking.stakesVestingContract), vestedStakes);
-            staking.stakesVestingContract.createVestingSchedule(
-                msg.sender, _sales[saleId].closingTime, lockingConfig.duration, lockingConfig.duration, 60, false, vestedStakes
-            );
+            staking.stakesVestingContract.createVestingSchedule(msg.sender, _sales[saleId].closingTime, _duration, _duration, 60, false, vestedStakes);
         }
     }
 
