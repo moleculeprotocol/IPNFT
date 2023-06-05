@@ -7,7 +7,7 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 import { CrowdSale, SaleState, Sale, SaleInfo } from "../src/crowdsale/CrowdSale.sol";
-import { VestedCrowdSale, VestingConfig, UnmanageableVestingContract } from "../src/crowdsale/VestedCrowdSale.sol";
+import { VestedCrowdSale, VestingConfig } from "../src/crowdsale/VestedCrowdSale.sol";
 import { TokenVesting } from "@moleculeprotocol/token-vesting/TokenVesting.sol";
 import { TimelockedToken, StillLocked } from "../src/TimelockedToken.sol";
 import { FakeERC20 } from "../src/helpers/FakeERC20.sol";
@@ -68,7 +68,7 @@ contract CrowdSaleVestedTest is Test {
 
         vm.startPrank(bidder);
         vm.recordLogs();
-        crowdSale.claim(saleId);
+        crowdSale.claim(saleId, "");
         Vm.Log[] memory entries = vm.getRecordedLogs();
         assertEq(entries[1].topics[0], keccak256("ScheduleCreated(bytes32,address,address,uint256,uint64)"));
         bytes32 scheduleId = entries[1].topics[1];
@@ -115,7 +115,7 @@ contract CrowdSaleVestedTest is Test {
         assertEq(uint256(info.state), uint256(SaleState.FAILED));
 
         vm.startPrank(bidder);
-        crowdSale.claim(saleId);
+        crowdSale.claim(saleId, "");
         vm.stopPrank();
 
         assertEq(biddingToken.balanceOf(bidder), 1_000_000 ether);
@@ -152,7 +152,7 @@ contract CrowdSaleVestedTest is Test {
 
         vm.startPrank(bidder);
         vm.recordLogs();
-        crowdSale.claim(saleId);
+        crowdSale.claim(saleId, "");
         Vm.Log[] memory entries = vm.getRecordedLogs();
         assertEq(entries[1].topics[0], keccak256("ScheduleCreated(bytes32,address,address,uint256,uint64)"));
         assertEq(bidder, address(uint160(uint256((entries[1].topics[2])))));
@@ -190,7 +190,7 @@ contract CrowdSaleVestedTest is Test {
 
         vm.warp(block.timestamp + 4440 days);
         vm.startPrank(bidder);
-        crowdSale.claim(saleId);
+        crowdSale.claim(saleId, "");
 
         //skips the vesting contract
         (TimelockedToken auctionTokenVesting,) = crowdSale.salesVesting(saleId);

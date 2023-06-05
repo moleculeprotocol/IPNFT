@@ -9,7 +9,6 @@ import { FractionalizedToken, Metadata as FractionalizedTokenMetadata } from "./
 import { IPNFT } from "./IPNFT.sol";
 
 error MustOwnIpnft();
-error NoSymbol();
 error AlreadyFractionalized();
 
 /// @title Fractionalizer

@@ -6,9 +6,7 @@ import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.s
 import { FixedPointMathLib } from "solmate/utils/FixedPointMathLib.sol";
 import { TokenVesting } from "@moleculeprotocol/token-vesting/TokenVesting.sol";
 import { TimelockedToken } from "../TimelockedToken.sol";
-import {
-    VestedCrowdSale, VestingConfig, IncompatibleVestingContract, UnmanageableVestingContract, UnsupportedInitializer
-} from "./VestedCrowdSale.sol";
+import { VestedCrowdSale, VestingConfig, IncompatibleVestingContract, UnsupportedInitializer } from "./VestedCrowdSale.sol";
 import { CrowdSale, Sale, BadDecimals } from "./CrowdSale.sol";
 
 struct StakingInfo {
@@ -18,9 +16,9 @@ struct StakingInfo {
     //fix price (always expressed at 1e18): stake tokens / bid token
     //see https://github.com/moleculeprotocol/IPNFT/pull/100
     uint256 wadFixedStakedPerBidPrice;
-    uint256 stakeTotal;
 }
 
+error UnmanageableVestingContract();
 error BadPrice();
 error InvalidDuration();
 
@@ -91,7 +89,7 @@ contract StakedVestedCrowdSale is VestedCrowdSale {
         }
 
         saleId = uint256(keccak256(abi.encode(sale)));
-        salesStaking[saleId] = StakingInfo(stakedToken, stakesVestingContract, wadFixedStakedPerBidPrice, 0);
+        salesStaking[saleId] = StakingInfo(stakedToken, stakesVestingContract, wadFixedStakedPerBidPrice);
         super.startSale(sale, vestingContract, cliff);
     }
 
@@ -133,7 +131,6 @@ contract StakedVestedCrowdSale is VestedCrowdSale {
 
         uint256 stakedTokenAmount = biddingTokenAmount.mulWadDown(staking.wadFixedStakedPerBidPrice);
 
-        staking.stakeTotal += stakedTokenAmount;
         stakes[saleId][msg.sender] += stakedTokenAmount;
 
         staking.stakedToken.safeTransferFrom(msg.sender, address(this), stakedTokenAmount);

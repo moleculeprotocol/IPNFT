@@ -98,11 +98,7 @@ contract CrowdSaleVestedStakedTest is Test {
         vm.expectRevert(InvalidDuration.selector);
         crowdSale.startSale(_sale, daoToken, vestedDao, 1, TimelockedToken(address(0)), 6 days);
 
-        uint256 saleId = crowdSale.startSale(_sale, daoToken, vestedDao, 1, TimelockedToken(address(0)), 60 days);
-
-        (,,, uint256 stakeTotal) = crowdSale.salesStaking(saleId);
-        //the total stakes are set to 0 upon initialization
-        assertEq(stakeTotal, 0);
+        crowdSale.startSale(_sale, daoToken, vestedDao, 1, TimelockedToken(address(0)), 60 days);
     }
 
     function testCannotSetupCrowdSaleWithParentFunctions() public {
@@ -146,7 +142,7 @@ contract CrowdSaleVestedStakedTest is Test {
         assertEq(info.surplus, 0);
 
         vm.startPrank(bidder);
-        crowdSale.claim(saleId);
+        crowdSale.claim(saleId, "");
         vm.stopPrank();
 
         (TimelockedToken auctionTokenVesting,) = crowdSale.salesVesting(saleId);
@@ -232,17 +228,17 @@ contract CrowdSaleVestedStakedTest is Test {
         vm.stopPrank();
 
         vm.startPrank(bidder2);
-        crowdSale.claim(saleId);
-        (uint256 zeroTokens, uint256 zeroRefunds) = crowdSale.claim(saleId);
+        crowdSale.claim(saleId, "");
+        (uint256 zeroTokens, uint256 zeroRefunds) = crowdSale.claim(saleId, "");
         assertEq(zeroRefunds * zeroTokens, 0);
         vm.stopPrank();
 
         vm.startPrank(bidder);
-        crowdSale.claim(saleId);
+        crowdSale.claim(saleId, "");
         vm.stopPrank();
 
         vm.startPrank(bidder2); //tries to "attack" by claiming once again
-        (zeroTokens, zeroRefunds) = crowdSale.claim(saleId);
+        (zeroTokens, zeroRefunds) = crowdSale.claim(saleId, "");
         assertEq(zeroRefunds * zeroTokens, 0);
         vm.stopPrank();
 
@@ -288,8 +284,6 @@ contract CrowdSaleVestedStakedTest is Test {
         //stakes have been placed.
         assertEq(daoToken.balanceOf(bidder), 847_500 ether);
         assertEq(daoToken.balanceOf(address(crowdSale)), 265_000 ether);
-        (,,, uint256 stakeTotal) = crowdSale.salesStaking(saleId);
-        assertEq(stakeTotal, 265_000 ether);
 
         assertEq(crowdSale.stakesOf(saleId, bidder), 152_500 ether);
         assertEq(crowdSale.stakesOf(saleId, bidder2), 112_500 ether);
@@ -300,11 +294,11 @@ contract CrowdSaleVestedStakedTest is Test {
         vm.stopPrank();
 
         vm.startPrank(bidder);
-        crowdSale.claim(saleId);
+        crowdSale.claim(saleId, "");
         vm.stopPrank();
 
         vm.startPrank(bidder2);
-        crowdSale.claim(saleId);
+        crowdSale.claim(saleId, "");
         vm.stopPrank();
 
         (TimelockedToken auctionTokenVesting,) = crowdSale.salesVesting(saleId);
@@ -354,7 +348,7 @@ contract CrowdSaleVestedStakedTest is Test {
         assertEq(uint256(info.state), uint256(SaleState.FAILED));
 
         vm.startPrank(bidder);
-        crowdSale.claim(saleId);
+        crowdSale.claim(saleId, "");
         vm.stopPrank();
 
         //after claiming a bid on a failed sale, the bidder
@@ -387,7 +381,7 @@ contract CrowdSaleVestedStakedTest is Test {
 
         vm.warp(block.timestamp + 4440 days);
         vm.startPrank(bidder);
-        crowdSale.claim(saleId);
+        crowdSale.claim(saleId, "");
 
         (TimelockedToken auctionTokenVesting,) = crowdSale.salesVesting(saleId);
 

@@ -3,6 +3,8 @@ pragma solidity 0.8.18;
 
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import { SafeCast } from "@openzeppelin/contracts/utils/math/SafeCast.sol";
+
 import { Clones } from "@openzeppelin/contracts/proxy/Clones.sol";
 import { TimelockedToken } from "../TimelockedToken.sol";
 import { CrowdSale, Sale } from "./CrowdSale.sol";
@@ -13,7 +15,6 @@ struct VestingConfig {
     uint256 cliff;
 }
 
-error UnmanageableVestingContract();
 error IncompatibleVestingContract();
 error UnsupportedInitializer();
 
@@ -85,7 +86,7 @@ contract VestedCrowdSale is CrowdSale {
             //no need for vesting when cliff already expired.
             _sales[saleId].auctionToken.safeTransfer(msg.sender, tokenAmount);
         } else {
-            vestingConfig.vestingContract.lock(msg.sender, tokenAmount, uint64(_sales[saleId].closingTime + vestingConfig.cliff));
+            vestingConfig.vestingContract.lock(msg.sender, tokenAmount, SafeCast.toUint64(_sales[saleId].closingTime + vestingConfig.cliff));
         }
     }
 
