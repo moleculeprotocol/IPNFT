@@ -210,12 +210,15 @@ export function handleClaimed(event: ClaimedEvent): void {
     return
   }
 
-  if (!crowdSale.contributions) {
+  if (crowdSale.contributions !== null) {
+    log.error('No contributors found for CrowdSale id: {}', [
+      event.params.saleId.toString()
+    ])
     return
-  }
-
-  for (let i = 0; i < crowdSale.contributions.length; i++) {
-    let contribution = Contribution.load(crowdSale.contributions[i])
+  } 
+  let contributions = changetype<string[]>(crowdSale.contributions)
+  for (let i = 0; i < contributions.length; i++) {
+    let contribution = Contribution.load(contributions[i])
     if (!contribution) continue
 
     if (contribution.contributor == event.params.claimer) {
