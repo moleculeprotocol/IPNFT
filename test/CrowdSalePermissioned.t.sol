@@ -10,7 +10,6 @@ import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
 import { FractionalizedToken, Metadata } from "../src/FractionalizedToken.sol";
 import { CrowdSale, Sale, SaleInfo, SaleState, BadDecimals } from "../src/crowdsale/CrowdSale.sol";
-import { LockingConfig } from "../src/crowdsale/LockingCrowdSale.sol";
 import { StakedLockingCrowdSale, BadPrice } from "../src/crowdsale/StakedLockingCrowdSale.sol";
 import { IPermissioner, TermsAcceptedPermissioner, InvalidSignature } from "../src/Permissioner.sol";
 
@@ -112,7 +111,8 @@ contract CrowdSalePermissionedTest is Test {
         crowdSale.claim(saleId, xsignature);
         vm.stopPrank();
 
-        (TimelockedToken auctionTokenVesting,) = crowdSale.salesLocking(saleId);
+        TimelockedToken auctionTokenVesting = crowdSale.lockingContracts(address(auctionToken));
+
         assertEq(auctionTokenVesting.balanceOf(bidder), _sale.salesAmount);
         assertEq(daoToken.balanceOf(bidder), 800_000 ether);
         assertEq(vestedDao.balanceOf(bidder), 200_000 ether);

@@ -14,7 +14,6 @@ import { TokenVesting } from "@moleculeprotocol/token-vesting/TokenVesting.sol";
 import { TimelockedToken } from "../../src/TimelockedToken.sol";
 import { IPermissioner, TermsAcceptedPermissioner } from "../../src/Permissioner.sol";
 import { CrowdSale, Sale, SaleInfo } from "../../src/crowdsale/CrowdSale.sol";
-import { LockingConfig } from "../../src/crowdsale/LockingCrowdSale.sol";
 import { StakedLockingCrowdSale } from "../../src/crowdsale/StakedLockingCrowdSale.sol";
 import { FakeERC20 } from "../../src/helpers/FakeERC20.sol";
 import { FractionalizedToken } from "../../src/FractionalizedToken.sol";

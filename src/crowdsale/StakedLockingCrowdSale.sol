@@ -6,7 +6,7 @@ import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.s
 import { FixedPointMathLib } from "solmate/utils/FixedPointMathLib.sol";
 import { TokenVesting } from "@moleculeprotocol/token-vesting/TokenVesting.sol";
 import { TimelockedToken } from "../TimelockedToken.sol";
-import { LockingCrowdSale, LockingConfig, UnsupportedInitializer, InvalidDuration } from "./LockingCrowdSale.sol";
+import { LockingCrowdSale, UnsupportedInitializer, InvalidDuration } from "./LockingCrowdSale.sol";
 import { CrowdSale, Sale, BadDecimals } from "./CrowdSale.sol";
 
 struct StakingInfo {
@@ -34,7 +34,15 @@ contract StakedLockingCrowdSale is LockingCrowdSale {
     mapping(uint256 => StakingInfo) public salesStaking;
     mapping(uint256 => mapping(address => uint256)) internal stakes;
 
-    event Started(uint256 indexed saleId, address indexed issuer, Sale sale, LockingConfig lockingConfig, StakingInfo staking);
+    event Started(
+        uint256 indexed saleId,
+        address indexed issuer,
+        Sale sale,
+        StakingInfo staking,
+        TimelockedToken lockingToken,
+        uint256 lockingDuration,
+        uint256 stakingDuration
+    );
     event Staked(uint256 indexed saleId, address indexed bidder, uint256 stakedAmount, uint256 price);
     event ClaimedStakes(uint256 indexed saleId, address indexed claimer, uint256 stakesClaimed, uint256 stakesRefunded);
 
@@ -100,7 +108,16 @@ contract StakedLockingCrowdSale is LockingCrowdSale {
      * @dev emits a custom event for this crowdsale class
      */
     function _afterSaleStarted(uint256 saleId) internal virtual override {
-        emit Started(saleId, msg.sender, _sales[saleId], salesLocking[saleId], salesStaking[saleId]);
+        uint256 stakingDuration = salesLockingDuration[saleId] < 7 days ? 7 days : salesLockingDuration[saleId];
+        emit Started(
+            saleId,
+            msg.sender,
+            _sales[saleId],
+            salesStaking[saleId],
+            lockingContracts[address(_sales[saleId].auctionToken)],
+            salesLockingDuration[saleId],
+            stakingDuration
+        );
     }
 
     /**
@@ -141,7 +158,7 @@ contract StakedLockingCrowdSale is LockingCrowdSale {
      * @inheritdoc CrowdSale
      */
     function claim(uint256 saleId, uint256 tokenAmount, uint256 refunds) internal virtual override {
-        LockingConfig storage lockingConfig = salesLocking[saleId];
+        uint256 duration = salesLockingDuration[saleId];
         StakingInfo storage staking = salesStaking[saleId];
         (uint256 refundedStakes, uint256 vestedStakes) = getClaimableStakes(saleId, refunds);
 
@@ -163,7 +180,7 @@ contract StakedLockingCrowdSale is LockingCrowdSale {
         }
 
         //the minimum vesting duration of `TokenVesting` is 7 days
-        uint256 _duration = lockingConfig.duration < 7 days ? 7 days : lockingConfig.duration;
+        uint256 _duration = duration < 7 days ? 7 days : duration;
         if (block.timestamp > _sales[saleId].closingTime + _duration) {
             //no need for vesting when duration already expired.
             staking.stakedToken.safeTransfer(msg.sender, vestedStakes);

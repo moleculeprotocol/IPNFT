@@ -133,7 +133,7 @@ type CrowdSale @entity {
   stakingToken: ERC20Token
   amountStaked: BigInt! #the amount of tokens staked so far
   vestedStakingToken: ERC20Token #the vested staking token that bidders partially receive after claiming
-  stakingCliff: BigInt! # The duration for how long staked tokens are locked ("cliff" in vesting terms)
+  stakingDuration: BigInt! # The duration for how long staked tokens are locked ("cliff" in vesting terms)
   wadFixedStakedPerBidPrice: BigInt # the fixed price of stake / bid token
   contributions: [Contribution!] @derivedFrom(field: "crowdSale")
 }

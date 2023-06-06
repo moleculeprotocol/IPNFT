@@ -7,7 +7,7 @@ import {
   Started as StartedEvent,
   Failed as FailedEvent,
   Claimed as ClaimedEvent,
-  lockingContractCreated as lockingContractCreatedEvent
+  LockingContractCreated as LockingContractCreatedEvent
 } from '../generated/StakedLockingCrowdSale/StakedLockingCrowdSale'
 
 import {
@@ -80,11 +80,11 @@ export function handleStarted(event: StartedEvent): void {
 
   crowdSale.salesAmount = event.params.sale.salesAmount
   crowdSale.lockedAuctionToken = makeTimelockedToken(
-    IERC20Metadata.bind(event.params.lockingConfig.lockingContract),
+    IERC20Metadata.bind(event.params.lockingToken),
     auctionToken
   ).id
 
-  crowdSale.auctionLockingDuration = event.params.lockingConfig.duration
+  crowdSale.auctionLockingDuration = event.params.lockingDuration
 
   crowdSale.biddingToken = makeERC20Token(
     IERC20Metadata.bind(event.params.sale.biddingToken)
@@ -99,7 +99,7 @@ export function handleStarted(event: StartedEvent): void {
   crowdSale.vestedStakingToken = makeERC20Token(
     IERC20Metadata.bind(event.params.staking.stakesVestingContract)
   ).id
-  crowdSale.stakingCliff = event.params.lockingConfig.duration
+  crowdSale.stakingDuration = event.params.stakingDuration
   crowdSale.wadFixedStakedPerBidPrice =
     event.params.staking.wadFixedStakedPerBidPrice
   crowdSale.save()
@@ -179,7 +179,7 @@ export function handleFailed(event: FailedEvent): void {
 }
 
 export function handlelockingContractCreated(
-  event: lockingContractCreatedEvent
+  event: LockingContractCreatedEvent
 ): void {
   let context = new DataSourceContext()
   context.setBytes('underlyingToken', event.params.underlyingToken)

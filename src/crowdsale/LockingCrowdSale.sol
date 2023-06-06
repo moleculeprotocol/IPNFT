@@ -9,12 +9,6 @@ import { Clones } from "@openzeppelin/contracts/proxy/Clones.sol";
 import { TimelockedToken } from "../TimelockedToken.sol";
 import { CrowdSale, Sale } from "./CrowdSale.sol";
 
-struct LockingConfig {
-    TimelockedToken lockingContract;
-    // a duration in seconds, counted from the sale's closing time
-    uint256 duration;
-}
-
 error UnsupportedInitializer();
 error InvalidDuration();
 
@@ -26,14 +20,14 @@ error InvalidDuration();
 contract LockingCrowdSale is CrowdSale {
     using SafeERC20 for IERC20Metadata;
 
-    mapping(uint256 => LockingConfig) public salesLocking;
+    mapping(uint256 => uint256) public salesLockingDuration;
 
     /// @notice map from token address to locked token contracts for reusability
     mapping(address => TimelockedToken) public lockingContracts;
 
     address immutable lockingTokenImplementation = address(new TimelockedToken());
 
-    event Started(uint256 indexed saleId, address indexed issuer, Sale sale, LockingConfig locking);
+    event Started(uint256 indexed saleId, address indexed issuer, Sale sale, TimelockedToken lockingToken, uint256 lockingDuration);
     event LockingContractCreated(TimelockedToken indexed lockingContract, IERC20Metadata indexed underlyingToken);
 
     /// @dev disable parent sale starting functions
@@ -61,18 +55,19 @@ contract LockingCrowdSale is CrowdSale {
             lockingContracts[address(sale.auctionToken)] = lockedTokenContract;
         }
 
-        salesLocking[saleId] = LockingConfig(lockedTokenContract, lockingDuration);
+        salesLockingDuration[saleId] = lockingDuration;
         saleId = super.startSale(sale);
     }
 
     function _afterSaleStarted(uint256 saleId) internal virtual override {
-        emit Started(saleId, msg.sender, _sales[saleId], salesLocking[saleId]);
+        emit Started(saleId, msg.sender, _sales[saleId], lockingContracts[address(_sales[saleId].auctionToken)], salesLockingDuration[saleId]);
     }
 
     function _afterSaleSettled(uint256 saleId) internal override {
         Sale storage sale = _sales[saleId];
-        uint256 currentAllowance = sale.auctionToken.allowance(address(this), address(salesLocking[saleId].lockingContract));
-        sale.auctionToken.forceApprove(address(salesLocking[saleId].lockingContract), currentAllowance + sale.salesAmount);
+        TimelockedToken lockingContract = lockingContracts[address(sale.auctionToken)];
+        uint256 currentAllowance = sale.auctionToken.allowance(address(this), address(lockingContract));
+        sale.auctionToken.forceApprove(address(lockingContract), currentAllowance + sale.salesAmount);
     }
 
     /**
@@ -82,14 +77,15 @@ contract LockingCrowdSale is CrowdSale {
      * @param tokenAmount amount of tokens to vest
      */
     function _claimAuctionTokens(uint256 saleId, uint256 tokenAmount) internal virtual override {
-        LockingConfig storage lockingConfig = salesLocking[saleId];
+        uint256 duration = salesLockingDuration[saleId];
+        TimelockedToken lockingContract = lockingContracts[address(_sales[saleId].auctionToken)];
 
         //the vesting start time is the official auction closing time
-        if (block.timestamp > _sales[saleId].closingTime + lockingConfig.duration) {
+        if (block.timestamp > _sales[saleId].closingTime + duration) {
             //no need for vesting when cliff already expired.
             _sales[saleId].auctionToken.safeTransfer(msg.sender, tokenAmount);
         } else {
-            lockingConfig.lockingContract.lock(msg.sender, tokenAmount, SafeCast.toUint64(_sales[saleId].closingTime + lockingConfig.duration));
+            lockingContract.lock(msg.sender, tokenAmount, SafeCast.toUint64(_sales[saleId].closingTime + duration));
         }
     }
 

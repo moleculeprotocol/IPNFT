@@ -8,7 +8,7 @@ import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/I
 import { TokenVesting } from "@moleculeprotocol/token-vesting/TokenVesting.sol";
 
 import { CrowdSale, SaleState, Sale, SaleInfo } from "../src/crowdsale/CrowdSale.sol";
-import { LockingCrowdSale, LockingConfig, InvalidDuration } from "../src/crowdsale/LockingCrowdSale.sol";
+import { LockingCrowdSale, InvalidDuration } from "../src/crowdsale/LockingCrowdSale.sol";
 import { TimelockedToken, StillLocked } from "../src/TimelockedToken.sol";
 import { FakeERC20 } from "../src/helpers/FakeERC20.sol";
 import { CrowdSaleHelpers } from "./helpers/CrowdSaleHelpers.sol";
@@ -80,21 +80,21 @@ contract CrowdSaleLockedTest is Test {
         bytes32 scheduleId = entries[1].topics[1];
         vm.stopPrank();
 
-        (TimelockedToken lokedAuctionToken,) = crowdSale.salesLocking(saleId);
+        TimelockedToken lockedAuctionToken = crowdSale.lockingContracts(address(auctionToken));
 
-        assertEq(lokedAuctionToken.balanceOf(bidder), _sale.salesAmount);
+        assertEq(lockedAuctionToken.balanceOf(bidder), _sale.salesAmount);
 
         vm.startPrank(bidder);
         vm.warp(_sale.closingTime + 2 days);
         vm.expectRevert(StillLocked.selector);
-        lokedAuctionToken.release(scheduleId);
-        assertEq(lokedAuctionToken.balanceOf(bidder), _sale.salesAmount);
+        lockedAuctionToken.release(scheduleId);
+        assertEq(lockedAuctionToken.balanceOf(bidder), _sale.salesAmount);
         assertEq(auctionToken.balanceOf(bidder), 0);
 
         vm.warp(_sale.closingTime + 3 days);
-        lokedAuctionToken.release(scheduleId);
+        lockedAuctionToken.release(scheduleId);
         assertEq(auctionToken.balanceOf(bidder), _sale.salesAmount);
-        assertEq(lokedAuctionToken.balanceOf(bidder), 0);
+        assertEq(lockedAuctionToken.balanceOf(bidder), 0);
         vm.stopPrank();
     }
 
@@ -126,9 +126,10 @@ contract CrowdSaleLockedTest is Test {
 
         assertEq(biddingToken.balanceOf(bidder), 1_000_000 ether);
         assertEq(auctionToken.balanceOf(bidder), 0);
-        (TimelockedToken lokedAuctionToken,) = crowdSale.salesLocking(saleId);
 
-        assertEq(lokedAuctionToken.balanceOf(bidder), 0);
+        TimelockedToken lockedAuctionToken = crowdSale.lockingContracts(address(auctionToken));
+
+        assertEq(lockedAuctionToken.balanceOf(bidder), 0);
     }
 
     function testAutoCreateLockingContracts() public {
@@ -195,8 +196,9 @@ contract CrowdSaleLockedTest is Test {
         crowdSale.claim(saleId, "");
 
         //skips the vesting contract
-        (TimelockedToken lokedAuctionToken,) = crowdSale.salesLocking(saleId);
-        assertEq(lokedAuctionToken.balanceOf(bidder), 0);
+        TimelockedToken lockedAuctionToken = crowdSale.lockingContracts(address(auctionToken));
+
+        assertEq(lockedAuctionToken.balanceOf(bidder), 0);
 
         assertEq(auctionToken.balanceOf(bidder), 400_000 ether);
 

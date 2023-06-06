@@ -8,7 +8,7 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 import { CrowdSale, Sale, SaleInfo, SaleState, BadDecimals } from "../src/crowdsale/CrowdSale.sol";
-import { LockingConfig, UnsupportedInitializer } from "../src/crowdsale/LockingCrowdSale.sol";
+import { UnsupportedInitializer } from "../src/crowdsale/LockingCrowdSale.sol";
 import { StakedLockingCrowdSale, IncompatibleLockingContract, BadPrice, InvalidDuration } from "../src/crowdsale/StakedLockingCrowdSale.sol";
 import { TokenVesting } from "@moleculeprotocol/token-vesting/TokenVesting.sol";
 import { TimelockedToken } from "../src/TimelockedToken.sol";
@@ -142,7 +142,7 @@ contract CrowdSaleLockedStakedTest is Test {
         crowdSale.claim(saleId, "");
         vm.stopPrank();
 
-        (TimelockedToken auctionTokenVesting,) = crowdSale.salesLocking(saleId);
+        TimelockedToken auctionTokenVesting = crowdSale.lockingContracts(address(auctionToken));
         assertEq(auctionTokenVesting.balanceOf(bidder), _sale.salesAmount);
         assertEq(daoToken.balanceOf(bidder), 800_000 ether);
         assertEq(vestedDao.balanceOf(bidder), 200_000 ether);
@@ -239,7 +239,7 @@ contract CrowdSaleLockedStakedTest is Test {
         assertEq(zeroRefunds * zeroTokens, 0);
         vm.stopPrank();
 
-        (TimelockedToken auctionTokenVesting,) = crowdSale.salesLocking(saleId);
+        TimelockedToken auctionTokenVesting = crowdSale.lockingContracts(address(auctionToken));
 
         assertEq(auctionTokenVesting.balanceOf(bidder), 300_000 ether);
         assertEq(biddingToken.balanceOf(bidder), 850_000 ether);
@@ -298,7 +298,7 @@ contract CrowdSaleLockedStakedTest is Test {
         crowdSale.claim(saleId, "");
         vm.stopPrank();
 
-        (TimelockedToken auctionTokenVesting,) = crowdSale.salesLocking(saleId);
+        TimelockedToken auctionTokenVesting = crowdSale.lockingContracts(address(auctionToken));
         assertEq(auctionTokenVesting.balanceOf(bidder), 230188679245283018800000);
         assertEq(auctionTokenVesting.balanceOf(bidder2), 169811320754716980800000);
 
@@ -354,7 +354,7 @@ contract CrowdSaleLockedStakedTest is Test {
         assertEq(daoToken.balanceOf(bidder), 1_000_000 ether);
 
         assertEq(auctionToken.balanceOf(bidder), 0);
-        (TimelockedToken auctionTokenVesting,) = crowdSale.salesLocking(saleId);
+        TimelockedToken auctionTokenVesting = crowdSale.lockingContracts(address(auctionToken));
 
         assertEq(auctionTokenVesting.balanceOf(bidder), 0);
     }
@@ -385,7 +385,8 @@ contract CrowdSaleLockedStakedTest is Test {
         crowdSale.claim(saleId, "");
         vm.stopPrank();
 
-        (TimelockedToken lockedAuctionToken,) = crowdSale.salesLocking(saleId);
+        TimelockedToken lockedAuctionToken = crowdSale.lockingContracts(address(auctionToken));
+
         assertEq(lockedAuctionToken.balanceOf(bidder), 200_000 ether);
 
         (, TokenVesting stakesVestingContract,) = crowdSale.salesStaking(saleId);

@@ -244,32 +244,6 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "_feeReceiver",
-        "type": "address"
-      }
-    ],
-    "name": "setFeeReceiver",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "fractionalizationPercentage_",
-        "type": "uint256"
-      }
-    ],
-    "name": "setReceiverPercentage",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
         "name": "newOwner",
         "type": "address"
       }
