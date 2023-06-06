@@ -146,4 +146,5 @@ type Contribution @entity {
   stakedAmount: BigInt
   price: BigInt # staking token vs. bidding token price
   createdAt: BigInt!
+  claimedAt: BigInt
 }
