@@ -29,9 +29,6 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable {
 
     IPNFT internal ipnft;
 
-    address internal feeReceiver;
-    uint256 internal fractionalizationPercentage;
-
     mapping(uint256 => FractionalizedToken) public fractionalized;
 
     /// @custom:oz-upgrades-unsafe-allow state-variable-immutable
@@ -47,22 +44,6 @@ contract Fractionalizer is UUPSUpgradeable, OwnableUpgradeable {
     constructor() {
         tokenImplementation = address(new FractionalizedToken());
         _disableInitializers();
-    }
-
-    /**
-     * @notice we're not taking any fees. If we once decided to do so, this can be used to update the fee receiver
-     * @param _feeReceiver the address that will receive fraction fees
-     */
-    function setFeeReceiver(address _feeReceiver) external onlyOwner {
-        feeReceiver = _feeReceiver;
-    }
-
-    /**
-     * @notice unused in this version
-     * @param fractionalizationPercentage_  uint256 the fee percentage `feeReceiver` takes on a new fractionalization
-     */
-    function setReceiverPercentage(uint256 fractionalizationPercentage_) external onlyOwner {
-        fractionalizationPercentage = fractionalizationPercentage_;
     }
 
     /**

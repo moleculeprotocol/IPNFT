@@ -8,13 +8,11 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 import { CrowdSale, Sale, SaleInfo, SaleState, BadDecimals } from "../src/crowdsale/CrowdSale.sol";
-import { VestingConfig } from "../src/crowdsale/VestedCrowdSale.sol";
-import { StakedVestedCrowdSale, IncompatibleVestingContract, BadPrice, StakingInfo } from "../src/crowdsale/StakedVestedCrowdSale.sol";
+import { StakedLockingCrowdSale, BadPrice, StakingInfo } from "../src/crowdsale/StakedLockingCrowdSale.sol";
 import { TokenVesting } from "@moleculeprotocol/token-vesting/TokenVesting.sol";
 import { TimelockedToken } from "../src/TimelockedToken.sol";
 
 import { FakeERC20 } from "../src/helpers/FakeERC20.sol";
-//import { BioPriceFeed, IPriceFeedConsumer } from "../src/BioPriceFeed.sol";
 import { CrowdSaleHelpers } from "./helpers/CrowdSaleHelpers.sol";
 
 /**
@@ -37,7 +35,7 @@ contract CrowdSaleWithNonStandardERC20Test is Test {
 
     //BioPriceFeed internal priceFeed;
 
-    StakedVestedCrowdSale internal crowdSale;
+    StakedLockingCrowdSale internal crowdSale;
 
     function setUp() public {
         vm.startPrank(deployer);
@@ -52,7 +50,7 @@ contract CrowdSaleWithNonStandardERC20Test is Test {
         // // 1=1 is the trivial case
         // priceFeed.signal(address(biddingToken), address(daoToken), 1e18);
 
-        crowdSale = new StakedVestedCrowdSale();
+        crowdSale = new StakedLockingCrowdSale();
         vm.stopPrank();
 
         auctionToken.mint(emitter, 500_000 ether);
@@ -85,7 +83,7 @@ contract CrowdSaleWithNonStandardERC20Test is Test {
         Sale memory _sale = CrowdSaleHelpers.makeSale(emitter, auctionToken, biddingToken);
         _sale.fundingGoal = 200_000e6;
         auctionToken.approve(address(crowdSale), 400_000 ether);
-        uint256 saleId = crowdSale.startSale(_sale, daoToken, vestedDao, 1e18, TimelockedToken(address(0)), 60 days);
+        uint256 saleId = crowdSale.startSale(_sale, daoToken, vestedDao, 1e18, 60 days);
         vm.stopPrank();
 
         vm.startPrank(bidder);
@@ -110,8 +108,8 @@ contract CrowdSaleWithNonStandardERC20Test is Test {
         vm.startPrank(bidder);
         crowdSale.claim(saleId, "");
         vm.stopPrank();
+        TimelockedToken auctionTokenVesting = crowdSale.lockingContracts(address(auctionToken));
 
-        (TimelockedToken auctionTokenVesting,) = crowdSale.salesVesting(saleId);
         assertEq(auctionTokenVesting.balanceOf(bidder), _sale.salesAmount);
         assertEq(daoToken.balanceOf(bidder), 800_000 ether);
         assertEq(vestedDao.balanceOf(bidder), 200_000 ether);
@@ -122,7 +120,7 @@ contract CrowdSaleWithNonStandardERC20Test is Test {
         Sale memory _sale = CrowdSaleHelpers.makeSale(emitter, auctionToken, biddingToken);
         _sale.fundingGoal = 200_000e6;
         auctionToken.approve(address(crowdSale), 400_000 ether);
-        uint256 saleId = crowdSale.startSale(_sale, daoToken, vestedDao, 1e18, TimelockedToken(address(0)), 60 days);
+        uint256 saleId = crowdSale.startSale(_sale, daoToken, vestedDao, 1e18, 60 days);
 
         vm.stopPrank();
 
@@ -156,7 +154,7 @@ contract CrowdSaleWithNonStandardERC20Test is Test {
         crowdSale.claim(saleId, "");
         vm.stopPrank();
 
-        (TimelockedToken auctionTokenVesting,) = crowdSale.salesVesting(saleId);
+        TimelockedToken auctionTokenVesting = crowdSale.lockingContracts(address(auctionToken));
 
         assertEq(auctionTokenVesting.balanceOf(bidder), 300_000 ether);
         assertEq(biddingToken.balanceOf(bidder), 850_000e6);
@@ -179,7 +177,7 @@ contract CrowdSaleWithNonStandardERC20Test is Test {
         _sale.fundingGoal = 200_000e6;
         auctionToken.approve(address(crowdSale), 400_000 ether);
         // 1 DAO = 4 $ <=> 1$ = 0.25 DAO, the price is always expressed as 1e18 decimal
-        uint256 saleId = crowdSale.startSale(_sale, daoToken, vestedDao, 25e16, TimelockedToken(address(0)), 60 days);
+        uint256 saleId = crowdSale.startSale(_sale, daoToken, vestedDao, 25e16, 60 days);
         vm.stopPrank();
 
         vm.startPrank(bidder);
@@ -216,7 +214,8 @@ contract CrowdSaleWithNonStandardERC20Test is Test {
         crowdSale.claim(saleId, "");
         vm.stopPrank();
 
-        (TimelockedToken auctionTokenVesting,) = crowdSale.salesVesting(saleId);
+        TimelockedToken auctionTokenVesting = crowdSale.lockingContracts(address(auctionToken));
+
         assertEq(auctionTokenVesting.balanceOf(bidder), 230188679245283018800000);
         assertEq(auctionTokenVesting.balanceOf(bidder2), 169811320754716980800000);
 
@@ -239,7 +238,7 @@ contract CrowdSaleWithNonStandardERC20Test is Test {
         _sale.fundingGoal = 200_000e6;
         auctionToken.approve(address(crowdSale), 400_000 ether);
         //0.25 DAO (18dec) / USDC (6dec)
-        uint256 saleId = crowdSale.startSale(_sale, daoToken, vestedDao, 25e16, TimelockedToken(address(0)), 60 days);
+        uint256 saleId = crowdSale.startSale(_sale, daoToken, vestedDao, 25e16, 60 days);
 
         vm.stopPrank();
 
@@ -278,8 +277,7 @@ contract CrowdSaleWithNonStandardERC20Test is Test {
         assertEq(auctionToken.balanceOf(bidder), 0);
         assertEq(daoToken.balanceOf(bidder), 1_000_000 ether);
         assertEq(daoToken.balanceOf(bidder2), 1_000_000 ether);
-        (TimelockedToken auctionTokenVesting,) = crowdSale.salesVesting(saleId);
-
+        TimelockedToken auctionTokenVesting = crowdSale.lockingContracts(address(auctionToken));
         assertEq(auctionTokenVesting.balanceOf(bidder), 0);
     }
 
@@ -304,7 +302,7 @@ contract CrowdSaleWithNonStandardERC20Test is Test {
         Sale memory _sale = CrowdSaleHelpers.makeSale(emitter, auctionToken, biddingToken);
         _sale.fundingGoal = 50_000e2;
         auctionToken.approve(address(crowdSale), 400_000 ether);
-        uint256 saleId = crowdSale.startSale(_sale, daoToken, vestedDao, 4e18, TimelockedToken(address(0)), 7 days);
+        uint256 saleId = crowdSale.startSale(_sale, daoToken, vestedDao, 4e18, 7 days);
         vm.stopPrank();
 
         vm.startPrank(bidder);
@@ -337,8 +335,7 @@ contract CrowdSaleWithNonStandardERC20Test is Test {
         crowdSale.claim(saleId, "");
         vm.stopPrank();
 
-        (TimelockedToken auctionTokenVesting,) = crowdSale.salesVesting(saleId);
-
+        TimelockedToken auctionTokenVesting = crowdSale.lockingContracts(address(auctionToken));
         assertEq(auctionTokenVesting.balanceOf(bidder), 300_000 ether);
         assertEq(biddingToken.balanceOf(bidder), 62_500e2);
         assertEq(vestedDao.balanceOf(bidder), 150_000 ether);

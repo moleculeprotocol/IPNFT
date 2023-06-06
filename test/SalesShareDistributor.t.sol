@@ -91,7 +91,6 @@ contract SalesShareDistributorTest is Test {
             )
         );
         fractionalizer.initialize(ipnft);
-        fractionalizer.setFeeReceiver(protocolOwner);
 
         distributor = SalesShareDistributor(
             address(

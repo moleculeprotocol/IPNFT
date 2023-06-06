@@ -74,7 +74,8 @@ contract CrowdSale is ReentrancyGuard {
      * @return saleId
      */
     function startSale(Sale calldata sale) public virtual returns (uint256 saleId) {
-        if (sale.closingTime < block.timestamp) {
+        //[M-02]
+        if (sale.closingTime < block.timestamp || sale.closingTime > block.timestamp + 180 days) {
             revert BadSaleDuration();
         }
 
@@ -203,12 +204,15 @@ contract CrowdSale is ReentrancyGuard {
      * @param permission. bytes are handed over to a configured permissioner contract
      */
     function claim(uint256 saleId, bytes memory permission) external nonReentrant returns (uint256 auctionTokens, uint256 refunds) {
-        if (_saleInfo[saleId].state == SaleState.RUNNING) {
-            revert BadSaleState(SaleState.SETTLED, SaleState.RUNNING);
-        }
-        if (_saleInfo[saleId].state == SaleState.FAILED) {
+        SaleState currentState = _saleInfo[saleId].state;
+        if (currentState == SaleState.FAILED) {
             return claimFailed(saleId);
         }
+        //[L-05]
+        if (currentState != SaleState.SETTLED) {
+            revert BadSaleState(SaleState.SETTLED, currentState);
+        }
+
         Sale storage sales = _sales[saleId];
         //we're not querying the permissioner if the sale has failed.
         if (address(sales.permissioner) != address(0)) {
@@ -272,7 +276,7 @@ contract CrowdSale is ReentrancyGuard {
     }
 
     /**
-     * @dev overridden in VestedCrowdSale (will lock auction tokens in vested contract)
+     * @dev overridden in LockingCrowdSale (will lock auction tokens in vested contract)
      */
     function _claimAuctionTokens(uint256 saleId, uint256 tokenAmount) internal virtual {
         _sales[saleId].auctionToken.safeTransfer(msg.sender, tokenAmount);

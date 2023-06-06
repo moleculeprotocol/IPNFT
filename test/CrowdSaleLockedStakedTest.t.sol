@@ -8,8 +8,8 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 import { CrowdSale, Sale, SaleInfo, SaleState, BadDecimals } from "../src/crowdsale/CrowdSale.sol";
-import { VestingConfig, UnsupportedInitializer } from "../src/crowdsale/VestedCrowdSale.sol";
-import { StakedVestedCrowdSale, IncompatibleVestingContract, BadPrice, InvalidDuration } from "../src/crowdsale/StakedVestedCrowdSale.sol";
+import { UnsupportedInitializer } from "../src/crowdsale/LockingCrowdSale.sol";
+import { StakedLockingCrowdSale, IncompatibleLockingContract, BadPrice, InvalidDuration } from "../src/crowdsale/StakedLockingCrowdSale.sol";
 import { TokenVesting } from "@moleculeprotocol/token-vesting/TokenVesting.sol";
 import { TimelockedToken } from "../src/TimelockedToken.sol";
 
@@ -17,7 +17,7 @@ import { FakeERC20 } from "../src/helpers/FakeERC20.sol";
 //import { BioPriceFeed, IPriceFeedConsumer } from "../src/BioPriceFeed.sol";
 import { CrowdSaleHelpers } from "./helpers/CrowdSaleHelpers.sol";
 
-contract CrowdSaleVestedStakedTest is Test {
+contract CrowdSaleLockedStakedTest is Test {
     address deployer = makeAddr("chucknorris");
     address emitter = makeAddr("emitter");
     address bidder = makeAddr("bidder");
@@ -34,7 +34,7 @@ contract CrowdSaleVestedStakedTest is Test {
 
     //BioPriceFeed internal priceFeed;
 
-    StakedVestedCrowdSale internal crowdSale;
+    StakedLockingCrowdSale internal crowdSale;
 
     function setUp() public {
         vm.startPrank(deployer);
@@ -47,7 +47,7 @@ contract CrowdSaleVestedStakedTest is Test {
         // // 1=1 is the trivial case
         // priceFeed.signal(address(biddingToken), address(daoToken), 1e18);
 
-        crowdSale = new StakedVestedCrowdSale();
+        crowdSale = new StakedLockingCrowdSale();
         vm.stopPrank();
 
         auctionToken.mint(emitter, 500_000 ether);
@@ -75,30 +75,27 @@ contract CrowdSaleVestedStakedTest is Test {
         vm.stopPrank();
     }
 
-    function testStakeVestedCrowdSalesBadParameters() public {
+    function testStakeLockingCrowdSalesBadParameters() public {
         vm.startPrank(emitter);
         Sale memory _sale = CrowdSaleHelpers.makeSale(emitter, auctionToken, biddingToken);
         auctionToken.approve(address(crowdSale), 400_000 ether);
 
         vm.expectRevert(); //cannot call .decimals() on 0x0
-        crowdSale.startSale(_sale, IERC20Metadata(address(0)), TokenVesting(address(0)), 0, TimelockedToken(address(0)), 60 days);
+        crowdSale.startSale(_sale, IERC20Metadata(address(0)), TokenVesting(address(0)), 0, 60 days);
 
         vm.expectRevert(); //need to bring a stake vesting contract
-        crowdSale.startSale(_sale, daoToken, TokenVesting(address(0)), 0, TimelockedToken(address(0)), 60 days);
+        crowdSale.startSale(_sale, daoToken, TokenVesting(address(0)), 0, 60 days);
 
-        TokenVesting wrongStakeVestingContract = new TokenVesting(auctionToken, "vested mol", "vmol");
-        wrongStakeVestingContract.grantRole(wrongStakeVestingContract.ROLE_CREATE_SCHEDULE(), address(crowdSale));
+        TokenVesting wrongStakelockingContract = new TokenVesting(auctionToken, "vested mol", "vmol");
+        wrongStakelockingContract.grantRole(wrongStakelockingContract.ROLE_CREATE_SCHEDULE(), address(crowdSale));
 
-        vm.expectRevert(IncompatibleVestingContract.selector);
-        crowdSale.startSale(_sale, daoToken, wrongStakeVestingContract, 0, TimelockedToken(address(0)), 60 days);
+        vm.expectRevert(IncompatibleLockingContract.selector);
+        crowdSale.startSale(_sale, daoToken, wrongStakelockingContract, 0, 60 days);
 
         vm.expectRevert(BadPrice.selector);
-        crowdSale.startSale(_sale, daoToken, vestedDao, 0, TimelockedToken(address(0)), 60 days);
+        crowdSale.startSale(_sale, daoToken, vestedDao, 0, 60 days);
 
-        vm.expectRevert(InvalidDuration.selector);
-        crowdSale.startSale(_sale, daoToken, vestedDao, 1, TimelockedToken(address(0)), 6 days);
-
-        crowdSale.startSale(_sale, daoToken, vestedDao, 1, TimelockedToken(address(0)), 60 days);
+        crowdSale.startSale(_sale, daoToken, vestedDao, 1e18, 60 days);
     }
 
     function testCannotSetupCrowdSaleWithParentFunctions() public {
@@ -110,7 +107,7 @@ contract CrowdSaleVestedStakedTest is Test {
         crowdSale.startSale(_sale);
 
         vm.expectRevert(UnsupportedInitializer.selector);
-        crowdSale.startSale(_sale, TimelockedToken(address(0)), 7 days);
+        crowdSale.startSale(_sale, 7 days);
         vm.stopPrank();
     }
 
@@ -119,7 +116,7 @@ contract CrowdSaleVestedStakedTest is Test {
         Sale memory _sale = CrowdSaleHelpers.makeSale(emitter, auctionToken, biddingToken);
 
         auctionToken.approve(address(crowdSale), 400_000 ether);
-        uint256 saleId = crowdSale.startSale(_sale, daoToken, vestedDao, 1e18, TimelockedToken(address(0)), 60 days);
+        uint256 saleId = crowdSale.startSale(_sale, daoToken, vestedDao, 1e18, 60 days);
 
         vm.stopPrank();
 
@@ -145,7 +142,7 @@ contract CrowdSaleVestedStakedTest is Test {
         crowdSale.claim(saleId, "");
         vm.stopPrank();
 
-        (TimelockedToken auctionTokenVesting,) = crowdSale.salesVesting(saleId);
+        TimelockedToken auctionTokenVesting = crowdSale.lockingContracts(address(auctionToken));
         assertEq(auctionTokenVesting.balanceOf(bidder), _sale.salesAmount);
         assertEq(daoToken.balanceOf(bidder), 800_000 ether);
         assertEq(vestedDao.balanceOf(bidder), 200_000 ether);
@@ -155,7 +152,7 @@ contract CrowdSaleVestedStakedTest is Test {
         vm.startPrank(emitter);
         Sale memory _sale = CrowdSaleHelpers.makeSale(emitter, auctionToken, biddingToken);
         auctionToken.approve(address(crowdSale), 400_000 ether);
-        uint256 saleId = crowdSale.startSale(_sale, daoToken, vestedDao, 1e18, TimelockedToken(address(0)), 60 days);
+        uint256 saleId = crowdSale.startSale(_sale, daoToken, vestedDao, 1e18, 60 days);
 
         vm.stopPrank();
 
@@ -242,7 +239,7 @@ contract CrowdSaleVestedStakedTest is Test {
         assertEq(zeroRefunds * zeroTokens, 0);
         vm.stopPrank();
 
-        (TimelockedToken auctionTokenVesting,) = crowdSale.salesVesting(saleId);
+        TimelockedToken auctionTokenVesting = crowdSale.lockingContracts(address(auctionToken));
 
         assertEq(auctionTokenVesting.balanceOf(bidder), 300_000 ether);
         assertEq(biddingToken.balanceOf(bidder), 850_000 ether);
@@ -264,7 +261,7 @@ contract CrowdSaleVestedStakedTest is Test {
         Sale memory _sale = CrowdSaleHelpers.makeSale(emitter, auctionToken, biddingToken);
         auctionToken.approve(address(crowdSale), 400_000 ether);
         // 1 DAO = 4 $
-        uint256 saleId = crowdSale.startSale(_sale, daoToken, vestedDao, 25e16, TimelockedToken(address(0)), 60 days);
+        uint256 saleId = crowdSale.startSale(_sale, daoToken, vestedDao, 25e16, 60 days);
 
         vm.stopPrank();
 
@@ -301,7 +298,7 @@ contract CrowdSaleVestedStakedTest is Test {
         crowdSale.claim(saleId, "");
         vm.stopPrank();
 
-        (TimelockedToken auctionTokenVesting,) = crowdSale.salesVesting(saleId);
+        TimelockedToken auctionTokenVesting = crowdSale.lockingContracts(address(auctionToken));
         assertEq(auctionTokenVesting.balanceOf(bidder), 230188679245283018800000);
         assertEq(auctionTokenVesting.balanceOf(bidder2), 169811320754716980800000);
 
@@ -323,7 +320,7 @@ contract CrowdSaleVestedStakedTest is Test {
         Sale memory _sale = CrowdSaleHelpers.makeSale(emitter, auctionToken, biddingToken);
         auctionToken.approve(address(crowdSale), 400_000 ether);
 
-        uint256 saleId = crowdSale.startSale(_sale, daoToken, vestedDao, 25e16, TimelockedToken(address(0)), 60 days);
+        uint256 saleId = crowdSale.startSale(_sale, daoToken, vestedDao, 25e16, 60 days);
         vm.stopPrank();
 
         vm.startPrank(bidder);
@@ -357,7 +354,7 @@ contract CrowdSaleVestedStakedTest is Test {
         assertEq(daoToken.balanceOf(bidder), 1_000_000 ether);
 
         assertEq(auctionToken.balanceOf(bidder), 0);
-        (TimelockedToken auctionTokenVesting,) = crowdSale.salesVesting(saleId);
+        TimelockedToken auctionTokenVesting = crowdSale.lockingContracts(address(auctionToken));
 
         assertEq(auctionTokenVesting.balanceOf(bidder), 0);
     }
@@ -365,31 +362,60 @@ contract CrowdSaleVestedStakedTest is Test {
     function testClaimLongAfterVestingPeriod() public {
         vm.startPrank(emitter);
         Sale memory _sale = CrowdSaleHelpers.makeSale(emitter, auctionToken, biddingToken);
-        _sale.closingTime = uint64(block.timestamp + 7 days);
+        _sale.closingTime = uint64(block.timestamp + 3 days);
         auctionToken.approve(address(crowdSale), 400_000 ether);
-        uint256 saleId = crowdSale.startSale(_sale, daoToken, vestedDao, 1e18, TimelockedToken(address(0)), 60 days);
+        uint256 saleId = crowdSale.startSale(_sale, daoToken, vestedDao, 1e18, 3 days);
+
         vm.stopPrank();
 
         vm.startPrank(bidder);
-        crowdSale.placeBid(saleId, 200_000 ether, "");
+        crowdSale.placeBid(saleId, 100_000 ether, "");
         vm.stopPrank();
 
-        vm.warp(block.timestamp + 7 days);
+        vm.startPrank(bidder2);
+        crowdSale.placeBid(saleId, 100_000 ether, "");
+        vm.stopPrank();
+
+        vm.warp(_sale.closingTime + 15 /*seconds*/ );
         vm.startPrank(anyone);
         crowdSale.settle(saleId);
         vm.stopPrank();
 
-        vm.warp(block.timestamp + 4440 days);
         vm.startPrank(bidder);
         crowdSale.claim(saleId, "");
-
-        (TimelockedToken auctionTokenVesting,) = crowdSale.salesVesting(saleId);
-
-        assertEq(auctionTokenVesting.balanceOf(bidder), 0);
-        assertEq(auctionToken.balanceOf(bidder), 400_000 ether);
-
-        assertEq(vestedDao.balanceOf(bidder), 0);
-        assertEq(daoToken.balanceOf(bidder), 1_000_000 ether);
         vm.stopPrank();
+
+        TimelockedToken lockedAuctionToken = crowdSale.lockingContracts(address(auctionToken));
+
+        assertEq(lockedAuctionToken.balanceOf(bidder), 200_000 ether);
+
+        (, TokenVesting stakesVestingContract,) = crowdSale.salesStaking(saleId);
+        bytes32 _scheduledId = stakesVestingContract.computeVestingScheduleIdForAddressAndIndex(bidder, 0);
+        assertEq(stakesVestingContract.computeReleasableAmount(_scheduledId), 0);
+
+        //even though duration is 3 days, the vesting duration is 7 (the minimum of a vesting contract) and the remaining days now are 5
+        vm.warp(_sale.closingTime + 6 days);
+        assertEq(stakesVestingContract.computeReleasableAmount(_scheduledId), 0);
+
+        vm.warp(_sale.closingTime + 7 days);
+        assertEq(stakesVestingContract.computeReleasableAmount(_scheduledId), 100_000 ether);
+
+        vm.warp(_sale.closingTime + 4440 days);
+
+        vm.startPrank(bidder);
+        stakesVestingContract.releaseAvailableTokensForHolder(bidder);
+        assertEq(daoToken.balanceOf(bidder), 1_000_000 ether);
+        assertEq(auctionToken.balanceOf(bidder), 0 ether);
+        vm.stopPrank();
+
+        vm.startPrank(bidder2);
+        crowdSale.claim(saleId, "");
+
+        //locking has been skipped
+        assertEq(vestedDao.balanceOf(bidder2), 0);
+        assertEq(lockedAuctionToken.balanceOf(bidder2), 0 ether);
+        assertEq(auctionToken.balanceOf(bidder2), 200_000 ether);
+        assertEq(daoToken.balanceOf(bidder2), 1_000_000 ether);
+        // vm.stopPrank();
     }
 }

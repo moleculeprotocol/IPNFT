@@ -171,7 +171,8 @@ contract IPNFT is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IReser
 
     /// @notice in case someone sends Eth to this contract, this function gets it out again
     function withdrawAll() public whenNotPaused onlyOwner {
-        require(payable(_msgSender()).send(address(this).balance), "transfer failed");
+        (bool success,) = _msgSender().call{ value: address(this).balance }("");
+        require(success, "transfer failed");
     }
 
     /// @inheritdoc UUPSUpgradeable
@@ -189,5 +190,9 @@ contract IPNFT is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IReser
     /// @inheritdoc ERC721Upgradeable
     function tokenURI(uint256 tokenId) public view virtual override(ERC721URIStorageUpgradeable, ERC721Upgradeable) returns (string memory) {
         return super.tokenURI(tokenId);
+    }
+
+    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC721Upgradeable, ERC721URIStorageUpgradeable) returns (bool) {
+        return super.supportsInterface(interfaceId);
     }
 }

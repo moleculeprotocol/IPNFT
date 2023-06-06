@@ -125,18 +125,16 @@ type CrowdSale @entity {
   state: SaleState!
   auctionToken: ERC20Token # could also use FractionalizedToken
   salesAmount: BigInt! #the amount of tokens to be auctioned
-  vestedAuctionToken: TimelockedToken #the vested auction token that bidders partially receive when claiming
-  auctionCliff: BigInt # The auction token cliff
+  lockedAuctionToken: TimelockedToken #the locked auction token that bidders partially receive when claiming
+  auctionLockingDuration: BigInt # The duration for how long auction tokens are locked
   biddingToken: ERC20Token
   fundingGoal: BigInt! #the amount of tokens to be raised
   amountRaised: BigInt! #the amount of tokens raised so far
   stakingToken: ERC20Token
   amountStaked: BigInt! #the amount of tokens staked so far
   vestedStakingToken: ERC20Token #the vested staking token that bidders partially receive after claiming
-  stakingCliff: BigInt! # The staking token cliff
+  stakingDuration: BigInt! # The duration for how long staked tokens are locked ("cliff" in vesting terms)
   wadFixedStakedPerBidPrice: BigInt # the fixed price of stake / bid token
-  #type: String! #the type of auction, can be "basic", "vested" "stakedVested"
-
   contributions: [Contribution!] @derivedFrom(field: "crowdSale")
 }
 

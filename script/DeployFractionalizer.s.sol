@@ -8,7 +8,7 @@ import { Fractionalizer } from "../src/Fractionalizer.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import { BioPriceFeed } from "../src/BioPriceFeed.sol";
 import { IPermissioner, TermsAcceptedPermissioner } from "../src/Permissioner.sol";
-import { StakedVestedCrowdSale } from "../src/crowdsale/StakedVestedCrowdSale.sol";
+import { StakedLockingCrowdSale } from "../src/crowdsale/StakedLockingCrowdSale.sol";
 
 contract DeployFractionalizerInfrastructure is Script {
     function run() public {
@@ -26,14 +26,14 @@ contract DeployFractionalizerInfrastructure is Script {
         );
         fractionalizer.initialize(IPNFT(ipnftAddress));
 
-        StakedVestedCrowdSale stakedVestedCrowdSale = new StakedVestedCrowdSale();
+        StakedLockingCrowdSale stakedLockingCrowdSale = new StakedLockingCrowdSale();
 
         vm.stopBroadcast();
 
         console.log("PRICEFEED_ADDRESS=%s", address(feed));
         console.log("TERMS_ACCEPTED_PERMISSIONER_ADDRESS=%s", address(p));
         console.log("FRACTIONALIZER_ADDRESS=%s", address(fractionalizer));
-        console.log("STAKED_VESTED_CROWDSALE_ADDRESS=%s", address(stakedVestedCrowdSale));
+        console.log("STAKED_LOCKING_CROWDSALE_ADDRESS=%s", address(stakedLockingCrowdSale));
     }
 }
 

@@ -18,7 +18,7 @@ ERC20 contracts are spawned when the IPNFT is fractionalized. Their bytecode is 
 
 ### fixed stake pricing
 
-The `StakedVestedCrowdSale` will require bidders to send along the same _value_ of staked tokens as they provide bidding tokens. This value must be determined by a price ratio which cannot be reliably / generally determined on chain for tokens with low trading volume. While we have built our own oracle proxy contract (BioPriceFeed) that might be extended in the future to support a fluent staking behaviour (the bidding vs DAO token price is likely varying during the sale). At the moment the sales initiator provides a fixed staked token price ratio when starting the sale.
+The `StakedLockingCrowdSale` will require bidders to send along the same _value_ of staked tokens as they provide bidding tokens. This value must be determined by a price ratio which cannot be reliably / generally determined on chain for tokens with low trading volume. While we have built our own oracle proxy contract (BioPriceFeed) that might be extended in the future to support a fluent staking behaviour (the bidding vs DAO token price is likely varying during the sale). At the moment the sales initiator provides a fixed staked token price ratio when starting the sale.
 
 ### bidding token support
 

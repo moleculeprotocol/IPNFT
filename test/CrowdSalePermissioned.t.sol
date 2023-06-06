@@ -10,8 +10,7 @@ import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
 import { FractionalizedToken, Metadata } from "../src/FractionalizedToken.sol";
 import { CrowdSale, Sale, SaleInfo, SaleState, BadDecimals } from "../src/crowdsale/CrowdSale.sol";
-import { VestingConfig } from "../src/crowdsale/VestedCrowdSale.sol";
-import { StakedVestedCrowdSale, IncompatibleVestingContract, BadPrice } from "../src/crowdsale/StakedVestedCrowdSale.sol";
+import { StakedLockingCrowdSale, BadPrice } from "../src/crowdsale/StakedLockingCrowdSale.sol";
 import { IPermissioner, TermsAcceptedPermissioner, InvalidSignature } from "../src/Permissioner.sol";
 
 import { TokenVesting } from "@moleculeprotocol/token-vesting/TokenVesting.sol";
@@ -38,7 +37,7 @@ contract CrowdSalePermissionedTest is Test {
     TermsAcceptedPermissioner internal permissioner;
     //BioPriceFeed internal priceFeed;
 
-    StakedVestedCrowdSale internal crowdSale;
+    StakedLockingCrowdSale internal crowdSale;
 
     function setUp() public {
         (bidder, bidderPk) = makeAddrAndKey("bidder");
@@ -50,7 +49,7 @@ contract CrowdSalePermissionedTest is Test {
         biddingToken = new FakeERC20("USD token", "USDC");
         daoToken = new FakeERC20("DAO token", "DAO");
 
-        crowdSale = new StakedVestedCrowdSale();
+        crowdSale = new StakedLockingCrowdSale();
         auctionToken.issue(emitter, 500_000 ether);
         vm.stopPrank();
 
@@ -78,7 +77,7 @@ contract CrowdSalePermissionedTest is Test {
         _sale.permissioner = permissioner;
         auctionToken.approve(address(crowdSale), 400_000 ether);
 
-        uint256 saleId = crowdSale.startSale(_sale, daoToken, vestedDao, 1e18, TimelockedToken(address(0)), 60 days);
+        uint256 saleId = crowdSale.startSale(_sale, daoToken, vestedDao, 1e18, 60 days);
         vm.stopPrank();
 
         string memory terms = permissioner.specificTermsV1(auctionToken);
@@ -112,7 +111,8 @@ contract CrowdSalePermissionedTest is Test {
         crowdSale.claim(saleId, xsignature);
         vm.stopPrank();
 
-        (TimelockedToken auctionTokenVesting,) = crowdSale.salesVesting(saleId);
+        TimelockedToken auctionTokenVesting = crowdSale.lockingContracts(address(auctionToken));
+
         assertEq(auctionTokenVesting.balanceOf(bidder), _sale.salesAmount);
         assertEq(daoToken.balanceOf(bidder), 800_000 ether);
         assertEq(vestedDao.balanceOf(bidder), 200_000 ether);

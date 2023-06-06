@@ -32,9 +32,6 @@ contract FractionalizerNext is UUPSUpgradeable, OwnableUpgradeable {
 
     IPNFT ipnft;
 
-    address feeReceiver;
-    uint256 fractionalizationPercentage;
-
     mapping(uint256 => FractionalizedTokenNext) public fractionalized;
     /// @custom:oz-upgrades-unsafe-allow state-variable-immutable
     address immutable tokenImplementation;
