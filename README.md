@@ -37,8 +37,8 @@ IP-NFTs allow their users to tokenize intellectual property. This repo contains 
 - Bio pricefeed: 0x8647dEFdEAAdF5448d021B364B2F17815aba4360
   <https://goerli.etherscan.io/address/0x8647defdeaadf5448d021b364b2f17815aba4360#code>
 
-- Staked/Vested Crowdsale: 0xFa7e83f13a833E688c7b45c7380D72c97133e16F
-  <https://goerli.etherscan.io/address/0xFa7e83f13a833E688c7b45c7380D72c97133e16F#code>
+- Staked/Vested Crowdsale: 0x1c52b03bf2F028CA5FD632685A7CC1A1B6B5c2Bb
+  <https://goerli.etherscan.io/address/0x1c52b03bf2F028CA5FD632685A7CC1A1B6B5c2Bb#code>
 
 #### some test tokens
 
