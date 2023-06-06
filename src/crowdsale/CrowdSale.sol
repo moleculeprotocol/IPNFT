@@ -189,11 +189,12 @@ contract CrowdSale is ReentrancyGuard {
      * @return refunds wei value of bidding tokens to return
      */
     function getClaimableAmounts(uint256 saleId, address bidder) public view virtual returns (uint256 auctionTokens, uint256 refunds) {
-        uint256 biddingRatio = _contributions[saleId][bidder].divWadDown(_saleInfo[saleId].total);
+        SaleInfo storage saleInfo = _saleInfo[saleId];
+        uint256 biddingRatio = (saleInfo.total == 0) ? 0 : _contributions[saleId][bidder].divWadDown(saleInfo.total);
         auctionTokens = biddingRatio.mulWadDown(_sales[saleId].salesAmount);
 
-        if (_saleInfo[saleId].surplus != 0) {
-            refunds = biddingRatio.mulWadDown(_saleInfo[saleId].surplus);
+        if (saleInfo.surplus != 0) {
+            refunds = biddingRatio.mulWadDown(saleInfo.surplus);
         }
     }
 
