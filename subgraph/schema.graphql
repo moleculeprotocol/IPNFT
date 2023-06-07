@@ -48,6 +48,7 @@ type TimelockedToken @entity {
   symbol: String!
   name: String
   underlyingToken: ERC20Token
+  fractionalized: Fractionalized
   schedules: [LockedSchedule!] @derivedFrom(field: "tokenContract")
 }
 
