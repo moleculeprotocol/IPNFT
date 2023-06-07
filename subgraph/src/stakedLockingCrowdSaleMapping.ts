@@ -40,7 +40,6 @@ function makeTimelockedToken(
   underlyingToken: ERC20Token
 ): TimelockedToken {
   let token = TimelockedToken.load(_contract._address)
-  let fractionalized = Fractionalized.load(underlyingToken.id.toHexString())
 
   if (!token) {
     token = new TimelockedToken(_contract._address)
@@ -49,6 +48,7 @@ function makeTimelockedToken(
     token.symbol = _contract.symbol()
     token.name = _contract.name()
     token.underlyingToken = underlyingToken.id
+    let fractionalized = Fractionalized.load(underlyingToken.id.toHexString())
     if (fractionalized) {
       token.fractionalized = fractionalized.id
     }
@@ -70,6 +70,18 @@ export function handleStarted(event: StartedEvent): void {
     ])
     return
   }
+  if (!fractionalized.lockedToken) {
+    fractionalized.lockedToken = event.params.lockingToken
+  } else if (fractionalized.lockedToken != event.params.lockingToken) {
+    log.error(
+      'the locking token per fractionalized should be unique {} != {}',
+      [
+        fractionalized.lockedToken.toHexString(),
+        event.params.lockingToken.toHexString()
+      ]
+    )
+  }
+
   crowdSale.fractionalizedIpnft = fractionalized.id
   crowdSale.issuer = event.params.issuer
   crowdSale.beneficiary = event.params.sale.beneficiary
@@ -80,14 +92,8 @@ export function handleStarted(event: StartedEvent): void {
   const auctionToken: ERC20Token = makeERC20Token(
     IERC20Metadata.bind(event.params.sale.auctionToken)
   )
-  crowdSale.auctionToken = auctionToken.id
 
   crowdSale.salesAmount = event.params.sale.salesAmount
-  crowdSale.lockedAuctionToken = makeTimelockedToken(
-    IERC20Metadata.bind(event.params.lockingToken),
-    auctionToken
-  ).id
-
   crowdSale.auctionLockingDuration = event.params.lockingDuration
 
   crowdSale.biddingToken = makeERC20Token(
