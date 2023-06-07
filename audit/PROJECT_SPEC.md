@@ -1,18 +1,18 @@
 # Project Spec
 
-## Fractionalizer
+## Synthesizer
 
-### Increasing Shares (Fraction Tokens)
+### Increasing Shares (Molecules)
 
-The original owner of an IPNFT can tell the `FractionalizedToken` to `issue` any number of times and dilute existing fraction token holders as long as the `FractionalizedToken` is not marked as `capped`. This is intended functionality for the time being, despite being a perceived vulnerability. In the future, we will use off-chain voting (Snapshot) with an oracle (UMA oSnap) to prevent non-consensus minting and dilution, but for now we are aware of and fine with this. For now, we consider the IP-NFT original owner (multisig) a trusted entity.
+The original owner of an IPNFT can tell the `Molecules` to `issue` any number of times and dilute existing molecule holders as long as the `Molecules` is not marked as `capped`. This is intended functionality for the time being, despite being a perceived vulnerability. In the future, we will use off-chain voting (Snapshot) with an oracle (UMA oSnap) to prevent non-consensus minting and dilution, but for now we are aware of and fine with this. For now, we consider the IP-NFT original owner (multisig) a trusted entity.
 
-### Unique Fractionalization identifiers
+### Unique Synthesis identifiers
 
-An IPNFT can be fractionalized several times but only once per "original owner". That's not a perfect solution and doesn't cover the constructed case that someone fractionalizes, sells to someone else, who fractionalizes it again, and sells it back to the first owner.
+An IPNFT can be synthesized several times but only once per "original owner". That's not a perfect solution and doesn't cover the constructed case that someone synthesizes, sells to someone else, who synthesizes it again, and sells it back to the first owner.
 
-### ERC20 fraction tokens are not (will never be) upgradeable
+### ERC20 Molecules are not (will never be) upgradeable
 
-ERC20 contracts are spawned when the IPNFT is fractionalized. Their bytecode is fixed and unproxied. Their template code is stored on the Fractionalizer contract so we can update the template itself but that only affects token contracts deployed on new fractionalization actions. The old tokens will stay at the code level they have been created with.
+ERC20 contracts are spawned when the IPNFT is synthesized. Their bytecode is fixed and unproxied. Their template code is stored on the Synthesizer contract so we can update the template itself but that only affects token contracts deployed on new synthesis actions. The old tokens will stay at the code level they have been created with.
 
 ## Crowdsale
 
@@ -32,8 +32,8 @@ We're using solmate's FP math library to calculate refund / vesting / return rat
 
 ### IPNFT Transferability
 
-Currently, the owner of an IPNFT can transfer or sell the IPNFT at their own discretion, potentially without the consent of fraction token holders. In the future we will ensure the IPNFT is locked during the `fractionalizeIpnft` function to ensure all IPNFT transfers and sales can be governed and enforced on chain. This trust tradeoff can be responded to by checking that the IPNFT is held by a sufficiently trusted multisig at the moment.
+Currently, the owner of an IPNFT can transfer or sell the IPNFT at their own discretion, potentially without the consent of molecule holders. In the future we will ensure the IPNFT is locked during the `synthesizeIpnft` function to ensure all IPNFT transfers and sales can be governed and enforced on chain. This trust tradeoff can be responded to by checking that the IPNFT is held by a sufficiently trusted multisig at the moment.
 
 ### IPNFT Sale Share Claiming
 
-Currently, the owner of an IPNFT can sell the IPNFT without the use of `Schmackoswap`, and claim all of the proceeds from the sale without distributing them to fraction holders, obviously against their will. In the future we will ensure the IPNFT is locked after the `fractionalizeIpnft` function has been called to ensure all sales are governed and enforced on chain, and enforce the IPNFT holder to call `Schmackoswap` with the `Fractionalizer` as the beneficiary, ensuring fraction token holders receive their share.
+Currently, the owner of an IPNFT can sell the IPNFT without the use of `Schmackoswap`, and claim all of the proceeds from the sale without distributing them to molecule holders, obviously against their will. In the future we will ensure the IPNFT is locked after the `synthesizeIpnft` function has been called to ensure all sales are governed and enforced on chain, and enforce the IPNFT holder to call `Schmackoswap` with the `Synthesizer` as the beneficiary, ensuring molecule holders receive their share.

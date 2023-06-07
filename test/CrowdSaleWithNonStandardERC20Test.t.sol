@@ -40,7 +40,7 @@ contract CrowdSaleWithNonStandardERC20Test is Test {
     function setUp() public {
         vm.startPrank(deployer);
 
-        auctionToken = new FakeERC20("Fractionalized IPNFT","FAM");
+        auctionToken = new FakeERC20("MOLECULES","MOL");
         biddingToken = new FakeERC20("USD token", "USDC");
         biddingToken.setDecimals(6);
 

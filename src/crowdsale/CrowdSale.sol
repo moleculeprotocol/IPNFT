@@ -6,7 +6,7 @@ import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.s
 import { ReentrancyGuard } from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import { FixedPointMathLib } from "solmate/utils/FixedPointMathLib.sol";
 import { IPermissioner } from "../Permissioner.sol";
-import { FractionalizedToken } from "../FractionalizedToken.sol";
+import { Molecules } from "../Molecules.sol";
 
 enum SaleState {
     UNKNOWN,
@@ -117,7 +117,7 @@ contract CrowdSale is ReentrancyGuard {
     }
 
     /**
-     * @dev even though `auctionToken` is casted to `FractionalizedToken` this should still work with IPNFT agnostic tokens
+     * @dev even though `auctionToken` is casted to `Molecules` this should still work with IPNFT agnostic tokens
      * @param saleId the sale id
      * @param biddingTokenAmount the amount of bidding tokens
      * @param permission bytes are handed over to a configured permissioner contract. Set to 0x0 / "" / [] if not needed
@@ -139,7 +139,7 @@ contract CrowdSale is ReentrancyGuard {
         }
 
         if (address(sale.permissioner) != address(0)) {
-            sale.permissioner.accept(FractionalizedToken(address(sale.auctionToken)), msg.sender, permission);
+            sale.permissioner.accept(Molecules(address(sale.auctionToken)), msg.sender, permission);
         }
 
         _bid(saleId, biddingTokenAmount);
@@ -199,7 +199,7 @@ contract CrowdSale is ReentrancyGuard {
     }
 
     /**
-     * @dev even though `auctionToken` is casted to `FractionalizedToken` this should still work with IPNFT agnostic tokens
+     * @dev even though `auctionToken` is casted to `Molecules` this should still work with IPNFT agnostic tokens
      * @notice public method that refunds and lets user redeem their sales shares
      * @param saleId the sale id
      * @param permission. bytes are handed over to a configured permissioner contract
@@ -217,7 +217,7 @@ contract CrowdSale is ReentrancyGuard {
         Sale storage sales = _sales[saleId];
         //we're not querying the permissioner if the sale has failed.
         if (address(sales.permissioner) != address(0)) {
-            sales.permissioner.accept(FractionalizedToken(address(sales.auctionToken)), msg.sender, permission);
+            sales.permissioner.accept(Molecules(address(sales.auctionToken)), msg.sender, permission);
         }
         (auctionTokens, refunds) = getClaimableAmounts(saleId, msg.sender);
         //a reentrancy won't have any effect after setting this to 0.

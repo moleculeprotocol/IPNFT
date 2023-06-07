@@ -16,7 +16,7 @@ import { IPermissioner, TermsAcceptedPermissioner } from "../../src/Permissioner
 import { CrowdSale, Sale, SaleInfo } from "../../src/crowdsale/CrowdSale.sol";
 import { StakedLockingCrowdSale } from "../../src/crowdsale/StakedLockingCrowdSale.sol";
 import { FakeERC20 } from "../../src/helpers/FakeERC20.sol";
-import { FractionalizedToken } from "../../src/FractionalizedToken.sol";
+import { Molecules } from "../../src/Molecules.sol";
 
 import { CommonScript } from "./Common.sol";
 
@@ -33,14 +33,14 @@ contract DeployCrowdSale is CommonScript {
         vestedDaoToken.grantRole(vestedDaoToken.ROLE_CREATE_SCHEDULE(), address(stakedLockingCrowdSale));
         vm.stopBroadcast();
 
-        //console.log("vested fraction Token %s", address(vestedMolToken));
+        //console.log("vested molecules Token %s", address(vestedMolToken));
         console.log("STAKED_LOCKING_CROWDSALE_ADDRESS=%s", address(stakedLockingCrowdSale));
     }
 }
 
 /**
- * @notice execute Ipnft.s.sol && Fixture.s.sol && Fractionalize.s.sol first
- * @notice assumes that bob (hh1) owns IPNFT#1 and has fractionalized it
+ * @notice execute Ipnft.s.sol && Fixture.s.sol && Synthesize.s.sol first
+ * @notice assumes that bob (hh1) owns IPNFT#1 and has synthesized it
  */
 contract FixtureCrowdSale is CommonScript {
     FakeERC20 internal usdc;
@@ -48,7 +48,7 @@ contract FixtureCrowdSale is CommonScript {
     FakeERC20 daoToken;
     TokenVesting vestedDaoToken;
 
-    FractionalizedToken internal auctionToken;
+    Molecules internal auctionToken;
 
     StakedLockingCrowdSale stakedLockingCrowdSale;
     TermsAcceptedPermissioner permissioner;
@@ -67,7 +67,7 @@ contract FixtureCrowdSale is CommonScript {
 
     function setupVestedMolToken() internal {
         vm.startBroadcast(deployer);
-        auctionToken = FractionalizedToken(vm.envAddress("FRACTIONALIZED_TOKEN_ADDRESS"));
+        auctionToken = Molecules(vm.envAddress("MOLECULES_ADDRESS"));
 
         vestedDaoToken.grantRole(vestedDaoToken.ROLE_CREATE_SCHEDULE(), address(stakedLockingCrowdSale));
         vm.stopBroadcast();
@@ -116,7 +116,7 @@ contract FixtureCrowdSale is CommonScript {
         placeBid(alice, 600 ether, saleId, abi.encodePacked(r, s, v));
         (v, r, s) = vm.sign(charliePk, ECDSA.toEthSignedMessageHash(abi.encodePacked(terms)));
         placeBid(charlie, 200 ether, saleId, abi.encodePacked(r, s, v));
-        console.log("LOCKED_FRACTIONALIZED_TOKEN_ADDRESS=%s", address(lockedMolToken));
+        console.log("LOCKED_MOLECULES_ADDRESS=%s", address(lockedMolToken));
         console.log("SALE_ID=%s", saleId);
     }
 }
@@ -126,7 +126,7 @@ contract ClaimSale is CommonScript {
         prepareAddresses();
         TermsAcceptedPermissioner permissioner = TermsAcceptedPermissioner(vm.envAddress("TERMS_ACCEPTED_PERMISSIONER_ADDRESS"));
         StakedLockingCrowdSale stakedLockingCrowdSale = StakedLockingCrowdSale(vm.envAddress("STAKED_LOCKING_CROWDSALE_ADDRESS"));
-        FractionalizedToken auctionToken = FractionalizedToken(vm.envAddress("FRACTIONALIZED_TOKEN_ADDRESS"));
+        Molecules auctionToken = Molecules(vm.envAddress("MOLECULES_ADDRESS"));
 
         uint256 saleId = vm.envUint("SALE_ID");
 

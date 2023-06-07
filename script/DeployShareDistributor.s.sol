@@ -6,7 +6,7 @@ import "forge-std/console.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import { IPNFT } from "../src/IPNFT.sol";
 import { SchmackoSwap } from "../src/SchmackoSwap.sol";
-import { Fractionalizer } from "../src/Fractionalizer.sol";
+import { Synthesizer } from "../src/Synthesizer.sol";
 import { Mintpass } from "../src/Mintpass.sol";
 import { SalesShareDistributor } from "../src/SalesShareDistributor.sol";
 

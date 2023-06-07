@@ -22,7 +22,7 @@ contract CrowdSaleFuzzTest is Test {
 
     function setUp() public {
         crowdSale = new CrowdSale();
-        auctionToken = new FakeERC20("Fractionalized IPNFT","FAM");
+        auctionToken = new FakeERC20("MOLECULES","MOL");
         biddingToken = new FakeERC20("USD token", "USDC");
     }
 

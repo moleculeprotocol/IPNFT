@@ -18,7 +18,7 @@ module.exports = {
     address: '0xAf0f99dcC64E8a6549d32013AC9f2C3FA7834688',
     startBlock: 8151797
   },
-  fractionalizer: {
+  synthesizer: {
     address: '0x593ED28cb4E8d143e16D83D151a2CC01fDa10B0A',
     startBlock: 9099340
   },

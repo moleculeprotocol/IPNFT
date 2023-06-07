@@ -6,30 +6,30 @@ type Ipnft @entity {
   symbol: String
   listings: [Listing!] @derivedFrom(field: "ipnft")
   readers: [CanRead!] @derivedFrom(field: "ipnft")
-  fractionalized: [Fractionalized!] @derivedFrom(field: "ipnft")
+  reactedIpnfts: [ReactedIpnft!] @derivedFrom(field: "ipnft")
 }
 
-type Fractionalized @entity {
-  id: ID! # fractionId hash of original owner + tokenId
+type ReactedIpnft @entity {
+  id: ID! # Molecules tokenaddress
   ipnft: Ipnft!
   createdAt: BigInt!
   erc20address: Bytes! #address of the underlying erc20 token
   agreementCid: String! #IPFS CID string of FAM Agreement
   originalOwner: Bytes! # address of the issuer
-  totalIssued: BigInt! #the highest amount of fractions issued, this can be raised by the owner
-  circulatingSupply: BigInt! #the amount of unburnt fractions
+  totalIssued: BigInt! #the highest amount of molecules issued, this can be raised by the owner
+  circulatingSupply: BigInt! #the amount of unburnt molecules
   symbol: String!
   tokenName: String!
   #   paymentToken: Bytes #address ERC20 Token
   #   paidPrice: BigInt #the price paid for the original ipnft
   #   claimedShares: BigInt! # the amount of shares that have already been claimed. This needs to have a fulfilledListingId to be set
-  fractions: [Fraction!] @derivedFrom(field: "fractionalizedIpfnt")
-  crowdsales: [CrowdSale!] @derivedFrom(field: "fractionalizedIpnft")
+  molecules: [Molecule!] @derivedFrom(field: "reactedIpnft")
+  crowdsales: [CrowdSale!] @derivedFrom(field: "reactedIpnft")
 }
 
-type Fraction @entity {
+type Molecule @entity {
   id: ID! # erc20address + owner address
-  fractionalizedIpfnt: Fractionalized!
+  reactedIpnft: ReactedIpnft!
   balance: BigInt! # Token balance of the owner
   owner: Bytes! #Address of the token owner
   agreementSignature: Bytes #the agreement signature, to be reused for other operations
@@ -48,7 +48,7 @@ type TimelockedToken @entity {
   symbol: String!
   name: String
   underlyingToken: ERC20Token
-  fractionalized: Fractionalized
+  reactedIpnft: ReactedIpnft
   schedules: [LockedSchedule!] @derivedFrom(field: "tokenContract")
 }
 
@@ -118,13 +118,13 @@ enum SaleState {
 
 type CrowdSale @entity {
   id: ID!
-  fractionalizedIpnft: Fractionalized!
+  reactedIpnft: ReactedIpnft!
   issuer: Bytes! #address of the creator
   beneficiary: Bytes! #address of the receiver of fundingGoal (usually issuer)
   closingTime: BigInt! #the time when the auction ends
   createdAt: BigInt! #the time when the auction was created
   state: SaleState!
-  auctionToken: ERC20Token # could also use FractionalizedToken
+  auctionToken: ERC20Token # could also use Molecules
   salesAmount: BigInt! #the amount of tokens to be auctioned
   lockedAuctionToken: TimelockedToken #the locked auction token that bidders partially receive when claiming
   auctionLockingDuration: BigInt # The duration for how long auction tokens are locked

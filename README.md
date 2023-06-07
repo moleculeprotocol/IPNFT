@@ -27,7 +27,7 @@ IP-NFTs allow their users to tokenize intellectual property. This repo contains 
 - HeadlessDispenser <https://goerli.etherscan.io/address/0x0F1Bd197c5dCC6bC7E8025037a7780010E2Cd22A#code>
 - Subgraph: <https://api.thegraph.com/subgraphs/name/dorianwilhelm/ip-nft-subgraph-goerli/graphql>
 
-- Fractionalizer: 0x593ED28cb4E8d143e16D83D151a2CC01fDa10B0A  
+- Synthesizer: 0x593ED28cb4E8d143e16D83D151a2CC01fDa10B0A  
   (Impl no 1 0x2c67338c5db1b4da457e6ed4132ae0745fd2a12e)
   <https://goerli.etherscan.io/address/0x593ED28cb4E8d143e16D83D151a2CC01fDa10B0A#code>
 
@@ -113,11 +113,11 @@ To just deploy all contracts using the default mnemonic's first account, run `fo
 
 To issue a mintpass, reserve and mint a test IPNFT for the 1st user, run `forge script script/dev/Ipnft.s.sol:FixtureIpnft -f $RPC_URL --broadcast`. This requires you to have executed Dev.s.sol before. This also creates a listing on Schmackoswap but doesn't accept it.
 
-To deploy the Fractionalizer, run `forge script script/dev/Fractionalize.s.sol:DeployFractionalizer -f $RPC_URL --broadcast`
-To fractionalize the test IPNFT, run `forge script script/dev/Fractionalize.s.sol:FixtureFractionalizer -f $RPC_URL --broadcast`
+To deploy the Synthesizer, run `forge script script/dev/Synthesize.s.sol:DeploySynthesizer -f $RPC_URL --broadcast`
+To synthesize the test IPNFT, run `forge script script/dev/Synthesize.s.sol:FixtureSynthesizer -f $RPC_URL --broadcast`
 
 To deploy the StakedLockingCrowdSale contract, run `forge script script/dev/CrowdSale.s.sol:DeployCrowdSale -f $RPC_URL --broadcast`
-To test a simple StakedLockingCrowdSale with a fractionalized IPNFT, run `forge script script/dev/CrowdSale.s.sol:FixtureCrowdSale -f $RPC_URL --broadcast`
+To test a simple StakedLockingCrowdSale with Molecules, run `forge script script/dev/CrowdSale.s.sol:FixtureCrowdSale -f $RPC_URL --broadcast`
 
 To approve and finalize the sales listing, run `forge script script/dev/ApproveAndBuy.s.sol -f $RPC_URL --broadcast`. See the inline comment on why this is a separate script.
 
@@ -132,20 +132,20 @@ To manually broadcast a bundle of deploy transactions, you can use `Deploy.s.sol
 3. Paste the private key for the deployer account
 4. to verify the contract during deployment, get an Etherscan API key and add `--verify --etherscan-api-key $ETHERSCAN_API_KEY` to the command.
 
-### Deploying the fractionalizer suite
+### Deploying the Synthesizer suite
 
-You can deploy the fractionlizer individually, but we created a deployment script that deploys all relevant contracts in the recommended order. These are
+You can deploy the Synthesizer individually, but we created a deployment script that deploys all relevant contracts in the recommended order. These are
 
 - BioPriceFeed
 - TermsAcceptedPermissioner
-- Fractionalizer
+- Synthesizer
 - StakedLockingCrowdSale
 
 You can deploy them all in one go (requires the current network's IPNFT address):
 
-`IPNFT_ADDRESS=... forge script script/DeployFractionalizer.s.sol:DeployFractionalizerInfrastructure --private-key $PRIVATE_KEY --rpc-url $RPC_URL --broadcast`
+`IPNFT_ADDRESS=... forge script script/DeploySynthesizer.s.sol:DeploySynthesizerInfrastructure --private-key $PRIVATE_KEY --rpc-url $RPC_URL --broadcast`
 
-The crowdsale computation model can be tried out here: https://docs.google.com/spreadsheets/d/1vvGzs6n0nGqSBewJFKPsX4umMDCwNhKVqqhGELY543g/edit?usp=sharing
+The crowdsale computation model can be tried out here: <https://docs.google.com/spreadsheets/d/1vvGzs6n0nGqSBewJFKPsX4umMDCwNhKVqqhGELY543g/edit?usp=sharing>
 
 Deploying and verifying a single contract without the help of any script
 `forge create --rpc-url $RPC_URL --private-key $PRIVATE_KEY --chain 5 --etherscan-api-key $ETHERSCAN_API_KEY --verify src/crowdsale/StakedLockingCrowdSale.sol:StakedLockingCrowdSale`

@@ -4,27 +4,27 @@ pragma solidity ^0.8.18;
 import "forge-std/Script.sol";
 import "forge-std/console.sol";
 import { IPNFT } from "../src/IPNFT.sol";
-import { Fractionalizer } from "../src/Fractionalizer.sol";
+import { Synthesizer } from "../src/Synthesizer.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import { BioPriceFeed } from "../src/BioPriceFeed.sol";
 import { IPermissioner, TermsAcceptedPermissioner } from "../src/Permissioner.sol";
 import { StakedLockingCrowdSale } from "../src/crowdsale/StakedLockingCrowdSale.sol";
 
-contract DeployFractionalizerInfrastructure is Script {
+contract DeploySynthesizerInfrastructure is Script {
     function run() public {
         vm.startBroadcast();
         address ipnftAddress = vm.envAddress("IPNFT_ADDRESS");
         BioPriceFeed feed = new BioPriceFeed();
         IPermissioner p = new TermsAcceptedPermissioner();
 
-        Fractionalizer fractionalizer = Fractionalizer(
+        Synthesizer synthesizer = Synthesizer(
             address(
                 new ERC1967Proxy(
-                    address(new Fractionalizer()), ""
+                    address(new Synthesizer()), ""
                 )
             )
         );
-        fractionalizer.initialize(IPNFT(ipnftAddress));
+        synthesizer.initialize(IPNFT(ipnftAddress));
 
         StakedLockingCrowdSale stakedLockingCrowdSale = new StakedLockingCrowdSale();
 
@@ -32,17 +32,17 @@ contract DeployFractionalizerInfrastructure is Script {
 
         console.log("PRICEFEED_ADDRESS=%s", address(feed));
         console.log("TERMS_ACCEPTED_PERMISSIONER_ADDRESS=%s", address(p));
-        console.log("FRACTIONALIZER_ADDRESS=%s", address(fractionalizer));
+        console.log("SYNTHESIZER_ADDRESS=%s", address(synthesizer));
         console.log("STAKED_LOCKING_CROWDSALE_ADDRESS=%s", address(stakedLockingCrowdSale));
     }
 }
 
-contract DeployFractionalizerImplementation is Script {
+contract DeploySynthesizerImplementation is Script {
     function run() public {
         vm.startBroadcast();
-        Fractionalizer impl = new Fractionalizer();
+        Synthesizer impl = new Synthesizer();
         vm.stopBroadcast();
 
-        console.log("fractionalizer impl %s", address(impl));
+        console.log("synthesizer impl %s", address(impl));
     }
 }

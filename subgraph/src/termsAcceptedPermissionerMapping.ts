@@ -1,27 +1,25 @@
-import { BigInt, log } from '@graphprotocol/graph-ts';
-import { TermsAccepted as TermsAcceptedEvent } from '../generated/TermsAcceptedPermissioner/TermsAcceptedPermissioner';
-import { Fraction, Fractionalized } from '../generated/schema';
+import { BigInt, log } from '@graphprotocol/graph-ts'
+import { TermsAccepted as TermsAcceptedEvent } from '../generated/TermsAcceptedPermissioner/TermsAcceptedPermissioner'
+import { Molecule, ReactedIpnft } from '../generated/schema'
 
 export function handleTermsAccepted(event: TermsAcceptedEvent): void {
-  let fractionId =
+  let moleculesId =
     event.params.tokenContract.toHexString() +
     '-' +
-    event.params.signer.toHexString();
+    event.params.signer.toHexString()
 
-  let fraction = Fraction.load(fractionId);
+  let molecule = Molecule.load(moleculesId)
 
-  if (!fraction) {
-    let fractionalized = Fractionalized.load(
-      event.params.tokenContract.toHexString()
-    );
-    if (!fractionalized) {
-      log.warning('fractions {} not found for signature', [fractionId]);
+  if (!molecule) {
+    let reacted = ReactedIpnft.load(event.params.tokenContract.toHexString())
+    if (!reacted) {
+      log.warning('molecules {} not found for signature', [moleculesId])
     }
-    fraction = new Fraction(fractionId);
-    fraction.owner = event.params.signer;
-    fraction.fractionalizedIpfnt = event.params.tokenContract.toHexString();
-    fraction.balance = BigInt.fromI32(0);
+    molecule = new Molecule(moleculesId)
+    molecule.owner = event.params.signer
+    molecule.reactedIpnft = event.params.tokenContract.toHexString()
+    molecule.balance = BigInt.fromI32(0)
   }
-  fraction.agreementSignature = event.params.signature;
-  fraction.save();
+  molecule.agreementSignature = event.params.signature
+  molecule.save()
 }

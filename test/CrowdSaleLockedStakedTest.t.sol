@@ -39,7 +39,7 @@ contract CrowdSaleLockedStakedTest is Test {
     function setUp() public {
         vm.startPrank(deployer);
 
-        auctionToken = new FakeERC20("Fractionalized IPNFT","FAM");
+        auctionToken = new FakeERC20("MOLECULES","MOL");
         biddingToken = new FakeERC20("USD token", "USDC");
         daoToken = new FakeERC20("DAO token", "DAO");
 

@@ -97,7 +97,7 @@ contract SchmackoSwap is ERC165, ReentrancyGuard {
 
     /**
      * {inheritDoc list}
-     * @param beneficiary address the account that will receive the funds after fulfillment. In case of fractionalization this should be the FractionalizerL2Dispatcher
+     * @param beneficiary address the account that will receive the funds after fulfillment. In case of synthesis this should be the SharesDistribution contract
      */
     function list(IERC721 tokenContract, uint256 tokenId, IERC20 paymentToken, uint256 askPrice, address beneficiary) public returns (uint256) {
         if (!tokenContract.isApprovedForAll(msg.sender, address(this))) {

@@ -6,15 +6,15 @@ import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/O
 import { Base64 } from "@openzeppelin/contracts/utils/Base64.sol";
 import { Clones } from "@openzeppelin/contracts/proxy/Clones.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
-import { MustOwnIpnft, AlreadyFractionalized } from "../../Fractionalizer.sol";
-import { FractionalizedToken, Metadata, TokenCapped } from "../../FractionalizedToken.sol";
+import { MustOwnIpnft, AlreadySynthesized } from "../../Synthesizer.sol";
+import { Molecules, Metadata, TokenCapped } from "../../Molecules.sol";
 import { IPNFT } from "../../IPNFT.sol";
 
-/// @title FractionalizedTokenNext
+/// @title MoleculesNext
 /// @author molecule.to
-/// @notice this is a template contract that's spawned by the fractionalizer
-/// @notice the owner of this contract is always the fractionalizer contract
-contract FractionalizedTokenNext is FractionalizedToken {
+/// @notice this is a template contract that's spawned by the synthesizer
+/// @notice the owner of this contract is always the synthesizer contract
+contract MoleculesNext is Molecules {
     uint256 public aNewStateVar;
 
     function setAStateVar(uint256 newVal) public {
@@ -22,17 +22,17 @@ contract FractionalizedTokenNext is FractionalizedToken {
     }
 }
 
-/// @title FractionalizerNext
+/// @title SynthesizerNext
 /// @author molecule.to
 /// @notice this is used to test upgrade safety
-contract FractionalizerNext is UUPSUpgradeable, OwnableUpgradeable {
-    event FractionsCreated(
+contract SynthesizerNext is UUPSUpgradeable, OwnableUpgradeable {
+    event MoleculesCreated(
         uint256 indexed ipnftId, address indexed tokenContract, address emitter, uint256 amount, string agreementCid, string name, string symbol
     );
 
     IPNFT ipnft;
 
-    mapping(uint256 => FractionalizedTokenNext) public fractionalized;
+    mapping(uint256 => MoleculesNext) public synthesized;
     /// @custom:oz-upgrades-unsafe-allow state-variable-immutable
     address immutable tokenImplementation;
 
@@ -44,37 +44,34 @@ contract FractionalizerNext is UUPSUpgradeable, OwnableUpgradeable {
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
-        tokenImplementation = address(new FractionalizedTokenNext());
+        tokenImplementation = address(new MoleculesNext());
         _disableInitializers();
     }
 
-    function fractionalizeIpnft(uint256 ipnftId, uint256 fractionsAmount, string calldata agreementCid)
-        external
-        returns (FractionalizedTokenNext token)
-    {
+    function synthesizeIpnft(uint256 ipnftId, uint256 moleculesAmount, string calldata agreementCid) external returns (MoleculesNext token) {
         if (ipnft.ownerOf(ipnftId) != _msgSender()) {
             revert MustOwnIpnft();
         }
         string memory ipnftSymbol = ipnft.symbol(ipnftId);
 
         // https://github.com/OpenZeppelin/workshops/tree/master/02-contracts-clone
-        FractionalizedTokenNext fractionalizedToken = FractionalizedTokenNext(Clones.clone(tokenImplementation));
-        string memory name = string.concat("Fractions of IPNFT #", Strings.toString(ipnftId));
-        fractionalizedToken.initialize(name, string.concat(ipnftSymbol, "-MOL"), Metadata(ipnftId, _msgSender(), agreementCid));
-        uint256 fractionHash = fractionalizedToken.hash();
+        MoleculesNext molecules = MoleculesNext(Clones.clone(tokenImplementation));
+        string memory name = string.concat("Molecules of IPNFT #", Strings.toString(ipnftId));
+        molecules.initialize(name, string.concat(ipnftSymbol, "-MOL"), Metadata(ipnftId, _msgSender(), agreementCid));
+        uint256 moleculeHash = molecules.hash();
         // ensure we can only call this once per sales cycle
-        if (address(fractionalized[fractionHash]) != address(0)) {
-            revert AlreadyFractionalized();
+        if (address(synthesized[moleculeHash]) != address(0)) {
+            revert AlreadySynthesized();
         }
 
-        fractionalized[fractionHash] = fractionalizedToken;
+        synthesized[moleculeHash] = molecules;
 
-        emit FractionsCreated(ipnftId, address(fractionalizedToken), _msgSender(), fractionsAmount, agreementCid, name, ipnftSymbol);
+        emit MoleculesCreated(ipnftId, address(molecules), _msgSender(), moleculesAmount, agreementCid, name, ipnftSymbol);
 
         //if we want to take a protocol fee, this might be a good point of doing so.
-        fractionalizedToken.issue(_msgSender(), fractionsAmount);
+        molecules.issue(_msgSender(), moleculesAmount);
 
-        return fractionalizedToken;
+        return molecules;
     }
 
     function _authorizeUpgrade(address /*newImplementation*/ )

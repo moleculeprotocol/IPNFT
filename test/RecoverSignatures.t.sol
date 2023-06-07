@@ -7,6 +7,7 @@ import { Mintpass } from "../src/Mintpass.sol";
 import { SignatureChecker } from "@openzeppelin/contracts/utils/cryptography/SignatureChecker.sol";
 import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
+// TODO: Rename to "As a molecule holder..." and create new signatures
 contract ReoverSigs is Test {
     function testRecoverManually() public {
         address _signer = 0x8FeEAAae1DB031E5F980F5E63fDbb277731e500e;

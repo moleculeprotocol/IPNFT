@@ -16,13 +16,13 @@ error TokenCapped();
 error OnlyIssuerOrOwner();
 
 /**
- * @title FractionalizedToken
+ * @title Molecules
  * @author molecule.to
- * @notice this is a template contract that's spawned by the Fractionalizer
- * @notice the owner of this contract is always the Fractionalizer contract.
+ * @notice this is a template contract that's spawned by the Synthesizer
+ * @notice the owner of this contract is always the Synthesizer contract.
  *         the issuer of a token bears the right to increase the supply as long as the token is not capped.
  */
-contract FractionalizedToken is ERC20BurnableUpgradeable, OwnableUpgradeable {
+contract Molecules is ERC20BurnableUpgradeable, OwnableUpgradeable {
     event Capped(uint256 atSupply);
 
     //this will only go up.
@@ -54,7 +54,7 @@ contract FractionalizedToken is ERC20BurnableUpgradeable, OwnableUpgradeable {
         return _metadata;
     }
     /**
-     * @notice Fractional tokens are identified by the original token holder and the underlying token id
+     * @notice Molecules are identified by the original token holder and the underlying token id
      * @return uint256 a token hash that's unique for [`originaOwner`,`ipnftid`]
      */
 
@@ -63,7 +63,7 @@ contract FractionalizedToken is ERC20BurnableUpgradeable, OwnableUpgradeable {
     }
 
     /**
-     * @notice we deliberately allow the fraction initializer to increase the fraction supply at will as long as the underlying asset has not been sold yet
+     * @notice we deliberately allow the synthesis initializer to increase the supply of Molecules at will as long as the underlying asset has not been sold yet
      * @param receiver address
      * @param amount uint256
      */
@@ -108,9 +108,9 @@ contract FractionalizedToken is ERC20BurnableUpgradeable, OwnableUpgradeable {
             Base64.encode(
                 bytes(
                     string.concat(
-                        '{"name": "Fractions of IPNFT #',
+                        '{"name": "Molecules of IPNFT #',
                         tokenId,
-                        '","description": "this token represents fractions of the underlying asset","decimals": 18,"external_url": "https://molecule.to","image": "",',
+                        '","description": "this token represents molecules of the underlying asset","decimals": 18,"external_url": "https://molecule.to","image": "",',
                         props,
                         "}"
                     )
