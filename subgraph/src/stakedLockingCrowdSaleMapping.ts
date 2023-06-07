@@ -40,6 +40,7 @@ function makeTimelockedToken(
   underlyingToken: ERC20Token
 ): TimelockedToken {
   let token = TimelockedToken.load(_contract._address)
+  let fractionalized = Fractionalized.load(underlyingToken.id.toHexString())
 
   if (!token) {
     token = new TimelockedToken(_contract._address)
@@ -48,6 +49,9 @@ function makeTimelockedToken(
     token.symbol = _contract.symbol()
     token.name = _contract.name()
     token.underlyingToken = underlyingToken.id
+    if (fractionalized) {
+      token.fractionalized = fractionalized.id
+    }
     token.save()
   }
 
@@ -215,7 +219,7 @@ export function handleClaimed(event: ClaimedEvent): void {
       event.params.saleId.toString()
     ])
     return
-  } 
+  }
   let contributions = changetype<string[]>(crowdSale.contributions)
   for (let i = 0; i < contributions.length; i++) {
     let contribution = Contribution.load(contributions[i])
