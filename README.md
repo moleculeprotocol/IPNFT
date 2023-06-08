@@ -27,7 +27,7 @@ IP-NFTs allow their users to tokenize intellectual property. This repo contains 
 - HeadlessDispenser <https://goerli.etherscan.io/address/0x0F1Bd197c5dCC6bC7E8025037a7780010E2Cd22A#code>
 - Subgraph: <https://api.thegraph.com/subgraphs/name/dorianwilhelm/ip-nft-subgraph-goerli/graphql>
 
-- Synthesizer: 0x593ED28cb4E8d143e16D83D151a2CC01fDa10B0A  
+- Fractionalizer: 0x593ED28cb4E8d143e16D83D151a2CC01fDa10B0A  
   (Impl no 1 0x2c67338c5db1b4da457e6ed4132ae0745fd2a12e)
   <https://goerli.etherscan.io/address/0x593ED28cb4E8d143e16D83D151a2CC01fDa10B0A#code>
 
@@ -113,8 +113,8 @@ To just deploy all contracts using the default mnemonic's first account, run `fo
 
 To issue a mintpass, reserve and mint a test IPNFT for the 1st user, run `forge script script/dev/Ipnft.s.sol:FixtureIpnft -f $RPC_URL --broadcast`. This requires you to have executed Dev.s.sol before. This also creates a listing on Schmackoswap but doesn't accept it.
 
-To deploy the Synthesizer, run `forge script script/dev/Synthesize.s.sol:DeploySynthesizer -f $RPC_URL --broadcast`
-To synthesize the test IPNFT, run `forge script script/dev/Synthesize.s.sol:FixtureSynthesizer -f $RPC_URL --broadcast`
+To deploy the Synthesizer, run `forge script script/dev/Synthesizer.s.sol:DeploySynthesizer -f $RPC_URL --broadcast`
+To synthesize the test IPNFT, run `forge script script/dev/Synthesizer.s.sol:FixtureSynthesizer -f $RPC_URL --broadcast`
 
 To deploy the StakedLockingCrowdSale contract, run `forge script script/dev/CrowdSale.s.sol:DeployCrowdSale -f $RPC_URL --broadcast`
 To test a simple StakedLockingCrowdSale with Molecules, run `forge script script/dev/CrowdSale.s.sol:FixtureCrowdSale -f $RPC_URL --broadcast`
