@@ -1,3 +1,159 @@
+No files changed, compilation skipped
+
+Running 2 tests for test/RecoverSignatures.t.sol:ReoverSigs
+[32m[PASS][0m testRecoverManually() (gas: 7573)
+[32m[PASS][0m testRecoverOz() (gas: 9297)
+Test result: [32mok[0m. 2 passed; 0 failed; finished in 632.95µs
+
+Running 6 tests for test/BioPriceFeed.t.sol:BioPriceFeedTest
+[32m[PASS][0m testCalculation() (gas: 62817)
+[32m[PASS][0m testGetPriceForNonExistentPair() (gas: 13974)
+[32m[PASS][0m testOnlySignaller() (gas: 44772)
+[32m[PASS][0m testSignalFloatingPrice() (gas: 66741)
+[32m[PASS][0m testSignalPrice() (gas: 66687)
+[32m[PASS][0m testUSDC() (gas: 89912)
+Test result: [32mok[0m. 6 passed; 0 failed; finished in 2.33ms
+
+Running 3 tests for test/TestSafe.t.sol:GnosisSafeSetup
+[32m[PASS][0m testGeneralSetup() (gas: 14838)
+[32m[PASS][0m testOwnersCanInteractWithSafe() (gas: 104510)
+[32m[PASS][0m testSafeAcceptsMoney() (gas: 24304)
+Test result: [32mok[0m. 3 passed; 0 failed; finished in 2.77ms
+
+Running 2 tests for test/ContractReceivers.t.sol:ContractReceiverTest
+[32m[PASS][0m testAbstractAccountsCanTradeIPNFTs() (gas: 1734447)
+[32m[PASS][0m testCanMintToERC721Receiver() (gas: 875931)
+Test result: [32mok[0m. 2 passed; 0 failed; finished in 3.92ms
+
+Running 1 test for test/CrowdSalePermissioned.t.sol:CrowdSalePermissionedTest
+[32m[PASS][0m testPermissionedSettlementAndSimpleClaims() (gas: 1065315)
+Test result: [32mok[0m. 1 passed; 0 failed; finished in 5.98ms
+
+Running 5 tests for test/CrowdSaleLockedTest.t.sol:CrowdSaleLockedTest
+[32m[PASS][0m testAutoCreateLockingContracts() (gas: 582164)
+[32m[PASS][0m testClaimLongAfterLockingPeriod() (gas: 479440)
+[32m[PASS][0m testLockingCrowdSalesBadParameters() (gas: 44848)
+[32m[PASS][0m testSettlementAndSimpleClaims() (gas: 585635)
+[32m[PASS][0m testUnsuccessfulSaleClaims() (gas: 437791)
+Test result: [32mok[0m. 5 passed; 0 failed; finished in 6.23ms
+
+Running 13 tests for test/SchmackoSwap.t.sol:SchmackoSwapTest
+[32m[PASS][0m testCanBuyListing() (gas: 286999)
+[32m[PASS][0m testCanCancelSale() (gas: 181557)
+[32m[PASS][0m testCanCreateSale() (gas: 177735)
+[32m[PASS][0m testCanOnlyBuyWithSufficientBalance() (gas: 325786)
+[32m[PASS][0m testCannotBuyNotExistingValue() (gas: 26528)
+[32m[PASS][0m testCannotFulfillWhenSellerHasMovedTheNft() (gas: 276060)
+[32m[PASS][0m testCannotListWhenTokenIsNotApproved() (gas: 33900)
+[32m[PASS][0m testCannotManageAllowListsForNonexistingListing() (gas: 200299)
+[32m[PASS][0m testCannotSendNftsToSchmackoswap() (gas: 60477)
+[32m[PASS][0m testGeneralBalancesAndSupplies() (gas: 36749)
+[32m[PASS][0m testNonOwnerCannotCancelSale() (gas: 176528)
+[32m[PASS][0m testNonOwnerCannotCreateSale() (gas: 41045)
+[32m[PASS][0m testSellerCanManageAllowlist() (gas: 189942)
+Test result: [32mok[0m. 13 passed; 0 failed; finished in 6.46ms
+
+Running 10 tests for test/CrowdSale.t.sol:CrowdSaleTest
+[32m[PASS][0m testCannotCreateSaleWithoutFunds() (gas: 195937)
+[32m[PASS][0m testCannotInitializeSaleWithBadParams() (gas: 282101)
+[32m[PASS][0m testCreateSale() (gas: 273447)
+[32m[PASS][0m testOverbiddingAndRefunds() (gas: 474806)
+[32m[PASS][0m testPlaceBid() (gas: 344173)
+[32m[PASS][0m testSettlementAndSimpleClaims() (gas: 412404)
+[32m[PASS][0m testSingleRefundsOnOvershoot() (gas: 355046)
+[32m[PASS][0m testTwoBiddersMeetExactly() (gas: 393222)
+[32m[PASS][0m testUnevenOverbiddingAndRefunds() (gas: 511458)
+[32m[PASS][0m testUnsuccessfulSaleClaims() (gas: 339414)
+Test result: [32mok[0m. 10 passed; 0 failed; finished in 5.83ms
+
+Running 7 tests for test/Fractionalizer.t.sol:SynthesizerTest
+[32m[PASS][0m testCanBeSynthesizedOnlyOnce() (gas: 652897)
+[32m[PASS][0m testCanUpgradeErc20TokenImplementation() (gas: 3890680)
+[32m[PASS][0m testCannotSynthesizeIfNotOwner() (gas: 36052)
+[32m[PASS][0m testGnosisSafeCanInteractWithMolecules() (gas: 4450673)
+[32m[PASS][0m testIncreaseMolecules() (gas: 490109)
+[32m[PASS][0m testIssueMolecules() (gas: 435492)
+[32m[PASS][0m testUrl() (gas: 461597)
+Test result: [32mok[0m. 7 passed; 0 failed; finished in 8.25ms
+
+Running 3 tests for test/IPNFTUpgrades.t.sol:IPNFTUpgrades
+[32m[PASS][0m testKeepsPauseability() (gas: 3104216)
+[32m[PASS][0m testTokensSurviveUpgrade() (gas: 3030574)
+[32m[PASS][0m testUpgradeContract() (gas: 2737397)
+Test result: [32mok[0m. 3 passed; 0 failed; finished in 2.25ms
+
+Running 5 tests for test/TimelockedToken.t.sol:TimelockedTokenTest
+[32m[PASS][0m testCanLock() (gas: 157947)
+[32m[PASS][0m testCanWithdrawAfterLockingPeriod() (gas: 149653)
+[32m[PASS][0m testCanWithdrawSeveralSchedules() (gas: 275990)
+[32m[PASS][0m testCannotCreateTheSameSchedule() (gas: 151204)
+[32m[PASS][0m testCannotTransferOrApprove() (gas: 154835)
+Test result: [32mok[0m. 5 passed; 0 failed; finished in 12.06ms
+
+Running 5 tests for test/CrowdSaleWithNonStandardERC20Test.t.sol:CrowdSaleWithNonStandardERC20Test
+[32m[PASS][0m testOverbiddingAndRefunds() (gas: 1414073)
+[32m[PASS][0m testSettlementAndSimpleClaims() (gas: 990091)
+[32m[PASS][0m testUnevenOverbiddingAndPriceAndRefunds() (gas: 1478054)
+[32m[PASS][0m testUnsuccessfulSaleClaims() (gas: 637366)
+[32m[PASS][0m testWith2Decimals() (gas: 2112135)
+Test result: [32mok[0m. 5 passed; 0 failed; finished in 6.10ms
+
+Running 11 tests for test/Mintpass.t.sol:MintpassTest
+[32m[PASS][0m testBatchMintFifty() (gas: 302226)
+[32m[PASS][0m testBatchMintTen() (gas: 132039)
+[32m[PASS][0m testBurnFromOwner() (gas: 109831)
+[32m[PASS][0m testBurnFromRandomUser() (gas: 97808)
+[32m[PASS][0m testFailTokenUri0() (gas: 10910)
+[32m[PASS][0m testGrantingAndRevokingOfModeratorRole() (gas: 195677)
+[32m[PASS][0m testRevokeFromRandomUser() (gas: 124400)
+[32m[PASS][0m testRevokeToken() (gas: 145174)
+[32m[PASS][0m testSafeMintFromNotOwner() (gas: 48811)
+[32m[PASS][0m testSingleMints() (gas: 183497)
+[32m[PASS][0m testTransfer() (gas: 91572)
+Test result: [32mok[0m. 11 passed; 0 failed; finished in 1.75ms
+
+Running 2 tests for test/Permissioner.t.sol:PermissionerTest
+[32m[PASS][0m testProveSigAndAcceptTerms() (gas: 77795)
+[32m[PASS][0m testThatContractSignaturesAreAccepted() (gas: 4841391)
+Test result: [32mok[0m. 2 passed; 0 failed; finished in 4.88ms
+
+Running 11 tests for test/IPNFT.t.sol:IPNFTTest
+[32m[PASS][0m testBurn() (gas: 265179)
+[32m[PASS][0m testCanWithdrawMintingFees() (gas: 318504)
+[32m[PASS][0m testCannotMintWhenPaused() (gas: 43469)
+[32m[PASS][0m testCannotSendPlainEtherToIPNFT() (gas: 32912)
+[32m[PASS][0m testInitialDeploymentState() (gas: 12565)
+[32m[PASS][0m testMintFromReservation() (gas: 338656)
+[32m[PASS][0m testOnlyReservationOwnerCanMintFromReservation() (gas: 147920)
+[32m[PASS][0m testOwnerCanGrantReadAccess() (gas: 353681)
+[32m[PASS][0m testOwnerCanWithdrawEthFunds() (gas: 129319)
+[32m[PASS][0m testTokenReservation() (gas: 152860)
+[32m[PASS][0m testTokenReservationCounter() (gas: 215608)
+Test result: [32mok[0m. 11 passed; 0 failed; finished in 118.43ms
+
+Running 7 tests for test/CrowdSaleLockedStakedTest.t.sol:CrowdSaleLockedStakedTest
+[32m[PASS][0m testCannotSetupCrowdSaleWithParentFunctions() (gas: 46067)
+[32m[PASS][0m testClaimLongAfterVestingPeriod() (gas: 1054637)
+[32m[PASS][0m testOverbiddingAndRefunds() (gas: 1429698)
+[32m[PASS][0m testSettlementAndSimpleClaims() (gas: 988744)
+[32m[PASS][0m testStakeLockingCrowdSalesBadParameters() (gas: 2465293)
+[32m[PASS][0m testUnevenOverbiddingAndPriceAndRefunds() (gas: 1474042)
+[32m[PASS][0m testUnsuccessfulSaleClaims() (gas: 681956)
+Test result: [32mok[0m. 7 passed; 0 failed; finished in 117.50ms
+
+Running 7 tests for test/SalesShareDistributor.t.sol:SalesShareDistributorTest
+[32m[PASS][0m testClaimBuyoutShares() (gas: 1506354)
+[32m[PASS][0m testClaimBuyoutSharesAfterSwap() (gas: 1536290)
+[32m[PASS][0m testClaimingFraud() (gas: 1807083)
+[32m[PASS][0m testCreateListingAndSell() (gas: 689725)
+[32m[PASS][0m testFuzzSynthesize(uint256,uint256) (runs: 256, μ: 613781, ~: 618476)
+[32m[PASS][0m testManuallyStartClaimingPhase() (gas: 801789)
+[32m[PASS][0m testStartClaimingPhase() (gas: 851597)
+Test result: [32mok[0m. 7 passed; 0 failed; finished in 118.50ms
+
+Running 1 test for test/CrowdSaleFuzz.t.sol:CrowdSaleFuzzTest
+[32m[PASS][0m testFuzzManyBidders(uint8,uint96,uint96) (runs: 256, μ: 1038650, ~: 623921)
+Test result: [32mok[0m. 1 passed; 0 failed; finished in 549.89ms
 | src/IPNFT.sol:IPNFT contract                    |                 |        |        |        |         |
 |-------------------------------------------------|-----------------|--------|--------|--------|---------|
 | Deployment Cost                                 | Deployment Size |        |        |        |         |
@@ -118,11 +274,11 @@
 | Deployment Cost                                | Deployment Size |        |        |        |         |
 | 1278414                                        | 6312            |        |        |        |         |
 | Function Name                                  | min             | avg    | median | max    | # calls |
-| claim                                          | 4725            | 22625  | 25007  | 31836  | 39      |
+| claim                                          | 4725            | 22275  | 25007  | 31836  | 34      |
 | claimResults                                   | 507             | 28482  | 29579  | 48849  | 8       |
 | contribution                                   | 720             | 720    | 720    | 720    | 2       |
 | getSaleInfo                                    | 1282            | 1282   | 1282   | 1282   | 2       |
-| placeBid                                       | 494             | 35613  | 26677  | 84746  | 40      |
+| placeBid                                       | 494             | 36890  | 26677  | 84746  | 35      |
 | settle                                         | 4114            | 12512  | 6872   | 25690  | 9       |
 | startSale                                      | 482             | 117844 | 186298 | 192200 | 18      |
 
@@ -144,20 +300,20 @@
 | src/crowdsale/StakedLockingCrowdSale.sol:StakedLockingCrowdSale contract                                     |                 |        |        |        |         |
 |--------------------------------------------------------------------------------------------------------------|-----------------|--------|--------|--------|---------|
 | Deployment Cost                                                                                              | Deployment Size |        |        |        |         |
-| 3156861                                                                                                      | 15628           |        |        |        |         |
+| 3177683                                                                                                      | 15732           |        |        |        |         |
 | Function Name                                                                                                | min             | avg    | median | max    | # calls |
-| claim                                                                                                        | 7731            | 223718 | 254160 | 385560 | 21      |
+| claim                                                                                                        | 7766            | 223757 | 254204 | 385604 | 21      |
 | claimResults                                                                                                 | 21705           | 39536  | 39106  | 48882  | 10      |
-| getSaleInfo                                                                                                  | 1282            | 1282   | 1282   | 1282   | 4       |
-| lockingContracts                                                                                             | 598             | 598    | 598    | 598    | 11      |
-| placeBid                                                                                                     | 10981           | 96626  | 85079  | 163889 | 25      |
-| registerVestingContract                                                                                      | 6304            | 23398  | 24477  | 26477  | 15      |
-| salesStaking                                                                                                 | 857             | 857    | 857    | 857    | 1       |
-| settle                                                                                                       | 5986            | 37518  | 33474  | 53374  | 11      |
-| stakesOf                                                                                                     | 732             | 732    | 732    | 732    | 5       |
-| startSale((address,address,address,uint256,uint256,uint64,address))(uint256)                                 | 362             | 362    | 362    | 362    | 1       |
+| getSaleInfo                                                                                                  | 1304            | 1304   | 1304   | 1304   | 4       |
+| lockingContracts                                                                                             | 620             | 620    | 620    | 620    | 11      |
+| placeBid                                                                                                     | 11003           | 96648  | 85101  | 163911 | 25      |
+| salesStaking                                                                                                 | 790             | 790    | 790    | 790    | 1       |
+| settle                                                                                                       | 6004            | 37539  | 33496  | 53396  | 11      |
+| stakesOf                                                                                                     | 754             | 754    | 754    | 754    | 5       |
+| startSale((address,address,address,uint256,uint256,uint64,address))(uint256)                                 | 384             | 384    | 384    | 384    | 1       |
 | startSale((address,address,address,uint256,uint256,uint64,address),address,address,uint256,uint256)(uint256) | 3376            | 277907 | 390753 | 392336 | 17      |
-| startSale((address,address,address,uint256,uint256,uint64,address),uint256)(uint256)                         | 472             | 472    | 472    | 472    | 1       |
+| startSale((address,address,address,uint256,uint256,uint64,address),uint256)(uint256)                         | 383             | 383    | 383    | 383    | 1       |
+| trustVestingContract                                                                                         | 6350            | 24808  | 25984  | 27984  | 15      |
 
 
 

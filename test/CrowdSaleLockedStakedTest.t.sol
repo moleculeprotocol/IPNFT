@@ -48,7 +48,6 @@ contract CrowdSaleLockedStakedTest is Test {
 
         auctionToken = new FakeERC20("MOLECULES","MOL");
         auctionToken.mint(emitter, 500_000 ether);
-
         biddingToken = new FakeERC20("USD token", "USDC");
         daoToken = new FakeERC20("DAO token", "DAO");
 

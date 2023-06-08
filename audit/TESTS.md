@@ -45,4 +45,4 @@ yarn deploy:local
 | src/TimelockedToken.sol                  | 82.76% (24/29)  | 83.87% (26/31)  | 100.00% (6/6)  | 58.33% (7/12)  |
 | src/crowdsale/CrowdSale.sol              | 98.81% (83/84)  | 98.81% (83/84)  | 95.00% (38/40) | 92.86% (13/14) |
 | src/crowdsale/LockingCrowdSale.sol       | 100.00% (23/23) | 100.00% (24/24) | 100.00% (6/6)  | 100.00% (6/6)  |
-| src/crowdsale/StakedLockingCrowdSale.sol | 96.00% (48/50)  | 96.30% (52/54)  | 88.89% (16/18) | 80.00% (8/10)  |
+| src/crowdsale/StakedLockingCrowdSale.sol | 94.23% (49/52)  | 94.64% (53/56)  | 88.89% (16/18) | 80.00% (8/10)  |
