@@ -1,40 +1,3 @@
-| src/FractionalizedToken.sol:FractionalizedToken contract |                 |        |        |        |         |
-|----------------------------------------------------------|-----------------|--------|--------|--------|---------|
-| Deployment Cost                                          | Deployment Size |        |        |        |         |
-| 1575845                                                  | 7903            |        |        |        |         |
-| Function Name                                            | min             | avg    | median | max    | # calls |
-| allowance                                                | 2775            | 2775   | 2775   | 2775   | 1       |
-| approve(address,uint256)                                 | 24646           | 24646  | 24646  | 24646  | 1       |
-| approve(address,uint256)(bool)                           | 22546           | 24121  | 24646  | 24646  | 4       |
-| balanceOf                                                | 576             | 656    | 576    | 2576   | 25      |
-| burnFrom                                                 | 4444            | 4444   | 4444   | 4444   | 3       |
-| cap                                                      | 545             | 19327  | 21675  | 21675  | 9       |
-| capped                                                   | 443             | 443    | 443    | 443    | 8       |
-| decimals                                                 | 200             | 200    | 200    | 200    | 1       |
-| hash                                                     | 645             | 645    | 645    | 645    | 15      |
-| initialize                                               | 161418          | 198409 | 205808 | 205808 | 18      |
-| issue                                                    | 779             | 59746  | 71357  | 71357  | 18      |
-| issuer                                                   | 432             | 432    | 432    | 432    | 15      |
-| metadata                                                 | 1794            | 2581   | 2079   | 7794   | 29      |
-| setAStateVar                                             | 260             | 260    | 260    | 260    | 1       |
-| symbol                                                   | 1284            | 1284   | 1284   | 1284   | 1       |
-| totalIssued                                              | 405             | 405    | 405    | 405    | 10      |
-| totalSupply                                              | 382             | 382    | 382    | 382    | 4       |
-| transfer                                                 | 20034           | 24040  | 25042  | 25042  | 10      |
-| transferFrom                                             | 22233           | 24153  | 24153  | 26073  | 2       |
-| uri                                                      | 64771           | 64771  | 64771  | 64771  | 1       |
-
-
-| src/Fractionalizer.sol:Fractionalizer contract |                 |        |        |        |         |
-|------------------------------------------------|-----------------|--------|--------|--------|---------|
-| Deployment Cost                                | Deployment Size |        |        |        |         |
-| 2779781                                        | 13991           |        |        |        |         |
-| Function Name                                  | min             | avg    | median | max    | # calls |
-| fractionalizeIpnft                             | 13091           | 341228 | 371839 | 371839 | 16      |
-| initialize                                     | 70688           | 70688  | 70688  | 70688  | 14      |
-| upgradeTo                                      | 10262           | 10262  | 10262  | 10262  | 1       |
-
-
 | src/IPNFT.sol:IPNFT contract                    |                 |        |        |        |         |
 |-------------------------------------------------|-----------------|--------|--------|--------|---------|
 | Deployment Cost                                 | Deployment Size |        |        |        |         |
@@ -85,6 +48,32 @@
 | transferFrom                       | 1440            | 1440  | 1440   | 1440   | 1       |
 
 
+| src/Molecules.sol:Molecules contract |                 |        |        |        |         |
+|--------------------------------------|-----------------|--------|--------|--------|---------|
+| Deployment Cost                      | Deployment Size |        |        |        |         |
+| 1575845                              | 7903            |        |        |        |         |
+| Function Name                        | min             | avg    | median | max    | # calls |
+| allowance                            | 2775            | 2775   | 2775   | 2775   | 1       |
+| approve                              | 22546           | 24226  | 24646  | 24646  | 5       |
+| balanceOf                            | 576             | 656    | 576    | 2576   | 25      |
+| burnFrom                             | 4444            | 4444   | 4444   | 4444   | 3       |
+| cap                                  | 545             | 19327  | 21675  | 21675  | 9       |
+| capped                               | 443             | 443    | 443    | 443    | 8       |
+| decimals                             | 200             | 200    | 200    | 200    | 1       |
+| hash                                 | 645             | 645    | 645    | 645    | 15      |
+| initialize                           | 161418          | 198409 | 205808 | 205808 | 18      |
+| issue                                | 779             | 59746  | 71357  | 71357  | 18      |
+| issuer                               | 432             | 432    | 432    | 432    | 15      |
+| metadata                             | 1794            | 2581   | 2079   | 7794   | 29      |
+| setAStateVar                         | 260             | 260    | 260    | 260    | 1       |
+| symbol                               | 1284            | 1284   | 1284   | 1284   | 1       |
+| totalIssued                          | 405             | 405    | 405    | 405    | 10      |
+| totalSupply                          | 382             | 382    | 382    | 382    | 4       |
+| transfer                             | 20034           | 24040  | 25042  | 25042  | 10      |
+| transferFrom                         | 22233           | 24153  | 24153  | 26073  | 2       |
+| uri                                  | 64771           | 64771  | 64771  | 64771  | 1       |
+
+
 | src/SchmackoSwap.sol:SchmackoSwap contract             |                 |        |        |        |         |
 |--------------------------------------------------------|-----------------|--------|--------|--------|---------|
 | Deployment Cost                                        | Deployment Size |        |        |        |         |
@@ -97,6 +86,16 @@
 | list(address,uint256,address,uint256)(uint256)         | 2249            | 121898 | 148487 | 148487 | 11      |
 | list(address,uint256,address,uint256,address)(uint256) | 139507          | 139507 | 139507 | 139507 | 5       |
 | listings                                               | 1392            | 1392   | 1392   | 1392   | 15      |
+
+
+| src/Synthesizer.sol:Synthesizer contract |                 |        |        |        |         |
+|------------------------------------------|-----------------|--------|--------|--------|---------|
+| Deployment Cost                          | Deployment Size |        |        |        |         |
+| 2779781                                  | 13991           |        |        |        |         |
+| Function Name                            | min             | avg    | median | max    | # calls |
+| initialize                               | 70688           | 70688  | 70688  | 70688  | 14      |
+| synthesizeIpnft                          | 13114           | 341242 | 371851 | 371851 | 16      |
+| upgradeTo                                | 10295           | 10295  | 10295  | 10295  | 1       |
 
 
 | src/TimelockedToken.sol:TimelockedToken contract |                 |       |        |        |         |
@@ -119,11 +118,11 @@
 | Deployment Cost                                | Deployment Size |        |        |        |         |
 | 1278414                                        | 6312            |        |        |        |         |
 | Function Name                                  | min             | avg    | median | max    | # calls |
-| claim                                          | 4725            | 19203  | 26395  | 31836  | 16      |
+| claim                                          | 4725            | 22625  | 25007  | 31836  | 39      |
 | claimResults                                   | 507             | 28482  | 29579  | 48849  | 8       |
 | contribution                                   | 720             | 720    | 720    | 720    | 2       |
 | getSaleInfo                                    | 1282            | 1282   | 1282   | 1282   | 2       |
-| placeBid                                       | 494             | 47705  | 42946  | 84746  | 17      |
+| placeBid                                       | 494             | 35613  | 26677  | 84746  | 40      |
 | settle                                         | 4114            | 12512  | 6872   | 25690  | 9       |
 | startSale                                      | 482             | 117844 | 186298 | 192200 | 18      |
 
