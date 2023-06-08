@@ -4,8 +4,8 @@
 | 1575845                                                  | 7903            |        |        |        |         |
 | Function Name                                            | min             | avg    | median | max    | # calls |
 | allowance                                                | 2775            | 2775   | 2775   | 2775   | 1       |
-| approve(address,uint256)                                 | 24646           | 24646  | 24646  | 24646  | 3       |
-| approve(address,uint256)(bool)                           | 22546           | 23596  | 23596  | 24646  | 2       |
+| approve(address,uint256)                                 | 24646           | 24646  | 24646  | 24646  | 1       |
+| approve(address,uint256)(bool)                           | 22546           | 24121  | 24646  | 24646  | 4       |
 | balanceOf                                                | 576             | 656    | 576    | 2576   | 25      |
 | burnFrom                                                 | 4444            | 4444   | 4444   | 4444   | 3       |
 | cap                                                      | 545             | 19327  | 21675  | 21675  | 9       |
@@ -117,44 +117,47 @@
 | src/crowdsale/CrowdSale.sol:CrowdSale contract |                 |        |        |        |         |
 |------------------------------------------------|-----------------|--------|--------|--------|---------|
 | Deployment Cost                                | Deployment Size |        |        |        |         |
-| 1205933                                        | 5950            |        |        |        |         |
+| 1278414                                        | 6312            |        |        |        |         |
 | Function Name                                  | min             | avg    | median | max    | # calls |
-| claim                                          | 4657            | 19172  | 26353  | 31808  | 16      |
+| claim                                          | 4725            | 21137  | 25007  | 31836  | 24      |
+| claimResults                                   | 507             | 28482  | 29579  | 48849  | 8       |
 | contribution                                   | 720             | 720    | 720    | 720    | 2       |
-| getSaleInfo                                    | 1103            | 1103   | 1103   | 1103   | 2       |
-| placeBid                                       | 516             | 47735  | 42979  | 84779  | 17      |
-| settle                                         | 4047            | 28816  | 28291  | 52463  | 9       |
-| startSale                                      | 504             | 116479 | 184050 | 189952 | 18      |
+| getSaleInfo                                    | 1282            | 1282   | 1282   | 1282   | 2       |
+| placeBid                                       | 494             | 40976  | 26677  | 84746  | 25      |
+| settle                                         | 4114            | 12512  | 6872   | 25690  | 9       |
+| startSale                                      | 482             | 117844 | 186298 | 192200 | 18      |
 
 
 | src/crowdsale/LockingCrowdSale.sol:LockingCrowdSale contract |                 |        |        |        |         |
 |--------------------------------------------------------------|-----------------|--------|--------|--------|---------|
 | Deployment Cost                                              | Deployment Size |        |        |        |         |
-| 2432342                                                      | 12028           |        |        |        |         |
+| 2484605                                                      | 12291           |        |        |        |         |
 | Function Name                                                | min             | avg    | median | max    | # calls |
-| claim                                                        | 9114            | 62106  | 66926  | 105460 | 4       |
-| getSaleInfo                                                  | 1125            | 1125   | 1125   | 1125   | 3       |
+| claim                                                        | 9082            | 62141  | 66978  | 105528 | 4       |
+| claimResults                                                 | 21673           | 33273  | 39074  | 39074  | 3       |
+| getSaleInfo                                                  | 1304            | 1304   | 1304   | 1304   | 3       |
 | lockingContracts                                             | 542             | 542    | 542    | 542    | 4       |
-| placeBid                                                     | 84781           | 84781  | 84781  | 84781  | 4       |
-| settle                                                       | 9993            | 40406  | 50544  | 50544  | 4       |
-| startSale                                                    | 1250            | 246174 | 307406 | 307406 | 5       |
+| placeBid                                                     | 84741           | 84741  | 84741  | 84741  | 4       |
+| settle                                                       | 6039            | 26664  | 33540  | 33540  | 4       |
+| startSale                                                    | 1250            | 247967 | 309647 | 309647 | 5       |
 
 
 | src/crowdsale/StakedLockingCrowdSale.sol:StakedLockingCrowdSale contract                                     |                 |        |        |        |         |
 |--------------------------------------------------------------------------------------------------------------|-----------------|--------|--------|--------|---------|
 | Deployment Cost                                                                                              | Deployment Size |        |        |        |         |
-| 2928295                                                                                                      | 14512           |        |        |        |         |
+| 3002775                                                                                                      | 14884           |        |        |        |         |
 | Function Name                                                                                                | min             | avg    | median | max    | # calls |
-| claim                                                                                                        | 7721            | 222895 | 254148 | 383548 | 21      |
-| getSaleInfo                                                                                                  | 1125            | 1125   | 1125   | 1125   | 4       |
+| claim                                                                                                        | 7731            | 222918 | 254160 | 383560 | 21      |
+| claimResults                                                                                                 | 21688           | 39516  | 39088  | 48860  | 10      |
+| getSaleInfo                                                                                                  | 1304            | 1304   | 1304   | 1304   | 4       |
 | lockingContracts                                                                                             | 598             | 598    | 598    | 598    | 11      |
 | placeBid                                                                                                     | 10959           | 96605  | 85057  | 163867 | 25      |
 | salesStaking                                                                                                 | 790             | 790    | 790    | 790    | 1       |
-| settle                                                                                                       | 9993            | 56685  | 50544  | 80280  | 11      |
+| settle                                                                                                       | 6039            | 37582  | 33540  | 53440  | 11      |
 | stakesOf                                                                                                     | 710             | 710    | 710    | 710    | 5       |
-| startSale((address,address,address,uint256,uint256,uint64,address))(uint256)                                 | 384             | 384    | 384    | 384    | 1       |
-| startSale((address,address,address,uint256,uint256,uint64,address),address,address,uint256,uint256)(uint256) | 3376            | 294450 | 390106 | 391602 | 16      |
-| startSale((address,address,address,uint256,uint256,uint64,address),uint256)(uint256)                         | 383             | 383    | 383    | 383    | 1       |
+| startSale((address,address,address,uint256,uint256,uint64,address))(uint256)                                 | 362             | 362    | 362    | 362    | 1       |
+| startSale((address,address,address,uint256,uint256,uint64,address),address,address,uint256,uint256)(uint256) | 3376            | 296161 | 392388 | 393883 | 16      |
+| startSale((address,address,address,uint256,uint256,uint64,address),uint256)(uint256)                         | 450             | 450    | 450    | 450    | 1       |
 
 
 

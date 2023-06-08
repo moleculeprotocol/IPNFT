@@ -64,6 +64,7 @@ contract CrowdSaleFuzzTest is Test {
 
         vm.startPrank(anyone);
         crowdSale.settle(saleId);
+        crowdSale.claimResults(saleId);
         vm.stopPrank();
 
         for (uint8 it = 0; it < bidders; it++) {

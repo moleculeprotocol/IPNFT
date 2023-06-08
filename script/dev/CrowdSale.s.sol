@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.18;
 
 import "forge-std/Test.sol";
 import "forge-std/console.sol";
@@ -132,6 +132,7 @@ contract ClaimSale is CommonScript {
 
         vm.startBroadcast(anyone);
         stakedLockingCrowdSale.settle(saleId);
+        stakedLockingCrowdSale.claimResults(saleId);
         vm.stopBroadcast();
 
         string memory terms = permissioner.specificTermsV1(auctionToken);
