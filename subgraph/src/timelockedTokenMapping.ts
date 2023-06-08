@@ -1,6 +1,6 @@
-import { dataSource, log } from '@graphprotocol/graph-ts'
+import { dataSource, log, BigInt } from '@graphprotocol/graph-ts'
 
-import { LockedSchedule } from '../generated/schema'
+import { LockedSchedule, Molecule } from '../generated/schema'
 import {
   ScheduleCreated,
   ScheduleReleased
@@ -9,11 +9,27 @@ import {
 export function handleScheduled(event: ScheduleCreated): void {
   let context = dataSource.context()
   let schedule = new LockedSchedule(event.params.scheduleId)
+
+  let reactedIpnft = context.getBytes('reactedIpnft').toHexString()
+  let moleculesId = reactedIpnft + '-' + event.params.beneficiary.toHexString()
+
+  let molecule = Molecule.load(moleculesId)
+  if (!molecule) {
+    molecule = new Molecule(moleculesId)
+    molecule.reactedIpnft = reactedIpnft
+    molecule.balance = BigInt.fromI32(0)
+    molecule.owner = event.params.beneficiary
+    molecule.agreementSignature = null
+    molecule.save()
+  }
+
+  schedule.molecule = moleculesId
   schedule.tokenContract = context.getBytes('lockingContract')
   schedule.beneficiary = event.params.beneficiary
   schedule.amount = event.params.amount
   schedule.expiresAt = event.params.expiresAt
   schedule.claimedAt = null
+
   schedule.save()
 }
 
