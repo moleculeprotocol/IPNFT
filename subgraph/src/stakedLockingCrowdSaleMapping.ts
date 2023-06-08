@@ -197,7 +197,7 @@ export function handleLockingContractCreated(
   event: LockingContractCreatedEvent
 ): void {
   let context = new DataSourceContext()
-  context.setBytes('underlyingToken', event.params.underlyingToken)
+  context.setBytes('reactedIpnft', event.params.underlyingToken)
   context.setBytes('lockingContract', event.params.lockingContract)
   TimelockedTokenTemplate.createWithContext(
     event.params.lockingContract,
