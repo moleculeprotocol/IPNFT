@@ -1,6 +1,16 @@
 [
   {
     "inputs": [],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "inputs": [],
+    "name": "AlreadyClaimed",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "BadDecimals",
     "type": "error"
   },
@@ -42,7 +52,7 @@
   },
   {
     "inputs": [],
-    "name": "IncompatibleLockingContract",
+    "name": "IncompatibleVestingContract",
     "type": "error"
   },
   {
@@ -78,12 +88,17 @@
   },
   {
     "inputs": [],
-    "name": "UnmanageablelockingContract",
+    "name": "UnmanageableVestingContract",
     "type": "error"
   },
   {
     "inputs": [],
     "name": "UnsupportedInitializer",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "UnsupportedVestingContract",
     "type": "error"
   },
   {
@@ -150,6 +165,32 @@
         "internalType": "uint256",
         "name": "saleId",
         "type": "uint256"
+      }
+    ],
+    "name": "ClaimedAuctionTokens",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "saleId",
+        "type": "uint256"
+      }
+    ],
+    "name": "ClaimedFundingGoal",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "saleId",
+        "type": "uint256"
       },
       {
         "indexed": true,
@@ -203,6 +244,25 @@
       }
     ],
     "name": "LockingContractCreated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "previousOwner",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "newOwner",
+        "type": "address"
+      }
+    ],
+    "name": "OwnershipTransferred",
     "type": "event"
   },
   {
@@ -501,6 +561,25 @@
     "type": "event"
   },
   {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "contract TokenVesting",
+        "name": "tokenVesting",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "bool",
+        "name": "trusted",
+        "type": "bool"
+      }
+    ],
+    "name": "UpdatedTrustedTokenVestings",
+    "type": "event"
+  },
+  {
     "inputs": [
       {
         "internalType": "uint256",
@@ -526,6 +605,19 @@
         "type": "uint256"
       }
     ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "saleId",
+        "type": "uint256"
+      }
+    ],
+    "name": "claimResults",
+    "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
   },
@@ -637,6 +729,11 @@
             "internalType": "uint256",
             "name": "surplus",
             "type": "uint256"
+          },
+          {
+            "internalType": "bool",
+            "name": "claimed",
+            "type": "bool"
           }
         ],
         "internalType": "struct SaleInfo",
@@ -667,6 +764,19 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "owner",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "uint256",
@@ -685,6 +795,26 @@
       }
     ],
     "name": "placeBid",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "contract TokenVesting",
+        "name": "stakesVestingContract",
+        "type": "address"
+      }
+    ],
+    "name": "registerVestingContract",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "renounceOwnership",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -965,6 +1095,51 @@
       }
     ],
     "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "newOwner",
+        "type": "address"
+      }
+    ],
+    "name": "transferOwnership",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "contract TokenVesting",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "trustedVestingContracts",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "contract TokenVesting",
+        "name": "stakesVestingContract",
+        "type": "address"
+      }
+    ],
+    "name": "unregisterVestingContract",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   }
 ]

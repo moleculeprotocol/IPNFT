@@ -7,7 +7,9 @@ import {
   Started as StartedEvent,
   Failed as FailedEvent,
   Claimed as ClaimedEvent,
-  LockingContractCreated as LockingContractCreatedEvent
+  LockingContractCreated as LockingContractCreatedEvent,
+  ClaimedAuctionTokens as ClaimedAuctionTokensEvent,
+  ClaimedFundingGoal as ClaimedFundingGoalEvent
 } from '../generated/StakedLockingCrowdSale/StakedLockingCrowdSale'
 
 import {
@@ -241,4 +243,36 @@ export function handleClaimed(event: ClaimedEvent): void {
       contribution.save()
     }
   }
+}
+
+/**
+ * emitted when the auctioneer pulls / claims bidding tokens after the sale is successfully settled
+ */
+export function handleClaimedSuccessfulSale(
+  event: ClaimedFundingGoalEvent
+): void {
+  let crowdSale = CrowdSale.load(event.params.saleId.toString())
+  if (!crowdSale) {
+    log.error('[handleClaimed] CrowdSale not found for id: {}', [
+      event.params.saleId.toString()
+    ])
+    return
+  }
+  crowdSale.claimedAt = event.block.timestamp
+}
+
+/**
+ * emitted when the auctioneer pulls / claims back auction tokens after the sale has settled and is failed
+ */
+export function handleClaimedFailedSale(
+  event: ClaimedAuctionTokensEvent
+): void {
+  let crowdSale = CrowdSale.load(event.params.saleId.toString())
+  if (!crowdSale) {
+    log.error('[handleClaimed] CrowdSale not found for id: {}', [
+      event.params.saleId.toString()
+    ])
+    return
+  }
+  crowdSale.claimedAt = event.block.timestamp
 }

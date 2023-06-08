@@ -138,6 +138,11 @@ dataSources:
           handler: handleFailed
         - event: LockingContractCreated(indexed address,indexed address)
           handler: handleLockingContractCreated
+        - event: ClaimedFundingGoal(indexed uint256)
+          handler: handleClaimedSuccessfulSale
+        - event: ClaimedAuctionTokens(indexed uint256)
+          handler: handleClaimedFailedSale
+        #- event: ClaimedStakes(indexed uint256,indexed address,uint256,uint256);
 
       file: ./src/stakedLockingCrowdSaleMapping.ts
   - kind: ethereum/contract
