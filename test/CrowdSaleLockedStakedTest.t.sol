@@ -132,6 +132,7 @@ contract CrowdSaleLockedStakedTest is Test {
         vm.startPrank(anyone);
         vm.warp(block.timestamp + 3 hours);
         crowdSale.settle(saleId);
+        crowdSale.claimResults(saleId);
         vm.stopPrank();
 
         assertEq(biddingToken.balanceOf(emitter), _sale.fundingGoal);
@@ -230,6 +231,10 @@ contract CrowdSaleLockedStakedTest is Test {
         assertEq(zeroRefunds * zeroTokens, 0);
         vm.stopPrank();
 
+        vm.startPrank(anyone);
+        crowdSale.claimResults(saleId);
+        vm.stopPrank();
+
         vm.startPrank(bidder);
         crowdSale.claim(saleId, "");
         vm.stopPrank();
@@ -310,6 +315,8 @@ contract CrowdSaleLockedStakedTest is Test {
 
         // //some dust is left on the table
         // //these are 0.0000000000004 tokens at 18 decimals
+        crowdSale.claimResults(saleId);
+
         assertEq(auctionToken.balanceOf(address(crowdSale)), 400_000);
         assertEq(biddingToken.balanceOf(address(crowdSale)), 860_000);
         assertEq(daoToken.balanceOf(address(crowdSale)), 0);
@@ -334,6 +341,7 @@ contract CrowdSaleLockedStakedTest is Test {
         vm.startPrank(anyone);
         vm.warp(block.timestamp + 3 hours);
         crowdSale.settle(saleId);
+        crowdSale.claimResults(saleId);
         vm.stopPrank();
 
         //when settling a failed sale, the auctioneer receives back all their auction tokens

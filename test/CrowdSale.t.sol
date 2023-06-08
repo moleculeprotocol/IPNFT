@@ -10,6 +10,7 @@ import {
     SaleState,
     Sale,
     SaleInfo,
+    AlreadyClaimed,
     BadSalesAmount,
     BadSaleDuration,
     SaleAlreadyActive,
@@ -175,16 +176,29 @@ contract CrowdSaleTest is Test {
         // cant claim before settled
         vm.startPrank(bidder);
         vm.expectRevert(abi.encodeWithSelector(BadSaleState.selector, SaleState.SETTLED, SaleState.RUNNING));
+        crowdSale.claimResults(saleId);
+
+        vm.expectRevert(abi.encodeWithSelector(BadSaleState.selector, SaleState.SETTLED, SaleState.RUNNING));
         crowdSale.claim(saleId, "");
         vm.stopPrank();
 
         vm.startPrank(anyone);
         crowdSale.settle(saleId);
 
+        //can't settle twice
         vm.expectRevert(abi.encodeWithSelector(BadSaleState.selector, SaleState.RUNNING, SaleState.SETTLED));
         crowdSale.settle(saleId);
         vm.stopPrank();
 
+        //[L-02] the emitter must claim their results manually
+        assertEq(biddingToken.balanceOf(emitter), 0);
+        vm.startPrank(anyone);
+        crowdSale.claimResults(saleId);
+
+        //[L-02] the results cannot be claimed twice
+        vm.expectRevert(AlreadyClaimed.selector);
+        crowdSale.claimResults(saleId);
+        vm.stopPrank();
         assertEq(biddingToken.balanceOf(emitter), _sale.fundingGoal);
         SaleInfo memory info = crowdSale.getSaleInfo(saleId);
         assertEq(info.surplus, 0);
@@ -208,8 +222,11 @@ contract CrowdSaleTest is Test {
         vm.stopPrank();
 
         vm.startPrank(anyone);
+        vm.expectRevert(abi.encodeWithSelector(BadSaleState.selector, SaleState.SETTLED, SaleState.RUNNING));
+        crowdSale.claimResults(saleId);
         vm.warp(block.timestamp + 3 hours);
         crowdSale.settle(saleId);
+        crowdSale.claimResults(saleId);
         vm.stopPrank();
 
         assertEq(biddingToken.balanceOf(emitter), 0);
@@ -363,6 +380,8 @@ contract CrowdSaleTest is Test {
         assertEq(auctionToken.balanceOf(bidder2), 100_000 ether);
         assertEq(biddingToken.balanceOf(bidder2), 950_000 ether);
 
+        crowdSale.claimResults(saleId);
+
         assertEq(auctionToken.balanceOf(address(crowdSale)), 0);
         assertEq(biddingToken.balanceOf(address(crowdSale)), 0);
     }
@@ -424,6 +443,8 @@ contract CrowdSaleTest is Test {
 
         assertEq(auctionToken.balanceOf(bidder2), 169811320754716980800000);
         assertEq(biddingToken.balanceOf(bidder2), 915094339622641508720000);
+
+        crowdSale.claimResults(saleId);
 
         assertEq(biddingToken.balanceOf(emitter), 200_000 ether);
 

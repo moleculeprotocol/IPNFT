@@ -33,6 +33,7 @@ struct SaleInfo {
     SaleState state;
     uint256 total;
     uint256 surplus;
+    bool claimed;
 }
 
 error BadDecimals();
@@ -45,6 +46,7 @@ error BidTooLow();
 error SaleNotFund(uint256);
 error SaleNotConcluded();
 error BadSaleState(SaleState expected, SaleState actual);
+error AlreadyClaimed();
 
 /**
  * @title CrowdSale
@@ -62,9 +64,16 @@ contract CrowdSale is ReentrancyGuard {
 
     event Started(uint256 indexed saleId, address indexed issuer, Sale sale);
     event Settled(uint256 indexed saleId, uint256 totalBids, uint256 surplus);
+    /// @notice emitted when participants of the sale claim their tokens
     event Claimed(uint256 indexed saleId, address indexed claimer, uint256 claimed, uint256 refunded);
     event Bid(uint256 indexed saleId, address indexed bidder, uint256 amount);
     event Failed(uint256 indexed saleId);
+
+    /// @notice emitted when sales owner / beneficiary claims `fundingGoal` `biddingTokens` after a successful sale
+    event ClaimedFundingGoal(uint256 indexed saleId);
+
+    /// @notice emitted when sales owner / beneficiary claims `salesAmount` `auctionTokens` after a non successful sale
+    event ClaimedAuctionTokens(uint256 indexed saleId);
 
     /**
      * @notice bidding tokens can have arbitrary decimals, auctionTokens must be 18 decimals
@@ -94,7 +103,7 @@ contract CrowdSale is ReentrancyGuard {
         }
 
         _sales[saleId] = sale;
-        _saleInfo[saleId] = SaleInfo(SaleState.RUNNING, 0, 0);
+        _saleInfo[saleId] = SaleInfo(SaleState.RUNNING, 0, 0, false);
 
         sale.auctionToken.safeTransferFrom(msg.sender, address(this), sale.salesAmount);
         _afterSaleStarted(saleId);
@@ -166,7 +175,6 @@ contract CrowdSale is ReentrancyGuard {
         if (saleInfo.total < sale.fundingGoal) {
             saleInfo.state = SaleState.FAILED;
             emit Failed(saleId);
-            sale.auctionToken.safeTransfer(sale.beneficiary, sale.salesAmount);
             return;
         }
         saleInfo.state = SaleState.SETTLED;
@@ -174,8 +182,33 @@ contract CrowdSale is ReentrancyGuard {
 
         emit Settled(saleId, saleInfo.total, saleInfo.surplus);
         _afterSaleSettled(saleId);
-        //transfer funds to issuer / beneficiary
-        sale.biddingToken.safeTransfer(sale.beneficiary, sale.fundingGoal);
+    }
+
+    /**
+     * @notice [L-02] lets the auctioneer pull the results of a succeeded / failed crowdsale
+     *         only callable once after the sale was settled
+     *         this is callable by anonye
+     * @param saleId the sale id
+     */
+    function claimResults(uint256 saleId) external virtual {
+        SaleInfo storage saleInfo = _saleInfo[saleId];
+        if (saleInfo.claimed) {
+            revert AlreadyClaimed();
+        }
+        saleInfo.claimed = true;
+
+        Sale storage sale = _sales[saleId];
+        if (saleInfo.state == SaleState.SETTLED) {
+            //transfer funds to issuer / beneficiary
+            emit ClaimedFundingGoal(saleId);
+            sale.biddingToken.safeTransfer(sale.beneficiary, sale.fundingGoal);
+        } else if (saleInfo.state == SaleState.FAILED) {
+            //return auction tokens
+            emit ClaimedAuctionTokens(saleId);
+            sale.auctionToken.safeTransfer(sale.beneficiary, sale.salesAmount);
+        } else {
+            revert BadSaleState(SaleState.SETTLED, saleInfo.state);
+        }
     }
 
     function _afterSaleSettled(uint256 saleId) internal virtual { }
