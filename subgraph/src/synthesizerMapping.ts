@@ -10,15 +10,15 @@ export function handleMoleculesCreated(event: MoleculesCreatedEvent): void {
 
   reacted.createdAt = event.block.timestamp
   reacted.ipnft = event.params.ipnftId.toString()
-  reacted.erc20address = event.params.tokenContract
   reacted.agreementCid = event.params.agreementCid
   reacted.originalOwner = event.params.emitter
-  //these will be updated by the underlying token graph
+  reacted.symbol = event.params.symbol
+  reacted.name = event.params.name
+  reacted.decimals = BigInt.fromU32(18)
+
+  //these will be updated by the underlying Molecules subgraph template
   reacted.totalIssued = BigInt.fromU32(0)
   reacted.circulatingSupply = BigInt.fromU32(0)
-  reacted.symbol = event.params.symbol
-  reacted.tokenName = event.params.name
-  //reacted.claimedShares = BigInt.fromU32(0);
   Molecules.create(event.params.tokenContract)
 
   reacted.save()

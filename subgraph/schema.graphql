@@ -11,21 +11,22 @@ type Ipnft @entity {
 
 type ReactedIpnft @entity {
   id: ID! # Molecules tokenaddress
-  ipnft: Ipnft!
-  createdAt: BigInt!
-  erc20address: Bytes! #address of the underlying erc20 token
+  name: String!
+  symbol: String!
+  decimals: BigInt!
   agreementCid: String! #IPFS CID string of FAM Agreement
   originalOwner: Bytes! # address of the issuer
+  # these will be updated by the underlying Molecules subgraph template
   totalIssued: BigInt! #the highest amount of molecules issued, this can be raised by the owner
   circulatingSupply: BigInt! #the amount of unburnt molecules
-  symbol: String!
-  tokenName: String!
   #   paymentToken: Bytes #address ERC20 Token
   #   paidPrice: BigInt #the price paid for the original ipnft
   #   claimedShares: BigInt! # the amount of shares that have already been claimed. This needs to have a fulfilledListingId to be set
+  ipnft: Ipnft!
   lockedToken: TimelockedToken #the locked token that bidders partially receive when claiming
   molecules: [Molecule!] @derivedFrom(field: "reactedIpnft")
   crowdsales: [CrowdSale!] @derivedFrom(field: "reactedIpnft")
+  createdAt: BigInt!
 }
 
 type Molecule @entity {
