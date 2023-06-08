@@ -65,7 +65,7 @@ contract CrowdSaleLockedStakedTest is Test {
         );
 
         vestedDao.grantRole(vestedDao.ROLE_CREATE_SCHEDULE(), address(crowdSale));
-        crowdSale.registerVestingContract(vestedDao);
+        crowdSale.trustVestingContract(vestedDao);
         vm.stopPrank();
 
         vm.startPrank(bidder);
@@ -104,10 +104,10 @@ contract CrowdSaleLockedStakedTest is Test {
 
         vm.startPrank(deployer);
         vm.expectRevert(UnmanageableVestingContract.selector);
-        crowdSale.registerVestingContract(wrongStakeVestingContract);
+        crowdSale.trustVestingContract(wrongStakeVestingContract);
 
         wrongStakeVestingContract.grantRole(wrongStakeVestingContract.ROLE_CREATE_SCHEDULE(), address(crowdSale));
-        crowdSale.registerVestingContract(wrongStakeVestingContract);
+        crowdSale.trustVestingContract(wrongStakeVestingContract);
         vm.stopPrank();
 
         vm.startPrank(emitter);

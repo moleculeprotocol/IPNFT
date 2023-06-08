@@ -800,19 +800,6 @@
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "contract TokenVesting",
-        "name": "stakesVestingContract",
-        "type": "address"
-      }
-    ],
-    "name": "registerVestingContract",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
     "inputs": [],
     "name": "renounceOwnership",
     "outputs": [],
@@ -1114,6 +1101,19 @@
     "inputs": [
       {
         "internalType": "contract TokenVesting",
+        "name": "stakesVestingContract",
+        "type": "address"
+      }
+    ],
+    "name": "trustVestingContract",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
         "name": "",
         "type": "address"
       }
@@ -1137,7 +1137,7 @@
         "type": "address"
       }
     ],
-    "name": "unregisterVestingContract",
+    "name": "untrustVestingContract",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

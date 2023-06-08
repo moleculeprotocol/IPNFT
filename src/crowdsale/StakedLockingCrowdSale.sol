@@ -35,7 +35,7 @@ contract StakedLockingCrowdSale is LockingCrowdSale, Ownable {
 
     mapping(uint256 => StakingInfo) public salesStaking;
     mapping(uint256 => mapping(address => uint256)) internal stakes;
-    mapping(TokenVesting => bool) public trustedVestingContracts;
+    mapping(address => bool) public trustedVestingContracts;
 
     event Started(
         uint256 indexed saleId,
@@ -62,16 +62,16 @@ contract StakedLockingCrowdSale is LockingCrowdSale, Ownable {
      * @notice this contract can only vest stakes for contracts that it knows so unknown actors cannot start crowdsales with malicious contracts
      * @param stakesVestingContract the
      */
-    function registerVestingContract(TokenVesting stakesVestingContract) external onlyOwner {
+    function trustVestingContract(TokenVesting stakesVestingContract) external onlyOwner {
         if (!stakesVestingContract.hasRole(stakesVestingContract.ROLE_CREATE_SCHEDULE(), address(this))) {
             revert UnmanageableVestingContract();
         }
-        trustedVestingContracts[stakesVestingContract] = true;
+        trustedVestingContracts[address(stakesVestingContract)] = true;
         emit UpdatedTrustedTokenVestings(stakesVestingContract, true);
     }
 
-    function unregisterVestingContract(TokenVesting stakesVestingContract) external onlyOwner {
-        trustedVestingContracts[stakesVestingContract] = false;
+    function untrustVestingContract(TokenVesting stakesVestingContract) external onlyOwner {
+        trustedVestingContracts[address(stakesVestingContract)] = false;
         emit UpdatedTrustedTokenVestings(stakesVestingContract, false);
     }
 
@@ -99,7 +99,7 @@ contract StakedLockingCrowdSale is LockingCrowdSale, Ownable {
         }
 
         // [H-01] we only open crowdsales with vesting contracts that we know
-        if (!trustedVestingContracts[stakesVestingContract]) {
+        if (!trustedVestingContracts[address(stakesVestingContract)]) {
             revert UnsupportedVestingContract();
         }
 

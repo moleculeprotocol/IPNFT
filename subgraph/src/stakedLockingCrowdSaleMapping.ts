@@ -259,6 +259,7 @@ export function handleClaimedSuccessfulSale(
     return
   }
   crowdSale.claimedAt = event.block.timestamp
+  crowdSale.save()
 }
 
 /**
@@ -275,4 +276,5 @@ export function handleClaimedFailedSale(
     return
   }
   crowdSale.claimedAt = event.block.timestamp
+  crowdSale.save()
 }

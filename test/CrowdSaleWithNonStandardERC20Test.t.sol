@@ -61,7 +61,7 @@ contract CrowdSaleWithNonStandardERC20Test is Test {
         );
 
         vestedDao.grantRole(vestedDao.ROLE_CREATE_SCHEDULE(), address(crowdSale));
-        crowdSale.registerVestingContract(vestedDao);
+        crowdSale.trustVestingContract(vestedDao);
         vm.stopPrank();
         vm.startPrank(bidder);
         biddingToken.mint(bidder, 1_000_000e6);
