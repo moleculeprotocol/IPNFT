@@ -40,7 +40,6 @@ function makeTimelockedToken(
   underlyingToken: ERC20Token
 ): TimelockedToken {
   let token = TimelockedToken.load(_contract._address)
-  let reactedIpnft = ReactedIpnft.load(underlyingToken.id.toHexString())
 
   if (!token) {
     token = new TimelockedToken(_contract._address)
@@ -49,6 +48,8 @@ function makeTimelockedToken(
     token.symbol = _contract.symbol()
     token.name = _contract.name()
     token.underlyingToken = underlyingToken.id
+
+    let reactedIpnft = ReactedIpnft.load(underlyingToken.id.toHexString())
     if (reactedIpnft) {
       token.reactedIpnft = reactedIpnft.id
     }
@@ -70,6 +71,18 @@ export function handleStarted(event: StartedEvent): void {
     ])
     return
   }
+
+  if (!reactedIpnft.lockedToken) {
+    reactedIpnft.lockedToken = event.params.lockingToken
+    reactedIpnft.save()
+  } else if (reactedIpnft.lockedToken !== event.params.lockingToken) {
+    log.error('the locking token per reacted Ipnft should be unique {} != {}', [
+      // Todo: Build breaks if these two lines are uncommented
+      //   reactedIpnft.lockedToken.toHexString(),
+      //   event.params.lockingToken.toHexString()
+    ])
+  }
+
   crowdSale.reactedIpnft = reactedIpnft.id
   crowdSale.issuer = event.params.issuer
   crowdSale.beneficiary = event.params.sale.beneficiary
@@ -77,16 +90,7 @@ export function handleStarted(event: StartedEvent): void {
   crowdSale.createdAt = event.block.timestamp
   crowdSale.state = 'RUNNING'
 
-  const auctionToken: ERC20Token = makeERC20Token(
-    IERC20Metadata.bind(event.params.sale.auctionToken)
-  )
-  crowdSale.auctionToken = auctionToken.id
-
   crowdSale.salesAmount = event.params.sale.salesAmount
-  crowdSale.lockedAuctionToken = makeTimelockedToken(
-    IERC20Metadata.bind(event.params.lockingToken),
-    auctionToken
-  ).id
 
   crowdSale.auctionLockingDuration = event.params.lockingDuration
 

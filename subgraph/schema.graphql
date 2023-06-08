@@ -23,6 +23,7 @@ type ReactedIpnft @entity {
   #   paymentToken: Bytes #address ERC20 Token
   #   paidPrice: BigInt #the price paid for the original ipnft
   #   claimedShares: BigInt! # the amount of shares that have already been claimed. This needs to have a fulfilledListingId to be set
+  lockedToken: TimelockedToken #the locked token that bidders partially receive when claiming
   molecules: [Molecule!] @derivedFrom(field: "reactedIpnft")
   crowdsales: [CrowdSale!] @derivedFrom(field: "reactedIpnft")
 }
@@ -124,9 +125,7 @@ type CrowdSale @entity {
   closingTime: BigInt! #the time when the auction ends
   createdAt: BigInt! #the time when the auction was created
   state: SaleState!
-  auctionToken: ERC20Token # could also use Molecules
   salesAmount: BigInt! #the amount of tokens to be auctioned
-  lockedAuctionToken: TimelockedToken #the locked auction token that bidders partially receive when claiming
   auctionLockingDuration: BigInt # The duration for how long auction tokens are locked
   biddingToken: ERC20Token
   fundingGoal: BigInt! #the amount of tokens to be raised
