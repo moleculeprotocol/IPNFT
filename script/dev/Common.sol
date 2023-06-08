@@ -15,11 +15,12 @@ contract CommonScript is Script {
     address anyone;
 
     uint256 alicePk;
+    uint256 bobPk;
     uint256 charliePk;
 
     function prepareAddresses() internal virtual {
         (deployer,) = deriveRememberKey(mnemonic, 0);
-        (bob,) = deriveRememberKey(mnemonic, 1);
+        (bob, bobPk) = deriveRememberKey(mnemonic, 1);
         (alice, alicePk) = deriveRememberKey(mnemonic, 2);
         (charlie, charliePk) = deriveRememberKey(mnemonic, 3);
         (anyone,) = deriveRememberKey(mnemonic, 4);

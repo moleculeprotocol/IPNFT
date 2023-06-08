@@ -53,7 +53,7 @@ describe('IPNFT fundamentals and upgrades', function () {
     const Synth0 = await ethers.getContractFactory('Synthesizer')
     const synth0 = await upgrades.deployProxy(
       Synth0,
-      [hre.ethers.constants.AddressZero],
+      [hre.ethers.constants.AddressZero, hre.ethers.constants.AddressZero],
       { kind: 'uups' }
     )
 

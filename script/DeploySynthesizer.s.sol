@@ -24,7 +24,7 @@ contract DeploySynthesizerInfrastructure is Script {
                 )
             )
         );
-        synthesizer.initialize(IPNFT(ipnftAddress));
+        synthesizer.initialize(IPNFT(ipnftAddress), p);
 
         StakedLockingCrowdSale stakedLockingCrowdSale = new StakedLockingCrowdSale();
 

@@ -5,10 +5,12 @@ import "forge-std/Script.sol";
 import "forge-std/console.sol";
 import { IPNFT } from "../../src/IPNFT.sol";
 import { Synthesizer } from "../../src/Synthesizer.sol";
-import { Molecules } from "../../src/Molecules.sol";
+import { Metadata, Molecules } from "../../src/Molecules.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
-import { TermsAcceptedPermissioner } from "../../src/Permissioner.sol";
+import { IPermissioner, TermsAcceptedPermissioner } from "../../src/Permissioner.sol";
 import { CommonScript } from "./Common.sol";
+import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
+import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
 contract DeploySynthesizer is CommonScript {
     function run() public {
@@ -21,8 +23,8 @@ contract DeploySynthesizer is CommonScript {
                 )
             )
         );
-
-        synthesizer.initialize(IPNFT(vm.envAddress("IPNFT_ADDRESS")));
+        IPermissioner permissioner = IPermissioner(vm.envAddress("TERMS_ACCEPTED_PERMISSIONER_ADDRESS"));
+        synthesizer.initialize(IPNFT(vm.envAddress("IPNFT_ADDRESS")), permissioner);
         vm.stopBroadcast();
         console.log("Synthesizer_ADDRESS=%s", address(synthesizer));
     }
@@ -47,8 +49,13 @@ contract FixtureSynthesizer is CommonScript {
     function run() public {
         prepareAddresses();
 
+        string memory terms = permissioner.specificTermsV1(Metadata(1, bob, "bafkreigk5dvqblnkdniges6ft5kmuly47ebw4vho6siikzmkaovq6sjstq"));
+
         vm.startBroadcast(bob);
-        Molecules tokenContract = synthesizer.synthesizeIpnft(1, 1_000_000 ether, "bafkreigk5dvqblnkdniges6ft5kmuly47ebw4vho6siikzmkaovq6sjstq");
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(bobPk, ECDSA.toEthSignedMessageHash(abi.encodePacked(terms)));
+        bytes memory signedTerms = abi.encodePacked(r, s, v);
+        Molecules tokenContract =
+            synthesizer.synthesizeIpnft(1, 1_000_000 ether, "bafkreigk5dvqblnkdniges6ft5kmuly47ebw4vho6siikzmkaovq6sjstq", signedTerms);
         vm.stopBroadcast();
 
         console.log("MOLECULES_ADDRESS=%s", address(tokenContract));

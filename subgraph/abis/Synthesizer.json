@@ -152,6 +152,11 @@
         "internalType": "contract IPNFT",
         "name": "_ipnft",
         "type": "address"
+      },
+      {
+        "internalType": "contract IPermissioner",
+        "name": "_permissioner",
+        "type": "address"
       }
     ],
     "name": "initialize",
@@ -208,6 +213,11 @@
         "internalType": "string",
         "name": "agreementCid",
         "type": "string"
+      },
+      {
+        "internalType": "bytes",
+        "name": "signedAgreement",
+        "type": "bytes"
       }
     ],
     "name": "synthesizeIpnft",
