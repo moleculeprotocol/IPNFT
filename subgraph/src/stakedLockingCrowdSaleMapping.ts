@@ -14,7 +14,7 @@ import {
   Contribution,
   CrowdSale,
   ERC20Token,
-  Fractionalized,
+  ReactedIpnft,
   TimelockedToken
 } from '../generated/schema'
 
@@ -40,7 +40,7 @@ function makeTimelockedToken(
   underlyingToken: ERC20Token
 ): TimelockedToken {
   let token = TimelockedToken.load(_contract._address)
-  let fractionalized = Fractionalized.load(underlyingToken.id.toHexString())
+  let reactedIpnft = ReactedIpnft.load(underlyingToken.id.toHexString())
 
   if (!token) {
     token = new TimelockedToken(_contract._address)
@@ -49,8 +49,8 @@ function makeTimelockedToken(
     token.symbol = _contract.symbol()
     token.name = _contract.name()
     token.underlyingToken = underlyingToken.id
-    if (fractionalized) {
-      token.fractionalized = fractionalized.id
+    if (reactedIpnft) {
+      token.reactedIpnft = reactedIpnft.id
     }
     token.save()
   }
@@ -61,16 +61,16 @@ function makeTimelockedToken(
 export function handleStarted(event: StartedEvent): void {
   let crowdSale = new CrowdSale(event.params.saleId.toString())
 
-  let fractionalized = Fractionalized.load(
+  let reactedIpnft = ReactedIpnft.load(
     event.params.sale.auctionToken.toHexString()
   )
-  if (!fractionalized) {
-    log.error('Fractionalized Ipnft not found for id: {}', [
+  if (!reactedIpnft) {
+    log.error('ReactedIpnft Ipnft not found for id: {}', [
       event.params.sale.auctionToken.toHexString()
     ])
     return
   }
-  crowdSale.fractionalizedIpnft = fractionalized.id
+  crowdSale.reactedIpnft = reactedIpnft.id
   crowdSale.issuer = event.params.issuer
   crowdSale.beneficiary = event.params.sale.beneficiary
   crowdSale.closingTime = event.params.sale.closingTime

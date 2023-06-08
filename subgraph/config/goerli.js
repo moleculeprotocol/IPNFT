@@ -18,16 +18,16 @@ module.exports = {
     address: '0xAf0f99dcC64E8a6549d32013AC9f2C3FA7834688',
     startBlock: 8151797
   },
-  fractionalizer: {
-    address: '0x593ED28cb4E8d143e16D83D151a2CC01fDa10B0A',
-    startBlock: 9099340
+  synthesizer: {
+    address: '0xb12494eeA6B992d0A1Db3C5423BE7a2d2337F58c',
+    startBlock: 9142681
   },
   stakedLockingCrowdSale: {
     address: '0x1c52b03bf2F028CA5FD632685A7CC1A1B6B5c2Bb',
-    startBlock: 9132127
+    startBlock: 9142681
   },
   termsAcceptedPermissioner: {
-    address: '0xaC17101C598e8D8567a158b773bF76d9CDDdCE31',
-    startBlock: 9044965
+    address: '0x3aFb3D87c12239B4D9DB67837F4bE4651FbBEd20',
+    startBlock: 9142681
   }
 }

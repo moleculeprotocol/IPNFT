@@ -49,17 +49,17 @@ describe('IPNFT fundamentals and upgrades', function () {
     expect(1).to.eq(1)
   })
 
-  it('validates fractionalizer upgrade', async function () {
-    const Frac0 = await ethers.getContractFactory('Fractionalizer')
-    const frac0 = await upgrades.deployProxy(
-      Frac0,
+  it('validates synthesizer upgrade', async function () {
+    const Synth0 = await ethers.getContractFactory('Synthesizer')
+    const synth0 = await upgrades.deployProxy(
+      Synth0,
       [hre.ethers.constants.AddressZero],
       { kind: 'uups' }
     )
 
     const result = await upgrades.validateUpgrade(
-      frac0.address,
-      await ethers.getContractFactory('FractionalizerNext'),
+      synth0.address,
+      await ethers.getContractFactory('SynthesizerNext'),
       {
         kind: 'uups'
       }

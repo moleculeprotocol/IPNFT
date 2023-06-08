@@ -32,7 +32,7 @@
   {
     "inputs": [
       {
-        "internalType": "contract FractionalizedToken",
+        "internalType": "contract Molecules",
         "name": "tokenContract",
         "type": "address"
       },
@@ -55,7 +55,7 @@
   {
     "inputs": [
       {
-        "internalType": "contract FractionalizedToken",
+        "internalType": "contract Molecules",
         "name": "tokenContract",
         "type": "address"
       },
@@ -84,7 +84,7 @@
   {
     "inputs": [
       {
-        "internalType": "contract FractionalizedToken",
+        "internalType": "contract Molecules",
         "name": "tokenContract",
         "type": "address"
       }

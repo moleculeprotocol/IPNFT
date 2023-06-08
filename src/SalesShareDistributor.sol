@@ -7,7 +7,7 @@ import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils
 import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import { ReentrancyGuardUpgradeable } from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import { FractionalizedToken, Metadata } from "./FractionalizedToken.sol";
+import { Molecules, Metadata } from "./Molecules.sol";
 import { SchmackoSwap, ListingState } from "./SchmackoSwap.sol";
 import { IPermissioner, TermsAcceptedPermissioner } from "./Permissioner.sol";
 
@@ -33,20 +33,20 @@ contract SalesShareDistributor is UUPSUpgradeable, OwnableUpgradeable, Reentranc
 
     mapping(address => Sales) public sales;
 
-    event SalesActivated(address indexed fractionToken, address paymentToken, uint256 paidPrice);
-    event SharesClaimed(address indexed fractionToken, address indexed claimer, uint256 amount);
+    event SalesActivated(address indexed molecules, address paymentToken, uint256 paidPrice);
+    event SharesClaimed(address indexed molecules, address indexed claimer, uint256 amount);
 
     function initialize(SchmackoSwap _schmackoSwap) public {
         schmackoSwap = _schmackoSwap;
     }
 
     /**
-     * @notice returns the `amount` of `paymentToken` that `tokenHolder` can claim by burning their fractions
+     * @notice returns the `amount` of `paymentToken` that `tokenHolder` can claim by burning their molecules
      *
      * @param tokenContract address
      * @param holder address
      */
-    function claimableTokens(FractionalizedToken tokenContract, address holder) public view returns (IERC20 paymentToken, uint256 amount) {
+    function claimableTokens(Molecules tokenContract, address holder) public view returns (IERC20 paymentToken, uint256 amount) {
         Sales storage _sales = sales[address(tokenContract)];
 
         if (address(_sales.paymentToken) == address(0)) {
@@ -59,11 +59,11 @@ contract SalesShareDistributor is UUPSUpgradeable, OwnableUpgradeable, Reentranc
     }
 
     /**
-     * @notice call during claiming phase to burn all fractions and receive the pro rata sales share
+     * @notice call during claiming phase to burn all molecules and receive the pro rata sales share
      * @param permissions bytes data that can be read and verified by the configured permissioner
      *        at the moment this simply is a valid signature over a `specificTermsV1` message
      */
-    function claim(FractionalizedToken tokenContract, bytes memory permissions) public nonReentrant {
+    function claim(Molecules tokenContract, bytes memory permissions) public nonReentrant {
         uint256 balance = tokenContract.balanceOf(_msgSender());
         if (balance < 1000) {
             revert InsufficientBalance();
@@ -88,11 +88,11 @@ contract SalesShareDistributor is UUPSUpgradeable, OwnableUpgradeable, Reentranc
      *         rn we restrict it to the token issuer since they must provide a permissioner that controls the claiming rules
      *         this is a deep dependency on our own sales contract
      *
-     * @param tokenContract FractionalizedToken     the fraction token
+     * @param tokenContract Molecules     the tokenContract of the Molecules
      * @param listingId     uint256     the listing id on Schmackoswap
      * @param permissioner  IPermissioner   the permissioner that permits claims
      */
-    function afterSale(FractionalizedToken tokenContract, uint256 listingId, IPermissioner permissioner) external {
+    function afterSale(Molecules tokenContract, uint256 listingId, IPermissioner permissioner) external {
         if (_msgSender() != tokenContract.issuer()) {
             revert OnlyIssuer();
         }
@@ -115,21 +115,21 @@ contract SalesShareDistributor is UUPSUpgradeable, OwnableUpgradeable, Reentranc
     }
 
     //audit: ensure that no one can withdraw arbitrary amounts here
-    //by simply creating a new fractionalization and claim an arbitrary value
+    //by simply creating a new Molecules instance and claim an arbitrary value
 
     /**
      * @notice When the sales beneficiary has not been set to the underlying erc20 token address but to the original owner's wallet instead,
      *         they can invoke this method to start the claiming phase manually. This e.g. allows sales off the record.
      *
-     *         Requires the originalOwner to behave honestly / in favor of the fraction holders
+     *         Requires the originalOwner to behave honestly / in favor of the molecules holders
      *         Requires the caller to have approved `price` of `paymentToken` to this contract
      *
-     * @param   tokenContract FractionalizedToken  the fraction token contract
+     * @param   tokenContract Molecules  the Molecules token contract
      * @param   paymentToken  IERC20   the payment token contract address
      * @param   paidPrice         uint256  the price the NFT has been sold for
      * @param permissioner  IPermissioner   the permissioner that permits claims
      */
-    function afterSale(FractionalizedToken tokenContract, IERC20 paymentToken, uint256 paidPrice, IPermissioner permissioner) external nonReentrant {
+    function afterSale(Molecules tokenContract, IERC20 paymentToken, uint256 paidPrice, IPermissioner permissioner) external nonReentrant {
         if (_msgSender() != tokenContract.issuer()) {
             revert OnlyIssuer();
         }
@@ -157,13 +157,9 @@ contract SalesShareDistributor is UUPSUpgradeable, OwnableUpgradeable, Reentranc
         paymentToken.safeTransferFrom(_msgSender(), address(this), paidPrice);
     }
 
-    function _startClaimingPhase(
-        FractionalizedToken tokenContract,
-        uint256 fulfilledListingId,
-        IERC20 _paymentToken,
-        uint256 price,
-        IPermissioner permissioner
-    ) internal {
+    function _startClaimingPhase(Molecules tokenContract, uint256 fulfilledListingId, IERC20 _paymentToken, uint256 price, IPermissioner permissioner)
+        internal
+    {
         if (!tokenContract.capped()) {
             revert UncappedToken();
         }

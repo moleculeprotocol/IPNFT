@@ -99,7 +99,7 @@
       {
         "indexed": true,
         "internalType": "address",
-        "name": "fractionToken",
+        "name": "molecules",
         "type": "address"
       },
       {
@@ -124,7 +124,7 @@
       {
         "indexed": true,
         "internalType": "address",
-        "name": "fractionToken",
+        "name": "molecules",
         "type": "address"
       },
       {
@@ -159,7 +159,7 @@
   {
     "inputs": [
       {
-        "internalType": "contract FractionalizedToken",
+        "internalType": "contract Molecules",
         "name": "tokenContract",
         "type": "address"
       },
@@ -187,7 +187,7 @@
   {
     "inputs": [
       {
-        "internalType": "contract FractionalizedToken",
+        "internalType": "contract Molecules",
         "name": "tokenContract",
         "type": "address"
       },
@@ -210,7 +210,7 @@
   {
     "inputs": [
       {
-        "internalType": "contract FractionalizedToken",
+        "internalType": "contract Molecules",
         "name": "tokenContract",
         "type": "address"
       },
@@ -228,7 +228,7 @@
   {
     "inputs": [
       {
-        "internalType": "contract FractionalizedToken",
+        "internalType": "contract Molecules",
         "name": "tokenContract",
         "type": "address"
       },

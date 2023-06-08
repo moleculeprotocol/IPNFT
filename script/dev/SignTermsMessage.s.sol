@@ -9,7 +9,7 @@ contract SignTermsMessage is Script {
     function run() public {
         uint256 pk = vm.envUint("PRIVATE_KEY");
         string memory terms =
-            "As a fraction holder of IPNFT #10, I accept all terms that I've read here: ipfs://bafkreigk5dvqblnkdniges6ft5kmuly47ebw4vho6siikzmkaovq6sjstq\n\nChain Id: 31337\nVersion: 1";
+            "As a molecule holder of IPNFT #10, I accept all terms that I've read here: ipfs://bafkreigk5dvqblnkdniges6ft5kmuly47ebw4vho6siikzmkaovq6sjstq\n\nChain Id: 31337\nVersion: 1";
 
         bytes32 termsHash = ECDSA.toEthSignedMessageHash(abi.encodePacked(terms));
 

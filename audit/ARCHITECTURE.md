@@ -9,22 +9,22 @@ see [SEQUENCE.md](../SEQUENCE.md) for a sequence diagram of the following flow
 - IPNFTs are usually owned by multisig wallets that are controlled by an offchain governance process. The governance token that controls decisions about the IPFNT asset is external / unrelated to the IPNFT protocol.
 - The IPNFT contract is deployed behind an ERC1967 UUPSProxy contract and can be upgraded at any time. It's currently owned by the Molecule Dev Team's multisig (2/3).
 
-## Fractionalizer | FractionalizedToken
+## Synthesizer | Molecules
 
-- The Fractionalizer allows an IPNFT owner to create a derived `FractionalizedToken` ERC20 contract. It represents partial ownership of rights attached to an IPNFT.
-- Owners of fractionalized tokens may gain access or usage rights to certain documents, secret data or may claim shares from other sources. This functionality is not necessarily built into any IPNFT contract but can be written by 3rd parties that rely on an IPNFT's (fractional) ownership.
-- The IPNFT owner creates an initial new `FractionalizedToken` supply by calling `fractionalizeIpnft(uint256 ipnftId, uint256 fractionsAmount, string calldata agreementCid)`
-  - this instantiates a new minimal clone of the currently templated `FractionalizedToken` implementation...
-  - ...and initializes it with the `Fractionalizer` contract as its owner
-  - the original owner of an IPNFT can tell the `FractionalizedToken` at any time to mint an arbitrary amount of fractionalized tokens by calling its `issue` function. Token holders must be aware that they can be diluted at the discretion of the IPNFT holder. New emissions are supposed to be controlled by the governance layer that controls the multisig (contract) that still holds the IPNFT.
-  - a `FractionalizedToken` can be marked as `capped` by the original owner. From there on its supply is limited. This condition will be required by a `SalesShareDistributor` of that token.
-- the initial emission of `FractionalizedTokens` to other accounts is out of scope of the `Fractionalizer` itself.
-- Fraction holders can transfer their `FractionalizedToken`s as they like.
-- To enjoy certain benefits, fraction holders might be asked to agree to a legal agreement document that can be provided during the fractionalization transaction. `FractionalizedToken`s can store them as IPFS CIDs inside their `Metadata` struct. Usage or enforcement of this agreement is not part of the `FractionalizedToken` but rather will help enforcing legal commitments by other parts (`TermsAcceptedPermissioner`) of the system.
+- The Synthesizer allows an IPNFT owner to create a derived `Molecules` ERC20 contract. It represents partial ownership of rights attached to an IPNFT.
+- Owners of Molecules may gain access or usage rights to certain documents, secret data or may claim shares from other sources. This functionality is not necessarily built into any IPNFT contract but can be written by 3rd parties that rely on an Molecules ownership.
+- The IPNFT owner creates an initial new `Molecules` supply by calling `synthesizeIpnft(uint256 ipnftId, uint256 moleculesAmount, string calldata agreementCid)`
+  - this instantiates a new minimal clone of the currently templated `Molecules` implementation...
+  - ...and initializes it with the `Synthesizer` contract as its owner
+  - the original owner of an IPNFT can tell the `Molecules` at any time to mint an arbitrary amount of molecules by calling its `issue` function. Token holders must be aware that they can be diluted at the discretion of the IPNFT holder. New emissions are supposed to be controlled by the governance layer that controls the multisig (contract) that still holds the IPNFT.
+  - a `Molecules` can be marked as `capped` by the original owner. From there on its supply is limited. This condition will be required by a `SalesShareDistributor` of that token.
+- the initial emission of `Moleculess` to other accounts is out of scope of the `Synthesizer` itself.
+- Molecule holders can transfer their `Molecules`s as they like.
+- To enjoy certain benefits, molecule holders might be asked to agree to a legal agreement document that can be provided during the synthesis transaction. `Molecules`s can store them as IPFS CIDs inside their `Metadata` struct. Usage or enforcement of this agreement is not part of the `Molecules` but rather will help enforcing legal commitments by other parts (`TermsAcceptedPermissioner`) of the system.
 
 ## CrowdSales
 
-To launch and fundraise governance shares of IPNFT projects, we've built a suite of crowdsale contracts that allow raising fixed amounts of bidding tokens in exchange for a fixed amount of fraction tokens, making this a fixed price sale. Fundraisers can bid an arbitrary amount of bidding tokens for auction tokens that are locked into the crowdsale contract for the time the sale is running. The amount of accepted bids is unrestricted, so a sale can be "oversold"; the claimable amounts for each bidder will be computed after settling the sale.
+To launch and fundraise governance shares of IPNFT projects, we've built a suite of crowdsale contracts that allow raising fixed amounts of bidding tokens in exchange for a fixed amount of molecules, making this a fixed price sale. Fundraisers can bid an arbitrary amount of bidding tokens for auction tokens that are locked into the crowdsale contract for the time the sale is running. The amount of accepted bids is unrestricted, so a sale can be "oversold"; the claimable amounts for each bidder will be computed after settling the sale.
 
 To take part in the sale, bidders are required to stake another predefined token, usually a membership token of an associated entity (a DAO) conducting the sale. When the funding goal is met after the sale's closing time, the sale can be settled which transfers funding goal of bidding tokens to the sale's beneficiary.
 
@@ -46,7 +46,7 @@ Technically speaking,
 
 ## Permissioner
 
-Smart contracts can utilize a `FractionalizedToken:Metadata`'s `agreementCid` to build permissioning schemes that e.g. enforce digital signatures on certain legal documents (the "FAM agreement").
+Smart contracts can utilize a `Molecules:Metadata`'s `agreementCid` to build permissioning schemes that e.g. enforce digital signatures on certain legal documents (the "FAM agreement").
 
 - these can be EIP-191/EIP-1267 signatures over a certain message that can be recreated and proven on chain and contains the agreement document's cid.
 - The most common case will be to use a `TermsAcceptedPermissioner` contract.
@@ -65,23 +65,23 @@ Smart contracts can utilize a `FractionalizedToken:Metadata`'s `agreementCid` to
 
 ## SalesShareDistributor
 
-A future use case for fractionalized tokens is the pro rata distribution of sales proceeds to fraction holders. Once an IPNFT is sold, the proceeds are captured by the `SalesShareDistributor` contract and fraction holders can claim their share by presenting their legal agreement signature.
+A future use case for molecules is the pro rata distribution of sales proceeds to molecule holders. Once an IPNFT is sold, the proceeds are captured by the `SalesShareDistributor` contract and molecule holders can claim their share by presenting their legal agreement signature.
 
 The claiming phase initiation differs depending on how the IPNFT has been sold:
 
-- When the IPNFT is sold using a `Schmackoswap` listing, the sale _must_ be initialized with the respective `Fractionalizedtoken` as beneficiary
-- When the listing is fulfilled, `Schmackoswap` will transfer the funds directly to the beneficiary, `FractionalizerToken`.
+- When the IPNFT is sold using a `Schmackoswap` listing, the sale _must_ be initialized with the respective `Molecules` as beneficiary
+- When the listing is fulfilled, `Schmackoswap` will transfer the funds directly to the beneficiary, `Molecules`.
 - _Anyone_ who wants to start the claiming phase and observes the fulfill transaction can call `afterSale` with the respective listing id.
-- `Fractionalizer` will check whether the trade has been successful and transitions the fraction id into the claiming phase
+- `Synthesizer` will check whether the trade has been successful and transitions the moleculesId into the claiming phase
 
 - When the IPNFT is sold _externally_, the `owner` is supposed to hold the resulting funds that should to be distributed
 - The `owner` calls `afterSale` using the ERC20 token that was used during the external sale and the amount the IPNFT has being sold for
 - This of course implies trust that the `owner` isn't cheating (unlikely since it's a doxxed multisig)
 - transitioning into the claiming phase requires the underlying token to be marked as `capped`. Otherwise the issuer could just increase the token supply after starting the claiming phase to fully dilute the claims of token holders.
 
-When the claiming phase is initiated, any fraction holder can claim their share of the IPNFT sales funds by calling `SalesShareDistributor:claim(FractionalizedToken tokenContract, bytes memory permissions)`.
+When the claiming phase is initiated, any molecule holder can claim their share of the IPNFT sales funds by calling `SalesShareDistributor:claim(Molecules tokenContract, bytes memory permissions)`.
 
 - Callers have to provide a valid legal agreement signature that's checked by a configured `Permissioner`
-- All fractionalized tokens of the caller are burned during the claiming process. The caller must approve the token before being able to call `claim`
-- In exchange for burning their fractionalized tokens, their _pro rata_ share of the `paymentToken` is transferred to the callers account
-- This _pro rata_ share of the sales proceeds is based on the proportion of the circulating supply of fractionalized tokens owned by the claiming account
+- All molecules of the caller are burned during the claiming process. The caller must approve the token before being able to call `claim`
+- In exchange for burning their molecules, their _pro rata_ share of the `paymentToken` is transferred to the callers account
+- This _pro rata_ share of the sales proceeds is based on the proportion of the circulating supply of molecules owned by the claiming account

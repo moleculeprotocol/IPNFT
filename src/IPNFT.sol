@@ -25,7 +25,7 @@ import { IReservable } from "./IReservable.sol";
 
 /// @title IPNFT V2.3
 /// @author molecule.to
-/// @notice IP-NFTs capture intellectual property to be traded and fractionalized
+/// @notice IP-NFTs capture intellectual property to be traded and synthesized
 contract IPNFT is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IReservable, UUPSUpgradeable, OwnableUpgradeable, PausableUpgradeable {
     using CountersUpgradeable for CountersUpgradeable.Counter;
 

@@ -79,30 +79,30 @@ dataSources:
           handler: handleRedeemed
       file: ./src/mintpassMapping.ts
   - kind: ethereum/contract
-    name: Fractionalizer
+    name: Synthesizer
     network: {{network}}
     source:
-      address: '{{fractionalizer.address}}'
-      abi: Fractionalizer
-      startBlock: {{fractionalizer.startBlock}}
+      address: '{{synthesizer.address}}'
+      abi: Synthesizer
+      startBlock: {{synthesizer.startBlock}}
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
       language: wasm/assemblyscript
       entities:
-        - Fractionalized
-        - Fraction
+        - ReactedIpnft
+        - Molecule
       abis:
-        - name: Fractionalizer
-          file: ./abis/Fractionalizer.json
+        - name: Synthesizer
+          file: ./abis/Synthesizer.json
       eventHandlers:
-        - event: FractionsCreated(indexed uint256,indexed uint256,indexed address,address,uint256,string,string,string)
-          handler: handleFractionsCreated
+        - event: MoleculesCreated(indexed uint256,indexed uint256,indexed address,address,uint256,string,string,string)
+          handler: handleMoleculesCreated
         # - event: SalesActivated(uint256,address,uint256)
         #   handler: handleSalesActivated
         # - event: TermsAccepted(indexed uint256,indexed address,bytes)
         #   handler: handleTermsAccepted
-      file: ./src/fractionalizerMapping.ts
+      file: ./src/synthesizerMapping.ts
   - kind: ethereum/contract
     name: StakedLockingCrowdSale
     network: {{network}}
@@ -124,7 +124,7 @@ dataSources:
         - name: IERC20Metadata
           file: ./abis/IERC20Metadata.json
       eventHandlers:
-        - event:  Started(indexed uint256,indexed address,(address,address,address,uint256,uint256,uint64,address),(address,address,uint256),address,uint256,uint256)
+        - event: Started(indexed uint256,indexed address,(address,address,address,uint256,uint256,uint64,address),(address,address,uint256),address,uint256,uint256)
           handler: handleStarted
         - event: Settled(indexed uint256,uint256,uint256)
           handler: handleSettled
@@ -152,7 +152,7 @@ dataSources:
       apiVersion: 0.0.6
       language: wasm/assemblyscript
       entities:
-        - Fraction
+        - Molecule
       abis:
         - name: TermsAcceptedPermissioner
           file: ./abis/TermsAcceptedPermissioner.json
@@ -161,21 +161,21 @@ dataSources:
           handler: handleTermsAccepted
       file: ./src/termsAcceptedPermissionerMapping.ts
 templates:
-  - name: FractionalizedToken
+  - name: Molecules
     kind: ethereum/contract
     network: {{network}}
     source:
-      abi: FractionalizedToken
+      abi: Molecules
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.6
       language: wasm/assemblyscript
-      file: ./src/fractionalizedTokenMapping.ts
+      file: ./src/moleculesMapping.ts
       entities:
-        - Fraction
+        - Molecule
       abis:
-        - name: FractionalizedToken
-          file: ./abis/FractionalizedToken.json
+        - name: Molecules
+          file: ./abis/Molecules.json
       eventHandlers:
         - event: Transfer(indexed address,indexed address,uint256)
           handler: handleTransfer
@@ -204,4 +204,3 @@ templates:
           handler: handleScheduled
         - event: ScheduleReleased(indexed bytes32,indexed address,uint256)
           handler: handleReleased
-

@@ -18,8 +18,8 @@ module.exports = {
     address: process.env.MINTPASS_ADDRESS,
     startBlock: 0
   },
-  fractionalizer: {
-    address: process.env.FRACTIONALIZER_ADDRESS,
+  synthesizer: {
+    address: process.env.SYNTHESIZER_ADDRESS,
     startBlock: 0
   },
   stakedLockingCrowdSale: {

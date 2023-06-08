@@ -16,7 +16,7 @@ import { Mintpass } from "../src/Mintpass.sol";
 import { IPermissioner, TermsAcceptedPermissioner, BlindPermissioner, InvalidSignature } from "../src/Permissioner.sol";
 
 import { IPNFTMintHelper } from "./IPNFTMintHelper.sol";
-import { Fractionalizer } from "../src/Fractionalizer.sol";
+import { Synthesizer } from "../src/Synthesizer.sol";
 
 import {
     SalesShareDistributor,
@@ -28,12 +28,12 @@ import {
     InsufficientBalance
 } from "../src/SalesShareDistributor.sol";
 
-import { FractionalizedToken, OnlyIssuerOrOwner } from "../src/FractionalizedToken.sol";
+import { Molecules, OnlyIssuerOrOwner } from "../src/Molecules.sol";
 import { SchmackoSwap, ListingState } from "../src/SchmackoSwap.sol";
 import { FakeERC20 } from "../src/helpers/FakeERC20.sol";
 
 contract SalesShareDistributorTest is Test {
-    using SafeERC20Upgradeable for FractionalizedToken;
+    using SafeERC20Upgradeable for Molecules;
 
     string ipfsUri = "ipfs://bafkreiankqd3jvpzso6khstnaoxovtyezyatxdy7t2qzjoolqhltmasqki";
     string agreementCid = "bafkreigk5dvqblnkdniges6ft5kmuly47ebw4vho6siikzmkaovq6sjstq";
@@ -45,7 +45,7 @@ contract SalesShareDistributorTest is Test {
     address originalOwner = makeAddr("daoMultisig");
     address ipnftBuyer = makeAddr("ipnftbuyer");
 
-    //Alice, Bob  are fraction holders
+    //Alice, Bob  are molecules holders
     address alice = makeAddr("alice");
     uint256 alicePk;
 
@@ -54,7 +54,7 @@ contract SalesShareDistributorTest is Test {
     address escrow = makeAddr("escrow");
 
     IPNFT internal ipnft;
-    Fractionalizer internal fractionalizer;
+    Synthesizer internal synthesizer;
     SalesShareDistributor internal distributor;
     SchmackoSwap internal schmackoSwap;
 
@@ -80,17 +80,17 @@ contract SalesShareDistributorTest is Test {
         ipnft.setAuthorizer(address(mintpass));
         mintpass.batchMint(originalOwner, 1);
 
-        fractionalizer = Fractionalizer(
+        synthesizer = Synthesizer(
             address(
                 new ERC1967Proxy(
                     address(
-                        new Fractionalizer()
+                        new Synthesizer()
                     ),
                     ""
                 )
             )
         );
-        fractionalizer.initialize(ipnft);
+        synthesizer.initialize(ipnft);
 
         distributor = SalesShareDistributor(
             address(
@@ -122,8 +122,8 @@ contract SalesShareDistributorTest is Test {
 
     function testCreateListingAndSell() public {
         vm.startPrank(originalOwner);
-        //ipnft.setApprovalForAll(address(fractionalizer), true);
-        FractionalizedToken tokenContract = fractionalizer.fractionalizeIpnft(1, 100_000, agreementCid);
+        //ipnft.setApprovalForAll(address(synthesizer), true);
+        Molecules tokenContract = synthesizer.synthesizeIpnft(1, 100_000, agreementCid);
         uint256 listingId = helpCreateListing(1_000_000 ether, address(tokenContract));
         vm.stopPrank();
 
@@ -147,8 +147,8 @@ contract SalesShareDistributorTest is Test {
 
     function testStartClaimingPhase() public {
         vm.startPrank(originalOwner);
-        // ipnft.setApprovalForAll(address(fractionalizer), true);
-        FractionalizedToken tokenContract = fractionalizer.fractionalizeIpnft(1, 100_000, agreementCid);
+        // ipnft.setApprovalForAll(address(synthesizer), true);
+        Molecules tokenContract = synthesizer.synthesizeIpnft(1, 100_000, agreementCid);
 
         uint256 listingId = helpCreateListing(1_000_000 ether, address(distributor));
         vm.stopPrank();
@@ -180,7 +180,7 @@ contract SalesShareDistributorTest is Test {
 
     function testManuallyStartClaimingPhase() public {
         vm.startPrank(originalOwner);
-        FractionalizedToken tokenContract = fractionalizer.fractionalizeIpnft(1, 100_000, agreementCid);
+        Molecules tokenContract = synthesizer.synthesizeIpnft(1, 100_000, agreementCid);
         ipnft.safeTransferFrom(originalOwner, ipnftBuyer, 1);
         assertEq(tokenContract.issuer(), originalOwner);
         tokenContract.cap();
@@ -211,7 +211,7 @@ contract SalesShareDistributorTest is Test {
 
     function testClaimBuyoutShares() public {
         vm.startPrank(originalOwner);
-        FractionalizedToken tokenContract = fractionalizer.fractionalizeIpnft(1, 100_000, agreementCid);
+        Molecules tokenContract = synthesizer.synthesizeIpnft(1, 100_000, agreementCid);
         tokenContract.cap();
 
         TermsAcceptedPermissioner permissioner = new TermsAcceptedPermissioner();
@@ -280,7 +280,7 @@ contract SalesShareDistributorTest is Test {
 
     function testClaimBuyoutSharesAfterSwap() public {
         vm.startPrank(originalOwner);
-        FractionalizedToken tokenContract = fractionalizer.fractionalizeIpnft(1, 100_000, agreementCid);
+        Molecules tokenContract = synthesizer.synthesizeIpnft(1, 100_000, agreementCid);
         tokenContract.cap();
 
         uint256 listingId = helpCreateListing(1_000_000 ether, address(distributor));
@@ -320,16 +320,16 @@ contract SalesShareDistributorTest is Test {
         assertEq(remainingAmount, 0);
     }
 
-    function testFuzzFractionalize(uint256 fractionAmount, uint256 salesPrice) public {
-        vm.assume(fractionAmount <= 2 ** 200);
+    function testFuzzSynthesize(uint256 moleculesAmount, uint256 salesPrice) public {
+        vm.assume(moleculesAmount <= 2 ** 200);
         vm.assume(salesPrice <= 100_000_000_000 ether);
 
         vm.startPrank(originalOwner);
-        FractionalizedToken tokenContract = fractionalizer.fractionalizeIpnft(1, fractionAmount, agreementCid);
+        Molecules tokenContract = synthesizer.synthesizeIpnft(1, moleculesAmount, agreementCid);
         tokenContract.cap();
 
-        assertEq(tokenContract.balanceOf(originalOwner), fractionAmount);
-        tokenContract.safeTransfer(alice, fractionAmount);
+        assertEq(tokenContract.balanceOf(originalOwner), moleculesAmount);
+        tokenContract.safeTransfer(alice, moleculesAmount);
         vm.stopPrank();
 
         vm.startPrank(ipnftBuyer);
@@ -345,7 +345,7 @@ contract SalesShareDistributorTest is Test {
 
     function testClaimingFraud() public {
         vm.startPrank(originalOwner);
-        FractionalizedToken tokenContract1 = fractionalizer.fractionalizeIpnft(1, 100_000, agreementCid);
+        Molecules tokenContract1 = synthesizer.synthesizeIpnft(1, 100_000, agreementCid);
         tokenContract1.cap();
         ipnft.setApprovalForAll(address(schmackoSwap), true);
         uint256 listingId1 = schmackoSwap.list(IERC721(address(ipnft)), 1, erc20, 1000 ether, address(distributor));
@@ -362,7 +362,7 @@ contract SalesShareDistributorTest is Test {
         uint256 reservationId = ipnft.reserve();
         ipnft.mintReservation{ value: MINTING_FEE }(bob, reservationId, 2, ipfsUri, DEFAULT_SYMBOL);
         ipnft.setApprovalForAll(address(schmackoSwap), true);
-        FractionalizedToken tokenContract2 = fractionalizer.fractionalizeIpnft(2, 70_000, agreementCid);
+        Molecules tokenContract2 = synthesizer.synthesizeIpnft(2, 70_000, agreementCid);
         tokenContract2.cap();
         uint256 listingId2 = schmackoSwap.list(IERC721(address(ipnft)), 2, erc20, 700 ether, address(originalOwner));
         schmackoSwap.changeBuyerAllowance(listingId2, ipnftBuyer, true);
