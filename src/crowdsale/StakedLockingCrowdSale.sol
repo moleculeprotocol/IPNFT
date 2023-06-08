@@ -35,7 +35,7 @@ contract StakedLockingCrowdSale is LockingCrowdSale, Ownable {
 
     mapping(uint256 => StakingInfo) public salesStaking;
     mapping(uint256 => mapping(address => uint256)) internal stakes;
-    mapping(address => bool) public knownVestingContracts;
+    mapping(TokenVesting => bool) public trustedVestingContracts;
 
     event Started(
         uint256 indexed saleId,
@@ -48,6 +48,7 @@ contract StakedLockingCrowdSale is LockingCrowdSale, Ownable {
     );
     event Staked(uint256 indexed saleId, address indexed bidder, uint256 stakedAmount, uint256 price);
     event ClaimedStakes(uint256 indexed saleId, address indexed claimer, uint256 stakesClaimed, uint256 stakesRefunded);
+    event UpdatedTrustedTokenVestings(TokenVesting indexed tokenVesting, bool trusted);
 
     /// @dev disable parent sale starting functions
     function startSale(Sale calldata, uint256) public pure override returns (uint256) {
@@ -65,11 +66,13 @@ contract StakedLockingCrowdSale is LockingCrowdSale, Ownable {
         if (!stakesVestingContract.hasRole(stakesVestingContract.ROLE_CREATE_SCHEDULE(), address(this))) {
             revert UnmanageableVestingContract();
         }
-        knownVestingContracts[address(stakesVestingContract)] = true;
+        trustedVestingContracts[stakesVestingContract] = true;
+        emit UpdatedTrustedTokenVestings(stakesVestingContract, true);
     }
 
-    function unregisterVestingContract(address stakesVestingContract) external onlyOwner {
-        knownVestingContracts[address(stakesVestingContract)] = false;
+    function unregisterVestingContract(TokenVesting stakesVestingContract) external onlyOwner {
+        trustedVestingContracts[stakesVestingContract] = false;
+        emit UpdatedTrustedTokenVestings(stakesVestingContract, false);
     }
 
     /**
@@ -96,7 +99,7 @@ contract StakedLockingCrowdSale is LockingCrowdSale, Ownable {
         }
 
         // [H-01] we only open crowdsales with vesting contracts that we know
-        if (!knownVestingContracts[address(stakesVestingContract)]) {
+        if (!trustedVestingContracts[stakesVestingContract]) {
             revert UnsupportedVestingContract();
         }
 
