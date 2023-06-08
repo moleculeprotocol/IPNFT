@@ -27,18 +27,18 @@ IP-NFTs allow their users to tokenize intellectual property. This repo contains 
 - HeadlessDispenser <https://goerli.etherscan.io/address/0x0F1Bd197c5dCC6bC7E8025037a7780010E2Cd22A#code>
 - Subgraph: <https://api.thegraph.com/subgraphs/name/dorianwilhelm/ip-nft-subgraph-goerli/graphql>
 
-- Fractionalizer: 0x593ED28cb4E8d143e16D83D151a2CC01fDa10B0A  
-  (Impl no 1 0x2c67338c5db1b4da457e6ed4132ae0745fd2a12e)
-  <https://goerli.etherscan.io/address/0x593ED28cb4E8d143e16D83D151a2CC01fDa10B0A#code>
+- Synthesizer: 0xb12494eeA6B992d0A1Db3C5423BE7a2d2337F58c  
+  (Impl no 1 0xbc255509707c5f95bab6b2f9189688300c5afa5f)
+  <https://goerli.etherscan.io/address/0xb12494eeA6B992d0A1Db3C5423BE7a2d2337F58c>
 
-- Terms Accepted Permissioner: 0xaC17101C598e8D8567a158b773bF76d9CDDdCE31
-  <https://goerli.etherscan.io/address/0xac17101c598e8d8567a158b773bf76d9cdddce31#code>
+- Terms Accepted Permissioner: 0x3aFb3D87c12239B4D9DB67837F4bE4651FbBEd20
+  <https://goerli.etherscan.io/address/0x3aFb3D87c12239B4D9DB67837F4bE4651FbBEd20#code>
 
 - Bio pricefeed: 0x8647dEFdEAAdF5448d021B364B2F17815aba4360
   <https://goerli.etherscan.io/address/0x8647defdeaadf5448d021b364b2f17815aba4360#code>
 
-- Staked/Vested Crowdsale: 0x1c52b03bf2F028CA5FD632685A7CC1A1B6B5c2Bb
-  <https://goerli.etherscan.io/address/0x1c52b03bf2F028CA5FD632685A7CC1A1B6B5c2Bb#code>
+- Staked/Locking Crowdsale: 0x5b161D131f8254A2df91e9382F6E5973aB4eD0f9
+  <https://goerli.etherscan.io/address/0x5b161D131f8254A2df91e9382F6E5973aB4eD0f9#code>
 
 #### some test tokens
 
