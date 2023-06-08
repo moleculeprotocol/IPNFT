@@ -9,7 +9,14 @@ import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/I
 
 import { CrowdSale, Sale, SaleInfo, SaleState, BadDecimals } from "../src/crowdsale/CrowdSale.sol";
 import { UnsupportedInitializer } from "../src/crowdsale/LockingCrowdSale.sol";
-import { StakedLockingCrowdSale, IncompatibleLockingContract, BadPrice, InvalidDuration } from "../src/crowdsale/StakedLockingCrowdSale.sol";
+import {
+    StakedLockingCrowdSale,
+    IncompatibleVestingContract,
+    UnmanageableVestingContract,
+    UnsupportedVestingContract,
+    BadPrice,
+    InvalidDuration
+} from "../src/crowdsale/StakedLockingCrowdSale.sol";
 import { TokenVesting } from "@moleculeprotocol/token-vesting/TokenVesting.sol";
 import { TimelockedToken } from "../src/TimelockedToken.sol";
 
@@ -40,6 +47,8 @@ contract CrowdSaleLockedStakedTest is Test {
         vm.startPrank(deployer);
 
         auctionToken = new FakeERC20("Fractionalized IPNFT","FAM");
+        auctionToken.mint(emitter, 500_000 ether);
+
         biddingToken = new FakeERC20("USD token", "USDC");
         daoToken = new FakeERC20("DAO token", "DAO");
 
@@ -48,9 +57,6 @@ contract CrowdSaleLockedStakedTest is Test {
         // priceFeed.signal(address(biddingToken), address(daoToken), 1e18);
 
         crowdSale = new StakedLockingCrowdSale();
-        vm.stopPrank();
-
-        auctionToken.mint(emitter, 500_000 ether);
 
         vestedDao = new TokenVesting(
             daoToken,
@@ -59,6 +65,8 @@ contract CrowdSaleLockedStakedTest is Test {
         );
 
         vestedDao.grantRole(vestedDao.ROLE_CREATE_SCHEDULE(), address(crowdSale));
+        crowdSale.registerVestingContract(vestedDao);
+        vm.stopPrank();
 
         vm.startPrank(bidder);
         biddingToken.mint(bidder, 1_000_000 ether);
@@ -76,6 +84,10 @@ contract CrowdSaleLockedStakedTest is Test {
     }
 
     function testStakeLockingCrowdSalesBadParameters() public {
+        vm.startPrank(deployer);
+        TokenVesting wrongStakeVestingContract = new TokenVesting(auctionToken, "vested mol", "vmol");
+        vm.stopPrank();
+
         vm.startPrank(emitter);
         Sale memory _sale = CrowdSaleHelpers.makeSale(emitter, auctionToken, biddingToken);
         auctionToken.approve(address(crowdSale), 400_000 ether);
@@ -86,11 +98,21 @@ contract CrowdSaleLockedStakedTest is Test {
         vm.expectRevert(); //need to bring a stake vesting contract
         crowdSale.startSale(_sale, daoToken, TokenVesting(address(0)), 0, 60 days);
 
-        TokenVesting wrongStakelockingContract = new TokenVesting(auctionToken, "vested mol", "vmol");
-        wrongStakelockingContract.grantRole(wrongStakelockingContract.ROLE_CREATE_SCHEDULE(), address(crowdSale));
+        vm.expectRevert(UnsupportedVestingContract.selector);
+        crowdSale.startSale(_sale, daoToken, wrongStakeVestingContract, 0, 60 days);
+        vm.stopPrank();
 
-        vm.expectRevert(IncompatibleLockingContract.selector);
-        crowdSale.startSale(_sale, daoToken, wrongStakelockingContract, 0, 60 days);
+        vm.startPrank(deployer);
+        vm.expectRevert(UnmanageableVestingContract.selector);
+        crowdSale.registerVestingContract(wrongStakeVestingContract);
+
+        wrongStakeVestingContract.grantRole(wrongStakeVestingContract.ROLE_CREATE_SCHEDULE(), address(crowdSale));
+        crowdSale.registerVestingContract(wrongStakeVestingContract);
+        vm.stopPrank();
+
+        vm.startPrank(emitter);
+        vm.expectRevert(IncompatibleVestingContract.selector);
+        crowdSale.startSale(_sale, daoToken, wrongStakeVestingContract, 0, 60 days);
 
         vm.expectRevert(BadPrice.selector);
         crowdSale.startSale(_sale, daoToken, vestedDao, 0, 60 days);

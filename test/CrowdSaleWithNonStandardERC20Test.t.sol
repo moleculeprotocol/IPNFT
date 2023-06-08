@@ -51,7 +51,6 @@ contract CrowdSaleWithNonStandardERC20Test is Test {
         // priceFeed.signal(address(biddingToken), address(daoToken), 1e18);
 
         crowdSale = new StakedLockingCrowdSale();
-        vm.stopPrank();
 
         auctionToken.mint(emitter, 500_000 ether);
 
@@ -62,7 +61,8 @@ contract CrowdSaleWithNonStandardERC20Test is Test {
         );
 
         vestedDao.grantRole(vestedDao.ROLE_CREATE_SCHEDULE(), address(crowdSale));
-
+        crowdSale.registerVestingContract(vestedDao);
+        vm.stopPrank();
         vm.startPrank(bidder);
         biddingToken.mint(bidder, 1_000_000e6);
         daoToken.mint(bidder, 1_000_000 ether);
