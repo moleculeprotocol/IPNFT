@@ -3,6 +3,7 @@ pragma solidity 0.8.18;
 
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { FixedPointMathLib } from "solmate/utils/FixedPointMathLib.sol";
 import { TokenVesting } from "@moleculeprotocol/token-vesting/TokenVesting.sol";
 import { TimelockedToken } from "../TimelockedToken.sol";
@@ -18,8 +19,9 @@ struct StakingInfo {
     uint256 wadFixedStakedPerBidPrice;
 }
 
-error IncompatibleLockingContract();
-error UnmanageablelockingContract();
+error IncompatibleVestingContract();
+error UnmanageableVestingContract();
+error UnsupportedVestingContract();
 error BadPrice();
 
 /**
@@ -27,12 +29,13 @@ error BadPrice();
  * @author molecule.to
  * @notice a fixed price sales base contract that locks the sold tokens in a configured locking contract and requires vesting another ("dao") token for a certain period of time to participate
  */
-contract StakedLockingCrowdSale is LockingCrowdSale {
+contract StakedLockingCrowdSale is LockingCrowdSale, Ownable {
     using SafeERC20 for IERC20Metadata;
     using FixedPointMathLib for uint256;
 
     mapping(uint256 => StakingInfo) public salesStaking;
     mapping(uint256 => mapping(address => uint256)) internal stakes;
+    mapping(address => bool) public knownVestingContracts;
 
     event Started(
         uint256 indexed saleId,
@@ -49,6 +52,24 @@ contract StakedLockingCrowdSale is LockingCrowdSale {
     /// @dev disable parent sale starting functions
     function startSale(Sale calldata, uint256) public pure override returns (uint256) {
         revert UnsupportedInitializer();
+    }
+
+    constructor() Ownable() { }
+
+    /**
+     * [H-01]
+     * @notice this contract can only vest stakes for contracts that it knows so unknown actors cannot start crowdsales with malicious contracts
+     * @param stakesVestingContract the
+     */
+    function registerVestingContract(TokenVesting stakesVestingContract) external onlyOwner {
+        if (!stakesVestingContract.hasRole(stakesVestingContract.ROLE_CREATE_SCHEDULE(), address(this))) {
+            revert UnmanageableVestingContract();
+        }
+        knownVestingContracts[address(stakesVestingContract)] = true;
+    }
+
+    function unregisterVestingContract(address stakesVestingContract) external onlyOwner {
+        knownVestingContracts[address(stakesVestingContract)] = false;
     }
 
     /**
@@ -74,12 +95,13 @@ contract StakedLockingCrowdSale is LockingCrowdSale {
             revert BadDecimals();
         }
 
-        if (!stakesVestingContract.hasRole(stakesVestingContract.ROLE_CREATE_SCHEDULE(), address(this))) {
-            revert UnmanageablelockingContract();
+        // [H-01] we only open crowdsales with vesting contracts that we know
+        if (!knownVestingContracts[address(stakesVestingContract)]) {
+            revert UnsupportedVestingContract();
         }
 
         if (address(stakesVestingContract.nativeToken()) != address(stakedToken)) {
-            revert IncompatibleLockingContract();
+            revert IncompatibleVestingContract();
         }
 
         if (wadFixedStakedPerBidPrice == 0) {
