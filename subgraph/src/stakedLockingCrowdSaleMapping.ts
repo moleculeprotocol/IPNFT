@@ -1,4 +1,4 @@
-import { BigInt, DataSourceContext, log } from '@graphprotocol/graph-ts'
+import { BigInt, Bytes, DataSourceContext, log } from '@graphprotocol/graph-ts'
 import { IERC20Metadata } from '../generated/StakedLockingCrowdSale/IERC20Metadata'
 import {
   Bid as BidEvent,
@@ -52,6 +52,8 @@ function makeTimelockedToken(
     let reactedIpnft = ReactedIpnft.load(underlyingToken.id.toHexString())
     if (reactedIpnft) {
       token.reactedIpnft = reactedIpnft.id
+      reactedIpnft.lockedToken = token.id
+      reactedIpnft.save()
     }
     token.save()
   }
@@ -75,12 +77,17 @@ export function handleStarted(event: StartedEvent): void {
   if (!reactedIpnft.lockedToken) {
     reactedIpnft.lockedToken = event.params.lockingToken
     reactedIpnft.save()
-  } else if (reactedIpnft.lockedToken !== event.params.lockingToken) {
-    log.error('the locking token per reacted Ipnft should be unique {} != {}', [
-      // Todo: Build breaks if these two lines are uncommented
-      //   reactedIpnft.lockedToken.toHexString(),
-      //   event.params.lockingToken.toHexString()
-    ])
+  } else {
+    let _reactedIpnftToken = changetype<Bytes>(
+      reactedIpnft.lockedToken
+    ).toHexString()
+    let _newToken = event.params.lockingToken.toHexString()
+    if (_reactedIpnftToken != _newToken) {
+      log.error(
+        'the locking token per reacted Ipnft should be unique {} != {}',
+        [_reactedIpnftToken, _newToken]
+      )
+    }
   }
 
   crowdSale.reactedIpnft = reactedIpnft.id
@@ -186,7 +193,7 @@ export function handleFailed(event: FailedEvent): void {
   crowdSale.save()
 }
 
-export function handlelockingContractCreated(
+export function handleLockingContractCreated(
   event: LockingContractCreatedEvent
 ): void {
   let context = new DataSourceContext()

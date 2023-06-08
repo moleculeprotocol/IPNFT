@@ -137,7 +137,7 @@ dataSources:
         - event: Failed(indexed uint256)
           handler: handleFailed
         - event: LockingContractCreated(indexed address,indexed address)
-          handler: handlelockingContractCreated
+          handler: handleLockingContractCreated
 
       file: ./src/stakedLockingCrowdSaleMapping.ts
   - kind: ethereum/contract
