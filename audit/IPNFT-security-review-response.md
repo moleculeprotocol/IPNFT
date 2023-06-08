@@ -1,6 +1,6 @@
 # Security Response
 
-This response is based on the codebase state at [5199541db760b551e2b91fd7cb4dcf678970d55b](https://github.com/moleculeprotocol/IPNFT/blob/5199541db760b551e2b91fd7cb4dcf678970d55b/)
+This response is based on the codebase state at [02b5d44a6d3e1cdfd9ac939e1ae11e1d166fe0ed](https://github.com/moleculeprotocol/IPNFT/blob/02b5d44a6d3e1cdfd9ac939e1ae11e1d166fe0ed/)
 
 [H-01]
 We have changed the `LockingCrowdSale` base contract so it doesn't allow or enforce bringing along an individual `TimelockedToken` contract. It will rather reuse these contracts and creates them when required, so these contracts are never be controlled by external entities (see `mapping(address => TimelockedToken) public lockingContracts;`)
