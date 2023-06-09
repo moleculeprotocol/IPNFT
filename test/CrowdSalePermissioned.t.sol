@@ -51,7 +51,6 @@ contract CrowdSalePermissionedTest is Test {
 
         crowdSale = new StakedLockingCrowdSale();
         auctionToken.issue(emitter, 500_000 ether);
-        vm.stopPrank();
 
         vestedDao = new TokenVesting(
             daoToken,
@@ -60,6 +59,8 @@ contract CrowdSalePermissionedTest is Test {
         );
 
         vestedDao.grantRole(vestedDao.ROLE_CREATE_SCHEDULE(), address(crowdSale));
+        crowdSale.trustVestingContract(vestedDao);
+        vm.stopPrank();
 
         vm.startPrank(bidder);
         biddingToken.mint(bidder, 1_000_000 ether);
@@ -100,6 +101,7 @@ contract CrowdSalePermissionedTest is Test {
         vm.startPrank(anyone);
         vm.warp(block.timestamp + 3 hours);
         crowdSale.settle(saleId);
+        crowdSale.claimResults(saleId);
         vm.stopPrank();
 
         assertEq(biddingToken.balanceOf(emitter), _sale.fundingGoal);

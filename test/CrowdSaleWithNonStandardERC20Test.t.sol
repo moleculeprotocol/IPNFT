@@ -51,7 +51,6 @@ contract CrowdSaleWithNonStandardERC20Test is Test {
         // priceFeed.signal(address(biddingToken), address(daoToken), 1e18);
 
         crowdSale = new StakedLockingCrowdSale();
-        vm.stopPrank();
 
         auctionToken.mint(emitter, 500_000 ether);
 
@@ -62,7 +61,8 @@ contract CrowdSaleWithNonStandardERC20Test is Test {
         );
 
         vestedDao.grantRole(vestedDao.ROLE_CREATE_SCHEDULE(), address(crowdSale));
-
+        crowdSale.trustVestingContract(vestedDao);
+        vm.stopPrank();
         vm.startPrank(bidder);
         biddingToken.mint(bidder, 1_000_000e6);
         daoToken.mint(bidder, 1_000_000 ether);
@@ -99,6 +99,7 @@ contract CrowdSaleWithNonStandardERC20Test is Test {
         vm.startPrank(anyone);
         vm.warp(block.timestamp + 3 hours);
         crowdSale.settle(saleId);
+        crowdSale.claimResults(saleId);
         vm.stopPrank();
 
         assertEq(biddingToken.balanceOf(emitter), _sale.fundingGoal);
@@ -144,6 +145,7 @@ contract CrowdSaleWithNonStandardERC20Test is Test {
         vm.startPrank(anyone);
         vm.warp(block.timestamp + 3 hours);
         crowdSale.settle(saleId);
+        crowdSale.claimResults(saleId);
         vm.stopPrank();
 
         vm.startPrank(bidder);
@@ -226,6 +228,7 @@ contract CrowdSaleWithNonStandardERC20Test is Test {
         assertEq(daoToken.balanceOf(bidder2) + vestedDao.balanceOf(bidder2), 1_000_000 ether);
 
         //some dust is left on the table
+        crowdSale.claimResults(saleId);
         assertEq(auctionToken.balanceOf(address(crowdSale)), 400_000);
         assertEq(biddingToken.balanceOf(address(crowdSale)), 1);
         assertEq(biddingToken.balanceOf(emitter), _sale.fundingGoal);
@@ -255,6 +258,7 @@ contract CrowdSaleWithNonStandardERC20Test is Test {
         vm.startPrank(anyone);
         vm.warp(block.timestamp + 3 hours);
         crowdSale.settle(saleId);
+        crowdSale.claimResults(saleId);
         vm.stopPrank();
 
         assertEq(biddingToken.balanceOf(emitter), 0);
@@ -345,7 +349,7 @@ contract CrowdSaleWithNonStandardERC20Test is Test {
         assertEq(biddingToken.balanceOf(bidder2), 87_500e2);
         assertEq(vestedDao.balanceOf(bidder2), 50_000 ether);
         assertEq(daoToken.balanceOf(bidder2), 950_000 ether);
-
+        crowdSale.claimResults(saleId);
         assertEq(auctionToken.balanceOf(address(crowdSale)), 0);
         assertEq(biddingToken.balanceOf(address(crowdSale)), 0);
         assertEq(daoToken.balanceOf(address(crowdSale)), 0);

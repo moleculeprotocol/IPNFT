@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity ^0.8.18;
 
 import "forge-std/Test.sol";
 import "forge-std/console.sol";
@@ -31,6 +31,7 @@ contract DeployCrowdSale is CommonScript {
         StakedLockingCrowdSale stakedLockingCrowdSale = new StakedLockingCrowdSale();
         TokenVesting vestedDaoToken = TokenVesting(vm.envAddress("VDAO_TOKEN_ADDRESS"));
         vestedDaoToken.grantRole(vestedDaoToken.ROLE_CREATE_SCHEDULE(), address(stakedLockingCrowdSale));
+        stakedLockingCrowdSale.trustVestingContract(vestedDaoToken);
         vm.stopBroadcast();
 
         //console.log("vested molecules Token %s", address(vestedMolToken));
@@ -60,6 +61,7 @@ contract FixtureCrowdSale is CommonScript {
 
         daoToken = FakeERC20(vm.envAddress("DAO_TOKEN_ADDRESS"));
         vestedDaoToken = TokenVesting(vm.envAddress("VDAO_TOKEN_ADDRESS"));
+        auctionToken = Molecules(vm.envAddress("MOLECULES_ADDRESS"));
 
         stakedLockingCrowdSale = StakedLockingCrowdSale(vm.envAddress("STAKED_LOCKING_CROWDSALE_ADDRESS"));
         permissioner = TermsAcceptedPermissioner(vm.envAddress("TERMS_ACCEPTED_PERMISSIONER_ADDRESS"));
@@ -132,6 +134,7 @@ contract ClaimSale is CommonScript {
 
         vm.startBroadcast(anyone);
         stakedLockingCrowdSale.settle(saleId);
+        stakedLockingCrowdSale.claimResults(saleId);
         vm.stopBroadcast();
 
         string memory terms = permissioner.specificTermsV1(auctionToken);

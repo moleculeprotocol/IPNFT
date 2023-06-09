@@ -66,6 +66,7 @@ contract CrowdSaleLockedTest is Test {
         vm.startPrank(anyone);
         vm.warp(block.timestamp + 3 hours);
         crowdSale.settle(saleId);
+        crowdSale.claimResults(saleId);
         vm.stopPrank();
 
         assertEq(biddingToken.balanceOf(emitter), _sale.fundingGoal);
@@ -112,6 +113,7 @@ contract CrowdSaleLockedTest is Test {
         vm.startPrank(anyone);
         vm.warp(block.timestamp + 3 hours);
         crowdSale.settle(saleId);
+        crowdSale.claimResults(saleId);
         vm.stopPrank();
 
         assertEq(biddingToken.balanceOf(emitter), 0);
@@ -146,6 +148,7 @@ contract CrowdSaleLockedTest is Test {
         vm.startPrank(anyone);
         vm.warp(block.timestamp + 3 hours);
         crowdSale.settle(saleId);
+        crowdSale.claimResults(saleId);
         vm.stopPrank();
 
         assertEq(biddingToken.balanceOf(emitter), _sale.fundingGoal);
