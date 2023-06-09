@@ -3,7 +3,7 @@
 	url = https://github.com/foundry-rs/forge-std
 [submodule "lib/openzeppelin-contracts"]
 	path = lib/openzeppelin-contracts
-	url = https://github.com/openzeppelin/openzeppelin-contracts
+	url = https://github.com/OpenZeppelin/openzeppelin-contracts
 	branch = release-v4.8
 [submodule "lib/solmate"]
 	path = lib/solmate
@@ -16,3 +16,11 @@
 	path = lib/ERC721B
 	url = https://github.com/badbabybearbots/ERC721B
 	branch = 0.2.1
+[submodule "lib/safe-contracts"]
+	path = lib/safe-contracts
+	url = https://github.com/safe-global/safe-contracts
+	branch = v1.4.0
+
+[submodule "lib/token-vesting-contract"]
+	path = lib/token-vesting-contract
+	url = https://github.com/moleculeprotocol/token-vesting-contract

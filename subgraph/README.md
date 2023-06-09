@@ -2,9 +2,9 @@
 
 ## Prerequisites
 
--   you can deploy contracts locally (see [the main README](../README.md))
--   you'll need docker (and docker-compose) on your box
--   install jq (`apt i jq` / `brew install jq`)
+- you can deploy contracts locally (see [the main README](../README.md))
+- you'll need docker (and docker-compose) on your box
+- install jq (`apt i jq` / `brew install jq`)
 
 ### Running subgraph and contracts locally
 
@@ -25,7 +25,7 @@ docker-compose --file docker-compose.yml --file docker-compose.ganache.yml up
 4. Prepare subgraph deployment
 
 ```sh
-yarn create-abis
+yarn abis
 yarn prepare:local
 ```
 
@@ -35,8 +35,8 @@ This copies over your contracts' ABIs and creates a `subgraph.yaml` file with th
 
 ```sh
 yarn build
-yarn create-local
-yarn deploy-local
+yarn create:local
+yarn deploy:local
 ```
 
 5. Checkout the local GraphQL API at <http://localhost:8000/subgraphs/name/moleculeprotocol/ipnft-subgraph>
@@ -47,7 +47,7 @@ If your local dev node needs a little "push", this is how you manually can mine 
 curl -H "Content-Type: application/json" -X POST --data '{"jsonrpc":"2.0","method":"evm_mine","params":[],"id":1}' 127.0.0.1:8545
 ```
 
-### deploying on the hosted service:
+### deploying on the hosted service
 
 1. get an api key for using the hosted service
 2. `yarn graph auth --product hosted-service <your api key>`

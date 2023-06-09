@@ -1,13 +1,13 @@
-// SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.17;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.18;
 
 import "forge-std/Test.sol";
-import { console } from "forge-std/console.sol";
+import "forge-std/console.sol";
+import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+
 import { IPNFT } from "../src/IPNFT.sol";
 import { Mintpass } from "../src/Mintpass.sol";
-import { UUPSProxy } from "../src/UUPSProxy.sol";
 import { IPNFTMintHelper } from "./IPNFTMintHelper.sol";
-import { ERC20 } from "solmate/tokens/ERC20.sol";
 
 contract Kamikaze {
     receive() external payable { }
@@ -19,9 +19,10 @@ contract Kamikaze {
 
 contract IPNFTTest is IPNFTMintHelper {
     event Reserved(address indexed reserver, uint256 indexed reservationId);
-    event IPNFTMinted(address indexed owner, uint256 indexed tokenId, string tokenURI);
+    event IPNFTMinted(address indexed owner, uint256 indexed tokenId, string tokenURI, string symbol);
+    event SymbolUpdated(uint256 indexed tokenId, string symbol);
+    event ReadAccessGranted(uint256 indexed tokenId, address indexed reader, uint256 until);
 
-    UUPSProxy proxy;
     IPNFT internal ipnft;
 
     address alice = makeAddr("alice");
@@ -30,9 +31,7 @@ contract IPNFTTest is IPNFTMintHelper {
 
     function setUp() public {
         vm.startPrank(deployer);
-        IPNFT implementationV2 = new IPNFT();
-        proxy = new UUPSProxy(address(implementationV2), "");
-        ipnft = IPNFT(address(proxy));
+        ipnft = IPNFT(address(new ERC1967Proxy(address(new IPNFT()), "")));
         ipnft.initialize();
 
         mintpass = new Mintpass(address(ipnft));
@@ -46,8 +45,6 @@ contract IPNFTTest is IPNFTMintHelper {
 
     function testInitialDeploymentState() public {
         assertEq(ipnft.paused(), false);
-        assertEq(ipnft.uri(1), "");
-        assertEq(ipnft.totalSupply(1), 0);
     }
 
     function testTokenReservation() public {
@@ -87,14 +84,16 @@ contract IPNFTTest is IPNFTMintHelper {
         uint256 reservationId = ipnft.reserve();
 
         vm.expectRevert(IPNFT.MintingFeeTooLow.selector);
-        ipnft.mintReservation(alice, reservationId, 1, ipfsUri);
+        ipnft.mintReservation(alice, reservationId, 1, ipfsUri, DEFAULT_SYMBOL);
 
         vm.expectEmit(true, true, false, true);
-        emit IPNFTMinted(alice, 1, ipfsUri);
-        ipnft.mintReservation{value: MINTING_FEE}(alice, reservationId, reservationId, ipfsUri);
+        emit IPNFTMinted(alice, 1, ipfsUri, DEFAULT_SYMBOL);
 
-        assertEq(ipnft.balanceOf(alice, 1), 1);
-        assertEq(ipnft.uri(1), ipfsUri);
+        ipnft.mintReservation{ value: MINTING_FEE }(alice, reservationId, reservationId, ipfsUri, DEFAULT_SYMBOL);
+
+        assertEq(ipnft.ownerOf(1), alice);
+        assertEq(ipnft.tokenURI(1), ipfsUri);
+        assertEq(ipnft.symbol(reservationId), DEFAULT_SYMBOL);
 
         assertEq(ipnft.reservations(1), address(0));
 
@@ -106,9 +105,9 @@ contract IPNFTTest is IPNFTMintHelper {
 
         vm.startPrank(alice);
 
-        ipnft.burn(alice, tokenId, 1);
+        ipnft.burn(tokenId);
 
-        assertEq(ipnft.balanceOf(alice, tokenId), 0);
+        assertEq(ipnft.balanceOf(alice), 0);
     }
 
     function testOnlyReservationOwnerCanMintFromReservation() public {
@@ -116,7 +115,7 @@ contract IPNFTTest is IPNFTMintHelper {
 
         vm.startPrank(bob);
         vm.expectRevert(abi.encodeWithSelector(IPNFT.NotOwningReservation.selector, 1));
-        ipnft.mintReservation(bob, 1, 1, arUri);
+        ipnft.mintReservation(bob, 1, 1, arUri, DEFAULT_SYMBOL);
         vm.stopPrank();
     }
 
@@ -126,8 +125,8 @@ contract IPNFTTest is IPNFTMintHelper {
     function testCannotSendPlainEtherToIPNFT() public {
         vm.deal(address(bob), 10 ether);
 
-        vm.prank(bob);
-        (bool transferWorked,) = address(ipnft).call{value: 10 ether}("");
+        vm.startPrank(bob);
+        (bool transferWorked,) = address(ipnft).call{ value: 10 ether }("");
         assertFalse(transferWorked);
         assertEq(address(ipnft).balance, 0);
 
@@ -143,9 +142,9 @@ contract IPNFTTest is IPNFTMintHelper {
 
     function testOwnerCanWithdrawEthFunds() public {
         vm.deal(address(bob), 10 ether);
-        vm.prank(bob);
+        vm.startPrank(bob);
         Kamikaze kamikaze = new Kamikaze();
-        (bool transferWorked,) = address(kamikaze).call{value: 10 ether}("");
+        (bool transferWorked,) = address(kamikaze).call{ value: 10 ether }("");
         assertTrue(transferWorked);
         assertEq(address(kamikaze).balance, 10 ether);
 
@@ -179,7 +178,7 @@ contract IPNFTTest is IPNFTMintHelper {
         assertEq(deployer.balance, 0.001 ether);
     }
 
-    function testCantMintWhenPaused() public {
+    function testCannotMintWhenPaused() public {
         vm.startPrank(deployer);
         ipnft.pause();
         vm.expectRevert(bytes("Pausable: paused"));
@@ -199,9 +198,11 @@ contract IPNFTTest is IPNFTMintHelper {
         ipnft.grantReadAccess(bob, tokenId, block.timestamp + 60);
 
         vm.startPrank(alice);
-        vm.expectRevert(bytes("until in the past"));
+        vm.expectRevert(IPNFT.BadDuration.selector);
         ipnft.grantReadAccess(bob, tokenId, block.timestamp);
 
+        vm.expectEmit(true, true, false, true);
+        emit ReadAccessGranted(tokenId, bob, block.timestamp + 60);
         ipnft.grantReadAccess(bob, tokenId, block.timestamp + 60);
         assertTrue(ipnft.canRead(bob, tokenId));
         vm.warp(block.timestamp + 55);

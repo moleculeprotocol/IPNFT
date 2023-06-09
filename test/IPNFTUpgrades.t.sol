@@ -1,22 +1,19 @@
-// SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.17;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.18;
 
 import "forge-std/Test.sol";
-import { console } from "forge-std/console.sol";
-import { IPNFT } from "../src/IPNFT.sol";
-import { IPNFTV22 } from "../src/IPNFTV22.sol";
-
+import "forge-std/console.sol";
+import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import { Mintpass } from "../src/Mintpass.sol";
-import { UUPSProxy } from "../src/UUPSProxy.sol";
 import { IPNFTMintHelper } from "./IPNFTMintHelper.sol";
-import { ERC20 } from "solmate/tokens/ERC20.sol";
+import { IPNFT } from "../src/IPNFT.sol";
+import { IPNFTV24 } from "../src/helpers/test-upgrades/IPNFTV24.sol";
 
 contract IPNFTUpgrades is IPNFTMintHelper {
     event Reserved(address indexed reserver, uint256 indexed reservationId);
 
-    UUPSProxy proxy;
     IPNFT internal ipnft;
-    IPNFTV22 internal ipnftV22;
+    IPNFTV24 internal ipnftV24;
 
     address alice = makeAddr("alice");
     address bob = makeAddr("bob");
@@ -24,9 +21,8 @@ contract IPNFTUpgrades is IPNFTMintHelper {
 
     function setUp() public {
         vm.startPrank(deployer);
-        IPNFT implementationV21 = new IPNFT();
-        proxy = new UUPSProxy(address(implementationV21), "");
-        ipnft = IPNFT(address(proxy));
+        IPNFT implementationV23 = new IPNFT();
+        ipnft = IPNFT(address(new ERC1967Proxy(address(implementationV23), "")));
         ipnft.initialize();
 
         mintpass = new Mintpass(address(ipnft));
@@ -37,23 +33,23 @@ contract IPNFTUpgrades is IPNFTMintHelper {
     }
 
     function doUpgrade() public {
-        IPNFTV22 implementationV22 = new IPNFTV22();
-        ipnft.upgradeTo(address(implementationV22));
+        IPNFTV24 implementationV24 = new IPNFTV24();
+        ipnft.upgradeTo(address(implementationV24));
 
-        ipnftV22 = IPNFTV22(address(proxy));
-        ipnftV22.reinit();
+        ipnftV24 = IPNFTV24(address(ipnft));
+        ipnftV24.reinit();
     }
 
     function testUpgradeContract() public {
         vm.startPrank(deployer);
         doUpgrade();
-        assertEq(ipnftV22.totalSupply(0), 0);
+        //assertEq(ipnft.totalSupply(0), 0);
 
         vm.expectRevert("Initializable: contract is already initialized");
-        ipnftV22.initialize();
+        ipnftV24.initialize();
 
         vm.stopPrank();
-        assertEq(ipnftV22.aNewProperty(), "some property");
+        assertEq(ipnftV24.aNewProperty(), "some property");
     }
 
     function testTokensSurviveUpgrade() public {
@@ -63,11 +59,11 @@ contract IPNFTUpgrades is IPNFTMintHelper {
         doUpgrade();
         vm.stopPrank();
 
-        assertEq(ipnftV22.totalSupply(1), 1);
-        assertEq(ipnftV22.balanceOf(alice, 1), 1);
+        assertEq(ipnftV24.ownerOf(1), alice);
+        assertEq(ipnftV24.symbol(1), DEFAULT_SYMBOL);
     }
 
-    function testLosesPauseability() public {
+    function testKeepsPauseability() public {
         mintAToken(ipnft, alice);
 
         vm.startPrank(deployer);
@@ -79,7 +75,8 @@ contract IPNFTUpgrades is IPNFTMintHelper {
 
         vm.startPrank(bob);
         //can reserve even though it was supposed to fail when paused before
-        ipnftV22.reserve();
+        vm.expectRevert("Pausable: paused");
+        ipnftV24.reserve();
         vm.stopPrank();
     }
 }

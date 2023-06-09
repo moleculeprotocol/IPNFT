@@ -70,7 +70,7 @@ contract Mintpass is AccessControl, ERC721BBaseTokenURI, ERC721BBurnable, IAutho
     /// @dev see {IAuthorizeMints-authorizeMint}
     /// @dev reverts when authorization conditions are not met
     /// @param data must be a single `uint256` value: the mint pass id that's to be authorized
-    function authorizeMint(address minter, address to, bytes memory data) external view override onlyRole(REDEEMER) returns (bool) {
+    function authorizeMint(address minter, address, /* to */ bytes memory data) external view override onlyRole(REDEEMER) returns (bool) {
         uint256 mintPassId = abi.decode(data, (uint256));
 
         if (ownerOf(mintPassId) != minter) {
@@ -143,19 +143,19 @@ contract Mintpass is AccessControl, ERC721BBaseTokenURI, ERC721BBurnable, IAutho
         return "IPNFTMNTPSS";
     }
 
-    function supportsInterface(bytes4 interfaceId) public view virtual override (ERC721B, IERC165, AccessControl) returns (bool) {
+    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC721B, IERC165, AccessControl) returns (bool) {
         return interfaceId == type(IERC721Metadata).interfaceId || super.supportsInterface(interfaceId);
     }
 
-    function totalSupply() public view virtual override (ERC721B, ERC721BBurnable) returns (uint256) {
+    function totalSupply() public view virtual override(ERC721B, ERC721BBurnable) returns (uint256) {
         return super.totalSupply();
     }
 
-    function _exists(uint256 tokenId) internal view virtual override (ERC721B, ERC721BBurnable) returns (bool) {
+    function _exists(uint256 tokenId) internal view virtual override(ERC721B, ERC721BBurnable) returns (bool) {
         return super._exists(tokenId);
     }
 
-    function ownerOf(uint256 tokenId) public view virtual override (ERC721B, ERC721BBurnable, IERC721) returns (address) {
+    function ownerOf(uint256 tokenId) public view virtual override(ERC721B, ERC721BBurnable, IERC721) returns (address) {
         return super.ownerOf(tokenId);
     }
 

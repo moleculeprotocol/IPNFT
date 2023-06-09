@@ -2,11 +2,11 @@ specVersion: 0.0.4
 schema:
   file: ./schema.graphql
 dataSources:
-  - kind: ethereum
+  - kind: ethereum/contract
     name: IPNFT
     network: {{network}}
     source:
-      address: "{{ipnft.address}}"
+      address: '{{ipnft.address}}'
       abi: IPNFT
       startBlock: {{ipnft.startBlock}}
     mapping:
@@ -21,16 +21,18 @@ dataSources:
       eventHandlers:
         - event: Reserved(indexed address,indexed uint256)
           handler: handleReservation
-        - event: IPNFTMinted(indexed address,indexed uint256,string)
+        - event: IPNFTMinted(indexed address,indexed uint256,string,string)
           handler: handleMint
-        - event: TransferSingle(indexed address,indexed address,indexed address,uint256,uint256)
-          handler: handleTransferSingle
+        - event: Transfer(indexed address,indexed address,indexed uint256)
+          handler: handleTransfer
+        - event: ReadAccessGranted(indexed uint256,indexed address,uint256)
+          handler: handleReadAccess
       file: ./src/ipnftMapping.ts
-  - kind: ethereum
+  - kind: ethereum/contract
     name: SchmackoSwap
     network: {{network}}
     source:
-      address: "{{schmackoSwap.address}}"
+      address: '{{schmackoSwap.address}}'
       abi: SchmackoSwap
       startBlock: {{schmackoSwap.startBlock}}
     mapping:
@@ -43,20 +45,20 @@ dataSources:
         - name: SchmackoSwap
           file: ./abis/SchmackoSwap.json
       eventHandlers:
-        - event: Listed(uint256,(address,uint256,address,uint256,address,uint256))
+        - event: Listed(uint256,(address,uint256,address,address,uint256,address,uint8))
           handler: handleListed
-        - event: Unlisted(uint256,(address,uint256,address,uint256,address,uint256))
+        - event: Unlisted(uint256,(address,uint256,address,address,uint256,address,uint8))
           handler: handleUnlisted
-        - event: Purchased(uint256,indexed address,(address,uint256,address,uint256,address,uint256))
+        - event: Purchased(uint256,indexed address,(address,uint256,address,address,uint256,address,uint8))
           handler: handlePurchased
         - event: AllowlistUpdated(uint256,indexed address,bool)
           handler: handleAllowlistUpdated
       file: ./src/swapMapping.ts
-  - kind: ethereum
+  - kind: ethereum/contract
     name: Mintpass
     network: {{network}}
     source:
-      address: "{{mintpass.address}}"
+      address: '{{mintpass.address}}'
       abi: Mintpass
       startBlock: {{mintpass.startBlock}}
     mapping:
@@ -76,3 +78,134 @@ dataSources:
         - event: Redeemed(indexed uint256)
           handler: handleRedeemed
       file: ./src/mintpassMapping.ts
+  - kind: ethereum/contract
+    name: Synthesizer
+    network: {{network}}
+    source:
+      address: '{{synthesizer.address}}'
+      abi: Synthesizer
+      startBlock: {{synthesizer.startBlock}}
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - ReactedIpnft
+        - Molecule
+      abis:
+        - name: Synthesizer
+          file: ./abis/Synthesizer.json
+      eventHandlers:
+        - event: MoleculesCreated(indexed uint256,indexed uint256,indexed address,address,uint256,string,string,string)
+          handler: handleMoleculesCreated
+        # - event: SalesActivated(uint256,address,uint256)
+        #   handler: handleSalesActivated
+        # - event: TermsAccepted(indexed uint256,indexed address,bytes)
+        #   handler: handleTermsAccepted
+      file: ./src/synthesizerMapping.ts
+  - kind: ethereum/contract
+    name: StakedLockingCrowdSale
+    network: {{network}}
+    source:
+      address: '{{stakedLockingCrowdSale.address}}'
+      abi: StakedLockingCrowdSale
+      startBlock: {{stakedLockingCrowdSale.startBlock}}
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - CrowdSale
+        - Contribution
+        - ERC20Token
+      abis:
+        - name: StakedLockingCrowdSale
+          file: ./abis/StakedLockingCrowdSale.json
+        - name: IERC20Metadata
+          file: ./abis/IERC20Metadata.json
+      eventHandlers:
+        - event: Started(indexed uint256,indexed address,(address,address,address,uint256,uint256,uint64,address),(address,address,uint256),address,uint256,uint256)
+          handler: handleStarted
+        - event: Settled(indexed uint256,uint256,uint256)
+          handler: handleSettled
+        - event: Claimed(indexed uint256,indexed address,uint256,uint256)
+          handler: handleClaimed
+        - event: Bid(indexed uint256,indexed address,uint256)
+          handler: handleBid
+        - event: Staked(indexed uint256,indexed address,uint256,uint256)
+          handler: handleStaked
+        - event: Failed(indexed uint256)
+          handler: handleFailed
+        - event: LockingContractCreated(indexed address,indexed address)
+          handler: handleLockingContractCreated
+        - event: ClaimedFundingGoal(indexed uint256)
+          handler: handleClaimedSuccessfulSale
+        - event: ClaimedAuctionTokens(indexed uint256)
+          handler: handleClaimedFailedSale
+        #- event: ClaimedStakes(indexed uint256,indexed address,uint256,uint256);
+
+      file: ./src/stakedLockingCrowdSaleMapping.ts
+  - kind: ethereum/contract
+    name: TermsAcceptedPermissioner
+    network: {{network}}
+    source:
+      address: '{{termsAcceptedPermissioner.address}}'
+      abi: TermsAcceptedPermissioner
+      startBlock: {{termsAcceptedPermissioner.startBlock}}
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - Molecule
+      abis:
+        - name: TermsAcceptedPermissioner
+          file: ./abis/TermsAcceptedPermissioner.json
+      eventHandlers:
+        - event: TermsAccepted(indexed address,indexed address,bytes)
+          handler: handleTermsAccepted
+      file: ./src/termsAcceptedPermissionerMapping.ts
+templates:
+  - name: Molecules
+    kind: ethereum/contract
+    network: {{network}}
+    source:
+      abi: Molecules
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      file: ./src/moleculesMapping.ts
+      entities:
+        - Molecule
+      abis:
+        - name: Molecules
+          file: ./abis/Molecules.json
+      eventHandlers:
+        - event: Transfer(indexed address,indexed address,uint256)
+          handler: handleTransfer
+        - event: Capped(uint256)
+          handler: handleCapped
+        # - event: SharesClaimed(indexed uint256,indexed address,uint256)
+        #   handler: handleSharesClaimed
+  - name: TimelockedToken
+    kind: ethereum/contract
+    network: {{network}}
+    source:
+      abi: TimelockedToken
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      file: ./src/timelockedTokenMapping.ts
+      entities:
+        - TimelockedToken
+        - LockedSchedule
+      abis:
+        - name: TimelockedToken
+          file: ./abis/TimelockedToken.json
+      eventHandlers:
+        - event: ScheduleCreated(indexed bytes32,indexed address,indexed address,uint256,uint64)
+          handler: handleScheduled
+        - event: ScheduleReleased(indexed bytes32,indexed address,uint256)
+          handler: handleReleased

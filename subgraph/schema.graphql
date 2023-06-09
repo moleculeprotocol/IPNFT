@@ -1,48 +1,154 @@
 type Ipnft @entity {
-    id: ID! #tokenId
-    owner: Bytes! # address
-    createdAt: BigInt!
-    tokenURI: String!
-    listings: [Listing!] @derivedFrom(field: "ipnft")
+  id: ID! #tokenId
+  owner: Bytes! # address
+  createdAt: BigInt!
+  tokenURI: String!
+  symbol: String
+  listings: [Listing!] @derivedFrom(field: "ipnft")
+  readers: [CanRead!] @derivedFrom(field: "ipnft")
+  reactedIpnfts: [ReactedIpnft!] @derivedFrom(field: "ipnft")
+}
+
+type ReactedIpnft @entity {
+  id: ID! # Molecules tokenaddress
+  name: String!
+  symbol: String!
+  decimals: BigInt!
+  agreementCid: String! #IPFS CID string of FAM Agreement
+  originalOwner: Bytes! # address of the issuer
+  # these will be updated by the underlying Molecules subgraph template
+  totalIssued: BigInt! #the highest amount of molecules issued, this can be raised by the owner
+  circulatingSupply: BigInt! #the amount of unburnt molecules
+  #   paymentToken: Bytes #address ERC20 Token
+  #   paidPrice: BigInt #the price paid for the original ipnft
+  #   claimedShares: BigInt! # the amount of shares that have already been claimed. This needs to have a fulfilledListingId to be set
+  ipnft: Ipnft!
+  lockedToken: TimelockedToken #the locked token that bidders partially receive when claiming
+  molecules: [Molecule!] @derivedFrom(field: "reactedIpnft")
+  crowdsales: [CrowdSale!] @derivedFrom(field: "reactedIpnft")
+  createdAt: BigInt!
+}
+
+type Molecule @entity {
+  id: ID! # erc20address + owner address
+  reactedIpnft: ReactedIpnft!
+  balance: BigInt! # Token balance of the owner
+  owner: Bytes! #Address of the token owner
+  agreementSignature: Bytes #the agreement signature, to be reused for other operations
+  schedules: [LockedSchedule!] @derivedFrom(field: "molecule")
+}
+
+type ERC20Token @entity {
+  id: Bytes!
+  decimals: BigInt!
+  symbol: String!
+  name: String
+}
+
+type TimelockedToken @entity {
+  id: Bytes!
+  decimals: BigInt!
+  symbol: String!
+  name: String
+  underlyingToken: ERC20Token
+  reactedIpnft: ReactedIpnft
+  schedules: [LockedSchedule!] @derivedFrom(field: "tokenContract")
+}
+
+type LockedSchedule @entity {
+  id: Bytes!
+  tokenContract: TimelockedToken!
+  beneficiary: Bytes!
+  amount: BigInt!
+  expiresAt: BigInt!
+  claimedAt: BigInt
+  molecule: Molecule!
 }
 
 type Listing @entity {
-    id: ID!
-    ipnft: Ipnft!
-    creator: Bytes! #address
-    tokenAmount: BigInt! #the amount of this token to sell, usually 1
-    paymentToken: Bytes! #address ERC20 Token
-    askPrice: BigInt!
-    createdAt: BigInt!
-    unlistedAt: BigInt
-    purchasedAt: BigInt
-    buyer: Bytes #address
-    allowed: [Allowed!] @derivedFrom(field: "listing")
+  id: ID!
+  ipnft: Ipnft!
+  creator: Bytes! #address
+  paymentToken: Bytes! #address ERC20 Token
+  beneficiary: Bytes! #address of the account that'll receive the payment
+  askPrice: BigInt!
+  createdAt: BigInt!
+  unlistedAt: BigInt
+  purchasedAt: BigInt
+  buyer: Bytes #address
+  allowed: [Allowed!] @derivedFrom(field: "listing")
+}
+
+type CanRead @entity {
+  id: ID! #keccak(tokenId,address)
+  ipnft: Ipnft!
+  reader: Bytes! #address
+  until: BigInt
 }
 
 type Allowed @entity {
-    id: ID! #listingid-account
-    account: Bytes!
-    listing: Listing!
-    allowed: Boolean!
+  id: ID! #listingid-account
+  account: Bytes!
+  listing: Listing!
+  allowed: Boolean!
 }
 
 type Reservation @entity {
-    id: ID! #reservationId will be future tokenId
-    owner: Bytes! #address
-    uri: String
-    createdAt: BigInt!
+  id: ID! #reservationId will be future tokenId
+  owner: Bytes! #address
+  uri: String
+  createdAt: BigInt!
 }
 
 enum MintpassStatus {
-    DEFAULT
-    REDEEMED
-    REVOKED
+  DEFAULT
+  REDEEMED
+  REVOKED
 }
 
 type Mintpass @entity {
-    id: ID! #tokenId
-    owner: Bytes! #address
-    createdAt: BigInt!
-    status: MintpassStatus
+  id: ID! #tokenId
+  owner: Bytes! #address
+  createdAt: BigInt!
+  status: MintpassStatus
+}
+
+enum SaleState {
+  UNKNOWN
+  RUNNING
+  SETTLED
+  FAILED
+}
+
+type CrowdSale @entity {
+  id: ID!
+  reactedIpnft: ReactedIpnft!
+  issuer: Bytes! #address of the creator
+  beneficiary: Bytes! #address of the receiver of fundingGoal (usually issuer)
+  closingTime: BigInt! #the time when the auction ends
+  createdAt: BigInt! #the time when the auction was created
+  state: SaleState!
+  salesAmount: BigInt! #the amount of tokens to be auctioned
+  auctionLockingDuration: BigInt # The duration for how long auction tokens are locked
+  biddingToken: ERC20Token
+  fundingGoal: BigInt! #the amount of tokens to be raised
+  amountRaised: BigInt! #the amount of tokens raised so far
+  stakingToken: ERC20Token
+  amountStaked: BigInt! #the amount of tokens staked so far
+  vestedStakingToken: ERC20Token #the vested staking token that bidders partially receive after claiming
+  stakingDuration: BigInt! # The duration for how long staked tokens are locked ("cliff" in vesting terms)
+  wadFixedStakedPerBidPrice: BigInt # the fixed price of stake / bid token
+  claimedAt: BigInt # the date when the auctioneer has claimed their return (depending on failed / settled sales)
+  contributions: [Contribution!] @derivedFrom(field: "crowdSale")
+}
+
+type Contribution @entity {
+  id: ID! #transactionhash
+  contributor: Bytes!
+  crowdSale: CrowdSale!
+  amount: BigInt!
+  stakedAmount: BigInt
+  price: BigInt # staking token vs. bidding token price
+  createdAt: BigInt!
+  claimedAt: BigInt
 }

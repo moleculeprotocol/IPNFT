@@ -1,18 +1,25 @@
-// SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.17;
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.18;
 
-import { ERC20 as SolERC20 } from "solmate/tokens/ERC20.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { ReentrancyGuard } from "solmate/utils/ReentrancyGuard.sol";
 import { SafeTransferLib } from "solmate/utils/SafeTransferLib.sol";
-import { ERC1155Supply } from "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Supply.sol";
 import { ERC165 } from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 import { IERC165 } from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+import { IERC721 } from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+
+enum ListingState {
+    LISTED,
+    CANCELLED,
+    FULFILLED
+}
 
 /// @title SchmackoSwap
 /// @author molecule.to
 /// @notice a sales contract that lets NFT holders list items with an ask price and control who can fulfill their offers. Accepts arbitrary ERC20 tokens as payment.
 contract SchmackoSwap is ERC165, ReentrancyGuard {
+    using SafeERC20 for IERC20;
     /// ERRORS ///
 
     /// @notice Thrown when user tries to initiate an action without being authorized
@@ -26,9 +33,6 @@ contract SchmackoSwap is ERC165, ReentrancyGuard {
 
     /// @notice Thrown when the buyer hasn't approved the marketplace to transfer their payment tokens
     error InsufficientAllowance();
-
-    /// @notice Thrown when the buyer has insufficient funds to purchase the listing or when the seller doesn't own all instances of the ERC1155 token
-    error InsufficientBalance();
 
     /// EVENTS ///
 
@@ -59,18 +63,21 @@ contract SchmackoSwap is ERC165, ReentrancyGuard {
     uint256 internal saleCounter = 1;
 
     /// @dev Parameters for listings
-    /// @param tokenContract The ERC1155 contract for the listed token
+    /// @param tokenContract The IERC721 contract for the listed token
     /// @param tokenId The ID of the listed token
     /// @param creator The address of the seller
     /// @param askPrice The amount the seller is asking for in exchange for the token
     struct Listing {
-        ERC1155Supply tokenContract;
+        IERC721 tokenContract;
         uint256 tokenId;
         address creator;
-        uint256 tokenAmount;
         IERC20 paymentToken;
         uint256 askPrice;
+        address beneficiary;
+        ListingState listingState;
     }
+
+    //mapping(uint256 => mapping(address => bool)) listingOperators;
 
     /// @notice An indexed list of listings
     mapping(uint256 => Listing) public listings;
@@ -84,7 +91,15 @@ contract SchmackoSwap is ERC165, ReentrancyGuard {
     /// @param askPrice How much you want to receive in exchange for the token
     /// @return The ID of the created listing
     /// @dev Remember to call `setApprovalForAll(<address of this contract>, true)` on the ERC1155's contract before calling this function
-    function list(ERC1155Supply tokenContract, uint256 tokenId, IERC20 paymentToken, uint256 askPrice) public returns (uint256) {
+    function list(IERC721 tokenContract, uint256 tokenId, IERC20 paymentToken, uint256 askPrice) public returns (uint256) {
+        return list(tokenContract, tokenId, paymentToken, askPrice, msg.sender);
+    }
+
+    /**
+     * {inheritDoc list}
+     * @param beneficiary address the account that will receive the funds after fulfillment. In case of synthesis this should be the SharesDistribution contract
+     */
+    function list(IERC721 tokenContract, uint256 tokenId, IERC20 paymentToken, uint256 askPrice, address beneficiary) public returns (uint256) {
         if (!tokenContract.isApprovedForAll(msg.sender, address(this))) {
             revert InsufficientAllowance();
         }
@@ -93,9 +108,10 @@ contract SchmackoSwap is ERC165, ReentrancyGuard {
             tokenContract: tokenContract,
             tokenId: tokenId,
             paymentToken: paymentToken,
-            tokenAmount: tokenContract.totalSupply(tokenId),
             askPrice: askPrice,
-            creator: msg.sender
+            creator: msg.sender,
+            beneficiary: beneficiary,
+            listingState: ListingState.LISTED
         });
 
         uint256 listingId = uint256(keccak256(abi.encode(listing, block.number)));
@@ -104,6 +120,7 @@ contract SchmackoSwap is ERC165, ReentrancyGuard {
 
         emit Listed(listingId, listing);
 
+        //todo: this stays unmentioned in the emitted event!
         return listingId;
     }
 
@@ -111,12 +128,15 @@ contract SchmackoSwap is ERC165, ReentrancyGuard {
     /// @param listingId The ID for the listing you want to cancel
     function cancel(uint256 listingId) public {
         Listing memory listing = listings[listingId];
+        if (listing.creator != msg.sender) {
+            revert Unauthorized();
+        }
 
-        if (listing.creator != msg.sender) revert Unauthorized();
-
-        delete listings[listingId];
-
-        emit Unlisted(listingId, listing);
+        if (listing.listingState != ListingState.LISTED) {
+            revert("cant cancel an inactive listing");
+        }
+        listings[listingId].listingState = ListingState.CANCELLED;
+        emit Unlisted(listingId, listings[listingId]);
     }
 
     /// @notice Purchase one of the listed tokens
@@ -125,45 +145,45 @@ contract SchmackoSwap is ERC165, ReentrancyGuard {
         Listing memory listing = listings[listingId];
         if (listing.creator == address(0)) revert ListingNotFound();
         if (allowlist[listingId][msg.sender] != true) revert NotOnAllowlist();
+        if (listing.listingState != ListingState.LISTED) revert("listing not active anymore");
 
         IERC20 paymentToken = listing.paymentToken;
 
-        uint256 allowance = paymentToken.allowance(msg.sender, address(this));
-        if (allowance < listing.askPrice) revert InsufficientAllowance();
+        listings[listingId].listingState = ListingState.FULFILLED;
 
-        uint256 buyerBalance = paymentToken.balanceOf(msg.sender);
-        if (buyerBalance < listing.askPrice) revert InsufficientBalance();
+        listing.tokenContract.safeTransferFrom(listing.creator, msg.sender, listing.tokenId);
+        paymentToken.safeTransferFrom(msg.sender, listing.beneficiary, listing.askPrice);
 
-        delete listings[listingId];
-
-        listing.tokenContract.safeTransferFrom(listing.creator, msg.sender, listing.tokenId, listing.tokenAmount, "");
-
-        SafeTransferLib.safeTransferFrom(SolERC20(address(paymentToken)), msg.sender, listing.creator, listing.askPrice);
-
-        emit Purchased(listingId, msg.sender, listing);
+        emit Purchased(listingId, msg.sender, listings[listingId]);
     }
 
     /// @notice lets the seller allow or disallow a certain buyer to fulfill the listing
     /// @param listingId The ID for the listing you want to purchase
     /// @param buyerAddress the address to change allowance for
-    /// @param isAllowed_ whether to allow or disallow `buyerAddress` to fulfill the listing
-    function changeBuyerAllowance(uint256 listingId, address buyerAddress, bool isAllowed_) public {
+    /// @param _isAllowed whether to allow or disallow `buyerAddress` to fulfill the listing
+    function changeBuyerAllowance(uint256 listingId, address buyerAddress, bool _isAllowed) public {
         Listing memory listing = listings[listingId];
 
         if (listing.creator == address(0)) revert ListingNotFound();
         if (listing.creator != msg.sender) revert Unauthorized();
         require(buyerAddress != address(0), "Can't add ZERO address to allowlist");
 
-        allowlist[listingId][buyerAddress] = isAllowed_;
+        allowlist[listingId][buyerAddress] = _isAllowed;
 
-        emit AllowlistUpdated(listingId, buyerAddress, isAllowed_);
+        emit AllowlistUpdated(listingId, buyerAddress, _isAllowed);
+    }
+
+    function changeBuyerAllowance(uint256 listingId, address[] calldata buyerAddresses, bool _isAllowed) external {
+        for (uint256 i = 0; i < buyerAddresses.length; i++) {
+            changeBuyerAllowance(listingId, buyerAddresses[i], _isAllowed);
+        }
     }
 
     function isAllowed(uint256 listingId, address buyerAddress) public view returns (bool) {
         return allowlist[listingId][buyerAddress];
     }
 
-    function supportsInterface(bytes4 interfaceId) public view virtual override (ERC165) returns (bool) {
+    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC165) returns (bool) {
         return super.supportsInterface(interfaceId);
     }
 }

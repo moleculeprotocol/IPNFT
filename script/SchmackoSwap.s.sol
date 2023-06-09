@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.13;
+pragma solidity ^0.8.18;
 
 import "forge-std/Script.sol";
 import "forge-std/console.sol";
@@ -10,7 +10,9 @@ contract SchmackoSwapScript is Script {
 
     function run() public {
         vm.startBroadcast();
-        new SchmackoSwap();
+        SchmackoSwap sos = new SchmackoSwap();
+
         vm.stopBroadcast();
+        console.log("Schmackoswap %s", address(sos));
     }
 }
