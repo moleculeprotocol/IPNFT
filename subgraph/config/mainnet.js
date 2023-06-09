@@ -15,5 +15,13 @@ module.exports = {
   synthesizer: {
     address: '',
     startBlock: 0
+  },
+  stakedLockingCrowdSale: {
+    address: '',
+    startBlock: 0
+  },
+  termsAcceptedPermissioner: {
+    address: '',
+    startBlock: 0
   }
 }
