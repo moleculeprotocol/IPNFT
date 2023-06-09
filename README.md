@@ -28,12 +28,12 @@ IP-NFTs allow their users to tokenize intellectual property. This repo contains 
 - Subgraph: <https://api.thegraph.com/subgraphs/name/dorianwilhelm/ip-nft-subgraph-goerli/graphql>
 
 - Synthesizer: 0xb12494eeA6B992d0A1Db3C5423BE7a2d2337F58c  
-  (Impl no 2 0x34dB200E2f1349AcEAb09e363d4e4631a68657f1)
+  (Impl no 3 0x9979302130BBA3CAA6410035c95dd8a23643e8c4)
 
   <https://goerli.etherscan.io/address/0xb12494eeA6B992d0A1Db3C5423BE7a2d2337F58c>
 
-- Terms Accepted Permissioner: 0x3aFb3D87c12239B4D9DB67837F4bE4651FbBEd20
-  <https://goerli.etherscan.io/address/0x3aFb3D87c12239B4D9DB67837F4bE4651FbBEd20#code>
+- Terms Accepted Permissioner: 0x0045723801561079d94f0Bb1B65f322078E52635
+  <https://goerli.etherscan.io/address/0x0045723801561079d94f0bb1b65f322078e52635#code>
 
 - Bio pricefeed: 0x8647dEFdEAAdF5448d021B364B2F17815aba4360
   <https://goerli.etherscan.io/address/0x8647defdeaadf5448d021b364b2f17815aba4360#code>

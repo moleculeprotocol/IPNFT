@@ -57,7 +57,7 @@ contract SynthesizerNext is UUPSUpgradeable, OwnableUpgradeable {
         permissioner = _permissioner;
     }
 
-    function reinit(IPermissioner _permissioner) public onlyOwner reinitializer(2) {
+    function reinit(IPermissioner _permissioner) public onlyOwner reinitializer(3) {
         permissioner = _permissioner;
     }
 
