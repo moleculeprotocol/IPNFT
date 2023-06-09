@@ -35,22 +35,11 @@ contract RolloutV23 is Script {
         );
         synthesizer.initialize(ipnft, permissioner);
         synthesizer.transferOwnership(moleculeDevMultisig);
-
-        StakedLockingCrowdSale stakedLockingCrowdSale = new StakedLockingCrowdSale();
-        //if we have vesting contracts:
-        //stakedLockingCrowdSale.trustVestingContract(vestedDaoToken);
-        //will work after merging:
-        stakedLockingCrowdSale.transferOwnership(moleculeDevMultisig);
-
-        //tell the tokenvesting owner to then execute:
-        // TokenVesting vestedDaoToken = TokenVesting(vm.envAddress("VDAO_TOKEN_ADDRESS"));
-        // vestedDaoToken.grantRole(vestedDaoToken.ROLE_CREATE_SCHEDULE(), address(stakedLockingCrowdSale));
         vm.stopBroadcast();
 
         console.log("IPNFT_ADDRESS=%s", address(ipnft));
         console.log("TERMS_ACCEPTED_PERMISSIONER_ADDRESS=%s", address(permissioner));
         console.log("SYNTHESIZER_ADDRESS=%s", address(synthesizer));
-        console.log("STAKED_LOCKING_CROWDSALE_ADDRESS=%s", address(stakedLockingCrowdSale));
 
         console.log("synthImpl implementation: %s", address(synthImpl));
         console.log("ipnft implementation: %s", address(ipnftImpl));
