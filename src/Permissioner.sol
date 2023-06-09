@@ -60,13 +60,7 @@ contract TermsAcceptedPermissioner is IPermissioner {
         return SignatureChecker.isValidSignatureNow(signer, termsHash, signature);
     }
 
-    /**
-     * @notice this yields the message text that claimers must present as signed message to burn their molecules and claim shares
-     * @param tokenContract ISynthesizedToken
-     */
-    function specificTermsV1(Molecules tokenContract) public view returns (string memory) {
-        Metadata memory metadata = tokenContract.metadata();
-
+    function specificTermsV1(Metadata memory metadata) public view returns (string memory) {
         return string.concat(
             "As a molecule holder of IPNFT #",
             Strings.toString(metadata.ipnftId),
@@ -78,5 +72,13 @@ contract TermsAcceptedPermissioner is IPermissioner {
             "\n",
             "Version: 1"
         );
+    }
+
+    /**
+     * @notice this yields the message text that claimers must present as signed message to burn their molecules and claim shares
+     * @param tokenContract ISynthesizedToken
+     */
+    function specificTermsV1(Molecules tokenContract) public view returns (string memory) {
+        return (specificTermsV1(tokenContract.metadata()));
     }
 }

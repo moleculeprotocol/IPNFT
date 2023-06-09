@@ -110,7 +110,7 @@ contract Molecules is ERC20BurnableUpgradeable, OwnableUpgradeable {
                     string.concat(
                         '{"name": "Molecules of IPNFT #',
                         tokenId,
-                        '","description": "this token represents molecules of the underlying asset","decimals": 18,"external_url": "https://molecule.to","image": "",',
+                        '","description": "Molecules, derived from IP-NFTs, are ERC-20 tokens governing IP pools.","decimals": 18,"external_url": "https://molecule.to","image": "",',
                         props,
                         "}"
                     )

@@ -84,6 +84,42 @@
   {
     "inputs": [
       {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "ipnftId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "originalOwner",
+            "type": "address"
+          },
+          {
+            "internalType": "string",
+            "name": "agreementCid",
+            "type": "string"
+          }
+        ],
+        "internalType": "struct Metadata",
+        "name": "metadata",
+        "type": "tuple"
+      }
+    ],
+    "name": "specificTermsV1",
+    "outputs": [
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "contract Molecules",
         "name": "tokenContract",
         "type": "address"

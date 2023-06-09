@@ -6,6 +6,7 @@ import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/O
 import { Clones } from "@openzeppelin/contracts/proxy/Clones.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 import { Molecules, Metadata as MoleculesMetadata } from "./Molecules.sol";
+import { IPermissioner } from "./Permissioner.sol";
 import { IPNFT } from "./IPNFT.sol";
 
 error MustOwnIpnft();
@@ -30,14 +31,21 @@ contract Synthesizer is UUPSUpgradeable, OwnableUpgradeable {
     IPNFT internal ipnft;
 
     mapping(uint256 => Molecules) public synthesized;
-
     /// @custom:oz-upgrades-unsafe-allow state-variable-immutable
     address immutable tokenImplementation;
 
-    function initialize(IPNFT _ipnft) external initializer {
+    /// @dev the permissioner checks if senders have agreed to legal requirements
+    IPermissioner permissioner;
+
+    /**
+     * @param _ipnft the IPNFT contract
+     * @param _permissioner a permissioning contract that checks if callers have agreed to the synthesized token's legal agreements
+     */
+    function initialize(IPNFT _ipnft, IPermissioner _permissioner) external initializer {
         __UUPSUpgradeable_init();
         __Ownable_init();
         ipnft = _ipnft;
+        permissioner = _permissioner;
     }
 
     /// @custom:oz-upgrades-unsafe-allow constructor
@@ -52,9 +60,13 @@ contract Synthesizer is UUPSUpgradeable, OwnableUpgradeable {
      * @param ipnftId the token id on the underlying nft collection
      * @param moleculesAmount the initially issued supply of Molecules
      * @param agreementCid a content hash that contains legal terms for Molecule owners
+     * @param signedAgreement the sender's signature over the signed agreemeent text (must be created on the client)
      * @return molecules a new created ERC20 token contract that represents the molecules
      */
-    function synthesizeIpnft(uint256 ipnftId, uint256 moleculesAmount, string calldata agreementCid) external returns (Molecules molecules) {
+    function synthesizeIpnft(uint256 ipnftId, uint256 moleculesAmount, string calldata agreementCid, bytes calldata signedAgreement)
+        external
+        returns (Molecules molecules)
+    {
         if (ipnft.ownerOf(ipnftId) != _msgSender()) {
             revert MustOwnIpnft();
         }
@@ -73,8 +85,7 @@ contract Synthesizer is UUPSUpgradeable, OwnableUpgradeable {
         synthesized[moleculeHash] = molecules;
 
         emit MoleculesCreated(moleculeHash, ipnftId, address(molecules), _msgSender(), moleculesAmount, agreementCid, name, tokenSymbol);
-
-        //if we want to take a protocol fee, this might be a good point of doing so.
+        permissioner.accept(molecules, _msgSender(), signedAgreement);
         molecules.issue(_msgSender(), moleculesAmount);
     }
 
@@ -82,7 +93,7 @@ contract Synthesizer is UUPSUpgradeable, OwnableUpgradeable {
     function _authorizeUpgrade(address /*newImplementation*/ )
         internal
         override
-        onlyOwner // solhint-disable-next-line no-empty-blocks
+        onlyOwner // solhint-disable--line no-empty-blocks
     {
         //empty block
     }
