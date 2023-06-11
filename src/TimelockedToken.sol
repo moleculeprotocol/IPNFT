@@ -14,7 +14,7 @@ struct Schedule {
 }
 
 error NotSupported();
-error ScheduleTooShort();
+error ScheduleOutOfRange();
 error StillLocked();
 error DuplicateSchedule();
 
@@ -103,8 +103,8 @@ contract TimelockedToken is IERC20MetadataUpgradeable, Initializable {
      * @return scheduleId the schedule's id. Must be tracked off chain
      */
     function lock(address beneficiary, uint256 amount, uint64 expiresAt) external returns (bytes32 scheduleId) {
-        if (expiresAt < block.timestamp + 15 minutes) {
-            revert ScheduleTooShort();
+        if (expiresAt < block.timestamp + 15 minutes || expiresAt > block.timestamp + 5 * 365 days) {
+            revert ScheduleOutOfRange();
         }
 
         scheduleId = keccak256(abi.encodePacked(msg.sender, beneficiary, amount, expiresAt));
