@@ -70,7 +70,7 @@ contract Synthesizer is UUPSUpgradeable, OwnableUpgradeable {
         if (ipnft.ownerOf(ipnftId) != _msgSender()) {
             revert MustOwnIpnft();
         }
-        string memory tokenSymbol = string.concat(ipnft.symbol(ipnftId), "-MOL");
+        string memory tokenSymbol = ipnft.symbol(ipnftId);
         // https://github.com/OpenZeppelin/workshops/tree/master/02-contracts-clone
         molecules = Molecules(Clones.clone(tokenImplementation));
         string memory name = string.concat("Molecules of IPNFT #", Strings.toString(ipnftId));

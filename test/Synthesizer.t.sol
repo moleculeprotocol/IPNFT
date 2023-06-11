@@ -114,7 +114,7 @@ contract SynthesizerTest is Test {
         assertEq(ipnft.ownerOf(1), originalOwner);
 
         assertEq(tokenContract.totalIssued(), 100_000);
-        assertEq(tokenContract.symbol(), "MOL-0001-MOL");
+        assertEq(tokenContract.symbol(), "MOL-0001");
 
         vm.startPrank(originalOwner);
         tokenContract.transfer(alice, 10_000);
