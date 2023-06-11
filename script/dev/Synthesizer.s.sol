@@ -55,7 +55,7 @@ contract FixtureSynthesizer is CommonScript {
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(bobPk, ECDSA.toEthSignedMessageHash(abi.encodePacked(terms)));
         bytes memory signedTerms = abi.encodePacked(r, s, v);
         Molecules tokenContract =
-            synthesizer.synthesizeIpnft(1, 1_000_000 ether, "bafkreigk5dvqblnkdniges6ft5kmuly47ebw4vho6siikzmkaovq6sjstq", signedTerms);
+            synthesizer.synthesizeIpnft(1, 1_000_000 ether, "bafkreigk5dvqblnkdniges6ft5kmuly47ebw4vho6siikzmkaovq6sjstq", "MOLE", signedTerms);
         vm.stopBroadcast();
 
         console.log("MOLECULES_ADDRESS=%s", address(tokenContract));

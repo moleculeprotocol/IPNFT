@@ -59,18 +59,22 @@ contract Synthesizer is UUPSUpgradeable, OwnableUpgradeable {
      *         molecules are identified by the original token holder and the token id
      * @param ipnftId the token id on the underlying nft collection
      * @param moleculesAmount the initially issued supply of Molecules
+     * @param tokenSymbol the molecule's token ticker symbol
      * @param agreementCid a content hash that contains legal terms for Molecule owners
      * @param signedAgreement the sender's signature over the signed agreemeent text (must be created on the client)
      * @return molecules a new created ERC20 token contract that represents the molecules
      */
-    function synthesizeIpnft(uint256 ipnftId, uint256 moleculesAmount, string calldata agreementCid, bytes calldata signedAgreement)
-        external
-        returns (Molecules molecules)
-    {
+    function synthesizeIpnft(
+        uint256 ipnftId,
+        uint256 moleculesAmount,
+        string memory tokenSymbol,
+        string memory agreementCid,
+        bytes calldata signedAgreement
+    ) external returns (Molecules molecules) {
         if (ipnft.ownerOf(ipnftId) != _msgSender()) {
             revert MustOwnIpnft();
         }
-        string memory tokenSymbol = string.concat(ipnft.symbol(ipnftId), "-MOL");
+
         // https://github.com/OpenZeppelin/workshops/tree/master/02-contracts-clone
         molecules = Molecules(Clones.clone(tokenImplementation));
         string memory name = string.concat("Molecules of IPNFT #", Strings.toString(ipnftId));

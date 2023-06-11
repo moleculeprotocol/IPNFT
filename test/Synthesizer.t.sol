@@ -97,7 +97,7 @@ contract SynthesizerTest is Test {
 
     function testUrl() public {
         vm.startPrank(originalOwner);
-        Molecules tokenContract = synthesizer.synthesizeIpnft(1, 100_000, agreementCid, "");
+        Molecules tokenContract = synthesizer.synthesizeIpnft(1, 100_000, "MOLE", agreementCid, "");
         string memory uri = tokenContract.uri();
         assertGt(bytes(uri).length, 200);
         vm.stopPrank();
@@ -106,7 +106,7 @@ contract SynthesizerTest is Test {
     function testIssueMolecules() public {
         vm.startPrank(originalOwner);
         //ipnft.setApprovalForAll(address(synthesizer), true);
-        Molecules tokenContract = synthesizer.synthesizeIpnft(1, 100_000, agreementCid, "");
+        Molecules tokenContract = synthesizer.synthesizeIpnft(1, 100_000, "MOLE", agreementCid, "");
         vm.stopPrank();
 
         assertEq(tokenContract.balanceOf(originalOwner), 100_000);
@@ -114,7 +114,7 @@ contract SynthesizerTest is Test {
         assertEq(ipnft.ownerOf(1), originalOwner);
 
         assertEq(tokenContract.totalIssued(), 100_000);
-        assertEq(tokenContract.symbol(), "MOL-0001-MOL");
+        assertEq(tokenContract.symbol(), "MOLE");
 
         vm.startPrank(originalOwner);
         tokenContract.transfer(alice, 10_000);
@@ -127,7 +127,7 @@ contract SynthesizerTest is Test {
 
     function testIncreaseMolecules() public {
         vm.startPrank(originalOwner);
-        Molecules tokenContract = synthesizer.synthesizeIpnft(1, 100_000, agreementCid, "");
+        Molecules tokenContract = synthesizer.synthesizeIpnft(1, 100_000, "MOLE", agreementCid, "");
 
         tokenContract.transfer(alice, 25_000);
         tokenContract.transfer(bob, 25_000);
@@ -160,10 +160,10 @@ contract SynthesizerTest is Test {
 
     function testCanBeSynthesizedOnlyOnce() public {
         vm.startPrank(originalOwner);
-        synthesizer.synthesizeIpnft(1, 100_000, agreementCid, "");
+        synthesizer.synthesizeIpnft(1, 100_000, "MOLE", agreementCid, "");
 
         vm.expectRevert(AlreadySynthesized.selector);
-        synthesizer.synthesizeIpnft(1, 100_000, agreementCid, "");
+        synthesizer.synthesizeIpnft(1, 100_000, "MOLE", agreementCid, "");
         vm.stopPrank();
     }
 
@@ -171,7 +171,7 @@ contract SynthesizerTest is Test {
         vm.startPrank(alice);
 
         vm.expectRevert(MustOwnIpnft.selector);
-        synthesizer.synthesizeIpnft(1, 100_000, agreementCid, "");
+        synthesizer.synthesizeIpnft(1, 100_000, "MOLE", agreementCid, "");
         vm.stopPrank();
     }
 
@@ -187,7 +187,7 @@ contract SynthesizerTest is Test {
         vm.stopPrank();
 
         vm.startPrank(originalOwner);
-        Molecules tokenContract = synthesizer.synthesizeIpnft(1, 100_000, agreementCid, "");
+        Molecules tokenContract = synthesizer.synthesizeIpnft(1, 100_000, "MOLE", agreementCid, "");
         tokenContract.safeTransfer(address(wallet), 100_000);
         vm.stopPrank();
 
@@ -217,7 +217,7 @@ contract SynthesizerTest is Test {
         vm.stopPrank();
 
         vm.startPrank(originalOwner);
-        Molecules tokenContractOld = synthesizer.synthesizeIpnft(1, 100_000, agreementCid, "");
+        Molecules tokenContractOld = synthesizer.synthesizeIpnft(1, 100_000, "MOLE", agreementCid, "");
         vm.stopPrank();
 
         vm.startPrank(deployer);
