@@ -211,6 +211,11 @@
       },
       {
         "internalType": "string",
+        "name": "tokenSymbol",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
         "name": "agreementCid",
         "type": "string"
       },
