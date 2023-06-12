@@ -13,8 +13,8 @@ module.exports = {
     startBlock: 16219338
   },
   synthesizer: {
-    address: '0x534E082059123bA06411aF4b2E8Aaf196Dd5fa5e',
-    startBlock: 17441953
+    address: '0x58EB89C69CB389DBef0c130C6296ee271b82f436',
+    startBlock: 17464363
   },
   stakedLockingCrowdSale: {
     address: '0xabcdabcdabcdabcdabcdabcdabcdabcdabcdabcd',
