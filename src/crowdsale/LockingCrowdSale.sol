@@ -36,6 +36,22 @@ contract LockingCrowdSale is CrowdSale {
     }
 
     /**
+     * @notice allows anyone to create a timelocked token that's controlled by this sale contract
+     *         helpful if you want to reuse the timelocked token for your own custom schedules
+     *         before having created any crowdsale on it.
+     * @param underlyingToken the token a timelocked token contract is created for
+     * @return lockedTokenContract the timelocked token contract either having been created or already existing
+     */
+    function createOrReturnTimelockContract(IERC20Metadata underlyingToken) public returns (TimelockedToken lockedTokenContract) {
+        lockedTokenContract = lockingContracts[address(underlyingToken)];
+
+        if (address(lockedTokenContract) == address(0)) {
+            lockedTokenContract = _makeNewLockedTokenContract(underlyingToken);
+            lockingContracts[address(underlyingToken)] = lockedTokenContract;
+        }
+    }
+
+    /**
      * @notice will instantiate a new TimelockedToken when none exists yet
      *
      * @param sale sale configuration
@@ -48,12 +64,7 @@ contract LockingCrowdSale is CrowdSale {
         if (lockingDuration > 366 days) {
             revert InvalidDuration();
         }
-        TimelockedToken lockedTokenContract = lockingContracts[address(sale.auctionToken)];
-
-        if (address(lockedTokenContract) == address(0)) {
-            lockedTokenContract = _makeNewLockedTokenContract(sale.auctionToken);
-            lockingContracts[address(sale.auctionToken)] = lockedTokenContract;
-        }
+        createOrReturnTimelockContract(sale.auctionToken);
 
         salesLockingDuration[saleId] = lockingDuration;
         saleId = super.startSale(sale);

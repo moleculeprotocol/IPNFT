@@ -176,6 +176,67 @@ contract CrowdSaleLockedTest is Test {
         assertEq(lockingContract.balanceOf(bidder), 0);
     }
 
+    function testReusePubliclyCreatedLockingContracts() public {
+        address charlie = makeAddr("charlie");
+        vm.startPrank(emitter);
+
+        TimelockedToken publiclyCreatedContract = crowdSale.createOrReturnTimelockContract(auctionToken);
+        auctionToken.approve(address(publiclyCreatedContract), 100 ether);
+        bytes32 customScheduleId = publiclyCreatedContract.lock(charlie, 100 ether, uint64(block.timestamp + 120 days));
+
+        Sale memory _sale = CrowdSaleHelpers.makeSale(emitter, auctionToken, biddingToken);
+        auctionToken.approve(address(crowdSale), 400_000 ether);
+        uint256 saleId = crowdSale.startSale(_sale, 60 days);
+        vm.stopPrank();
+
+        vm.startPrank(bidder);
+        crowdSale.placeBid(saleId, 200_000 ether, "");
+        vm.stopPrank();
+
+        vm.startPrank(anyone);
+        vm.warp(block.timestamp + 3 hours);
+        crowdSale.settle(saleId);
+        crowdSale.claimResults(saleId);
+        vm.stopPrank();
+
+        assertEq(address(crowdSale.lockingContracts(address(auctionToken))), address(publiclyCreatedContract));
+
+        assertEq(biddingToken.balanceOf(emitter), _sale.fundingGoal);
+        SaleInfo memory info = crowdSale.getSaleInfo(saleId);
+        assertEq(info.surplus, 0);
+
+        vm.startPrank(bidder);
+        vm.recordLogs();
+        crowdSale.claim(saleId, "");
+        Vm.Log[] memory entries = vm.getRecordedLogs();
+        assertEq(entries[1].topics[0], keccak256("ScheduleCreated(bytes32,address,address,uint256,uint64)"));
+        assertEq(bidder, address(uint160(uint256((entries[1].topics[2])))));
+        bytes32 scheduleId = entries[1].topics[1];
+        vm.stopPrank();
+
+        //TimelockedToken lockingContract = TimelockedToken(crowdSale.lockingContracts(address(auctionToken)));
+        assertEq(publiclyCreatedContract.balanceOf(bidder), _sale.salesAmount);
+
+        vm.warp(_sale.closingTime + 60 days);
+        vm.startPrank(anyone);
+        publiclyCreatedContract.release(scheduleId);
+        vm.stopPrank();
+
+        assertEq(auctionToken.balanceOf(bidder), _sale.salesAmount);
+        assertEq(publiclyCreatedContract.balanceOf(bidder), 0);
+
+        vm.startPrank(charlie);
+        vm.expectRevert(StillLocked.selector);
+        publiclyCreatedContract.release(customScheduleId);
+
+        vm.warp(_sale.closingTime + 121 days);
+        publiclyCreatedContract.release(customScheduleId);
+        vm.stopPrank();
+
+        assertEq(auctionToken.balanceOf(charlie), 100 ether);
+        assertEq(auctionToken.balanceOf(address(publiclyCreatedContract)), 0);
+    }
+
     function testClaimLongAfterLockingPeriod() public {
         vm.startPrank(emitter);
         Sale memory _sale = CrowdSaleHelpers.makeSale(emitter, auctionToken, biddingToken);
