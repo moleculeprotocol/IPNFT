@@ -8,7 +8,7 @@ IP-NFTs allow their users to tokenize intellectual property. This repo contains 
 
 | Contract     | Address                                                                                                                     | Actions                                                                                                                                                                                                                                                                                                 |
 | ------------ | --------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| IP-NFT       | [0x769C68346c5B20eb358BcEdb55c6F27b5Aa43585](https://etherscan.io/address/0x769C68346c5B20eb358BcEdb55c6F27b5Aa43585#code>) | <a href="https://thirdweb.com/ethereum/0x769C68346c5B20eb358BcEdb55c6F27b5Aa43585?utm_source=contract_badge" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0x769C68346c5B20eb358BcEdb55c6F27b5Aa43585&theme=dark&chainId=1" alt="View contract" /></a> |
+| IP-NFT       | [0xcaD88677CA87a7815728C72D74B4ff4982d54Fc1](https://etherscan.io/address/0xcaD88677CA87a7815728C72D74B4ff4982d54Fc1#code>) | <a href="https://thirdweb.com/ethereum/0xcaD88677CA87a7815728C72D74B4ff4982d54Fc1?utm_source=contract_badge" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0xcaD88677CA87a7815728C72D74B4ff4982d54Fc1&theme=dark&chainId=1" alt="View contract" /></a> |
 | SchmackoSwap | [0xc09b8577c762b5e97a7d640f242e1d9bfaa7eb9d](https://etherscan.io/address/0xc09b8577c762b5e97a7d640f242e1d9bfaa7eb9d#code)  | <a href="https://thirdweb.com/ethereum/0xc09b8577c762b5E97a7D640F242E1D9bfAa7EB9d?utm_source=contract_badge" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0xc09b8577c762b5E97a7D640F242E1D9bfAa7EB9d&theme=dark&chainId=1" alt="View contract" /></a> |
 | Mintpass     | [0x0ecff38f41ecd1e978f1443ed96c0c22497d73cb](https://etherscan.io/address/0x0ecff38f41ecd1e978f1443ed96c0c22497d73cb#code)  | <a href="https://thirdweb.com/ethereum/0x0Ecff38F41EcD1E978f1443eD96c0C22497d73cB?utm_source=contract_badge" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0x0Ecff38F41EcD1E978f1443eD96c0C22497d73cB&theme=dark&chainId=1" alt="View contract" /></a> |
 | Synthesizer  | [0x534E082059123bA06411aF4b2E8Aaf196Dd5fa5e](https://etherscan.io/address/0x534E082059123bA06411aF4b2E8Aaf196Dd5fa5e#code)  | <a href="https://thirdweb.com/ethereum/0x534E082059123bA06411aF4b2E8Aaf196Dd5fa5e?utm_source=contract_badge" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0x534E082059123bA06411aF4b2E8Aaf196Dd5fa5e&theme=dark&chainId=1" alt="View contract" /></a> |
@@ -16,9 +16,8 @@ IP-NFTs allow their users to tokenize intellectual property. This repo contains 
 
 - Subgraph: <https://api.thegraph.com/subgraphs/name/moleculeprotocol/ip-nft-mainnet>
 
-  synthImpl implementation 2: 0x5372B35C82856A8BabF0A33Ca9Fd21E009F6A60d
-  (old 0x4B62eC784479c5520ec77de8D10C1A85d8F0850A)
-  ipnft implementation: 0xdbdf5082500B7732bf88e6f4Fe0ecbD1582cC060
+synthImpl implementation 2: 0x5372B35C82856A8BabF0A33Ca9Fd21E009F6A60d
+ipnft implementation: 0x0443DfAC8E510cFBDFdb9247E77400E9728aE45D
 
 ---
 

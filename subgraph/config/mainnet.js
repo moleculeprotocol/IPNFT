@@ -1,8 +1,8 @@
 module.exports = {
   network: 'mainnet',
   ipnft: {
-    address: '0x769C68346c5B20eb358BcEdb55c6F27b5Aa43585',
-    startBlock: 17441953
+    address: '0xcaD88677CA87a7815728C72D74B4ff4982d54Fc1',
+    startBlock: 17463429
   },
   schmackoSwap: {
     address: '0xc09b8577c762b5e97a7d640f242e1d9bfaa7eb9d',
