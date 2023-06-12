@@ -23,8 +23,8 @@ module.exports = {
     startBlock: 9142681
   },
   stakedLockingCrowdSale: {
-    address: '0x5b161D131f8254A2df91e9382F6E5973aB4eD0f9',
-    startBlock: 9142681
+    address: '0x46c3369dece07176ad7164906d3593aa4c126d35',
+    startBlock: 9168705
   },
   termsAcceptedPermissioner: {
     address: '0x0045723801561079d94f0Bb1B65f322078E52635',
