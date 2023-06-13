@@ -265,8 +265,8 @@ export function handleClaimed(event: ClaimedEvent): void {
     )
     return
   }
-
   contribution.claimedAt = event.block.timestamp
+  contribution.claimedTx = event.transaction.hash.toHex()
   contribution.save()
 }
 
