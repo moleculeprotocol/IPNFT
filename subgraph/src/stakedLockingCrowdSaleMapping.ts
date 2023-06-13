@@ -119,58 +119,9 @@ export function handleStarted(event: StartedEvent): void {
   crowdSale.stakingDuration = event.params.stakingDuration
   crowdSale.wadFixedStakedPerBidPrice =
     event.params.staking.wadFixedStakedPerBidPrice
+
   crowdSale.save()
   log.info('[handleStarted] crowdsale {}', [crowdSale.id])
-}
-
-export function handleBid(event: BidEvent): void {
-  let crowdSale = CrowdSale.load(event.params.saleId.toString())
-  if (!crowdSale) {
-    log.error('[handleBid] CrowdSale not found for id: {}', [
-      event.params.saleId.toString()
-    ])
-    return
-  }
-
-  //   Update CrowdSale
-  crowdSale.amountRaised = crowdSale.amountRaised.plus(event.params.amount)
-
-  crowdSale.save()
-
-  //   Create Contribution
-  let contribution = new Contribution(event.transaction.hash.toHexString())
-  contribution.amount = event.params.amount
-  contribution.contributor = event.params.bidder
-  contribution.createdAt = event.block.timestamp
-  contribution.crowdSale = crowdSale.id
-
-  contribution.save()
-}
-
-export function handleStaked(event: StakedEvent): void {
-  let crowdSale = CrowdSale.load(event.params.saleId.toString())
-  if (!crowdSale) {
-    log.error('[handleStaked] CrowdSale not found for id: {}', [
-      event.params.saleId.toString()
-    ])
-    return
-  }
-  crowdSale.amountStaked = crowdSale.amountStaked.plus(
-    event.params.stakedAmount
-  )
-  crowdSale.save()
-
-  let contribution = Contribution.load(event.transaction.hash.toHexString())
-  if (!contribution) {
-    log.error(
-      '[handleStaked] cannot associate contribution for stake handler {}',
-      [event.transaction.hash.toHexString()]
-    )
-    return
-  }
-  contribution.stakedAmount = event.params.stakedAmount
-  contribution.price = event.params.price
-  contribution.save()
 }
 
 export function handleSettled(event: SettledEvent): void {
@@ -218,31 +169,105 @@ export function handleLockingContractCreated(
   )
 }
 
+export function handleBid(event: BidEvent): void {
+  let crowdSale = CrowdSale.load(event.params.saleId.toString())
+  if (!crowdSale) {
+    log.error('[HANDLEBID] CrowdSale not found for id: {}', [
+      event.params.saleId.toString()
+    ])
+    return
+  }
+
+  //   Update CrowdSale
+  crowdSale.amountRaised = crowdSale.amountRaised.plus(event.params.amount)
+  crowdSale.save()
+
+  let contributionId =
+    event.params.saleId.toString() + '-' + event.params.bidder.toHex()
+
+  //   Load or Create Contribution
+  let contribution = Contribution.load(contributionId)
+  if (!contribution) {
+    contribution = new Contribution(contributionId)
+    contribution.amount = BigInt.fromI32(0)
+    contribution.stakedAmount = BigInt.fromI32(0)
+  }
+
+  contribution.contributor = event.params.bidder
+  contribution.createdAt = event.block.timestamp
+  contribution.amount = contribution.amount.plus(event.params.amount)
+  contribution.crowdSale = crowdSale.id
+
+  contribution.save()
+}
+
+export function handleStaked(event: StakedEvent): void {
+  let crowdSale = CrowdSale.load(event.params.saleId.toString())
+
+  if (!crowdSale) {
+    log.error('[HANDLESTAKED] CrowdSale not found for id: {}', [
+      event.params.saleId.toString()
+    ])
+    return
+  }
+
+  crowdSale.amountStaked = crowdSale.amountStaked.plus(
+    event.params.stakedAmount
+  )
+  crowdSale.save()
+
+  let contributionId =
+    event.params.saleId.toString() + '-' + event.params.bidder.toHex()
+
+  //   Load or Create Contribution
+  let contribution = Contribution.load(contributionId)
+  if (!contribution) {
+    //this should never happen, actually
+    log.warning(
+      '[HANDLESTAKED] No contribution found for CrowdSale | user : {} | {}',
+      [event.params.saleId.toString(), event.params.bidder.toHexString()]
+    )
+
+    contribution = new Contribution(contributionId)
+    contribution.amount = BigInt.fromI32(0)
+    contribution.stakedAmount = BigInt.fromI32(0)
+    contribution.crowdSale = crowdSale.id
+    contribution.createdAt = event.block.timestamp
+  }
+
+  contribution.price = event.params.price
+
+  contribution.stakedAmount = contribution.stakedAmount.plus(
+    event.params.stakedAmount
+  )
+
+  contribution.save()
+}
+
 export function handleClaimed(event: ClaimedEvent): void {
   let crowdSale = CrowdSale.load(event.params.saleId.toString())
   if (!crowdSale) {
-    log.error('[handleClaimed] CrowdSale not found for id: {}', [
+    log.error('[HANDLECLAIMED] CrowdSale not found for id: {}', [
       event.params.saleId.toString()
     ])
     return
   }
 
-  if (crowdSale.contributions !== null) {
-    log.error('No contributors found for CrowdSale id: {}', [
-      event.params.saleId.toString()
-    ])
+  let contributionId =
+    event.params.saleId.toString() + '-' + event.params.claimer.toHex()
+  //   Load  Contribution
+  let contribution = Contribution.load(contributionId)
+
+  if (contribution === null) {
+    log.error(
+      '[HANDLECLAIMED] No contribution found for CrowdSale | user : {} | {}',
+      [event.params.saleId.toString(), event.params.claimer.toHexString()]
+    )
     return
   }
-  let contributions = changetype<string[]>(crowdSale.contributions)
-  for (let i = 0; i < contributions.length; i++) {
-    let contribution = Contribution.load(contributions[i])
-    if (!contribution) continue
 
-    if (contribution.contributor == event.params.claimer) {
-      contribution.claimedAt = event.block.timestamp
-      contribution.save()
-    }
-  }
+  contribution.claimedAt = event.block.timestamp
+  contribution.save()
 }
 
 /**
@@ -270,7 +295,7 @@ export function handleClaimedFailedSale(
 ): void {
   let crowdSale = CrowdSale.load(event.params.saleId.toString())
   if (!crowdSale) {
-    log.error('[handleClaimed] CrowdSale not found for id: {}', [
+    log.error('[handleClaimedFailedSale] CrowdSale not found for id: {}', [
       event.params.saleId.toString()
     ])
     return

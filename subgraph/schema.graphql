@@ -143,11 +143,11 @@ type CrowdSale @entity {
 }
 
 type Contribution @entity {
-  id: ID! #transactionhash
+  id: ID! #crowdsaleid-contributor
   contributor: Bytes!
   crowdSale: CrowdSale!
   amount: BigInt!
-  stakedAmount: BigInt
+  stakedAmount: BigInt!
   price: BigInt # staking token vs. bidding token price
   createdAt: BigInt!
   claimedAt: BigInt
