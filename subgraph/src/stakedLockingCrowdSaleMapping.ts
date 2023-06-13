@@ -7,6 +7,7 @@ import {
   Started as StartedEvent,
   Failed as FailedEvent,
   Claimed as ClaimedEvent,
+  ClaimedStakes as ClaimedStakesEvent,
   LockingContractCreated as LockingContractCreatedEvent,
   ClaimedAuctionTokens as ClaimedAuctionTokensEvent,
   ClaimedFundingGoal as ClaimedFundingGoalEvent
@@ -267,9 +268,26 @@ export function handleClaimed(event: ClaimedEvent): void {
   }
   contribution.claimedAt = event.block.timestamp
   contribution.claimedTx = event.transaction.hash.toHex()
+  contribution.claimedTokens = event.params.claimed
+  contribution.refundedTokens = event.params.refunded
   contribution.save()
 }
-
+export function handleClaimedStakes(event: ClaimedStakesEvent): void {
+  let contributionId =
+    event.params.saleId.toString() + '-' + event.params.claimer.toHex()
+  //   Load  Contribution
+  let contribution = Contribution.load(contributionId)
+  if (contribution === null) {
+    log.error(
+      '[HANDLECLAIMED] No contribution found for CrowdSale | user : {} | {}',
+      [event.params.saleId.toString(), event.params.claimer.toHexString()]
+    )
+    return
+  }
+  contribution.claimedStakes = event.params.stakesClaimed
+  contribution.refundedStakes = event.params.stakesRefunded
+  contribution.save()
+}
 /**
  * emitted when the auctioneer pulls / claims bidding tokens after the sale is successfully settled
  */

@@ -152,4 +152,9 @@ type Contribution @entity {
   createdAt: BigInt!
   claimedAt: BigInt
   claimedTx: String
+
+  claimedTokens: BigInt
+  claimedStakes: BigInt
+  refundedTokens: BigInt
+  refundedStakes: BigInt
 }
