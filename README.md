@@ -47,8 +47,8 @@ ipnft implementation: 0x0443DfAC8E510cFBDFdb9247E77400E9728aE45D
 - Bio pricefeed: 0x8647dEFdEAAdF5448d021B364B2F17815aba4360
   <https://goerli.etherscan.io/address/0x8647defdeaadf5448d021b364b2f17815aba4360#code>
 
-- Staked/Locking Crowdsale: 0x5b161D131f8254A2df91e9382F6E5973aB4eD0f9
-  <https://goerli.etherscan.io/address/0x5b161D131f8254A2df91e9382F6E5973aB4eD0f9#code>
+- Staked/Locking Crowdsale: 0x46c3369dece07176ad7164906d3593aa4c126d35
+  <https://goerli.etherscan.io/address/0x46c3369dece07176ad7164906d3593aa4c126d35#code>
 
   - Blind Permissioner: 0xec68a1fc8d4c2834f8dfbdb56691f9f0a3d6be11
     <https://goerli.etherscan.io/address/0xec68a1fc8d4c2834f8dfbdb56691f9f0a3d6be11#code>
