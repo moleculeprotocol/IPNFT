@@ -128,21 +128,22 @@ dataSources:
           handler: handleStarted
         - event: Settled(indexed uint256,uint256,uint256)
           handler: handleSettled
-        - event: Claimed(indexed uint256,indexed address,uint256,uint256)
-          handler: handleClaimed
+        - event: Failed(indexed uint256)
+          handler: handleFailed
         - event: Bid(indexed uint256,indexed address,uint256)
           handler: handleBid
         - event: Staked(indexed uint256,indexed address,uint256,uint256)
           handler: handleStaked
-        - event: Failed(indexed uint256)
-          handler: handleFailed
+        - event: Claimed(indexed uint256,indexed address,uint256,uint256)
+          handler: handleClaimed
+        - event: ClaimedStakes(indexed uint256,indexed address,uint256,uint256)
+          handler: handleClaimedStakes
         - event: LockingContractCreated(indexed address,indexed address)
           handler: handleLockingContractCreated
         - event: ClaimedFundingGoal(indexed uint256)
           handler: handleClaimedSuccessfulSale
         - event: ClaimedAuctionTokens(indexed uint256)
           handler: handleClaimedFailedSale
-        #- event: ClaimedStakes(indexed uint256,indexed address,uint256,uint256);
 
       file: ./src/stakedLockingCrowdSaleMapping.ts
   - kind: ethereum/contract
