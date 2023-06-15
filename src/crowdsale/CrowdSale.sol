@@ -156,8 +156,7 @@ contract CrowdSale is ReentrancyGuard {
 
     /**
      * @notice anyone can call this for the beneficiary.
-     *         Releases raised funds to beneficiary when funding goal was met
-     *         Returns all auction tokens to beneficiary (auctioneer) when funding goal was not met
+     *         beneficiary must claim their respective proceeds by calling `claimResults` afterwards
      * @param saleId the sale id
      */
     function settle(uint256 saleId) public virtual nonReentrant {
@@ -296,7 +295,7 @@ contract CrowdSale is ReentrancyGuard {
 
     /**
      * @dev internal bid method
-     * increases bidder's contribution counter
+     * increases bidder's contribution balance
      * increases sale's bid total
      *
      * @param saleId sale id

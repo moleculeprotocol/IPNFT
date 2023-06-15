@@ -15,14 +15,14 @@ error InvalidDuration();
 /**
  * @title LockingCrowdSale
  * @author molecule.to
- * @notice a fixed price sales base contract that locks the sold tokens in a configured vesting scheme
+ * @notice a fixed price sales base contract that locks the sold tokens for a configurable duration
  */
 contract LockingCrowdSale is CrowdSale {
     using SafeERC20 for IERC20Metadata;
 
     mapping(uint256 => uint256) public salesLockingDuration;
 
-    /// @notice map from token address to locked token contracts for reusability
+    /// @notice map from token address to reusable TimelockedToken contracts
     mapping(address => TimelockedToken) public lockingContracts;
 
     address immutable lockingTokenImplementation = address(new TimelockedToken());
@@ -55,7 +55,7 @@ contract LockingCrowdSale is CrowdSale {
      * @notice will instantiate a new TimelockedToken when none exists yet
      *
      * @param sale sale configuration
-     * @param lockingDuration duration after which the receiver can redeem their tokens
+     * @param lockingDuration duration after which the receiver can release their tokens
      * @return saleId the newly created sale's id
      */
     function startSale(Sale calldata sale, uint256 lockingDuration) public virtual returns (uint256 saleId) {
@@ -82,10 +82,10 @@ contract LockingCrowdSale is CrowdSale {
     }
 
     /**
-     * @dev will send auction tokens to the configured timelock contract.
+     * @dev will send auction tokens to the configured timelock contract or release them directly when already past sale locking duration
      *
      * @param saleId sale id
-     * @param tokenAmount amount of tokens to vest
+     * @param tokenAmount amount of tokens to lock
      */
     function _claimAuctionTokens(uint256 saleId, uint256 tokenAmount) internal virtual override {
         uint256 duration = salesLockingDuration[saleId];
@@ -101,9 +101,8 @@ contract LockingCrowdSale is CrowdSale {
     }
 
     /**
-     * @dev deploys a new timelocked token contract for the auctionToken
-     *      to save on gas and improve UX, this should only be called once per auctionToken.
-     *      If a timelocked token contract already exists for auctionToken, you can provide it when initializing the sale.
+     * @dev deploys a new timelocked token contract for the `auctionToken`
+     *      to save on gas and improve UX, this is only called once per `auctionToken`
      * @param auctionToken the auction token that a timelocked token contract is created for
      * @return lockedTokenContract address of the new timelocked token contract
      */
