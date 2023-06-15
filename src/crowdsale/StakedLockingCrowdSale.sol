@@ -27,7 +27,8 @@ error BadPrice();
 /**
  * @title StakedLockingCrowdSale
  * @author molecule.to
- * @notice a fixed price sales base contract that locks the sold tokens in a configured locking contract and requires vesting another ("dao") token for a certain period of time to participate
+ * @notice a fixed price sales contract that locks the sold tokens in a configured locking contract and requires vesting another ("dao") token for a certain period of time to participate
+ * @dev see https://github.com/moleculeprotocol/IPNFT
  */
 contract StakedLockingCrowdSale is LockingCrowdSale, Ownable {
     using SafeERC20 for IERC20Metadata;
@@ -60,7 +61,7 @@ contract StakedLockingCrowdSale is LockingCrowdSale, Ownable {
     /**
      * [H-01]
      * @notice this contract can only vest stakes for contracts that it knows so unknown actors cannot start crowdsales with malicious contracts
-     * @param stakesVestingContract the
+     * @param stakesVestingContract the TokenVesting contract to trust
      */
     function trustVestingContract(TokenVesting stakesVestingContract) external onlyOwner {
         if (!stakesVestingContract.hasRole(stakesVestingContract.ROLE_CREATE_SCHEDULE(), address(this))) {
@@ -76,11 +77,10 @@ contract StakedLockingCrowdSale is LockingCrowdSale, Ownable {
     }
 
     /**
-     * @notice if lockingContract is 0x0, a new timelocked token vesting contract clone is automatically created
-     *
-     * @param sale sale configuration
+     * @notice starts a new crowdsale
+     * @param sale sale configuration (see CrowdSale.sol)
      * @param stakedToken the ERC20 contract for staking tokens
-     * @param stakesVestingContract the TokenVesting contract for vested staking tokens
+     * @param stakesVestingContract the TokenVesting contract for vested staking tokens. Will revert when not trusted.
      * @param wadFixedStakedPerBidPrice the 10e18 based float price for stakes/bid tokens
      * @param lockingDuration duration in seconds until stakes and auction tokens are vested or locked after the sale has settled
      *        NOTE: If `lockingDuration` is < 7 days, the the vesting contract schedules will stil have a 7 days cliff as required by the underlying TokenVesting contract.
@@ -98,7 +98,7 @@ contract StakedLockingCrowdSale is LockingCrowdSale, Ownable {
             revert BadDecimals();
         }
 
-        // [H-01] we only open crowdsales with vesting contracts that we know
+        // [H-01] we only open crowdsales with vesting contracts that we trust
         if (!trustedVestingContracts[address(stakesVestingContract)]) {
             revert UnsupportedVestingContract();
         }
