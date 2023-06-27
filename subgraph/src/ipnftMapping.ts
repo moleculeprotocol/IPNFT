@@ -14,6 +14,10 @@ import {
 import { Ipnft, Reservation, CanRead } from '../generated/schema'
 
 export function handleTransfer(event: TransferEvent): void {
+  if (event.params.from === Address.zero()) {
+    // remove the burned IPNFT
+    store.remove('IPNFT', event.params.tokenId.toString())
+  }
   if (event.params.from !== Address.zero()) {
     let ipnft = Ipnft.load(event.params.tokenId.toString())
     if (ipnft) {
