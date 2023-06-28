@@ -16,13 +16,10 @@ import { Ipnft, Reservation, CanRead } from '../generated/schema'
 
 export function handleTransfer(event: TransferEvent): void {
   if (event.params.to == Address.zero()) {
-    log.info('Burned IPNFT nr {}', [
-      event.params.tokenId.toString()
-    ])
     store.remove('Ipnft', event.params.tokenId.toString())
     return
   }
-  if (event.params.from !== Address.zero()) {
+  if (event.params.from != Address.zero()) {
     let ipnft = Ipnft.load(event.params.tokenId.toString())
     if (ipnft) {
       ipnft.owner = event.params.to
