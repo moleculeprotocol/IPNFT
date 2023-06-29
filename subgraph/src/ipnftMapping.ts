@@ -3,8 +3,7 @@ import {
   ByteArray,
   crypto,
   ethereum,
-  store,
-  log
+  store
 } from '@graphprotocol/graph-ts'
 import {
   IPNFTMinted as IPNFTMintedEvent,
