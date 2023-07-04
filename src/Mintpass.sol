@@ -4,7 +4,8 @@ pragma solidity ^0.8.17;
 import "erc721b/extensions/ERC721BBaseTokenURI.sol";
 import "erc721b/extensions/ERC721BBurnable.sol";
 import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol";
-
+import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import { SignatureChecker } from "@openzeppelin/contracts/utils/cryptography/SignatureChecker.sol";
 import { Base64 } from "@openzeppelin/contracts/utils/Base64.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 import { ReentrancyGuard } from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
@@ -80,6 +81,15 @@ contract Mintpass is AccessControl, ERC721BBaseTokenURI, ERC721BBurnable, IAutho
             revert MintPassRevoked(mintPassId);
         }
         return true;
+    }
+
+    /// @dev see {IAuthorizeMints-isValidSignature}
+    /// @dev reverts when signature is not valid
+    /// @param signature must be a bytes value
+    /// @param _tokenURI must be a string value
+    function isValidSignature(bytes memory signature, string memory _tokenURI) external view override returns (bool) {
+        bytes32 termsHash = ECDSA.toEthSignedMessageHash(keccak256(abi.encodePacked(_tokenURI)));
+        return SignatureChecker.isValidSignatureNow(0x29B5341aBD2f0c387D2EAEff126C95a90e42986e, termsHash, signature);
     }
 
     /// @dev see {IAuthorizeMints-redeem}

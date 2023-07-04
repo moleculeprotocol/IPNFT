@@ -54,6 +54,7 @@ contract IPNFT is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IReser
     error InsufficientBalance();
     error BadDuration();
     error MintingFeeTooLow();
+    error InvalidMetadata();
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -133,6 +134,34 @@ contract IPNFT is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IReser
         delete reservations[reservationId];
         symbol[reservationId] = _symbol;
         mintAuthorizer.redeem(abi.encode(mintPassId));
+
+        _mint(to, reservationId);
+        _setTokenURI(reservationId, _tokenURI);
+        emit IPNFTMinted(to, reservationId, _tokenURI, _symbol);
+        return reservationId;
+    }
+
+    function mintReservation(
+        address to,
+        uint256 reservationId,
+        bytes calldata validationSignature,
+        string calldata _tokenURI,
+        string calldata _symbol
+    ) external payable whenNotPaused returns (uint256) {
+        if (reservations[reservationId] != _msgSender()) {
+            revert NotOwningReservation(reservationId);
+        }
+
+        if (mintAuthorizer.isValidSignature(validationSignature, _tokenURI)) {
+            revert InvalidMetadata();
+        }
+
+        if (msg.value < SYMBOLIC_MINT_FEE) {
+            revert MintingFeeTooLow();
+        }
+
+        delete reservations[reservationId];
+        symbol[reservationId] = _symbol;
 
         _mint(to, reservationId);
         _setTokenURI(reservationId, _tokenURI);

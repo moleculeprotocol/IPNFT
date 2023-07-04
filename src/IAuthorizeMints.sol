@@ -15,4 +15,9 @@ interface IAuthorizeMints {
     /// @notice called by the gated token contract to signal that a token has been minted and an authorization can be invalidated
     /// @param data implementation specific data
     function redeem(bytes memory data) external;
+
+    /// @notice checks whether the metadata validation signature is valid. MAY safely revert if this is not the case.
+    /// @param _tokenURI is the tokenURI signed to verify against
+    /// @param signature represents the signature from the relayer
+    function isValidSignature(bytes memory signature, string memory _tokenURI) external view returns (bool);
 }
