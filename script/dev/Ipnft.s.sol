@@ -58,7 +58,7 @@ contract FixtureIpnft is CommonScript {
     function mintIpnft(address from, address to) internal returns (uint256) {
         vm.startBroadcast(from);
         uint256 reservationId = ipnft.reserve();
-        ipnft.mintReservation{ value: 0.001 ether }(to, reservationId, 1, "ar://cy7I6VoEXhO5rHrq8siFYtelM9YZKyoGj3vmGwJZJOc", "BIO-00001");
+        ipnft.mintReservation{ value: 0.001 ether }(to, reservationId, "0xc81fd01ac05d0057871c91978ba5f54053fb44f0a3550076c8c9cc5247623dfd2deb2ee1118ceed2c9ab6581527f5a00df1363ffacd40b147f05767cc7e0f01f1b", "ar://cy7I6VoEXhO5rHrq8siFYtelM9YZKyoGj3vmGwJZJOc", "BIO-00001");
         vm.stopBroadcast();
         return reservationId;
     }

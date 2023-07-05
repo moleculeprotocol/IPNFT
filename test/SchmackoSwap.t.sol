@@ -29,6 +29,8 @@ contract SchmackoSwapTest is Test {
     address seller = makeAddr("seller");
     address buyer = makeAddr("buyer");
     address otherUser = makeAddr("otherUser");
+    bytes validationSignature =
+        "0xc81fd01ac05d0057871c91978ba5f54053fb44f0a3550076c8c9cc5247623dfd2deb2ee1118ceed2c9ab6581527f5a00df1363ffacd40b147f05767cc7e0f01f1b";
 
     event Listed(uint256 listingId, SchmackoSwap.Listing listing);
     event Unlisted(uint256 listingId, SchmackoSwap.Listing listing);
@@ -58,7 +60,7 @@ contract SchmackoSwapTest is Test {
         // Ensure marketplace can access sellers's tokens
         ipnft.setApprovalForAll(address(schmackoSwap), true);
         ipnft.reserve();
-        ipnft.mintReservation{ value: 0.001 ether }(seller, 1, 1, arUri, DEFAULT_SYMBOL);
+        ipnft.mintReservation{ value: 0.001 ether }(seller, 1, validationSignature, arUri, DEFAULT_SYMBOL);
         vm.stopPrank();
     }
 

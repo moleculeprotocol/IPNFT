@@ -84,12 +84,12 @@ contract IPNFTTest is IPNFTMintHelper {
         uint256 reservationId = ipnft.reserve();
 
         vm.expectRevert(IPNFT.MintingFeeTooLow.selector);
-        ipnft.mintReservation(alice, reservationId, 1, ipfsUri, DEFAULT_SYMBOL);
+        ipnft.mintReservation(alice, reservationId, validationSignature, ipfsUri, DEFAULT_SYMBOL);
 
         vm.expectEmit(true, true, false, true);
         emit IPNFTMinted(alice, 1, ipfsUri, DEFAULT_SYMBOL);
 
-        ipnft.mintReservation{ value: MINTING_FEE }(alice, reservationId, reservationId, ipfsUri, DEFAULT_SYMBOL);
+        ipnft.mintReservation{ value: MINTING_FEE }(alice, reservationId, validationSignature, ipfsUri, DEFAULT_SYMBOL);
 
         assertEq(ipnft.ownerOf(1), alice);
         assertEq(ipnft.tokenURI(1), ipfsUri);
@@ -115,7 +115,7 @@ contract IPNFTTest is IPNFTMintHelper {
 
         vm.startPrank(bob);
         vm.expectRevert(abi.encodeWithSelector(IPNFT.NotOwningReservation.selector, 1));
-        ipnft.mintReservation(bob, 1, 1, arUri, DEFAULT_SYMBOL);
+        ipnft.mintReservation(bob, 1, validationSignature, arUri, DEFAULT_SYMBOL);
         vm.stopPrank();
     }
 

@@ -47,7 +47,8 @@ contract SynthesizerTest is Test {
     uint256 bobPk;
     address charlie = makeAddr("charlie");
     address escrow = makeAddr("escrow");
-
+    bytes validationSignature =
+        "0xc81fd01ac05d0057871c91978ba5f54053fb44f0a3550076c8c9cc5247623dfd2deb2ee1118ceed2c9ab6581527f5a00df1363ffacd40b147f05767cc7e0f01f1b";
     IPNFT internal ipnft;
     Synthesizer internal synthesizer;
     SchmackoSwap internal schmackoSwap;
@@ -91,7 +92,7 @@ contract SynthesizerTest is Test {
         vm.deal(originalOwner, MINTING_FEE);
         vm.startPrank(originalOwner);
         uint256 reservationId = ipnft.reserve();
-        ipnft.mintReservation{ value: MINTING_FEE }(originalOwner, reservationId, 1, ipfsUri, DEFAULT_SYMBOL);
+        ipnft.mintReservation{ value: MINTING_FEE }(originalOwner, reservationId, validationSignature, ipfsUri, DEFAULT_SYMBOL);
         vm.stopPrank();
     }
 
@@ -234,7 +235,7 @@ contract SynthesizerTest is Test {
         vm.deal(originalOwner, MINTING_FEE);
         vm.startPrank(originalOwner);
         uint256 reservationId = ipnft.reserve();
-        ipnft.mintReservation{ value: MINTING_FEE }(originalOwner, reservationId, 2, ipfsUri, DEFAULT_SYMBOL);
+        ipnft.mintReservation{ value: MINTING_FEE }(originalOwner, reservationId, validationSignature, ipfsUri, DEFAULT_SYMBOL);
         Molecules tokenContractNew = synth2.synthesizeIpnft(2, 70_000, agreementCid, "");
         vm.stopPrank();
 

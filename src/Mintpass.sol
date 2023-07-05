@@ -71,7 +71,7 @@ contract Mintpass is AccessControl, ERC721BBaseTokenURI, ERC721BBurnable, IAutho
     /// @dev see {IAuthorizeMints-authorizeMint}
     /// @dev reverts when authorization conditions are not met
     /// @param data must be a single `uint256` value: the mint pass id that's to be authorized
-    function authorizeMint(address minter, address, /* to */ bytes memory data) external view override onlyRole(REDEEMER) returns (bool) {
+    function authorizeMint(address minter, address, /* to */ bytes memory data) external view onlyRole(REDEEMER) returns (bool) {
         uint256 mintPassId = abi.decode(data, (uint256));
 
         if (ownerOf(mintPassId) != minter) {
@@ -95,7 +95,7 @@ contract Mintpass is AccessControl, ERC721BBaseTokenURI, ERC721BBurnable, IAutho
     /// @dev see {IAuthorizeMints-redeem}
     /// @dev reverts when authorization conditions are not met
     /// @param data must be a single `uint256` value: the mint pass id that's to be redeemed
-    function redeem(bytes memory data) external override onlyRole(REDEEMER) {
+    function redeem(bytes memory data) external onlyRole(REDEEMER) {
         uint256 mintPassId = abi.decode(data, (uint256));
         if (!isRedeemable(mintPassId)) {
             revert NotRedeemable();

@@ -34,7 +34,7 @@ contract IPNFT is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IReser
     /// @notice by reserving a mint an user captures a new token id
     mapping(uint256 => address) public reservations;
 
-    /// @notice an authorizer that checks whether a mint operation is allowed, e.g. a mintpass contract
+    /// @notice an authorizer that checks whether a mint operation is allowed
     IAuthorizeMints mintAuthorizer;
 
     mapping(uint256 => mapping(address => uint256)) internal readAllowances;
@@ -50,11 +50,10 @@ contract IPNFT is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IReser
 
     error NotOwningReservation(uint256 id);
     error ToZeroAddress();
-    error NeedsMintpass();
+    error Unauthorized();
     error InsufficientBalance();
     error BadDuration();
     error MintingFeeTooLow();
-    error InvalidMetadata();
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -93,7 +92,7 @@ contract IPNFT is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IReser
      */
     function reserve() external whenNotPaused returns (uint256 reservationId) {
         if (!mintAuthorizer.authorizeReservation(_msgSender())) {
-            revert NeedsMintpass();
+            revert Unauthorized();
         }
         reservationId = _reservationCounter.current();
         _reservationCounter.increment();
@@ -107,12 +106,12 @@ contract IPNFT is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IReser
      *
      * @param to the recipient of the NFT
      * @param reservationId the reserved token id that has been reserved with `reserve()`
-     * @param mintPassId an id that's handed over to the `IAuthorizeMints` interface
      * @param _tokenURI a location that resolves to a valid IP-NFT metadata structure
      * @param _symbol a symbol that represents the IPNFT's derivatives. Can be changed by the owner
+     * @param authorization a bytes encoded parameter that's handed to the current authorizer
      * @return the `reservationId`
      */
-    function mintReservation(address to, uint256 reservationId, uint256 mintPassId, string calldata _tokenURI, string calldata _symbol)
+    function mintReservation(address to, uint256 reservationId, string calldata _tokenURI, string calldata _symbol, bytes calldata authorization)
         external
         payable
         override
@@ -123,8 +122,8 @@ contract IPNFT is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IReser
             revert NotOwningReservation(reservationId);
         }
 
-        if (!mintAuthorizer.authorizeMint(_msgSender(), to, abi.encode(mintPassId))) {
-            revert NeedsMintpass();
+        if (!mintAuthorizer.authorizeMint(_msgSender(), to, authorization)) {
+            revert Unauthorized();
         }
 
         if (msg.value < SYMBOLIC_MINT_FEE) {
@@ -133,35 +132,7 @@ contract IPNFT is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IReser
 
         delete reservations[reservationId];
         symbol[reservationId] = _symbol;
-        mintAuthorizer.redeem(abi.encode(mintPassId));
-
-        _mint(to, reservationId);
-        _setTokenURI(reservationId, _tokenURI);
-        emit IPNFTMinted(to, reservationId, _tokenURI, _symbol);
-        return reservationId;
-    }
-
-    function mintReservation(
-        address to,
-        uint256 reservationId,
-        bytes calldata validationSignature,
-        string calldata _tokenURI,
-        string calldata _symbol
-    ) external payable whenNotPaused returns (uint256) {
-        if (reservations[reservationId] != _msgSender()) {
-            revert NotOwningReservation(reservationId);
-        }
-
-        if (mintAuthorizer.isValidSignature(validationSignature, _tokenURI)) {
-            revert InvalidMetadata();
-        }
-
-        if (msg.value < SYMBOLIC_MINT_FEE) {
-            revert MintingFeeTooLow();
-        }
-
-        delete reservations[reservationId];
-        symbol[reservationId] = _symbol;
+        mintAuthorizer.redeem(authorization);
 
         _mint(to, reservationId);
         _setTokenURI(reservationId, _tokenURI);

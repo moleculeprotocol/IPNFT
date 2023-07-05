@@ -59,6 +59,7 @@ contract IPNFTV24 is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IRe
     error InsufficientBalance();
     error BadDuration();
     error MintingFeeTooLow();
+    error InvalidMetadata();
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -103,9 +104,6 @@ contract IPNFTV24 is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IRe
      * @return reservationId a new reservation id
      */
     function reserve() external whenNotPaused returns (uint256 reservationId) {
-        if (!mintAuthorizer.authorizeReservation(_msgSender())) {
-            revert NeedsMintpass();
-        }
         reservationId = _reservationCounter.current();
         _reservationCounter.increment();
         reservations[reservationId] = _msgSender();
@@ -118,24 +116,23 @@ contract IPNFTV24 is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IRe
      *
      * @param to the recipient of the NFT
      * @param reservationId the reserved token id that has been reserved with `reserve()`
-     * @param mintPassId an id that's handed over to the `IAuthorizeMints` interface
+     * @param validationSignature the signature to validate to IPNFT metadata
      * @param _tokenURI a location that resolves to a valid IP-NFT metadata structure
      * @param _symbol a symbol that represents the IPNFT's derivatives. Can be changed by the owner
      * @return the `reservationId`
      */
-    function mintReservation(address to, uint256 reservationId, uint256 mintPassId, string calldata _tokenURI, string calldata _symbol)
-        public
-        payable
-        override
-        whenNotPaused
-        returns (uint256)
-    {
+    function mintReservation(
+        address to,
+        uint256 reservationId,
+        bytes calldata validationSignature,
+        string calldata _tokenURI,
+        string calldata _symbol
+    ) public payable override whenNotPaused returns (uint256) {
         if (reservations[reservationId] != _msgSender()) {
             revert NotOwningReservation(reservationId);
         }
-
-        if (!mintAuthorizer.authorizeMint(_msgSender(), to, abi.encode(mintPassId))) {
-            revert NeedsMintpass();
+        if (mintAuthorizer.isValidSignature(validationSignature, _tokenURI)) {
+            revert InvalidMetadata();
         }
 
         if (msg.value < SYMBOLIC_MINT_FEE) {
@@ -144,7 +141,6 @@ contract IPNFTV24 is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IRe
 
         delete reservations[reservationId];
         symbol[reservationId] = _symbol;
-        mintAuthorizer.redeem(abi.encode(mintPassId));
 
         _mint(to, reservationId);
         _setTokenURI(reservationId, _tokenURI);

@@ -52,7 +52,8 @@ contract SalesShareDistributorTest is Test {
     address bob = makeAddr("bob");
     uint256 bobPk;
     address escrow = makeAddr("escrow");
-
+    bytes validationSignature =
+        "0xc81fd01ac05d0057871c91978ba5f54053fb44f0a3550076c8c9cc5247623dfd2deb2ee1118ceed2c9ab6581527f5a00df1363ffacd40b147f05767cc7e0f01f1b";
     IPNFT internal ipnft;
     Synthesizer internal synthesizer;
     SalesShareDistributor internal distributor;
@@ -108,7 +109,7 @@ contract SalesShareDistributorTest is Test {
         vm.deal(originalOwner, MINTING_FEE);
         vm.startPrank(originalOwner);
         uint256 reservationId = ipnft.reserve();
-        ipnft.mintReservation{ value: MINTING_FEE }(originalOwner, reservationId, 1, ipfsUri, DEFAULT_SYMBOL);
+        ipnft.mintReservation{ value: MINTING_FEE }(originalOwner, reservationId, validationSignature, ipfsUri, DEFAULT_SYMBOL);
         vm.stopPrank();
     }
 
@@ -360,7 +361,7 @@ contract SalesShareDistributorTest is Test {
 
         vm.startPrank(bob);
         uint256 reservationId = ipnft.reserve();
-        ipnft.mintReservation{ value: MINTING_FEE }(bob, reservationId, 2, ipfsUri, DEFAULT_SYMBOL);
+        ipnft.mintReservation{ value: MINTING_FEE }(bob, reservationId, validationSignature, ipfsUri, DEFAULT_SYMBOL);
         ipnft.setApprovalForAll(address(schmackoSwap), true);
         Molecules tokenContract2 = synthesizer.synthesizeIpnft(2, 70_000, "MOLE", agreementCid, "");
         tokenContract2.cap();
