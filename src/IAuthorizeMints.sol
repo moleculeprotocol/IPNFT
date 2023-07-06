@@ -16,3 +16,17 @@ interface IAuthorizeMints {
     /// @param data implementation specific data
     function redeem(bytes memory data) external;
 }
+
+contract AcceptAllMintAuthorizer is IAuthorizeMints {
+    function authorizeMint(address, address, bytes memory) external pure override returns (bool) {
+        return true;
+    }
+
+    function authorizeReservation(address) external pure override returns (bool) {
+        return true;
+    }
+
+    function redeem(bytes memory) external pure override {
+        return;
+    }
+}

@@ -41,11 +41,11 @@ contract SignatureMintAuthorizer is IAuthorizeMints, Ownable {
 
     /// @inheritdoc IAuthorizeMints
     /// @dev this authorizer does not restrict reservations
-    function authorizeReservation(address) external view override returns (bool) {
+    function authorizeReservation(address) external pure override returns (bool) {
         return true;
     }
 
-    function redeem(bytes memory) external override {
+    function redeem(bytes memory) external pure override {
         return;
     }
 }

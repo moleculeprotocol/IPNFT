@@ -14,7 +14,7 @@ import { SafeProxyFactory } from "safe-global/safe-contracts/proxies/SafeProxyFa
 import { Enum } from "safe-global/safe-contracts/common/Enum.sol";
 import "./helpers/MakeGnosisWallet.sol";
 import { IPNFT } from "../src/IPNFT.sol";
-import { Mintpass } from "../src/Mintpass.sol";
+import { AcceptAllMintAuthorizer, IAuthorizeMints } from "../src/IAuthorizeMints.sol";
 
 import { FakeERC20 } from "../src/helpers/FakeERC20.sol";
 import { Synthesizer } from "../src/Synthesizer.sol";
@@ -47,12 +47,11 @@ contract SynthesizerTest is Test {
     uint256 bobPk;
     address charlie = makeAddr("charlie");
     address escrow = makeAddr("escrow");
-    bytes validationSignature =
-        "0xc81fd01ac05d0057871c91978ba5f54053fb44f0a3550076c8c9cc5247623dfd2deb2ee1118ceed2c9ab6581527f5a00df1363ffacd40b147f05767cc7e0f01f1b";
+    bytes authorization = "";
     IPNFT internal ipnft;
     Synthesizer internal synthesizer;
     SchmackoSwap internal schmackoSwap;
-    Mintpass internal mintpass;
+    IAuthorizeMints internal authorizer;
     IPermissioner internal blindPermissioner;
 
     FakeERC20 internal erc20;
@@ -62,29 +61,18 @@ contract SynthesizerTest is Test {
         (bob, bobPk) = makeAddrAndKey("bob");
         vm.startPrank(deployer);
 
-        ipnft = IPNFT(address(new ERC1967Proxy(address(new IPNFT()), "")));
+        ipnft = IPNFT(address(new ERC1967Proxy(address(new IPNFT()), '')));
         ipnft.initialize();
 
         schmackoSwap = new SchmackoSwap();
-        erc20 = new FakeERC20("Fake ERC20", "FERC");
+        erc20 = new FakeERC20('Fake ERC20', 'FERC');
         erc20.mint(ipnftBuyer, 1_000_000 ether);
 
-        mintpass = new Mintpass(address(ipnft));
-        mintpass.grantRole(mintpass.MODERATOR(), deployer);
-        ipnft.setAuthorizer(address(mintpass));
-        mintpass.batchMint(originalOwner, 1);
+        authorizer = new AcceptAllMintAuthorizer();
+        ipnft.setAuthorizer(address(authorizer));
         blindPermissioner = new BlindPermissioner();
 
-        synthesizer = Synthesizer(
-            address(
-                new ERC1967Proxy(
-                    address(
-                        new Synthesizer()
-                    ), 
-                    ""
-                )
-            )
-        );
+        synthesizer = Synthesizer(address(new ERC1967Proxy(address(new Synthesizer()), '')));
         synthesizer.initialize(ipnft, blindPermissioner);
 
         vm.stopPrank();
@@ -92,7 +80,7 @@ contract SynthesizerTest is Test {
         vm.deal(originalOwner, MINTING_FEE);
         vm.startPrank(originalOwner);
         uint256 reservationId = ipnft.reserve();
-        ipnft.mintReservation{ value: MINTING_FEE }(originalOwner, reservationId, validationSignature, ipfsUri, DEFAULT_SYMBOL);
+        ipnft.mintReservation{ value: MINTING_FEE }(originalOwner, reservationId, ipfsUri, DEFAULT_SYMBOL, authorization);
         vm.stopPrank();
     }
 
@@ -214,7 +202,6 @@ contract SynthesizerTest is Test {
 
     function testCanUpgradeErc20TokenImplementation() public {
         vm.startPrank(deployer);
-        mintpass.batchMint(originalOwner, 1);
         vm.stopPrank();
 
         vm.startPrank(originalOwner);
@@ -235,7 +222,7 @@ contract SynthesizerTest is Test {
         vm.deal(originalOwner, MINTING_FEE);
         vm.startPrank(originalOwner);
         uint256 reservationId = ipnft.reserve();
-        ipnft.mintReservation{ value: MINTING_FEE }(originalOwner, reservationId, validationSignature, ipfsUri, DEFAULT_SYMBOL);
+        ipnft.mintReservation{ value: MINTING_FEE }(originalOwner, reservationId, ipfsUri, DEFAULT_SYMBOL, authorization);
         Molecules tokenContractNew = synth2.synthesizeIpnft(2, 70_000, agreementCid, "");
         vm.stopPrank();
 

@@ -3,7 +3,6 @@ pragma solidity ^0.8.18;
 
 import "forge-std/Test.sol";
 import "forge-std/console.sol";
-import { Mintpass } from "../src/Mintpass.sol";
 import { SignatureChecker } from "@openzeppelin/contracts/utils/cryptography/SignatureChecker.sol";
 import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 

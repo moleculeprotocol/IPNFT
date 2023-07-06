@@ -12,7 +12,7 @@ import { SafeERC20Upgradeable } from "@openzeppelin/contracts-upgradeable/token/
 
 import { console } from "forge-std/console.sol";
 import { IPNFT } from "../src/IPNFT.sol";
-import { Mintpass } from "../src/Mintpass.sol";
+import { IAuthorizeMints, AcceptAllMintAuthorizer } from "../src/IAuthorizeMints.sol";
 import { IPermissioner, TermsAcceptedPermissioner, BlindPermissioner, InvalidSignature } from "../src/Permissioner.sol";
 
 import { IPNFTMintHelper } from "./IPNFTMintHelper.sol";
@@ -52,15 +52,13 @@ contract SalesShareDistributorTest is Test {
     address bob = makeAddr("bob");
     uint256 bobPk;
     address escrow = makeAddr("escrow");
-    bytes validationSignature =
-        "0xc81fd01ac05d0057871c91978ba5f54053fb44f0a3550076c8c9cc5247623dfd2deb2ee1118ceed2c9ab6581527f5a00df1363ffacd40b147f05767cc7e0f01f1b";
+    bytes authorization = "";
     IPNFT internal ipnft;
     Synthesizer internal synthesizer;
     SalesShareDistributor internal distributor;
     SchmackoSwap internal schmackoSwap;
 
-    Mintpass internal mintpass;
-
+    IAuthorizeMints internal authorizer;
     FakeERC20 internal erc20;
     IPermissioner internal blindPermissioner;
 
@@ -76,10 +74,8 @@ contract SalesShareDistributorTest is Test {
         erc20.mint(ipnftBuyer, 1_000_000 ether);
 
         blindPermissioner = new BlindPermissioner();
-        mintpass = new Mintpass(address(ipnft));
-        mintpass.grantRole(mintpass.MODERATOR(), deployer);
-        ipnft.setAuthorizer(address(mintpass));
-        mintpass.batchMint(originalOwner, 1);
+        authorizer = new AcceptAllMintAuthorizer();
+        ipnft.setAuthorizer(address(authorizer));
 
         synthesizer = Synthesizer(
             address(
@@ -109,7 +105,7 @@ contract SalesShareDistributorTest is Test {
         vm.deal(originalOwner, MINTING_FEE);
         vm.startPrank(originalOwner);
         uint256 reservationId = ipnft.reserve();
-        ipnft.mintReservation{ value: MINTING_FEE }(originalOwner, reservationId, validationSignature, ipfsUri, DEFAULT_SYMBOL);
+        ipnft.mintReservation{ value: MINTING_FEE }(originalOwner, reservationId, ipfsUri, DEFAULT_SYMBOL, authorization);
         vm.stopPrank();
     }
 
@@ -356,12 +352,11 @@ contract SalesShareDistributorTest is Test {
 
         vm.deal(bob, MINTING_FEE);
         vm.startPrank(deployer);
-        mintpass.batchMint(bob, 1);
         vm.stopPrank();
 
         vm.startPrank(bob);
         uint256 reservationId = ipnft.reserve();
-        ipnft.mintReservation{ value: MINTING_FEE }(bob, reservationId, validationSignature, ipfsUri, DEFAULT_SYMBOL);
+        ipnft.mintReservation{ value: MINTING_FEE }(bob, reservationId, ipfsUri, DEFAULT_SYMBOL, authorization);
         ipnft.setApprovalForAll(address(schmackoSwap), true);
         Molecules tokenContract2 = synthesizer.synthesizeIpnft(2, 70_000, "MOLE", agreementCid, "");
         tokenContract2.cap();

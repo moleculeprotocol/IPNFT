@@ -59,7 +59,7 @@ contract IPNFTV24 is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IRe
     error InsufficientBalance();
     error BadDuration();
     error MintingFeeTooLow();
-    error InvalidMetadata();
+    error Unauthorized();
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -116,23 +116,23 @@ contract IPNFTV24 is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IRe
      *
      * @param to the recipient of the NFT
      * @param reservationId the reserved token id that has been reserved with `reserve()`
-     * @param validationSignature the signature to validate to IPNFT metadata
      * @param _tokenURI a location that resolves to a valid IP-NFT metadata structure
      * @param _symbol a symbol that represents the IPNFT's derivatives. Can be changed by the owner
+     * @param authorization the signature to validate to IPNFT metadata
      * @return the `reservationId`
      */
-    function mintReservation(
-        address to,
-        uint256 reservationId,
-        bytes calldata validationSignature,
-        string calldata _tokenURI,
-        string calldata _symbol
-    ) public payable override whenNotPaused returns (uint256) {
+    function mintReservation(address to, uint256 reservationId, string calldata _tokenURI, string calldata _symbol, bytes calldata authorization)
+        public
+        payable
+        override
+        whenNotPaused
+        returns (uint256)
+    {
         if (reservations[reservationId] != _msgSender()) {
             revert NotOwningReservation(reservationId);
         }
-        if (mintAuthorizer.isValidSignature(validationSignature, _tokenURI)) {
-            revert InvalidMetadata();
+        if (!mintAuthorizer.authorizeMint(_msgSender(), to, authorization)) {
+            revert Unauthorized();
         }
 
         if (msg.value < SYMBOLIC_MINT_FEE) {

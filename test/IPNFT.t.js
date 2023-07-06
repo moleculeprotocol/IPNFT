@@ -3,7 +3,7 @@ const hre = require('hardhat')
 
 describe('IPNFT fundamentals and upgrades', function () {
   let ipnftContract
-  let mintpass
+  let authorizer
   let deployer, alice, bob
 
   beforeEach(async function () {
@@ -14,10 +14,10 @@ describe('IPNFT fundamentals and upgrades', function () {
     const IPNFT = await ethers.getContractFactory('IPNFT')
     ipnftContract = await upgrades.deployProxy(IPNFT, { kind: 'uups' })
 
-    const Mintpass = await ethers.getContractFactory('Mintpass')
-    mintpass = await Mintpass.deploy(ipnftContract.address)
+    const AcceptAllMintAuthorizer = await ethers.getContractFactory('AcceptAllMintAuthorizer')
+    authorizer = await AcceptAllMintAuthorizer.deploy()
 
-    await ipnftContract.connect(deployer).setAuthorizer(mintpass.address)
+    await ipnftContract.connect(deployer).setAuthorizer(authorizer.address)
   })
 
   it('validates updates V23 -> V24', async function () {

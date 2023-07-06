@@ -10,7 +10,7 @@ import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy
 import { IERC721Receiver } from "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 
 import { IPNFT } from "../src/IPNFT.sol";
-import { Mintpass } from "../src/Mintpass.sol";
+import { IAuthorizeMints, AcceptAllMintAuthorizer } from "../src/IAuthorizeMints.sol";
 import { SchmackoSwap } from "../src/SchmackoSwap.sol";
 import { FakeERC20 } from "../src/helpers/FakeERC20.sol";
 import { IPNFTMintHelper } from "./IPNFTMintHelper.sol";
@@ -65,7 +65,6 @@ contract ContractReceiverTest is IPNFTMintHelper {
     address owner = makeAddr("contractowner");
     address buyer = makeAddr("buyer");
     address otherUser = makeAddr("otherUser");
-
     SchmackoSwap internal schmackoSwap;
 
     event Listed(uint256 listingId, SchmackoSwap.Listing listing);
@@ -78,15 +77,14 @@ contract ContractReceiverTest is IPNFTMintHelper {
 
     function setUp() public {
         vm.startPrank(deployer);
-        ipnft = IPNFT(address(new ERC1967Proxy(address(new IPNFT()), "")));
+        ipnft = IPNFT(address(new ERC1967Proxy(address(new IPNFT()), '')));
         ipnft.initialize();
 
-        mintpass = new Mintpass(address(ipnft));
-        mintpass.grantRole(mintpass.MODERATOR(), deployer);
-        ipnft.setAuthorizer(address(mintpass));
+        authorizer = new AcceptAllMintAuthorizer();
+        ipnft.setAuthorizer(address(authorizer));
         schmackoSwap = new SchmackoSwap();
 
-        FakeERC20 _testToken = new FakeERC20("Fakium", "FAKE20");
+        FakeERC20 _testToken = new FakeERC20('Fakium', 'FAKE20');
         _testToken.mint(buyer, 1 ether);
         testToken = IERC20(address(_testToken));
 
@@ -95,7 +93,6 @@ contract ContractReceiverTest is IPNFTMintHelper {
     }
 
     function testCanMintToERC721Receiver() public {
-        dealMintpass(owner);
         vm.startPrank(owner);
 
         uint256 reservationId = ipnft.reserve();
@@ -104,15 +101,13 @@ contract ContractReceiverTest is IPNFTMintHelper {
         //vm.expectRevert(bytes("ERC721: transfer to non ERC721Receiver implementer"));
         //ipnft.mintReservation{ value: MINTING_FEE }(address(boringWallet), reservationId, 1, arUri, DEFAULT_SYMBOL);
         CleverContractWallet wallet = new CleverContractWallet();
-        ipnft.mintReservation{ value: MINTING_FEE }(address(wallet), reservationId, validationSignature, arUri, DEFAULT_SYMBOL);
+        ipnft.mintReservation{ value: MINTING_FEE }(address(wallet), reservationId, arUri, DEFAULT_SYMBOL, authorization);
         vm.stopPrank();
 
         assertEq(ipnft.ownerOf(1), address(wallet));
     }
 
     function testAbstractAccountsCanTradeIPNFTs() public {
-        dealMintpass(owner);
-
         vm.startPrank(buyer);
         CleverContractWallet buyerWallet = new CleverContractWallet();
         testToken.transfer(address(buyerWallet), 1 ether);
@@ -121,7 +116,7 @@ contract ContractReceiverTest is IPNFTMintHelper {
         vm.startPrank(owner);
         CleverContractWallet wallet = new CleverContractWallet();
         uint256 reservationId = ipnft.reserve();
-        ipnft.mintReservation{ value: MINTING_FEE }(address(wallet), reservationId, validationSignature, arUri, DEFAULT_SYMBOL);
+        ipnft.mintReservation{ value: MINTING_FEE }(address(wallet), reservationId, arUri, DEFAULT_SYMBOL, authorization);
 
         uint256 listingId = wallet.startSelling(address(schmackoSwap), address(ipnft), address(testToken), 1, address(buyerWallet));
         vm.stopPrank();
