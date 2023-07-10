@@ -1,15 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.18;
 
+import "forge-std/console.sol";
 import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
-import { IAuthorizeMints } from "./IAuthorizeMints.sol";
-
-struct SignedMintAuthorization {
-    uint256 reservationId;
-    string tokenUri;
-    bytes signature;
-}
+import { IAuthorizeMints, SignedMintAuthorization } from "./IAuthorizeMints.sol";
 
 /// @title SignedMintAuthorizer
 /// @author molecule.to
@@ -27,13 +22,14 @@ contract SignedMintAuthorizer is IAuthorizeMints, Ownable {
     /// @inheritdoc IAuthorizeMints
     /// @dev reverts when signature is not valid or recovered signer is not trusted
     //todo consider using an ERC712 typed signature here
-    /// @param data contains encoded data that a trusted signer has agreed upon
-    function authorizeMint(address minter, address to, bytes memory data) external view returns (bool) {
-        SignedMintAuthorization memory auth = abi.decode(data, (SignedMintAuthorization));
+    /// @param signedAuthorization contains encoded SignedMintAuthorization that a trusted signer has agreed upon
+    function authorizeMint(address minter, address to, bytes memory signedAuthorization) external view override returns (bool) {
+        SignedMintAuthorization memory auth = abi.decode(signedAuthorization, (SignedMintAuthorization));
 
         bytes32 signedHash = ECDSA.toEthSignedMessageHash(keccak256(abi.encodePacked(minter, to, auth.reservationId, auth.tokenUri)));
 
-        (address signer,) = ECDSA.tryRecover(signedHash, auth.signature);
+        (address signer,) = ECDSA.tryRecover(signedHash, auth.authorization);
+
         return trustedSigners[signer];
     }
 

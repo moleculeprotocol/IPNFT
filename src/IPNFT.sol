@@ -8,7 +8,7 @@ import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/O
 import { PausableUpgradeable } from "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
 import { CountersUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/CountersUpgradeable.sol";
 import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-import { IAuthorizeMints } from "./IAuthorizeMints.sol";
+import { IAuthorizeMints, SignedMintAuthorization } from "./IAuthorizeMints.sol";
 import { IReservable } from "./IReservable.sol";
 
 /*
@@ -122,12 +122,12 @@ contract IPNFT is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IReser
             revert NotOwningReservation(reservationId);
         }
 
-        if (!mintAuthorizer.authorizeMint(_msgSender(), to, authorization)) {
-            revert Unauthorized();
-        }
-
         if (msg.value < SYMBOLIC_MINT_FEE) {
             revert MintingFeeTooLow();
+        }
+
+        if (!mintAuthorizer.authorizeMint(_msgSender(), to, abi.encode(SignedMintAuthorization(reservationId, _tokenURI, authorization)))) {
+            revert Unauthorized();
         }
 
         delete reservations[reservationId];

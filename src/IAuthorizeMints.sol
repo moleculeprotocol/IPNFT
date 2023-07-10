@@ -1,6 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.18;
 
+struct SignedMintAuthorization {
+    uint256 reservationId;
+    string tokenUri;
+    /// eth_sign(keccak256(abi.encodePacked(minter, to, reservationId, tokenUri)))
+    bytes authorization;
+}
+
 /// @title IAuthorizeMints
 /// @author molecule.to
 /// @notice a flexible interface to gate token mint calls on another contract, built for IP-NFTs

@@ -32,24 +32,18 @@ contract MintAuthorizerTest is Test {
         vm.stopPrank();
     }
 
-    function testAuthorizerAcceptsValidSignatures() public {
-        bytes32 authMessageHash = ECDSA.toEthSignedMessageHash(keccak256(abi.encodePacked(alice, ipnft, uint256(1), ipfsUri)));
+    function testAuthorizerAcceptsOnlyValidSignatures() public {
+        bytes32 authMessageHash = ECDSA.toEthSignedMessageHash(keccak256(abi.encodePacked(alice, alice, uint256(1), ipfsUri)));
 
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(authorizedSignerPk, authMessageHash);
 
         SignedMintAuthorization memory authorization = SignedMintAuthorization(1, ipfsUri, abi.encodePacked(r, s, v));
 
-        bool authorized = authorizer.authorizeMint(alice, ipnft, abi.encode(authorization));
+        bool authorized = authorizer.authorizeMint(alice, alice, abi.encode(authorization));
         assertTrue(authorized);
-    }
 
-    function testUnauthorizeMint() public {
-        bytes32 authMessageHash = ECDSA.toEthSignedMessageHash(keccak256(abi.encodePacked(alice, ipnft, uint256(1), ipfsUri)));
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(alicePk, authMessageHash);
-
-        SignedMintAuthorization memory authorization = SignedMintAuthorization(1, ipfsUri, abi.encodePacked(r, s, v));
-
-        bool authorized = authorizer.authorizeMint(alice, ipnft, abi.encode(authorization));
+        (v, r, s) = vm.sign(alicePk, authMessageHash);
+        authorized = authorizer.authorizeMint(alice, alice, abi.encode(SignedMintAuthorization(1, ipfsUri, abi.encodePacked(r, s, v))));
         assertFalse(authorized);
     }
 }
