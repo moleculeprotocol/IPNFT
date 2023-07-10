@@ -10,7 +10,7 @@ import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy
 import { IERC721Receiver } from "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 
 import { IPNFT } from "../src/IPNFT.sol";
-import { IAuthorizeMints, AcceptAllMintAuthorizer } from "../src/IAuthorizeMints.sol";
+import { AcceptAllAuthorizer } from "./helpers/AcceptAllAuthorizer.sol";
 import { SchmackoSwap } from "../src/SchmackoSwap.sol";
 import { FakeERC20 } from "../src/helpers/FakeERC20.sol";
 import { IPNFTMintHelper } from "./IPNFTMintHelper.sol";
@@ -80,8 +80,7 @@ contract ContractReceiverTest is IPNFTMintHelper {
         ipnft = IPNFT(address(new ERC1967Proxy(address(new IPNFT()), '')));
         ipnft.initialize();
 
-        authorizer = new AcceptAllMintAuthorizer();
-        ipnft.setAuthorizer(address(authorizer));
+        ipnft.setAuthorizer(new AcceptAllAuthorizer());
         schmackoSwap = new SchmackoSwap();
 
         FakeERC20 _testToken = new FakeERC20('Fakium', 'FAKE20');
@@ -101,7 +100,7 @@ contract ContractReceiverTest is IPNFTMintHelper {
         //vm.expectRevert(bytes("ERC721: transfer to non ERC721Receiver implementer"));
         //ipnft.mintReservation{ value: MINTING_FEE }(address(boringWallet), reservationId, 1, arUri, DEFAULT_SYMBOL);
         CleverContractWallet wallet = new CleverContractWallet();
-        ipnft.mintReservation{ value: MINTING_FEE }(address(wallet), reservationId, arUri, DEFAULT_SYMBOL, authorization);
+        ipnft.mintReservation{ value: MINTING_FEE }(address(wallet), reservationId, arUri, DEFAULT_SYMBOL, "");
         vm.stopPrank();
 
         assertEq(ipnft.ownerOf(1), address(wallet));
@@ -116,7 +115,7 @@ contract ContractReceiverTest is IPNFTMintHelper {
         vm.startPrank(owner);
         CleverContractWallet wallet = new CleverContractWallet();
         uint256 reservationId = ipnft.reserve();
-        ipnft.mintReservation{ value: MINTING_FEE }(address(wallet), reservationId, arUri, DEFAULT_SYMBOL, authorization);
+        ipnft.mintReservation{ value: MINTING_FEE }(address(wallet), reservationId, arUri, DEFAULT_SYMBOL, "");
 
         uint256 listingId = wallet.startSelling(address(schmackoSwap), address(ipnft), address(testToken), 1, address(buyerWallet));
         vm.stopPrank();

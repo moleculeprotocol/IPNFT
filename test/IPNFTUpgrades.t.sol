@@ -4,7 +4,7 @@ pragma solidity ^0.8.18;
 import "forge-std/Test.sol";
 import "forge-std/console.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
-import { IAuthorizeMints, AcceptAllMintAuthorizer } from "../src/IAuthorizeMints.sol";
+import { AcceptAllAuthorizer } from "./helpers/AcceptAllAuthorizer.sol";
 import { IPNFTMintHelper } from "./IPNFTMintHelper.sol";
 import { IPNFT } from "../src/IPNFT.sol";
 import { IPNFTV24 } from "../src/helpers/test-upgrades/IPNFTV24.sol";
@@ -25,8 +25,7 @@ contract IPNFTUpgrades is IPNFTMintHelper {
         ipnft = IPNFT(address(new ERC1967Proxy(address(implementationV23), "")));
         ipnft.initialize();
 
-        authorizer = new AcceptAllMintAuthorizer();
-        ipnft.setAuthorizer(address(authorizer));
+        ipnft.setAuthorizer(new AcceptAllAuthorizer());
         vm.stopPrank();
         vm.deal(alice, 0.05 ether);
     }

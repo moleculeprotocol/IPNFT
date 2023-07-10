@@ -1,8 +1,6 @@
-// SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.17;
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.18;
 
-import "erc721b/extensions/ERC721BBaseTokenURI.sol";
-import "erc721b/extensions/ERC721BBurnable.sol";
 import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { IAuthorizeMints } from "./IAuthorizeMints.sol";
@@ -13,9 +11,9 @@ struct SignedMintAuthorization {
     bytes signature;
 }
 
-/// @title SignatureMintAuthorizer
+/// @title SignedMintAuthorizer
 /// @author molecule.to
-contract SignatureMintAuthorizer is IAuthorizeMints, Ownable {
+contract SignedMintAuthorizer is IAuthorizeMints, Ownable {
     mapping(address => bool) trustedSigners;
 
     constructor(address initialSigner) Ownable() {
@@ -45,6 +43,8 @@ contract SignatureMintAuthorizer is IAuthorizeMints, Ownable {
         return true;
     }
 
+    /// @inheritdoc IAuthorizeMints
+    /// @dev this authorizer does not track redemptions
     function redeem(bytes memory) external pure override {
         return;
     }

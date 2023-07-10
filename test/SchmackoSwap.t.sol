@@ -9,7 +9,7 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
 import { IPNFT } from "../src/IPNFT.sol";
-import { IAuthorizeMints, AcceptAllMintAuthorizer } from "../src/IAuthorizeMints.sol";
+import { AcceptAllAuthorizer } from "./helpers/AcceptAllAuthorizer.sol";
 import { SchmackoSwap, ListingState } from "../src/SchmackoSwap.sol";
 import { FakeERC20 } from "../src/helpers/FakeERC20.sol";
 
@@ -18,7 +18,6 @@ contract SchmackoSwapTest is Test {
     uint256 constant MINTING_FEE = 0.001 ether;
     string DEFAULT_SYMBOL = "MOL-0001";
 
-    IAuthorizeMints authorizer;
     IPNFT internal ipnft;
     IERC721 internal ierc721;
 
@@ -29,7 +28,6 @@ contract SchmackoSwapTest is Test {
     address seller = makeAddr("seller");
     address buyer = makeAddr("buyer");
     address otherUser = makeAddr("otherUser");
-    bytes authorization = "";
 
     event Listed(uint256 listingId, SchmackoSwap.Listing listing);
     event Unlisted(uint256 listingId, SchmackoSwap.Listing listing);
@@ -40,10 +38,10 @@ contract SchmackoSwapTest is Test {
         vm.startPrank(deployer);
         ipnft = IPNFT(address(new ERC1967Proxy(address(new IPNFT()), "")));
         ipnft.initialize();
+        ipnft.setAuthorizer(new AcceptAllAuthorizer());
+
         ierc721 = IERC721(address(ipnft));
 
-        authorizer = new AcceptAllMintAuthorizer();
-        ipnft.setAuthorizer(address(authorizer));
         FakeERC20 _testToken = new FakeERC20("Fakium", "FAKE20");
         _testToken.mint(buyer, 1 ether);
         testToken = IERC20(address(_testToken));
@@ -56,7 +54,7 @@ contract SchmackoSwapTest is Test {
         // Ensure marketplace can access sellers's tokens
         ipnft.setApprovalForAll(address(schmackoSwap), true);
         ipnft.reserve();
-        ipnft.mintReservation{ value: 0.001 ether }(seller, 1, arUri, DEFAULT_SYMBOL, authorization);
+        ipnft.mintReservation{ value: 0.001 ether }(seller, 1, arUri, DEFAULT_SYMBOL, "");
         vm.stopPrank();
     }
 

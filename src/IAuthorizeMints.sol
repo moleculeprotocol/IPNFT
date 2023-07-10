@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.17;
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.18;
 
 /// @title IAuthorizeMints
 /// @author molecule.to
@@ -15,18 +15,4 @@ interface IAuthorizeMints {
     /// @notice called by the gated token contract to signal that a token has been minted and an authorization can be invalidated
     /// @param data implementation specific data
     function redeem(bytes memory data) external;
-}
-
-contract AcceptAllMintAuthorizer is IAuthorizeMints {
-    function authorizeMint(address, address, bytes memory) external pure override returns (bool) {
-        return true;
-    }
-
-    function authorizeReservation(address) external pure override returns (bool) {
-        return true;
-    }
-
-    function redeem(bytes memory) external pure override {
-        return;
-    }
 }

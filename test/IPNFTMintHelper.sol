@@ -11,8 +11,6 @@ abstract contract IPNFTMintHelper is Test {
     string ipfsUri = "ipfs://QmYwAPJzv5CZsnA9LqYKXfutJzBg68";
     string arUri = "ar://tNbdHqh3AVDHVD06P0OPUXSProI5kGcZZw8IvLkekSY";
     string imageUrl = "ar://7De6dRLDaMhMeC6Utm9bB9PRbcvKdi-rw_sDM8pJSMU";
-    bytes authorization = "";
-    IAuthorizeMints internal authorizer;
 
     address deployer = makeAddr("chucknorris");
 
@@ -27,6 +25,10 @@ abstract contract IPNFTMintHelper is Test {
     }
 
     function mintAToken(IReservable ipnft, address to) internal returns (uint256) {
+        return mintAToken(ipnft, to, "");
+    }
+
+    function mintAToken(IReservable ipnft, address to, bytes memory authorization) internal returns (uint256) {
         vm.startPrank(to);
         uint256 reservationId = ipnft.reserve();
 

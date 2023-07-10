@@ -14,8 +14,10 @@ describe('IPNFT fundamentals and upgrades', function () {
     const IPNFT = await ethers.getContractFactory('IPNFT')
     ipnftContract = await upgrades.deployProxy(IPNFT, { kind: 'uups' })
 
-    const AcceptAllMintAuthorizer = await ethers.getContractFactory('AcceptAllMintAuthorizer')
-    authorizer = await AcceptAllMintAuthorizer.deploy()
+    const SignedMintAuthorizer = await ethers.getContractFactory(
+      'SignedMintAuthorizer'
+    )
+    authorizer = await SignedMintAuthorizer.deploy(deployer.address)
 
     await ipnftContract.connect(deployer).setAuthorizer(authorizer.address)
   })

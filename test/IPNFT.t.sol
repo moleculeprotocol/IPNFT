@@ -6,7 +6,7 @@ import "forge-std/console.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
 import { IPNFT } from "../src/IPNFT.sol";
-import { AcceptAllMintAuthorizer } from "../src/IAuthorizeMints.sol";
+import { AcceptAllAuthorizer } from "./helpers/AcceptAllAuthorizer.sol";
 import { IPNFTMintHelper } from "./IPNFTMintHelper.sol";
 
 contract Kamikaze {
@@ -34,8 +34,7 @@ contract IPNFTTest is IPNFTMintHelper {
         ipnft = IPNFT(address(new ERC1967Proxy(address(new IPNFT()), "")));
         ipnft.initialize();
 
-        authorizer = new AcceptAllMintAuthorizer();
-        ipnft.setAuthorizer(address(authorizer));
+        ipnft.setAuthorizer(new AcceptAllAuthorizer());
 
         vm.deal(alice, 0.05 ether);
 
@@ -48,14 +47,9 @@ contract IPNFTTest is IPNFTMintHelper {
 
     function testTokenReservation() public {
         vm.startPrank(alice);
-
-        uint256 reservationId = ipnft.reserve();
-        vm.stopPrank();
-
-        vm.startPrank(alice);
         vm.expectEmit(true, true, true, true);
         emit Reserved(alice, 1);
-        reservationId = ipnft.reserve();
+        ipnft.reserve();
 
         assertEq(ipnft.reservations(1), alice);
     }
@@ -76,12 +70,12 @@ contract IPNFTTest is IPNFTMintHelper {
         uint256 reservationId = ipnft.reserve();
 
         vm.expectRevert(IPNFT.MintingFeeTooLow.selector);
-        ipnft.mintReservation(alice, reservationId, ipfsUri, DEFAULT_SYMBOL, authorization);
+        ipnft.mintReservation(alice, reservationId, ipfsUri, DEFAULT_SYMBOL, "");
 
         vm.expectEmit(true, true, false, true);
         emit IPNFTMinted(alice, 1, ipfsUri, DEFAULT_SYMBOL);
 
-        ipnft.mintReservation{ value: MINTING_FEE }(alice, reservationId, ipfsUri, DEFAULT_SYMBOL, authorization);
+        ipnft.mintReservation{ value: MINTING_FEE }(alice, reservationId, ipfsUri, DEFAULT_SYMBOL, "");
 
         assertEq(ipnft.ownerOf(1), alice);
         assertEq(ipnft.tokenURI(1), ipfsUri);
@@ -107,7 +101,7 @@ contract IPNFTTest is IPNFTMintHelper {
 
         vm.startPrank(bob);
         vm.expectRevert(abi.encodeWithSelector(IPNFT.NotOwningReservation.selector, 1));
-        ipnft.mintReservation(bob, 1, arUri, DEFAULT_SYMBOL, authorization);
+        ipnft.mintReservation(bob, 1, arUri, DEFAULT_SYMBOL, "");
         vm.stopPrank();
     }
 

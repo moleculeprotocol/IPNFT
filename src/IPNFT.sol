@@ -77,8 +77,8 @@ contract IPNFT is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IReser
         _unpause();
     }
 
-    function setAuthorizer(address authorizer_) external onlyOwner {
-        mintAuthorizer = IAuthorizeMints(authorizer_);
+    function setAuthorizer(IAuthorizeMints authorizer_) external onlyOwner {
+        mintAuthorizer = authorizer_;
     }
 
     /// @notice https://docs.opensea.io/docs/contract-level-metadata

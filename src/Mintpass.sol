@@ -4,7 +4,7 @@ pragma solidity ^0.8.17;
 import "erc721b/extensions/ERC721BBaseTokenURI.sol";
 import "erc721b/extensions/ERC721BBurnable.sol";
 import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol";
-import { SignatureChecker } from "@openzeppelin/contracts/utils/cryptography/SignatureChecker.sol";
+
 import { Base64 } from "@openzeppelin/contracts/utils/Base64.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 import { ReentrancyGuard } from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
@@ -70,12 +70,7 @@ contract Mintpass is AccessControl, ERC721BBaseTokenURI, ERC721BBurnable, IAutho
     /// @dev see {IAuthorizeMints-authorizeMint}
     /// @dev reverts when authorization conditions are not met
     /// @param data must be a single `uint256` value: the mint pass id that's to be authorized
-    function authorizeMint(
-        address minter,
-        address,
-        /* to */
-        bytes memory data
-    ) external view onlyRole(REDEEMER) returns (bool) {
+    function authorizeMint(address minter, address, /* to */ bytes memory data) external view override onlyRole(REDEEMER) returns (bool) {
         uint256 mintPassId = abi.decode(data, (uint256));
 
         if (ownerOf(mintPassId) != minter) {

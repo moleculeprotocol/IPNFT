@@ -14,7 +14,7 @@ import { SafeProxyFactory } from "safe-global/safe-contracts/proxies/SafeProxyFa
 import { Enum } from "safe-global/safe-contracts/common/Enum.sol";
 import "./helpers/MakeGnosisWallet.sol";
 import { IPNFT } from "../src/IPNFT.sol";
-import { AcceptAllMintAuthorizer, IAuthorizeMints } from "../src/IAuthorizeMints.sol";
+import { AcceptAllAuthorizer } from "./helpers/AcceptAllAuthorizer.sol";
 
 import { FakeERC20 } from "../src/helpers/FakeERC20.sol";
 import { Synthesizer } from "../src/Synthesizer.sol";
@@ -47,11 +47,10 @@ contract SynthesizerTest is Test {
     uint256 bobPk;
     address charlie = makeAddr("charlie");
     address escrow = makeAddr("escrow");
-    bytes authorization = "";
+
     IPNFT internal ipnft;
     Synthesizer internal synthesizer;
     SchmackoSwap internal schmackoSwap;
-    IAuthorizeMints internal authorizer;
     IPermissioner internal blindPermissioner;
 
     FakeERC20 internal erc20;
@@ -61,18 +60,17 @@ contract SynthesizerTest is Test {
         (bob, bobPk) = makeAddrAndKey("bob");
         vm.startPrank(deployer);
 
-        ipnft = IPNFT(address(new ERC1967Proxy(address(new IPNFT()), '')));
+        ipnft = IPNFT(address(new ERC1967Proxy(address(new IPNFT()), "")));
         ipnft.initialize();
+        ipnft.setAuthorizer(new AcceptAllAuthorizer());
 
         schmackoSwap = new SchmackoSwap();
         erc20 = new FakeERC20('Fake ERC20', 'FERC');
         erc20.mint(ipnftBuyer, 1_000_000 ether);
 
-        authorizer = new AcceptAllMintAuthorizer();
-        ipnft.setAuthorizer(address(authorizer));
         blindPermissioner = new BlindPermissioner();
 
-        synthesizer = Synthesizer(address(new ERC1967Proxy(address(new Synthesizer()), '')));
+        synthesizer = Synthesizer(address(new ERC1967Proxy(address(new Synthesizer()), "")));
         synthesizer.initialize(ipnft, blindPermissioner);
 
         vm.stopPrank();
@@ -80,7 +78,7 @@ contract SynthesizerTest is Test {
         vm.deal(originalOwner, MINTING_FEE);
         vm.startPrank(originalOwner);
         uint256 reservationId = ipnft.reserve();
-        ipnft.mintReservation{ value: MINTING_FEE }(originalOwner, reservationId, ipfsUri, DEFAULT_SYMBOL, authorization);
+        ipnft.mintReservation{ value: MINTING_FEE }(originalOwner, reservationId, ipfsUri, DEFAULT_SYMBOL, "");
         vm.stopPrank();
     }
 
@@ -222,7 +220,7 @@ contract SynthesizerTest is Test {
         vm.deal(originalOwner, MINTING_FEE);
         vm.startPrank(originalOwner);
         uint256 reservationId = ipnft.reserve();
-        ipnft.mintReservation{ value: MINTING_FEE }(originalOwner, reservationId, ipfsUri, DEFAULT_SYMBOL, authorization);
+        ipnft.mintReservation{ value: MINTING_FEE }(originalOwner, reservationId, ipfsUri, DEFAULT_SYMBOL, "");
         Molecules tokenContractNew = synth2.synthesizeIpnft(2, 70_000, agreementCid, "");
         vm.stopPrank();
 
