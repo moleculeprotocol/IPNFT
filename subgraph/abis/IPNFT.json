@@ -20,11 +20,6 @@
     "type": "error"
   },
   {
-    "inputs": [],
-    "name": "NeedsMintpass",
-    "type": "error"
-  },
-  {
     "inputs": [
       {
         "internalType": "uint256",
@@ -38,6 +33,11 @@
   {
     "inputs": [],
     "name": "ToZeroAddress",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "Unauthorized",
     "type": "error"
   },
   {
@@ -498,11 +498,6 @@
         "type": "uint256"
       },
       {
-        "internalType": "uint256",
-        "name": "mintPassId",
-        "type": "uint256"
-      },
-      {
         "internalType": "string",
         "name": "_tokenURI",
         "type": "string"
@@ -511,6 +506,11 @@
         "internalType": "string",
         "name": "_symbol",
         "type": "string"
+      },
+      {
+        "internalType": "bytes",
+        "name": "authorization",
+        "type": "bytes"
       }
     ],
     "name": "mintReservation",
@@ -713,7 +713,7 @@
   {
     "inputs": [
       {
-        "internalType": "address",
+        "internalType": "contract IAuthorizeMints",
         "name": "authorizer_",
         "type": "address"
       }

@@ -14,10 +14,6 @@ module.exports = {
     address: '0x67D8ed102E2168A46FA342e39A5f7D16c103Bd0d',
     startBlock: 9099302
   },
-  mintpass: {
-    address: '0xAf0f99dcC64E8a6549d32013AC9f2C3FA7834688',
-    startBlock: 8151797
-  },
   synthesizer: {
     address: '0xb12494eeA6B992d0A1Db3C5423BE7a2d2337F58c',
     startBlock: 9142681

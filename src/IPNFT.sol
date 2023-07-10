@@ -23,7 +23,7 @@ import { IReservable } from "./IReservable.sol";
  \▓▓▓▓▓▓\▓▓             \▓▓   \▓▓\▓▓         \▓▓
  */
 
-/// @title IPNFT V2.3
+/// @title IPNFT V2.4
 /// @author molecule.to
 /// @notice IP-NFTs capture intellectual property to be traded and synthesized
 contract IPNFT is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IReservable, UUPSUpgradeable, OwnableUpgradeable, PausableUpgradeable {

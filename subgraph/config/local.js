@@ -14,10 +14,6 @@ module.exports = {
     address: process.env.SOS_ADDRESS,
     startBlock: 0
   },
-  mintpass: {
-    address: process.env.MINTPASS_ADDRESS,
-    startBlock: 0
-  },
   synthesizer: {
     address: process.env.SYNTHESIZER_ADDRESS,
     startBlock: 0
