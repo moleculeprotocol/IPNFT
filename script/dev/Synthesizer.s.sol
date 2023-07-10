@@ -26,7 +26,7 @@ contract DeploySynthesizer is CommonScript {
         IPermissioner permissioner = IPermissioner(vm.envAddress("TERMS_ACCEPTED_PERMISSIONER_ADDRESS"));
         synthesizer.initialize(IPNFT(vm.envAddress("IPNFT_ADDRESS")), permissioner);
         vm.stopBroadcast();
-        console.log("Synthesizer_ADDRESS=%s", address(synthesizer));
+        console.log("SYNTHESIZER_ADDRESS=%s", address(synthesizer));
     }
 }
 

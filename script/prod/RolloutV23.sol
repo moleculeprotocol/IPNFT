@@ -8,10 +8,11 @@ import { IPNFT } from "../../src/IPNFT.sol";
 import { IPermissioner, TermsAcceptedPermissioner } from "../../src/Permissioner.sol";
 import { Synthesizer } from "../../src/Synthesizer.sol";
 import { StakedLockingCrowdSale } from "../../src/crowdsale/StakedLockingCrowdSale.sol";
+import { Mintpass } from "../../src/Mintpass.sol";
 
 contract RolloutV23 is Script {
     function run() public {
-        address mintpass = 0x0Ecff38F41EcD1E978f1443eD96c0C22497d73cB;
+        Mintpass mintpass = Mintpass(0x0Ecff38F41EcD1E978f1443eD96c0C22497d73cB);
         //address vestedDaoToken = 0x0
         address moleculeDevMultisig = 0xCfA0F84660fB33bFd07C369E5491Ab02C449f71B;
         vm.startBroadcast();

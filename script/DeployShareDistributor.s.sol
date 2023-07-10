@@ -7,7 +7,6 @@ import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy
 import { IPNFT } from "../src/IPNFT.sol";
 import { SchmackoSwap } from "../src/SchmackoSwap.sol";
 import { Synthesizer } from "../src/Synthesizer.sol";
-import { Mintpass } from "../src/Mintpass.sol";
 import { SalesShareDistributor } from "../src/SalesShareDistributor.sol";
 
 contract DeployShareDistributor is Script {
