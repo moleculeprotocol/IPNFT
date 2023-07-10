@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.13;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.18;
 
 import "forge-std/Script.sol";
 import "forge-std/console.sol";
@@ -10,7 +10,7 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import { IPNFT } from "../../src/IPNFT.sol";
 import { SchmackoSwap } from "../../src/SchmackoSwap.sol";
-import { SignatureMintAuthorizer } from "../../src/MintAuthorizer.sol";
+import { SignedMintAuthorizer } from "../../src/SignedMintAuthorizer.sol";
 import { FakeERC20 } from "../../src/helpers/FakeERC20.sol";
 import { CommonScript } from "./Common.sol";
 
@@ -29,38 +29,18 @@ contract DeployIpnftSuite is CommonScript {
 
         SchmackoSwap swap = new SchmackoSwap();
 
-        SignatureMintAuthorizer authorizer = new SignatureMintAuthorizer(
-      0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
-    );
-
-        ipnft.setAuthorizer(address(authorizer));
+        SignedMintAuthorizer authorizer = new SignedMintAuthorizer(deployer);
+        ipnft.setAuthorizer(authorizer);
 
         console.log("IPNFT_ADDRESS=%s", address(ipnft));
         console.log("SOS_ADDRESS=%s", address(swap));
-        console.log("SIGNATURE_AUTHORIZER_ADDRESS=%s", address(authorizer));
+        console.log("AUTHORIZER_ADDRESS=%s", address(authorizer));
 
         vm.stopBroadcast();
     }
 }
 
-contract SignAuthorizationScript is CommonScript {
-    SignedMintAuthorization signedMintAuthorization;
-    bytes32 messageHash;
-
-    function signAuthorization(address ipnft) internal returns (bytes memory) {
-        signedMintAuthorization.reservationId = 1;
-        signedMintAuthorization.tokenUri = "tokenURI";
-        messageHash = ECDSA.toEthSignedMessageHash(
-            keccak256(abi.encodePacked(alice, ipnft, signedMintAuthorization.reservationId, signedMintAuthorization.tokenUri))
-        );
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(charliePk, messageHash);
-        bytes memory signature = abi.encodePacked(r, s, v);
-        signedMintAuthorization.signature = signature;
-        return abi.encode(signedMintAuthorization);
-    }
-}
-
-contract FixtureIpnft is SignAuthorizationScript {
+contract FixtureIpnft is CommonScript {
     IPNFT ipnft;
     SchmackoSwap schmackoSwap;
     FakeERC20 usdc;
@@ -75,8 +55,16 @@ contract FixtureIpnft is SignAuthorizationScript {
     function mintIpnft(address from, address to) internal returns (uint256) {
         vm.startBroadcast(from);
         uint256 reservationId = ipnft.reserve();
-        bytes memory data = signAuthorization(address(ipnft));
-        ipnft.mintReservation{ value: 0.001 ether }(to, reservationId, "ar://cy7I6VoEXhO5rHrq8siFYtelM9YZKyoGj3vmGwJZJOc", "BIO-00001", data);
+
+        bytes32 messageHash =
+            ECDSA.toEthSignedMessageHash(keccak256(abi.encodePacked(from, to, reservationId, "ar://cy7I6VoEXhO5rHrq8siFYtelM9YZKyoGj3vmGwJZJOc")));
+
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(deployerPk, messageHash);
+
+        ipnft.mintReservation{ value: 0.001 ether }(
+            to, reservationId, "ar://cy7I6VoEXhO5rHrq8siFYtelM9YZKyoGj3vmGwJZJOc", "BIO-00001", abi.encodePacked(r, s, v)
+        );
+
         vm.stopBroadcast();
         return reservationId;
     }

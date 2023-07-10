@@ -8,24 +8,40 @@ import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/O
 import { PausableUpgradeable } from "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
 import { CountersUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/CountersUpgradeable.sol";
 import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-import { IAuthorizeMints } from "../../IAuthorizeMints.sol";
-import { IReservable } from "../../IReservable.sol";
+import { IAuthorizeMints } from "../../../src/IAuthorizeMints.sol";
+//import { IReservable } from "../../../src/IReservable.sol";
+
+interface IReservableV23 {
+    function reserve() external returns (uint256);
+    function mintReservation(address to, uint256 reservationId, uint256 mintPassId, string calldata tokenURI, string calldata symbol)
+        external
+        payable
+        returns (uint256 tokenId);
+}
 
 /*
- ▄▄▄ ▄▄▄▄▄▄▄ ▄▄    ▄ ▄▄▄▄▄▄▄ ▄▄▄▄▄▄▄ ▄▄   ▄▄ ▄▄▄▄▄▄▄ ▄   ▄▄▄ 
-█   █       █  █  █ █       █       █  █ █  █       █ █ █   █
-█   █    ▄  █   █▄█ █    ▄▄▄█▄     ▄█  █▄█  █▄▄▄▄   █ █▄█   █
-█   █   █▄█ █       █   █▄▄▄  █   █ █       █▄▄▄▄█  █       █
-█   █    ▄▄▄█  ▄    █    ▄▄▄█ █   █ █       █ ▄▄▄▄▄▄█▄▄▄    █
-█   █   █   █ █ █   █   █     █   █  █     ██ █▄▄▄▄▄    █   █
-█▄▄▄█▄▄▄█   █▄█  █▄▄█▄▄▄█     █▄▄▄█   █▄▄▄█ █▄▄▄▄▄▄▄█   █▄▄▄█
+ ______ _______         __    __ ________ ________
+|      \       \       |  \  |  \        \        \
+ \▓▓▓▓▓▓ ▓▓▓▓▓▓▓\      | ▓▓\ | ▓▓ ▓▓▓▓▓▓▓▓\▓▓▓▓▓▓▓▓
+  | ▓▓ | ▓▓__/ ▓▓______| ▓▓▓\| ▓▓ ▓▓__      | ▓▓
+  | ▓▓ | ▓▓    ▓▓      \ ▓▓▓▓\ ▓▓ ▓▓  \     | ▓▓
+  | ▓▓ | ▓▓▓▓▓▓▓ \▓▓▓▓▓▓ ▓▓\▓▓ ▓▓ ▓▓▓▓▓     | ▓▓
+ _| ▓▓_| ▓▓            | ▓▓ \▓▓▓▓ ▓▓        | ▓▓
+|   ▓▓ \ ▓▓            | ▓▓  \▓▓▓ ▓▓        | ▓▓
+ \▓▓▓▓▓▓\▓▓             \▓▓   \▓▓\▓▓         \▓▓
  */
 
-/// @title IPNFTV2.4 Demo for Testing Upgrades
+/// @title IPNFT V2.3
 /// @author molecule.to
-/// @notice Demo contract to test upgrades. Don't use like this
-/// @dev Don't use this for anything other than testing.
-contract IPNFTV24 is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IReservable, UUPSUpgradeable, OwnableUpgradeable, PausableUpgradeable {
+/// @notice IP-NFTs capture intellectual property to be traded and synthesized
+contract IPNFTV23 is
+    ERC721URIStorageUpgradeable,
+    ERC721BurnableUpgradeable,
+    IReservableV23,
+    UUPSUpgradeable,
+    OwnableUpgradeable,
+    PausableUpgradeable
+{
     using CountersUpgradeable for CountersUpgradeable.Counter;
 
     CountersUpgradeable.Counter private _reservationCounter;
@@ -43,15 +59,9 @@ contract IPNFTV24 is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IRe
     /// @notice an IPNFT's base symbol, to be determined by the minter / owner, e.g. BIO-00001
     mapping(uint256 => string) public symbol;
 
-    /// @notice musnt't take the minting fee property gap
-    string public aNewProperty;
-
     event Reserved(address indexed reserver, uint256 indexed reservationId);
     event IPNFTMinted(address indexed owner, uint256 indexed tokenId, string tokenURI, string symbol);
     event ReadAccessGranted(uint256 indexed tokenId, address indexed reader, uint256 until);
-
-    // A NEW EVENT FOR UPDATES
-    event SymbolUpdated(uint256 indexed tokenId, string symbol);
 
     error NotOwningReservation(uint256 id);
     error ToZeroAddress();
@@ -59,7 +69,6 @@ contract IPNFTV24 is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IRe
     error InsufficientBalance();
     error BadDuration();
     error MintingFeeTooLow();
-    error Unauthorized();
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -67,7 +76,7 @@ contract IPNFTV24 is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IRe
     }
 
     /// @notice Contract initialization logic
-    function initialize() public initializer {
+    function initialize() external initializer {
         __UUPSUpgradeable_init();
         __Ownable_init();
         __Pausable_init();
@@ -75,22 +84,15 @@ contract IPNFTV24 is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IRe
         _reservationCounter.increment(); //start at 1.
     }
 
-    function pause() public onlyOwner {
+    function pause() external onlyOwner {
         _pause();
     }
 
-    function unpause() public onlyOwner {
+    function unpause() external onlyOwner {
         _unpause();
     }
 
-    function reinit() public onlyOwner reinitializer(2) {
-        aNewProperty = "some property";
-    }
-
-    function setAuthorizer(address authorizer_) public onlyOwner {
-        if (authorizer_ == address(0)) {
-            revert ToZeroAddress();
-        }
+    function setAuthorizer(address authorizer_) external onlyOwner {
         mintAuthorizer = IAuthorizeMints(authorizer_);
     }
 
@@ -104,6 +106,9 @@ contract IPNFTV24 is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IRe
      * @return reservationId a new reservation id
      */
     function reserve() external whenNotPaused returns (uint256 reservationId) {
+        if (!mintAuthorizer.authorizeReservation(_msgSender())) {
+            revert NeedsMintpass();
+        }
         reservationId = _reservationCounter.current();
         _reservationCounter.increment();
         reservations[reservationId] = _msgSender();
@@ -116,13 +121,13 @@ contract IPNFTV24 is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IRe
      *
      * @param to the recipient of the NFT
      * @param reservationId the reserved token id that has been reserved with `reserve()`
+     * @param mintPassId an id that's handed over to the `IAuthorizeMints` interface
      * @param _tokenURI a location that resolves to a valid IP-NFT metadata structure
      * @param _symbol a symbol that represents the IPNFT's derivatives. Can be changed by the owner
-     * @param authorization the signature to validate to IPNFT metadata
      * @return the `reservationId`
      */
-    function mintReservation(address to, uint256 reservationId, string calldata _tokenURI, string calldata _symbol, bytes calldata authorization)
-        public
+    function mintReservation(address to, uint256 reservationId, uint256 mintPassId, string calldata _tokenURI, string calldata _symbol)
+        external
         payable
         override
         whenNotPaused
@@ -131,8 +136,9 @@ contract IPNFTV24 is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IRe
         if (reservations[reservationId] != _msgSender()) {
             revert NotOwningReservation(reservationId);
         }
-        if (!mintAuthorizer.authorizeMint(_msgSender(), to, authorization)) {
-            revert Unauthorized();
+
+        if (!mintAuthorizer.authorizeMint(_msgSender(), to, abi.encode(mintPassId))) {
+            revert NeedsMintpass();
         }
 
         if (msg.value < SYMBOLIC_MINT_FEE) {
@@ -141,28 +147,12 @@ contract IPNFTV24 is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IRe
 
         delete reservations[reservationId];
         symbol[reservationId] = _symbol;
+        mintAuthorizer.redeem(abi.encode(mintPassId));
 
         _mint(to, reservationId);
         _setTokenURI(reservationId, _tokenURI);
         emit IPNFTMinted(to, reservationId, _tokenURI, _symbol);
         return reservationId;
-    }
-
-    /**
-     * A NEW METHOD TO TEST UPGRADEABILITY
-     * @param tokenId ipnft token id
-     * @param newSymbol the new symbol for this ipnft
-     */
-    function updateSymbol(uint256 tokenId, string memory newSymbol) external {
-        if (ownerOf(tokenId) != _msgSender()) {
-            revert InsufficientBalance();
-        }
-        _updateSymbol(tokenId, newSymbol);
-    }
-
-    function _updateSymbol(uint256 tokenId, string memory newSymbol) internal {
-        symbol[tokenId] = newSymbol;
-        emit SymbolUpdated(tokenId, newSymbol);
     }
 
     /**
@@ -191,15 +181,13 @@ contract IPNFTV24 is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IRe
      * @return bool current read allowance
      */
     function canRead(address reader, uint256 tokenId) external view returns (bool) {
-        if (ownerOf(tokenId) == reader) {
-            return true;
-        }
-        return readAllowances[tokenId][reader] > block.timestamp;
+        return (ownerOf(tokenId) == reader || readAllowances[tokenId][reader] > block.timestamp);
     }
 
     /// @notice in case someone sends Eth to this contract, this function gets it out again
     function withdrawAll() public whenNotPaused onlyOwner {
-        require(payable(_msgSender()).send(address(this).balance), "transfer failed");
+        (bool success,) = _msgSender().call{ value: address(this).balance }("");
+        require(success, "transfer failed");
     }
 
     /// @inheritdoc UUPSUpgradeable
