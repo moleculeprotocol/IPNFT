@@ -22,7 +22,7 @@ type ReactedIpnft @entity {
   #   paymentToken: Bytes #address ERC20 Token
   #   paidPrice: BigInt #the price paid for the original ipnft
   #   claimedShares: BigInt! # the amount of shares that have already been claimed. This needs to have a fulfilledListingId to be set
-  ipnft: Ipnft!
+  ipnft: Ipnft
   lockedToken: TimelockedToken #the locked token that bidders partially receive when claiming
   molecules: [Molecule!] @derivedFrom(field: "reactedIpnft")
   crowdsales: [CrowdSale!] @derivedFrom(field: "reactedIpnft")
