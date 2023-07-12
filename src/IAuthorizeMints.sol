@@ -1,5 +1,12 @@
-// SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.17;
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.18;
+
+struct SignedMintAuthorization {
+    uint256 reservationId;
+    string tokenUri;
+    /// eth_sign(keccak256(abi.encodePacked(minter, to, reservationId, tokenUri)))
+    bytes authorization;
+}
 
 /// @title IAuthorizeMints
 /// @author molecule.to

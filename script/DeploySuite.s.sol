@@ -6,12 +6,12 @@ import "forge-std/console.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import { IPNFT } from "../src/IPNFT.sol";
 import { SchmackoSwap } from "../src/SchmackoSwap.sol";
-import { Mintpass } from "../src/Mintpass.sol";
+import { SignedMintAuthorizer } from "../src/SignedMintAuthorizer.sol";
 
 /**
  * @title DeploySuite
  * @author molecule.to
- * @notice deploys IPNFT, Mintpass, Schmackoswap, initializes Mintpass as authorizer on IPNFT
+ * @notice deploys IPNFT, Authorizer, Schmackoswap, initializes IPNFT with signature expecting authorizer
  */
 contract DeploySuite is Script {
     function run() public {
@@ -23,14 +23,12 @@ contract DeploySuite is Script {
         ipnft.initialize();
 
         SchmackoSwap swap = new SchmackoSwap();
-        Mintpass mintpass = new Mintpass(address(ipnft));
-        mintpass.grantRole(mintpass.MODERATOR(), moderator);
-
-        ipnft.setAuthorizer(address(mintpass));
+        SignedMintAuthorizer authorizer = new SignedMintAuthorizer(moderator);
+        ipnft.setAuthorizer(authorizer);
 
         console.log("IPNFT_ADDRESS=%s", address(ipnft));
         console.log("SOS_ADDRESS=%s", address(swap));
-        console.log("MINTPASS_ADDRESS=%s", address(mintpass));
+        console.log("AUTHORIZER_ADDRESS=%s", address(authorizer));
 
         vm.stopBroadcast();
     }

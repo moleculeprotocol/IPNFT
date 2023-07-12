@@ -8,25 +8,23 @@ import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/O
 import { PausableUpgradeable } from "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
 import { CountersUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/CountersUpgradeable.sol";
 import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-import { IAuthorizeMints, SignedMintAuthorization } from "./IAuthorizeMints.sol";
-import { IReservable } from "./IReservable.sol";
+import { IAuthorizeMints, SignedMintAuthorization } from "../../IAuthorizeMints.sol";
+import { IReservable } from "../../IReservable.sol";
 
 /*
- ______ _______         __    __ ________ ________
-|      \       \       |  \  |  \        \        \
- \▓▓▓▓▓▓ ▓▓▓▓▓▓▓\      | ▓▓\ | ▓▓ ▓▓▓▓▓▓▓▓\▓▓▓▓▓▓▓▓
-  | ▓▓ | ▓▓__/ ▓▓______| ▓▓▓\| ▓▓ ▓▓__      | ▓▓
-  | ▓▓ | ▓▓    ▓▓      \ ▓▓▓▓\ ▓▓ ▓▓  \     | ▓▓
-  | ▓▓ | ▓▓▓▓▓▓▓ \▓▓▓▓▓▓ ▓▓\▓▓ ▓▓ ▓▓▓▓▓     | ▓▓
- _| ▓▓_| ▓▓            | ▓▓ \▓▓▓▓ ▓▓        | ▓▓
-|   ▓▓ \ ▓▓            | ▓▓  \▓▓▓ ▓▓        | ▓▓
- \▓▓▓▓▓▓\▓▓             \▓▓   \▓▓\▓▓         \▓▓
+  _____  ___    __  ___  _____        ____    ____  
+  \_   \/ _ \/\ \ \/ __\/__   \/\   /\___ \  | ___| 
+   / /\/ /_)/  \/ / _\    / /\/\ \ / / __) | |___ \ 
+/\/ /_/ ___/ /\  / /     / /    \ V / / __/ _ ___) |
+\____/\/   \_\ \/\/      \/      \_/ |_____(_)____/ 
+                                                    
  */
 
-/// @title IPNFT V2.4
+/// @title IPNFTV2.5 Demo for Testing Upgrades
 /// @author molecule.to
-/// @notice IP-NFTs capture intellectual property to be traded and synthesized
-contract IPNFT is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IReservable, UUPSUpgradeable, OwnableUpgradeable, PausableUpgradeable {
+/// @notice Demo contract to test upgrades. Don't use like this
+/// @dev Don't use this for anything other than testing.
+contract IPNFTV25 is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IReservable, UUPSUpgradeable, OwnableUpgradeable, PausableUpgradeable {
     using CountersUpgradeable for CountersUpgradeable.Counter;
 
     CountersUpgradeable.Counter private _reservationCounter;
@@ -44,9 +42,15 @@ contract IPNFT is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IReser
     /// @notice an IPNFT's base symbol, to be determined by the minter / owner, e.g. BIO-00001
     mapping(uint256 => string) public symbol;
 
+    /// @notice musnt't take the minting fee property gap
+    string public aNewProperty;
+
     event Reserved(address indexed reserver, uint256 indexed reservationId);
     event IPNFTMinted(address indexed owner, uint256 indexed tokenId, string tokenURI, string symbol);
     event ReadAccessGranted(uint256 indexed tokenId, address indexed reader, uint256 until);
+
+    // A NEW EVENT FOR UPDATES
+    event SymbolUpdated(uint256 indexed tokenId, string symbol);
 
     error NotOwningReservation(uint256 id);
     error ToZeroAddress();
@@ -79,6 +83,10 @@ contract IPNFT is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IReser
 
     function setAuthorizer(IAuthorizeMints authorizer_) external onlyOwner {
         mintAuthorizer = authorizer_;
+    }
+
+    function reinit() public onlyOwner reinitializer(2) {
+        aNewProperty = "some property";
     }
 
     /// @notice https://docs.opensea.io/docs/contract-level-metadata
@@ -138,6 +146,23 @@ contract IPNFT is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IReser
         _setTokenURI(reservationId, _tokenURI);
         emit IPNFTMinted(to, reservationId, _tokenURI, _symbol);
         return reservationId;
+    }
+
+    /**
+     * A NEW METHOD TO TEST UPGRADEABILITY
+     * @param tokenId ipnft token id
+     * @param newSymbol the new symbol for this ipnft
+     */
+    function updateSymbol(uint256 tokenId, string memory newSymbol) external {
+        if (ownerOf(tokenId) != _msgSender()) {
+            revert InsufficientBalance();
+        }
+        _updateSymbol(tokenId, newSymbol);
+    }
+
+    function _updateSymbol(uint256 tokenId, string memory newSymbol) internal {
+        symbol[tokenId] = newSymbol;
+        emit SymbolUpdated(tokenId, newSymbol);
     }
 
     /**

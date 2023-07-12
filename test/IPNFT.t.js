@@ -3,7 +3,7 @@ const hre = require('hardhat')
 
 describe('IPNFT fundamentals and upgrades', function () {
   let ipnftContract
-  let mintpass
+  let authorizer
   let deployer, alice, bob
 
   beforeEach(async function () {
@@ -14,38 +14,37 @@ describe('IPNFT fundamentals and upgrades', function () {
     const IPNFT = await ethers.getContractFactory('IPNFT')
     ipnftContract = await upgrades.deployProxy(IPNFT, { kind: 'uups' })
 
-    const Mintpass = await ethers.getContractFactory('Mintpass')
-    mintpass = await Mintpass.deploy(ipnftContract.address)
+    const SignedMintAuthorizer = await ethers.getContractFactory(
+      'SignedMintAuthorizer'
+    )
+    authorizer = await SignedMintAuthorizer.deploy(deployer.address)
 
-    await ipnftContract.connect(deployer).setAuthorizer(mintpass.address)
+    await ipnftContract.connect(deployer).setAuthorizer(authorizer.address)
   })
 
-  it('validates updates V23 -> V24', async function () {
-    const IPNFTV23 = await ethers.getContractFactory('IPNFT')
+  it('validates updates V23 -> V24 -> V25', async function () {
+    const IPNFTV23 = await ethers.getContractFactory('IPNFTV23')
     const ipnftContractV23 = await upgrades.deployProxy(IPNFTV23, {
       kind: 'uups'
     })
 
     const result = await upgrades.validateUpgrade(
       ipnftContractV23.address,
-      await ethers.getContractFactory('IPNFTV24'),
+      await ethers.getContractFactory('IPNFT'),
       {
         kind: 'uups'
       }
     )
     //just make sure the above didn't throw :)
     expect(1).to.eq(1)
-  })
 
-  it('validates updates to V24', async function () {
-    const result = await upgrades.validateUpgrade(
-      ipnftContract.address,
-      await ethers.getContractFactory('IPNFTV24'),
+    const result25 = await upgrades.validateUpgrade(
+      ipnftContractV23.address,
+      await ethers.getContractFactory('IPNFTV25'),
       {
         kind: 'uups'
       }
     )
-    //just make sure the above didn't throw :)
     expect(1).to.eq(1)
   })
 

@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.13;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.18;
 
 import "forge-std/Script.sol";
 import "forge-std/console.sol";
@@ -7,11 +7,18 @@ import "forge-std/console.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import { IERC721 } from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import { IPNFT } from "../../src/IPNFT.sol";
 import { SchmackoSwap } from "../../src/SchmackoSwap.sol";
-import { Mintpass } from "../../src/Mintpass.sol";
+import { SignedMintAuthorizer } from "../../src/SignedMintAuthorizer.sol";
 import { FakeERC20 } from "../../src/helpers/FakeERC20.sol";
 import { CommonScript } from "./Common.sol";
+
+struct SignedMintAuthorization {
+    uint256 reservationId;
+    string tokenUri;
+    bytes signature;
+}
 
 contract DeployIpnftSuite is CommonScript {
     function run() public {
@@ -22,14 +29,12 @@ contract DeployIpnftSuite is CommonScript {
 
         SchmackoSwap swap = new SchmackoSwap();
 
-        Mintpass mintpass = new Mintpass(address(ipnft));
-        mintpass.grantRole(mintpass.MODERATOR(), deployer);
-
-        ipnft.setAuthorizer(address(mintpass));
+        SignedMintAuthorizer authorizer = new SignedMintAuthorizer(deployer);
+        ipnft.setAuthorizer(authorizer);
 
         console.log("IPNFT_ADDRESS=%s", address(ipnft));
         console.log("SOS_ADDRESS=%s", address(swap));
-        console.log("MINTPASS_ADDRESS=%s", address(mintpass));
+        console.log("AUTHORIZER_ADDRESS=%s", address(authorizer));
 
         vm.stopBroadcast();
     }
@@ -38,27 +43,28 @@ contract DeployIpnftSuite is CommonScript {
 contract FixtureIpnft is CommonScript {
     IPNFT ipnft;
     SchmackoSwap schmackoSwap;
-    Mintpass mintpass;
     FakeERC20 usdc;
 
     function prepareAddresses() internal override {
         super.prepareAddresses();
         ipnft = IPNFT(vm.envAddress("IPNFT_ADDRESS"));
         schmackoSwap = SchmackoSwap(vm.envAddress("SOS_ADDRESS"));
-        mintpass = Mintpass(vm.envAddress("MINTPASS_ADDRESS"));
         usdc = FakeERC20(vm.envAddress("USDC_ADDRESS"));
-    }
-
-    function mintMintPass(address to) internal {
-        vm.startBroadcast(deployer);
-        mintpass.batchMint(to, 2);
-        vm.stopBroadcast();
     }
 
     function mintIpnft(address from, address to) internal returns (uint256) {
         vm.startBroadcast(from);
         uint256 reservationId = ipnft.reserve();
-        ipnft.mintReservation{ value: 0.001 ether }(to, reservationId, 1, "ar://cy7I6VoEXhO5rHrq8siFYtelM9YZKyoGj3vmGwJZJOc", "BIO-00001");
+
+        bytes32 messageHash =
+            ECDSA.toEthSignedMessageHash(keccak256(abi.encodePacked(from, to, reservationId, "ar://cy7I6VoEXhO5rHrq8siFYtelM9YZKyoGj3vmGwJZJOc")));
+
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(deployerPk, messageHash);
+
+        ipnft.mintReservation{ value: 0.001 ether }(
+            to, reservationId, "ar://cy7I6VoEXhO5rHrq8siFYtelM9YZKyoGj3vmGwJZJOc", "BIO-00001", abi.encodePacked(r, s, v)
+        );
+
         vm.stopBroadcast();
         return reservationId;
     }
@@ -73,8 +79,6 @@ contract FixtureIpnft is CommonScript {
 
     function run() public {
         prepareAddresses();
-
-        mintMintPass(bob);
 
         uint256 tokenId = mintIpnft(bob, bob);
 
