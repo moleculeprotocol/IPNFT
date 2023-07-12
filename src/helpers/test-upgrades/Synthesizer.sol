@@ -6,8 +6,8 @@ import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/O
 import { Clones } from "@openzeppelin/contracts/proxy/Clones.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 import { Molecules, Metadata as MoleculesMetadata } from "./Molecules.sol";
-import { IPermissioner } from "./Permissioner.sol";
-import { IPNFT } from "./IPNFT.sol";
+import { IPermissioner } from "./SynthPermissioner.sol";
+import { IPNFT } from "../../IPNFT.sol";
 
 error MustOwnIpnft();
 error AlreadySynthesized();

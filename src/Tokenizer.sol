@@ -5,26 +5,18 @@ import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils
 import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import { Clones } from "@openzeppelin/contracts/proxy/Clones.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
-import { Molecules, Metadata as MoleculesMetadata } from "../../Molecules.sol";
-import { IPermissioner } from "../../Permissioner.sol";
-import { IPNFT } from "../../IPNFT.sol";
+import { IPToken, Metadata as TokenMetadata } from "./IPToken.sol";
+import { IPermissioner } from "./Permissioner.sol";
+import { IPNFT } from "./IPNFT.sol";
 
 error MustOwnIpnft();
-error AlreadySynthesized();
+error Alreadytokenized();
 
-contract MoleculesNext is Molecules {
-    uint256 public aNewStateVar;
-
-    function setAStateVar(uint256 newVal) public {
-        aNewStateVar = newVal;
-    }
-}
-
-/// @title Synthesizer
+/// @title Tokenizer 1.1
 /// @author molecule.to
 /// @notice synthesizes an IPNFT to an ERC20 token (called molecules) and controls its supply.
 ///         Allows molecule holders to withdraw sales shares when the IPNFT is sold
-contract SynthesizerNext is UUPSUpgradeable, OwnableUpgradeable {
+contract Tokenizer is UUPSUpgradeable, OwnableUpgradeable {
     event MoleculesCreated(
         uint256 indexed moleculesId,
         uint256 indexed ipnftId,
@@ -38,7 +30,7 @@ contract SynthesizerNext is UUPSUpgradeable, OwnableUpgradeable {
 
     IPNFT internal ipnft;
 
-    mapping(uint256 => MoleculesNext) public synthesized;
+    mapping(uint256 => IPToken) public tokenized;
     /// @custom:oz-upgrades-unsafe-allow state-variable-immutable
     address immutable tokenImplementation;
 
@@ -46,9 +38,8 @@ contract SynthesizerNext is UUPSUpgradeable, OwnableUpgradeable {
     IPermissioner permissioner;
 
     /**
-     *
      * @param _ipnft the IPNFT contract
-     * @param _permissioner a permissioning contract that checks if callers have agreed to the synthesized token's legal agreements
+     * @param _permissioner a permissioning contract that checks if callers have agreed to the tokenized token's legal agreements
      */
     function initialize(IPNFT _ipnft, IPermissioner _permissioner) external initializer {
         __UUPSUpgradeable_init();
@@ -57,56 +48,60 @@ contract SynthesizerNext is UUPSUpgradeable, OwnableUpgradeable {
         permissioner = _permissioner;
     }
 
-    function reinit(IPermissioner _permissioner) public onlyOwner reinitializer(3) {
-        permissioner = _permissioner;
-    }
-
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
-        tokenImplementation = address(new MoleculesNext());
+        tokenImplementation = address(new IPToken());
         _disableInitializers();
+    }
+
+    function reinit(IPermissioner _permissioner) public onlyOwner reinitializer(1) {
+        permissioner = _permissioner;
     }
 
     /**
      * @notice initializes synthesis on ipnft#id for the current asset holder.
-     *         molecules are identified by the original token holder and the token id
+     *         IPTokens are identified by the original token holder and the token id
      * @param ipnftId the token id on the underlying nft collection
-     * @param moleculesAmount the initially issued supply of Molecules
-     * @param agreementCid a content hash that contains legal terms for Molecule owners
+     * @param tokenAmount the initially issued supply of IP tokens
+     * @param tokenSymbol the ip token's ticker symbol
+     * @param agreementCid a content hash that contains legal terms for IP token owners
      * @param signedAgreement the sender's signature over the signed agreemeent text (must be created on the client)
-     * @return molecules a new created ERC20 token contract that represents the molecules
+     * @return token a new created ERC20 token contract that represents the tokenized ipnft
      */
-    function synthesizeIpnft(uint256 ipnftId, uint256 moleculesAmount, string calldata agreementCid, bytes calldata signedAgreement)
-        external
-        returns (MoleculesNext molecules)
-    {
+    function tokenizeIpnft(
+        uint256 ipnftId,
+        uint256 tokenAmount,
+        string memory tokenSymbol,
+        string memory agreementCid,
+        bytes calldata signedAgreement
+    ) external returns (IPToken token) {
         if (ipnft.ownerOf(ipnftId) != _msgSender()) {
             revert MustOwnIpnft();
         }
-        string memory tokenSymbol = ipnft.symbol(ipnftId);
-        // https://github.com/OpenZeppelin/workshops/tree/master/02-contracts-clone
-        molecules = MoleculesNext(Clones.clone(tokenImplementation));
-        string memory name = string.concat("Molecules of IPNFT #", Strings.toString(ipnftId));
-        molecules.initialize(name, tokenSymbol, MoleculesMetadata(ipnftId, _msgSender(), agreementCid));
 
-        uint256 moleculeHash = molecules.hash();
+        // https://github.com/OpenZeppelin/workshops/tree/master/02-contracts-clone
+        token = IPToken(Clones.clone(tokenImplementation));
+        string memory name = string.concat("IP Tokens of IPNFT #", Strings.toString(ipnftId));
+        token.initialize(name, tokenSymbol, TokenMetadata(ipnftId, _msgSender(), agreementCid));
+
+        uint256 tokenHash = token.hash();
         // ensure we can only call this once per sales cycle
-        if (address(synthesized[moleculeHash]) != address(0)) {
-            revert AlreadySynthesized();
+        if (address(tokenized[tokenHash]) != address(0)) {
+            revert Alreadytokenized();
         }
 
-        synthesized[moleculeHash] = molecules;
+        tokenized[tokenHash] = token;
 
-        emit MoleculesCreated(moleculeHash, ipnftId, address(molecules), _msgSender(), moleculesAmount, agreementCid, name, tokenSymbol);
-        permissioner.accept(molecules, _msgSender(), signedAgreement);
-        molecules.issue(_msgSender(), moleculesAmount);
+        emit MoleculesCreated(tokenHash, ipnftId, address(token), _msgSender(), tokenAmount, agreementCid, name, tokenSymbol);
+        permissioner.accept(token, _msgSender(), signedAgreement);
+        token.issue(_msgSender(), tokenAmount);
     }
 
     /// @notice upgrade authorization logic
     function _authorizeUpgrade(address /*newImplementation*/ )
         internal
         override
-        onlyOwner // solhint-disable-next-line no-empty-blocks
+        onlyOwner // solhint-disable--line no-empty-blocks
     {
         //empty block
     }
