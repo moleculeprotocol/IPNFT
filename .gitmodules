@@ -24,3 +24,6 @@
 [submodule "lib/token-vesting-contract"]
 	path = lib/token-vesting-contract
 	url = https://github.com/moleculeprotocol/token-vesting-contract
+[submodule "lib/solidity-base64"]
+	path = lib/solidity-base64
+	url = https://github.com/hir0min/solidity-base64
