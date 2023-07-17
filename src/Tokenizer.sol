@@ -29,7 +29,8 @@ contract Tokenizer is UUPSUpgradeable, OwnableUpgradeable {
 
     IPNFT internal ipnft;
 
-    mapping(uint256 => IPToken) public tokenized;
+    //this is the old term to keep the storage layout intact
+    mapping(uint256 => IPToken) public synthesized;
     /// @custom:oz-upgrades-unsafe-allow state-variable-immutable
     address immutable tokenImplementation;
 
@@ -85,11 +86,11 @@ contract Tokenizer is UUPSUpgradeable, OwnableUpgradeable {
 
         uint256 tokenHash = token.hash();
         // ensure we can only call this once per sales cycle
-        if (address(tokenized[tokenHash]) != address(0)) {
+        if (address(synthesized[tokenHash]) != address(0)) {
             revert AlreadyTokenized();
         }
 
-        tokenized[tokenHash] = token;
+        synthesized[tokenHash] = token;
 
         //this has been called MoleculesCreated before
         emit TokensCreated(tokenHash, ipnftId, address(token), _msgSender(), tokenAmount, agreementCid, name, tokenSymbol);

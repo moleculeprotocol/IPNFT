@@ -27,7 +27,7 @@ done
 forge script script/dev/Ipnft.s.sol:DeployIpnftSuite -f $RPC_URL --broadcast
 forge script script/dev/Tokens.s.sol:DeployTokens -f $RPC_URL --broadcast 
 forge script script/dev/Periphery.s.sol -f $RPC_URL --broadcast
-forge script script/dev/Synthesizer.s.sol:DeploySynthesizer -f $RPC_URL --broadcast 
+forge script script/dev/Tokenizer.s.sol:DeployTokenizer -f $RPC_URL --broadcast 
 forge script script/dev/CrowdSale.s.sol:DeployCrowdSale -f $RPC_URL --broadcast
 forge script script/dev/Tokens.s.sol:DeployFakeTokens -f $RPC_URL --broadcast 
 
@@ -36,7 +36,7 @@ if [ "$fixture" -eq "1" ]; then
   echo "Running fixture scripts."
 
     forge script script/dev/Ipnft.s.sol:FixtureIpnft -f $RPC_URL --broadcast
-    forge script script/dev/Synthesizer.s.sol:FixtureSynthesizer -f $RPC_URL --broadcast
+    forge script script/dev/Tokenizer.s.sol:FixtureTokenizer -f $RPC_URL --broadcast
     forge script script/dev/CrowdSale.s.sol:FixtureCrowdSale -f $RPC_URL --broadcast
     
     echo "SALE_ID= forge script script/dev/CrowdSale.s.sol:ClaimSale -f $RPC_URL --broadcast" 

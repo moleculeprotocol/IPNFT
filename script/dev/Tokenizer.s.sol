@@ -26,7 +26,7 @@ contract DeployTokenizer is CommonScript {
         IPermissioner permissioner = IPermissioner(vm.envAddress("TERMS_ACCEPTED_PERMISSIONER_ADDRESS"));
         tokenizer.initialize(IPNFT(vm.envAddress("IPNFT_ADDRESS")), permissioner);
         vm.stopBroadcast();
-        console.log("SYNTHESIZER_ADDRESS=%s", address(tokenizer));
+        console.log("TOKENIZER_ADDRESS=%s", address(tokenizer));
     }
 }
 
@@ -42,7 +42,7 @@ contract FixtureTokenizer is CommonScript {
 
     function prepareAddresses() internal override {
         super.prepareAddresses();
-        tokenizer = Tokenizer(vm.envAddress("SYNTHESIZER_ADDRESS"));
+        tokenizer = Tokenizer(vm.envAddress("TOKENIZER_ADDRESS"));
         permissioner = TermsAcceptedPermissioner(vm.envAddress("TERMS_ACCEPTED_PERMISSIONER_ADDRESS"));
     }
 
@@ -58,7 +58,7 @@ contract FixtureTokenizer is CommonScript {
             tokenizer.tokenizeIpnft(1, 1_000_000 ether, "MOLE", "bafkreigk5dvqblnkdniges6ft5kmuly47ebw4vho6siikzmkaovq6sjstq", signedTerms);
         vm.stopBroadcast();
 
-        console.log("MOLECULES_ADDRESS=%s", address(tokenContract));
-        console.log("molecules hash: %s", tokenContract.hash());
+        console.log("IPTS_ADDRESS=%s", address(tokenContract));
+        console.log("IPT round hash: %s", tokenContract.hash());
     }
 }
