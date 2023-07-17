@@ -7,3 +7,4 @@ forge-std/=lib/forge-std/src/
 solmate/=lib/solmate/src/
 erc721b/=lib/ERC721B/contracts/
 safe-global/safe-contracts/=lib/safe-contracts/contracts/
+base64/=lib/solidity-base64/contracts/libraries/

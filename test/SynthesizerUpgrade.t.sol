@@ -3,16 +3,16 @@ pragma solidity ^0.8.18;
 
 import "forge-std/Test.sol";
 import { console } from "forge-std/console.sol";
+import { stdJson } from "forge-std/StdJson.sol";
 
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import { SafeERC20Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
+import { Base64Url } from "base64/Base64Url.sol";
 
-import { Safe } from "safe-global/safe-contracts/Safe.sol";
-import { SafeProxyFactory } from "safe-global/safe-contracts/proxies/SafeProxyFactory.sol";
-import { Enum } from "safe-global/safe-contracts/common/Enum.sol";
-import "./helpers/MakeGnosisWallet.sol";
+import { Strings } from "./helpers/Strings.sol";
+
 import { IPNFT } from "../src/IPNFT.sol";
 import { AcceptAllAuthorizer } from "./helpers/AcceptAllAuthorizer.sol";
 
@@ -29,6 +29,23 @@ import {
 } from "../src/helpers/test-upgrades/SynthPermissioner.sol";
 
 import { SchmackoSwap, ListingState } from "../src/SchmackoSwap.sol";
+
+struct IPTMetadataProps {
+    string agreement_content;
+    address erc20_contract;
+    uint256 ipnft_id;
+    address original_owner;
+    string supply;
+}
+
+struct IPTUriMetadata {
+    uint256 decimals;
+    string description;
+    string external_url;
+    string image;
+    string name;
+    IPTMetadataProps properties;
+}
 
 contract SynthesizerUpgradeTest is Test {
     using SafeERC20Upgradeable for IPToken;
@@ -133,5 +150,15 @@ contract SynthesizerUpgradeTest is Test {
         tokenContractNew.issue(originalOwner, 30_000);
         assertEq(tokenContractNew.balanceOf(originalOwner), 100_000);
         vm.stopPrank();
+
+        string memory encodedUri = tokenContractOld.uri();
+        IPTUriMetadata memory parsedMetadata =
+            abi.decode(vm.parseJson(string(Base64Url.decode(Strings.substring(encodedUri, 29, bytes(encodedUri).length)))), (IPTUriMetadata));
+        assertEq(parsedMetadata.name, "Molecules of IPNFT #1");
+
+        encodedUri = tokenContractNew.uri();
+        parsedMetadata =
+            abi.decode(vm.parseJson(string(Base64Url.decode(Strings.substring(encodedUri, 29, bytes(encodedUri).length)))), (IPTUriMetadata));
+        assertEq(parsedMetadata.name, "IP Tokens of IPNFT #2");
     }
 }
