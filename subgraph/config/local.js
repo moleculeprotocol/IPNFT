@@ -1,7 +1,7 @@
 const path = require('node:path')
 require('dotenv').config({
   debug: true,
-  path: path.resolve(process.cwd(), '../.env.example')
+  path: path.resolve(process.cwd(), '../.env')
 })
 
 module.exports = {
@@ -14,8 +14,8 @@ module.exports = {
     address: process.env.SOS_ADDRESS,
     startBlock: 0
   },
-  synthesizer: {
-    address: process.env.SYNTHESIZER_ADDRESS,
+  tokenizer: {
+    address: process.env.TOKENIZER_ADDRESS,
     startBlock: 0
   },
   stakedLockingCrowdSale: {

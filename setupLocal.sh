@@ -22,22 +22,27 @@ while [ "$#" -gt 0 ]; do
   shift
 done
 
+FSC="forge script  -f $RPC_URL --broadcast --revert-strings debug"
 
 # Deployments
-forge script script/dev/Ipnft.s.sol:DeployIpnftSuite -f $RPC_URL --broadcast
-forge script script/dev/Tokens.s.sol:DeployTokens -f $RPC_URL --broadcast 
-forge script script/dev/Periphery.s.sol -f $RPC_URL --broadcast
-forge script script/dev/Tokenizer.s.sol:DeployTokenizer -f $RPC_URL --broadcast 
-forge script script/dev/CrowdSale.s.sol:DeployCrowdSale -f $RPC_URL --broadcast
-forge script script/dev/Tokens.s.sol:DeployFakeTokens -f $RPC_URL --broadcast 
+$FSC script/dev/Ipnft.s.sol:DeployIpnftSuite 
+$FSC script/dev/Tokens.s.sol:DeployTokens  
+$FSC script/dev/Periphery.s.sol 
+$FSC script/dev/Tokenizer.s.sol:DeployTokenizer  
+$FSC script/dev/CrowdSale.s.sol:DeployCrowdSale 
+$FSC script/dev/Tokens.s.sol:DeployFakeTokens  
 
 # optionally: fixtures
 if [ "$fixture" -eq "1" ]; then
   echo "Running fixture scripts."
 
-    forge script script/dev/Ipnft.s.sol:FixtureIpnft -f $RPC_URL --broadcast
-    forge script script/dev/Tokenizer.s.sol:FixtureTokenizer -f $RPC_URL --broadcast
-    forge script script/dev/CrowdSale.s.sol:FixtureCrowdSale -f $RPC_URL --broadcast
+  $FSC script/dev/Ipnft.s.sol:FixtureIpnft 
+  $FSC script/dev/Tokenizer.s.sol:FixtureTokenizer 
+  $FSC script/dev/CrowdSale.s.sol:FixtureCrowdSale 
     
-    echo "SALE_ID= forge script script/dev/CrowdSale.s.sol:ClaimSale -f $RPC_URL --broadcast" 
+  echo "Waiting 15 seconds until claiming sale..."
+  sleep 16
+  cast rpc evm_mine
+
+  $FSC script/dev/CrowdSale.s.sol:ClaimSale
 fi

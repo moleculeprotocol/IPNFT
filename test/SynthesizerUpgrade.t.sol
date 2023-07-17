@@ -125,6 +125,10 @@ contract SynthesizerUpgradeTest is Test {
 
         TermsAcceptedPermissioner termsPermissioner = new TermsAcceptedPermissioner();
         tokenizer.reinit(termsPermissioner);
+
+        vm.expectRevert("Initializable: contract is already initialized");
+        tokenizer.reinit(termsPermissioner);
+
         vm.stopPrank();
 
         assertEq(tokenContractOld.balanceOf(originalOwner), 100_000);
