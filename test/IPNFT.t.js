@@ -58,7 +58,7 @@ describe('IPNFT fundamentals and upgrades', function () {
 
     const result = await upgrades.validateUpgrade(
       synth0.address,
-      await ethers.getContractFactory('SynthesizerNext'),
+      await ethers.getContractFactory('Tokenizer'),
       {
         kind: 'uups'
       }
