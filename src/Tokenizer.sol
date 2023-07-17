@@ -53,7 +53,7 @@ contract Tokenizer is UUPSUpgradeable, OwnableUpgradeable {
         _disableInitializers();
     }
 
-    function reinit(IPermissioner _permissioner) public onlyOwner reinitializer(1) {
+    function reinit(IPermissioner _permissioner) public onlyOwner reinitializer(2) {
         permissioner = _permissioner;
     }
 
