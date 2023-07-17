@@ -1,12 +1,15 @@
 import { BigInt } from '@graphprotocol/graph-ts'
-import { MoleculesCreated as MoleculesCreatedEvent } from '../generated/Synthesizer/Synthesizer'
+import {
+  MoleculesCreated as MoleculesCreatedEvent,
+  TokensCreated as TokensCreatedEvent
+} from '../generated/Tokenizer/Tokenizer'
 
-import { Molecules } from '../generated/templates'
+import { IPToken } from '../generated/templates'
 
-import { ReactedIpnft } from '../generated/schema'
+import { IPT } from '../generated/schema'
 
-export function handleMoleculesCreated(event: MoleculesCreatedEvent): void {
-  let reacted = new ReactedIpnft(event.params.tokenContract.toHexString())
+export function handleIPTsCreated(event: TokensCreatedEvent): void {
+  let reacted = new IPT(event.params.tokenContract.toHexString())
 
   reacted.createdAt = event.block.timestamp
   reacted.ipnft = event.params.ipnftId.toString()
@@ -19,7 +22,7 @@ export function handleMoleculesCreated(event: MoleculesCreatedEvent): void {
   //these will be updated by the underlying Molecules subgraph template
   reacted.totalIssued = BigInt.fromU32(0)
   reacted.circulatingSupply = BigInt.fromU32(0)
-  Molecules.create(event.params.tokenContract)
+  IPToken.create(event.params.tokenContract)
 
   reacted.save()
 }

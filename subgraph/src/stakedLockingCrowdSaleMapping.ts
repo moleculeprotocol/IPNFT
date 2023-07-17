@@ -17,7 +17,7 @@ import {
   Contribution,
   CrowdSale,
   ERC20Token,
-  ReactedIpnft,
+  IPT,
   TimelockedToken
 } from '../generated/schema'
 
@@ -52,11 +52,11 @@ function makeTimelockedToken(
     token.name = _contract.name()
     token.underlyingToken = underlyingToken.id
 
-    let reactedIpnft = ReactedIpnft.load(underlyingToken.id.toHexString())
-    if (reactedIpnft) {
-      token.reactedIpnft = reactedIpnft.id
-      reactedIpnft.lockedToken = token.id
-      reactedIpnft.save()
+    let ipt = IPT.load(underlyingToken.id.toHexString())
+    if (ipt) {
+      token.ipt = ipt.id
+      ipt.lockedToken = token.id
+      ipt.save()
     }
     token.save()
   }
@@ -67,33 +67,29 @@ function makeTimelockedToken(
 export function handleStarted(event: StartedEvent): void {
   let crowdSale = new CrowdSale(event.params.saleId.toString())
 
-  let reactedIpnft = ReactedIpnft.load(
-    event.params.sale.auctionToken.toHexString()
-  )
-  if (!reactedIpnft) {
-    log.error('ReactedIpnft Ipnft not found for id: {}', [
+  let ipt = IPT.load(event.params.sale.auctionToken.toHexString())
+  if (!ipt) {
+    log.error('[Crowdsale] Ipt not found for id: {}', [
       event.params.sale.auctionToken.toHexString()
     ])
     return
   }
 
-  if (!reactedIpnft.lockedToken) {
-    reactedIpnft.lockedToken = event.params.lockingToken
-    reactedIpnft.save()
+  if (!ipt.lockedToken) {
+    ipt.lockedToken = event.params.lockingToken
+    ipt.save()
   } else {
-    let _reactedIpnftToken = changetype<Bytes>(
-      reactedIpnft.lockedToken
-    ).toHexString()
+    let _ipt = changetype<Bytes>(ipt.lockedToken).toHexString()
     let _newToken = event.params.lockingToken.toHexString()
-    if (_reactedIpnftToken != _newToken) {
-      log.error(
-        'the locking token per reacted Ipnft should be unique {} != {}',
-        [_reactedIpnftToken, _newToken]
-      )
+    if (_ipt != _newToken) {
+      log.error('the locking token per IPT should be unique {} != {}', [
+        _ipt,
+        _newToken
+      ])
     }
   }
 
-  crowdSale.reactedIpnft = reactedIpnft.id
+  crowdSale.ipt = ipt.id
   crowdSale.issuer = event.params.issuer
   crowdSale.beneficiary = event.params.sale.beneficiary
   crowdSale.closingTime = event.params.sale.closingTime
@@ -151,7 +147,7 @@ export function handleLockingContractCreated(
   event: LockingContractCreatedEvent
 ): void {
   let context = new DataSourceContext()
-  context.setBytes('reactedIpnft', event.params.underlyingToken)
+  context.setBytes('ipt', event.params.underlyingToken)
   context.setBytes('lockingContract', event.params.lockingContract)
   TimelockedTokenTemplate.createWithContext(
     event.params.lockingContract,
@@ -272,10 +268,11 @@ export function handleClaimed(event: ClaimedEvent): void {
   contribution.refundedTokens = event.params.refunded
   contribution.save()
 }
+
 export function handleClaimedStakes(event: ClaimedStakesEvent): void {
   let contributionId =
     event.params.saleId.toString() + '-' + event.params.claimer.toHex()
-  //   Load  Contribution
+  // Load Contribution
   let contribution = Contribution.load(contributionId)
   if (contribution === null) {
     log.error(
