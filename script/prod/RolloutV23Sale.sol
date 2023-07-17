@@ -6,7 +6,6 @@ import "forge-std/console.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import { IPNFT } from "../../src/IPNFT.sol";
 import { IPermissioner, TermsAcceptedPermissioner } from "../../src/Permissioner.sol";
-import { Synthesizer } from "../../src/Synthesizer.sol";
 import { StakedLockingCrowdSale } from "../../src/crowdsale/StakedLockingCrowdSale.sol";
 
 contract RolloutV23Sale is Script {

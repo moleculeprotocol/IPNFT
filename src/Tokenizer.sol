@@ -10,14 +10,13 @@ import { IPermissioner } from "./Permissioner.sol";
 import { IPNFT } from "./IPNFT.sol";
 
 error MustOwnIpnft();
-error Alreadytokenized();
+error AlreadyTokenized();
 
 /// @title Tokenizer 1.1
 /// @author molecule.to
-/// @notice synthesizes an IPNFT to an ERC20 token (called molecules) and controls its supply.
-///         Allows molecule holders to withdraw sales shares when the IPNFT is sold
+/// @notice tokenizes an IPNFT to an ERC20 token (called IPT) and controls its supply.
 contract Tokenizer is UUPSUpgradeable, OwnableUpgradeable {
-    event MoleculesCreated(
+    event TokensCreated(
         uint256 indexed moleculesId,
         uint256 indexed ipnftId,
         address indexed tokenContract,
@@ -87,12 +86,13 @@ contract Tokenizer is UUPSUpgradeable, OwnableUpgradeable {
         uint256 tokenHash = token.hash();
         // ensure we can only call this once per sales cycle
         if (address(tokenized[tokenHash]) != address(0)) {
-            revert Alreadytokenized();
+            revert AlreadyTokenized();
         }
 
         tokenized[tokenHash] = token;
 
-        emit MoleculesCreated(tokenHash, ipnftId, address(token), _msgSender(), tokenAmount, agreementCid, name, tokenSymbol);
+        //this has been called MoleculesCreated before
+        emit TokensCreated(tokenHash, ipnftId, address(token), _msgSender(), tokenAmount, agreementCid, name, tokenSymbol);
         permissioner.accept(token, _msgSender(), signedAgreement);
         token.issue(_msgSender(), tokenAmount);
     }

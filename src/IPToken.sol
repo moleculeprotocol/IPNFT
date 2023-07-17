@@ -18,8 +18,8 @@ error OnlyIssuerOrOwner();
 /**
  * @title IPToken
  * @author molecule.to
- * @notice this is a template contract that's spawned by the Synthesizer
- * @notice the owner of this contract is always the Synthesizer contract.
+ * @notice this is a template contract that's spawned by the Tokenizer
+ * @notice the owner of this contract is always the Tokenizer contract.
  *         the issuer of a token bears the right to increase the supply as long as the token is not capped.
  * @dev formerly known as "molecules"
  */

@@ -5,8 +5,8 @@ import "forge-std/Script.sol";
 import "forge-std/console.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import { IPNFT } from "../../src/IPNFT.sol";
-import { IPermissioner, TermsAcceptedPermissioner } from "../../src/Permissioner.sol";
-import { Synthesizer } from "../../src/Synthesizer.sol";
+import { IPermissioner, TermsAcceptedPermissioner } from "../../src/helpers/test-upgrades/SynthPermissioner.sol";
+import { Synthesizer } from "../../src/helpers/test-upgrades/Synthesizer.sol";
 import { StakedLockingCrowdSale } from "../../src/crowdsale/StakedLockingCrowdSale.sol";
 import { Mintpass } from "../../src/Mintpass.sol";
 

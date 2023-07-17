@@ -16,7 +16,7 @@ import { IPermissioner, TermsAcceptedPermissioner } from "../../src/Permissioner
 import { CrowdSale, Sale, SaleInfo } from "../../src/crowdsale/CrowdSale.sol";
 import { StakedLockingCrowdSale } from "../../src/crowdsale/StakedLockingCrowdSale.sol";
 import { FakeERC20 } from "../../src/helpers/FakeERC20.sol";
-import { Molecules } from "../../src/Molecules.sol";
+import { IPToken } from "../../src/IPToken.sol";
 
 import { CommonScript } from "./Common.sol";
 
@@ -49,7 +49,7 @@ contract FixtureCrowdSale is CommonScript {
     FakeERC20 daoToken;
     TokenVesting vestedDaoToken;
 
-    Molecules internal auctionToken;
+    IPToken internal auctionToken;
 
     StakedLockingCrowdSale stakedLockingCrowdSale;
     TermsAcceptedPermissioner permissioner;
@@ -61,7 +61,7 @@ contract FixtureCrowdSale is CommonScript {
 
         daoToken = FakeERC20(vm.envAddress("DAO_TOKEN_ADDRESS"));
         vestedDaoToken = TokenVesting(vm.envAddress("VDAO_TOKEN_ADDRESS"));
-        auctionToken = Molecules(vm.envAddress("MOLECULES_ADDRESS"));
+        auctionToken = IPToken(vm.envAddress("MOLECULES_ADDRESS"));
 
         stakedLockingCrowdSale = StakedLockingCrowdSale(vm.envAddress("STAKED_LOCKING_CROWDSALE_ADDRESS"));
         permissioner = TermsAcceptedPermissioner(vm.envAddress("TERMS_ACCEPTED_PERMISSIONER_ADDRESS"));
@@ -69,7 +69,7 @@ contract FixtureCrowdSale is CommonScript {
 
     function setupVestedMolToken() internal {
         vm.startBroadcast(deployer);
-        auctionToken = Molecules(vm.envAddress("MOLECULES_ADDRESS"));
+        auctionToken = IPToken(vm.envAddress("MOLECULES_ADDRESS"));
 
         vestedDaoToken.grantRole(vestedDaoToken.ROLE_CREATE_SCHEDULE(), address(stakedLockingCrowdSale));
         vm.stopBroadcast();
@@ -128,7 +128,7 @@ contract ClaimSale is CommonScript {
         prepareAddresses();
         TermsAcceptedPermissioner permissioner = TermsAcceptedPermissioner(vm.envAddress("TERMS_ACCEPTED_PERMISSIONER_ADDRESS"));
         StakedLockingCrowdSale stakedLockingCrowdSale = StakedLockingCrowdSale(vm.envAddress("STAKED_LOCKING_CROWDSALE_ADDRESS"));
-        Molecules auctionToken = Molecules(vm.envAddress("MOLECULES_ADDRESS"));
+        IPToken auctionToken = IPToken(vm.envAddress("MOLECULES_ADDRESS"));
 
         uint256 saleId = vm.envUint("SALE_ID");
 

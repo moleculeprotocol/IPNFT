@@ -4,45 +4,45 @@ pragma solidity ^0.8.13;
 import "forge-std/Script.sol";
 import "forge-std/console.sol";
 import { IPNFT } from "../../src/IPNFT.sol";
-import { Synthesizer } from "../../src/Synthesizer.sol";
-import { Metadata, Molecules } from "../../src/Molecules.sol";
+import { Tokenizer } from "../../src/Tokenizer.sol";
+import { Metadata, IPToken } from "../../src/IPToken.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import { IPermissioner, TermsAcceptedPermissioner } from "../../src/Permissioner.sol";
 import { CommonScript } from "./Common.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
-contract DeploySynthesizer is CommonScript {
+contract DeployTokenizer is CommonScript {
     function run() public {
         prepareAddresses();
         vm.startBroadcast(deployer);
-        Synthesizer synthesizer = Synthesizer(
+        Tokenizer tokenizer = Tokenizer(
             address(
                 new ERC1967Proxy(
-                    address(new Synthesizer()), ""
+                    address(new Tokenizer()), ""
                 )
             )
         );
         IPermissioner permissioner = IPermissioner(vm.envAddress("TERMS_ACCEPTED_PERMISSIONER_ADDRESS"));
-        synthesizer.initialize(IPNFT(vm.envAddress("IPNFT_ADDRESS")), permissioner);
+        tokenizer.initialize(IPNFT(vm.envAddress("IPNFT_ADDRESS")), permissioner);
         vm.stopBroadcast();
-        console.log("SYNTHESIZER_ADDRESS=%s", address(synthesizer));
+        console.log("SYNTHESIZER_ADDRESS=%s", address(tokenizer));
     }
 }
 
 /**
- * @title FixtureSynthesizer
+ * @title FixtureTokenizer
  * @author
- * @notice execute Ipnft.s.sol && DeploySynthesizer first
+ * @notice execute Ipnft.s.sol && DeployTokenizer first
  * @notice assumes that bob (hh1) owns IPNFT#1
  */
-contract FixtureSynthesizer is CommonScript {
-    Synthesizer synthesizer;
+contract FixtureTokenizer is CommonScript {
+    Tokenizer tokenizer;
     TermsAcceptedPermissioner permissioner;
 
     function prepareAddresses() internal override {
         super.prepareAddresses();
-        synthesizer = Synthesizer(vm.envAddress("SYNTHESIZER_ADDRESS"));
+        tokenizer = Tokenizer(vm.envAddress("SYNTHESIZER_ADDRESS"));
         permissioner = TermsAcceptedPermissioner(vm.envAddress("TERMS_ACCEPTED_PERMISSIONER_ADDRESS"));
     }
 
@@ -54,8 +54,8 @@ contract FixtureSynthesizer is CommonScript {
         vm.startBroadcast(bob);
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(bobPk, ECDSA.toEthSignedMessageHash(abi.encodePacked(terms)));
         bytes memory signedTerms = abi.encodePacked(r, s, v);
-        Molecules tokenContract =
-            synthesizer.synthesizeIpnft(1, 1_000_000 ether, "MOLE", "bafkreigk5dvqblnkdniges6ft5kmuly47ebw4vho6siikzmkaovq6sjstq", signedTerms);
+        IPToken tokenContract =
+            tokenizer.tokenizeIpnft(1, 1_000_000 ether, "MOLE", "bafkreigk5dvqblnkdniges6ft5kmuly47ebw4vho6siikzmkaovq6sjstq", signedTerms);
         vm.stopBroadcast();
 
         console.log("MOLECULES_ADDRESS=%s", address(tokenContract));

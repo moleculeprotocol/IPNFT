@@ -52,7 +52,7 @@ contract TermsAcceptedPermissioner is IPermissioner {
     }
 
     /**
-     * @notice checks whether `signer`'s `signature` of `specificTermsV1` on `moleculeId` is valid
+     * @notice checks whether `signer`'s `signature` of `specificTermsV1` on `tokenContract.metadata.ipnftId` is valid
      * @param tokenContract Molecules
      */
     function isValidSignature(IPToken tokenContract, address signer, bytes calldata signature) public view returns (bool) {
