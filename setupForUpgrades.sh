@@ -19,6 +19,7 @@ $FSC script/dev/Ipnft.s.sol:FixtureIpnft
 $FSC script/dev/Synthesizer.s.sol:FixtureSynthesizer 
 $FSC script/dev/CrowdSale.s.sol:FixtureCrowdSale 
 
+echo "Waiting 15 seconds until claiming sale..."
 sleep 16
 cast rpc evm_mine
 
