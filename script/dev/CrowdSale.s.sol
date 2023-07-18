@@ -134,19 +134,19 @@ contract ClaimSale is CommonScript {
 
         vm.startBroadcast(anyone);
         stakedLockingCrowdSale.settle(saleId);
-        stakedLockingCrowdSale.claimResults(saleId);
+        //stakedLockingCrowdSale.claimResults(saleId);
         vm.stopBroadcast();
 
-        string memory terms = permissioner.specificTermsV1(auctionToken);
+        // string memory terms = permissioner.specificTermsV1(auctionToken);
 
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(alicePk, ECDSA.toEthSignedMessageHash(abi.encodePacked(terms)));
-        vm.startBroadcast(alice);
-        stakedLockingCrowdSale.claim(saleId, abi.encodePacked(r, s, v));
-        vm.stopBroadcast();
+        // (uint8 v, bytes32 r, bytes32 s) = vm.sign(alicePk, ECDSA.toEthSignedMessageHash(abi.encodePacked(terms)));
+        // vm.startBroadcast(alice);
+        // stakedLockingCrowdSale.claim(saleId, abi.encodePacked(r, s, v));
+        // vm.stopBroadcast();
 
-        vm.startBroadcast(charlie);
-        (v, r, s) = vm.sign(charliePk, ECDSA.toEthSignedMessageHash(abi.encodePacked(terms)));
-        stakedLockingCrowdSale.claim(saleId, abi.encodePacked(r, s, v));
-        vm.stopBroadcast();
+        // vm.startBroadcast(charlie);
+        // (v, r, s) = vm.sign(charliePk, ECDSA.toEthSignedMessageHash(abi.encodePacked(terms)));
+        // stakedLockingCrowdSale.claim(saleId, abi.encodePacked(r, s, v));
+        // vm.stopBroadcast();
     }
 }
