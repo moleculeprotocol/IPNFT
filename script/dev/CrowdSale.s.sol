@@ -15,6 +15,7 @@ import { IPermissioner, TermsAcceptedPermissioner } from "../../src/Permissioner
 import { CrowdSale, Sale, SaleInfo } from "../../src/crowdsale/CrowdSale.sol";
 import { StakedLockingCrowdSale } from "../../src/crowdsale/StakedLockingCrowdSale.sol";
 import { FakeERC20 } from "../../src/helpers/FakeERC20.sol";
+import { Strings as SLib } from "../../src/helpers/Strings.sol";
 import { IPToken } from "../../src/IPToken.sol";
 
 import { CommonScript } from "./Common.sol";
@@ -120,33 +121,34 @@ contract FixtureCrowdSale is CommonScript {
         placeBid(charlie, 200 ether, saleId, abi.encodePacked(r, s, v));
         console.log("LOCKED_IPTS_ADDRESS=%s", address(lockedMolToken));
         console.log("SALE_ID=%s", saleId);
+        vm.writeFile("SALEID.txt", Strings.toString(saleId));
     }
 }
 
 contract ClaimSale is CommonScript {
     function run() public {
         prepareAddresses();
-        TermsAcceptedPermissioner permissioner = TermsAcceptedPermissioner(vm.envAddress("TERMS_ACCEPTED_PERMISSIONER_ADDRESS"));
         StakedLockingCrowdSale stakedLockingCrowdSale = StakedLockingCrowdSale(vm.envAddress("STAKED_LOCKING_CROWDSALE_ADDRESS"));
+        TermsAcceptedPermissioner permissioner = TermsAcceptedPermissioner(vm.envAddress("TERMS_ACCEPTED_PERMISSIONER_ADDRESS"));
         IPToken auctionToken = IPToken(vm.envAddress("IPTS_ADDRESS"));
-
-        uint256 saleId = vm.envUint("SALE_ID");
+        uint256 saleId = SLib.stringToUint(vm.readFile("SALEID.txt"));
+        vm.removeFile("SALEID.txt");
 
         vm.startBroadcast(anyone);
         stakedLockingCrowdSale.settle(saleId);
-        //stakedLockingCrowdSale.claimResults(saleId);
+        stakedLockingCrowdSale.claimResults(saleId);
         vm.stopBroadcast();
 
-        // string memory terms = permissioner.specificTermsV1(auctionToken);
+        string memory terms = permissioner.specificTermsV1(auctionToken);
 
-        // (uint8 v, bytes32 r, bytes32 s) = vm.sign(alicePk, ECDSA.toEthSignedMessageHash(abi.encodePacked(terms)));
-        // vm.startBroadcast(alice);
-        // stakedLockingCrowdSale.claim(saleId, abi.encodePacked(r, s, v));
-        // vm.stopBroadcast();
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(alicePk, ECDSA.toEthSignedMessageHash(abi.encodePacked(terms)));
+        vm.startBroadcast(alice);
+        stakedLockingCrowdSale.claim(saleId, abi.encodePacked(r, s, v));
+        vm.stopBroadcast();
 
-        // vm.startBroadcast(charlie);
-        // (v, r, s) = vm.sign(charliePk, ECDSA.toEthSignedMessageHash(abi.encodePacked(terms)));
-        // stakedLockingCrowdSale.claim(saleId, abi.encodePacked(r, s, v));
-        // vm.stopBroadcast();
+        vm.startBroadcast(charlie);
+        (v, r, s) = vm.sign(charliePk, ECDSA.toEthSignedMessageHash(abi.encodePacked(terms)));
+        stakedLockingCrowdSale.claim(saleId, abi.encodePacked(r, s, v));
+        vm.stopBroadcast();
     }
 }

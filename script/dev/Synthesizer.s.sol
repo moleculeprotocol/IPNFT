@@ -79,23 +79,21 @@ contract FixtureSynthesizer is CommonScript {
     }
 }
 
-contract UpgradeSynthesizer is CommonScript {
+contract UpgradeSynthesizerToTokenizer is CommonScript {
     function run() public {
         prepareAddresses();
         Synthesizer synthesizer = Synthesizer(vm.envAddress("SYNTHESIZER_ADDRESS"));
-        TermsAcceptedPermissioner newTermsPermissioner = new TermsAcceptedPermissioner();
 
-        vm.startBroadcast(bob);
+        vm.startBroadcast(deployer);
         Tokenizer tokenizerImpl = new Tokenizer();
-
         synthesizer.upgradeTo(address(tokenizerImpl));
-
         Tokenizer tokenizer = Tokenizer(address(synthesizer));
+
+        TermsAcceptedPermissioner newTermsPermissioner = new TermsAcceptedPermissioner();
         tokenizer.reinit(newTermsPermissioner);
         vm.stopBroadcast();
 
-        //should equal synthesizer
-        console.log("TOKENIZER_ADDRESS=%s", address(tokenizer));
+        console.log("TOKENIZER_ADDRESS=%s", address(tokenizer)); //should equal synthesizer
         console.log("NEW_TERMS_ACCEPTED_PERMISSIONER_ADDRESS=%s", address(newTermsPermissioner));
     }
 }

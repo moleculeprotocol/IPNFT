@@ -6,19 +6,22 @@ set -a
   . ./.env.upgrades
 set +a
 
+FSC="forge script -f $RPC_URL --broadcast --revert-strings debug"
 
 # Deployments
-forge script script/dev/Ipnft.s.sol:DeployIpnftSuite -f $RPC_URL --broadcast
-forge script script/dev/Tokens.s.sol:DeployTokens -f $RPC_URL --broadcast 
-#forge script script/dev/Periphery.s.sol -f $RPC_URL --broadcast
-forge script script/dev/Synthesizer.s.sol:DeploySynthesizer -f $RPC_URL --broadcast 
-forge script script/dev/CrowdSale.s.sol:DeployCrowdSale -f $RPC_URL --broadcast
-forge script script/dev/Tokens.s.sol:DeployFakeTokens -f $RPC_URL --broadcast 
+$FSC script/dev/Ipnft.s.sol:DeployIpnftSuite 
+$FSC script/dev/Tokens.s.sol:DeployTokens 
+$FSC script/dev/Synthesizer.s.sol:DeploySynthesizer 
+$FSC script/dev/CrowdSale.s.sol:DeployCrowdSale
+$FSC script/dev/Tokens.s.sol:DeployFakeTokens  
 
-forge script script/dev/Ipnft.s.sol:FixtureIpnft -f $RPC_URL --broadcast
-forge script script/dev/Synthesizer.s.sol:FixtureSynthesizer -f $RPC_URL --broadcast
-forge script script/dev/CrowdSale.s.sol:FixtureCrowdSale -f $RPC_URL --broadcast
+$FSC script/dev/Ipnft.s.sol:FixtureIpnft 
+$FSC script/dev/Synthesizer.s.sol:FixtureSynthesizer 
+$FSC script/dev/CrowdSale.s.sol:FixtureCrowdSale 
 
-sleep 5
-echo "SALE_ID= forge script script/dev/CrowdSale.s.sol:ClaimSale -f $RPC_URL --broadcast" 
-echo "forge script script/dev/CrowdSale.s.sol:ClaimSale -f $RPC_URL --broadcast" 
+sleep 16
+cast rpc evm_mine
+
+$FSC script/dev/CrowdSale.s.sol:ClaimSale
+$FSC script/dev/Synthesizer.s.sol:UpgradeSynthesizerToTokenizer
+
