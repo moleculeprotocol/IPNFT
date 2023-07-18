@@ -1,0 +1,37 @@
+account_id: ''
+actions:
+  moleculeprotocol/project:
+    runtime: v2
+    sources: actions
+    specs:
+      BidEventGoerli:
+        description: BidEvent on Goerli StakedLockingCrowdSale contract
+        function: trigger:triggerDuneQuery
+        trigger:
+          type: transaction
+          transaction:
+            filters:
+              - eventEmitted:
+                  contract:
+                    address: 0x46c3369dEce07176Ad7164906D3593AA4C126d35
+                  name: Bid
+                network: 5
+            status:
+              - mined
+        execution_type: ''
+      BidEventMainnet:
+        description: BidEvent on Mainnet StakedLockingCrowdSale contract
+        function: trigger:triggerDuneQuery
+        trigger:
+          type: transaction
+          transaction:
+            filters:
+              - eventEmitted:
+                  contract:
+                    address: 0x35Bce29F52f51f547998717CD598068Afa2B29B7
+                  name: Bid
+                network: 1
+            status:
+              - mined
+        execution_type: ''
+project_slug: ''

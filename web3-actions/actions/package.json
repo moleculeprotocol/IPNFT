@@ -1,0 +1,16 @@
+{
+  "name": "actions",
+  "scripts": {
+    "build": "tsc",
+    "test": "ts-mocha tests/**/*.test.ts --timeout 15000"
+  },
+  "devDependencies": {
+    "@types/node": "^20.4.2",
+    "axios": "^1.4.0",
+    "ts-node": "^10.8.0",
+    "typescript": "^5.1.6"
+  },
+  "dependencies": {
+    "@tenderly/actions": "^0.2.4"
+  }
+}
