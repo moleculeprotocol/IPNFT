@@ -274,3 +274,16 @@ let account(1) fulfill the listing
 grant read access to another party
 
 `cast send --private-key $PRIVATE_KEY  -i $IPNFT_ADDRESS "grantReadAccess(address,uint256,uint256)" 0x70997970C51812dc3A010C7d01b50e0d17dc79C8 1 1680265071`
+
+## Actions
+
+We are using Tenderly Web3Actions to trigger actions based on emitted Events from our deployed Contracts.
+
+These are setup under the moleculeprotocol organization on Tenderly.
+The QueryIds and API-KEY are stored in the Tenderly context and can be accessed via the Tenderly Frontend.
+To update these actions you need the Tenderly login credentials.
+
+- StakedLockingCrowdSale (Mainnet & Goerli): BidEvent => Triggers a POST request that executes Dune Queries to update the Dune Visualizations.
+  
+You can find out more about Web3Actions on Tenderly here: <https://docs.tenderly.co/web3-actions/intro-to-web3-actions>
+How to init & deploy new Web3Actions: <https://docs.tenderly.co/web3-actions/tutorials-and-quickstarts/deploy-web3-action-via-cli>
