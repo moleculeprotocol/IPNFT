@@ -1,8 +1,11 @@
 import axios from 'axios'
 
 const triggerDuneQuery = async (context, event) => {
-  const bid_event_hash = await context.storage.getJson('BID_EVENT_HASH')
-  const placeBidLog = event.logs.find((log) => log.topics[0] === bid_event_hash)
+  // hash of Bid Event signature: keccak256("Bid(uint256 saleId, address bidder, uint256 amount)");
+  const BID_EVENT_SIG =
+    '0xdcd726e11f8b5e160f00290f0fe3a1abb547474e53a8e7a8f49a85e7b1ca3199'
+
+  const placeBidLog = event.logs.find((log) => log.topics[0] === BID_EVENT_SIG)
 
   if (!placeBidLog) return
   const saleId = BigInt(placeBidLog.topics[1]).toString()
