@@ -1,5 +1,0 @@
-# Dependency directories
-node_modules/
-
-# Ignore tsc output
-out/**/*
