@@ -7,6 +7,8 @@ else
   DC="docker compose --progress=plain --ansi=never"  
 fi
 
+CURRENT_SNAPSHOT=$(<./deploy/SNAPSHOT)
+
 #todo check whether docker is operational & cast is available here.
 
 # if [[ "$OSTYPE" == "darwin"* ]]; then
@@ -24,7 +26,7 @@ GRAPH_CONTAINER=${scname:1}
 
 $DC stop graph-node 
 docker container wait $GRAPH_CONTAINER
-cast rpc evm_revert $1
+cast rpc evm_revert $CURRENT_SNAPSHOT
 
 $DC exec -T postgres dropdb -U graph-node -w graph-node
 $DC exec -T postgres createdb -U graph-node -w graph-node
@@ -37,5 +39,8 @@ $DC exec -T postgres pg_restore -U graph-node -w -d graph-node after_setup.dump
 # $DC restart graph-node
 
 $DC start graph-node
-sleep 5
-cast rpc evm_snapshot
+#wait for graph-node to be alive again
+curl --retry-connrefused --retry-all-errors --max-time 30 --retry 10 --retry-delay 3 --retry-max-time 60 http://127.0.0.1:8030
+
+cast rpc evm_snapshot > ./deploy/SNAPSHOT
+

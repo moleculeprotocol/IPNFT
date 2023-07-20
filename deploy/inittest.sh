@@ -18,8 +18,10 @@ yarn prepare:local
 yarn codegen
 yarn create:local
 yarn deploy:local -l v0.0.1
+cd ..
 
 $DC exec -T postgres pg_dump -Fc -U graph-node -w graph-node -f after_setup.dump
 cast rpc evm_snapshot
+echo "0x0" > ./deploy/SNAPSHOT
 
  
