@@ -1,8 +1,7 @@
-with
-  data as (
-    SELECT
-      Bidder,
-      amount as bid_size
+with bids as (
+  SELECT
+      Bidder as bidder,
+      sum(amount) as bid_size
     FROM
       ipnft_{{chain}}.StakedLockingCrowdSale_evt_Bid
     WHERE
@@ -12,26 +11,21 @@ with
       amount
     ORDER BY
       bid_size DESC
-  ),
-  token as (
-    SELECT
-      json_extract_scalar(sale, '$.biddingToken') as biddingToken
+),
+decimals as (SELECT tokens.decimals
+    FROM
+    (
+    SELECT from_hex(json_extract_scalar(sale, '$.biddingToken')) as biddingTokenContract
     FROM
       ipnft_{{chain}}.StakedLockingCrowdSale_evt_Started
     WHERE
       saleId = cast('{{saleId}}' as uint256)
-  ),
-  token_with_decimals as (
-    SELECT
-      biddingToken,
-      decimals
-    FROM
-      token
-      JOIN tokens.erc20 ON from_hex(biddingToken) = contract_address
+    ) as sale
+      LEFT JOIN prices.tokens as tokens 
+      ON tokens.blockchain = '{{chain}}' 
+      AND tokens.contract_address = sale.biddingTokenContract
   )
-SELECT
-  Bidder,
-  bid_size / pow(10, decimals) as adjusted_bid_size
-FROM
-  data
-  CROSS JOIN token_with_decimals
+  select 
+    Bidder,
+    bid_size / pow(10, decimals) as bid_amount
+  FROM bids, decimals
