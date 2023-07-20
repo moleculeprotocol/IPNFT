@@ -1,5 +1,5 @@
 {
-  "license": "UNLICENSED",
+  "license": "MIT",
   "scripts": {},
   "devDependencies": {
     "@nomicfoundation/hardhat-foundry": "^1.0.0",
@@ -9,10 +9,6 @@
     "@openzeppelin/hardhat-upgrades": "^1.21.0",
     "chai": "^4.3.7",
     "ethers": "^5.7.2",
-    "hardhat": "^2.14.0",
-    "axios": "^1.4.0"
-  },
-  "dependencies": {
-    "@tenderly/actions": "^0.2.4"
+    "hardhat": "^2.14.0"
   }
 }
