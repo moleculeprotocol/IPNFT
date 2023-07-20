@@ -4,7 +4,7 @@ with
       Bidder,
       amount as bid_size
     FROM
-      {{chain}}.StakedLockingCrowdSale_evt_Bid
+      ipnft_{{chain}}.StakedLockingCrowdSale_evt_Bid
     WHERE
       saleId = cast('{{saleId}}' as uint256)
     GROUP BY
@@ -17,7 +17,7 @@ with
     SELECT
       json_extract_scalar(sale, '$.biddingToken') as biddingToken
     FROM
-      {{chain}}.StakedLockingCrowdSale_evt_Started
+      ipnft_{{chain}}.StakedLockingCrowdSale_evt_Started
     WHERE
       saleId = cast('{{saleId}}' as uint256)
   ),

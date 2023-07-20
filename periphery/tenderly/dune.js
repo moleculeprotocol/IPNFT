@@ -14,9 +14,9 @@ const triggerDuneQuery = async (context, event) => {
   //[Cumulative Bids, CrowdSale Bids]
   const duneQueryIds = [2709374, 2709364]
 
-  const queryParameters = {
+  const query_parameters = {
     saleId: saleId,
-    chain: event.network === '5' ? 'ipnft_goerli' : 'ipnft_ethereum'
+    chain: event.network === '5' ? 'goerli' : 'ethereum'
   }
 
   for (const queryId of duneQueryIds) {
@@ -24,7 +24,7 @@ const triggerDuneQuery = async (context, event) => {
       const res = await axios.post(
         `https://api.dune.com/api/v1/query/${queryId}/execute`,
         {
-          query_parameters: queryParameters
+          query_parameters
         },
         {
           headers: {
