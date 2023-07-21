@@ -12,20 +12,20 @@ with bids as (
     ORDER BY
       bid_size DESC
 ),
-decimals as (SELECT tokens.decimals
+decimals as (
+    SELECT erc20.decimals
     FROM
-    (
-    SELECT from_hex(json_extract_scalar(sale, '$.biddingToken')) as biddingTokenContract
-    FROM
-      ipnft_{{chain}}.StakedLockingCrowdSale_evt_Started
-    WHERE
-      saleId = cast('{{saleId}}' as uint256)
+    (SELECT from_hex(json_extract_scalar(sale, '$.biddingToken')) as biddingTokenContract
+     FROM
+       ipnft_{{chain}}.StakedLockingCrowdSale_evt_Started
+     WHERE
+       saleId = cast('{{saleId}}' as uint256)
     ) as sale
-      LEFT JOIN prices.tokens as tokens 
-      ON tokens.blockchain = '{{chain}}' 
-      AND tokens.contract_address = sale.biddingTokenContract
+      LEFT JOIN tokens.erc20 as erc20 
+      ON erc20.blockchain = '{{chain}}' 
+      AND erc20.contract_address = sale.biddingTokenContract
   )
   select 
     Bidder,
-    bid_size / pow(10, decimals) as bid_amount
+    bid_size / pow(10, COALESCE(decimals,18)) as bid_amount
   FROM bids, decimals
