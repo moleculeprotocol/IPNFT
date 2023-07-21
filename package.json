@@ -1,5 +1,5 @@
 {
-  "license": "UNLICENSED",
+  "license": "MIT",
   "scripts": {},
   "devDependencies": {
     "@nomicfoundation/hardhat-foundry": "^1.0.0",
@@ -10,6 +10,5 @@
     "chai": "^4.3.7",
     "ethers": "^5.7.2",
     "hardhat": "^2.14.0"
-  },
-  "dependencies": {}
+  }
 }
