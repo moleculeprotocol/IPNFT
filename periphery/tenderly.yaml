@@ -1,12 +1,13 @@
 account_id: ''
+project_slug: ''
 actions:
   moleculeprotocol/project:
     runtime: v2
-    sources: actions
+    sources: tenderly
     specs:
       BidEventGoerli:
         description: BidEvent on Goerli StakedLockingCrowdSale contract
-        function: trigger:triggerDuneQuery
+        function: dune:triggerDuneQuery
         trigger:
           type: transaction
           transaction:
@@ -21,7 +22,7 @@ actions:
         execution_type: ''
       BidEventMainnet:
         description: BidEvent on Mainnet StakedLockingCrowdSale contract
-        function: trigger:triggerDuneQuery
+        function: dune:triggerDuneQuery
         trigger:
           type: transaction
           transaction:
@@ -34,4 +35,4 @@ actions:
             status:
               - mined
         execution_type: ''
-project_slug: ''
+
