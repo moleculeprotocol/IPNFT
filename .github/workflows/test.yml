@@ -17,11 +17,12 @@ jobs:
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
         with:
-          version: nightly
-      - name: Use Node.js 16
+          version: nightly-d369d2486f85576eec4ca41d277391dfdae21ba7
+
+      - name: Use Node.js 18
         uses: actions/setup-node@v3
         with:
-          node-version: "16.x"
+          node-version: '18'
 
       - name: Install node dependencies
         run: yarn --frozen-lockfile

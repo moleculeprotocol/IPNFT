@@ -31,10 +31,12 @@ services:
       GRAPH_LOG: info
       GRAPH_ALLOW_NON_DETERMINISTIC_IPFS: 1
   ipfs:
-    image: ipfs/kubo:v0.15.0
+    image: ipfs/kubo:v0.21.0
     ports:
       - '5001:5001'
-    #volumes:
+      - '8080:8080'
+    volumes:
+      - ./deploy/001-ipfs-config.sh:/container-init.d/001-ipfs-config.sh
     #  - ./data/ipfs:/data/ipfs
   postgres:
     image: postgres
