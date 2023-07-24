@@ -22,8 +22,12 @@ module.exports = {
     address: '0x46c3369dece07176ad7164906d3593aa4c126d35',
     startBlock: 9168705
   },
-  termsAcceptedPermissioner: {
+  termsAcceptedPermissionerOld: {
     address: '0x0045723801561079d94f0Bb1B65f322078E52635',
+    startBlock: 9148511
+  },
+  termsAcceptedPermissioner: {
+    address: '',
     startBlock: 9148511
   }
 }

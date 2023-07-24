@@ -1,7 +1,7 @@
 const path = require('node:path')
 require('dotenv').config({
   debug: true,
-  path: path.resolve(process.cwd(), '../.env.upgrades')
+  path: path.resolve(process.cwd(), '../.env')
 })
 
 module.exports = {
@@ -24,6 +24,10 @@ module.exports = {
   },
   termsAcceptedPermissioner: {
     address: process.env.TERMS_ACCEPTED_PERMISSIONER_ADDRESS,
+    startBlock: 0
+  },
+  termsAcceptedPermissionerOld: {
+    address: process.env.OLD_TERMS_ACCEPTED_PERMISSIONER_ADDRESS,
     startBlock: 0
   }
 }

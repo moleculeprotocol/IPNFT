@@ -24,30 +24,23 @@ ipnft implementation: 0x0443DfAC8E510cFBDFdb9247E77400E9728aE45D
 
 ### Goerli
 
-| Contract             | Address                                                                                                                            | Actions                                                                                                                                                                                                                                                                                               |
-| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| IP-NFT               | [0xaf7358576C9F7cD84696D28702fC5ADe33cce0e9](https://goerli.etherscan.io/address/0xaf7358576C9F7cD84696D28702fC5ADe33cce0e9#code>) | <a href="https://thirdweb.com/goerli/0xaf7358576C9F7cD84696D28702fC5ADe33cce0e9?utm_source=contract_badge" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0xaf7358576C9F7cD84696D28702fC5ADe33cce0e9&theme=dark&chainId=5" alt="View contract" /></a> |
-| SchmackoSwap         | [0x67D8ed102E2168A46FA342e39A5f7D16c103Bd0d](https://goerli.etherscan.io/address/0x67D8ed102E2168A46FA342e39A5f7D16c103Bd0d#code)  | <a href="https://thirdweb.com/goerli/0x67D8ed102E2168A46FA342e39A5f7D16c103Bd0d?utm_source=contract_badge" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0x67D8ed102E2168A46FA342e39A5f7D16c103Bd0d&theme=dark&chainId=5" alt="View contract" /></a> |
-| Mintpass             | [0xaf0f99dcc64e8a6549d32013ac9f2c3fa7834688](https://goerli.etherscan.io/address/0xaf0f99dcc64e8a6549d32013ac9f2c3fa7834688#code)  | <a href="https://thirdweb.com/goerli/0xaf0f99dcc64e8a6549d32013ac9f2c3fa7834688?utm_source=contract_badge" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0xaf0f99dcc64e8a6549d32013ac9f2c3fa7834688&theme=dark&chainId=5" alt="View contract" /></a> |
-| Synthesizer          | [0xb12494eeA6B992d0A1Db3C5423BE7a2d2337F58c](https://goerli.etherscan.io/address/0xb12494eeA6B992d0A1Db3C5423BE7a2d2337F58c#code)  | <a href="https://thirdweb.com/goerli/0xb12494eeA6B992d0A1Db3C5423BE7a2d2337F58c?utm_source=contract_badge" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0xb12494eeA6B992d0A1Db3C5423BE7a2d2337F58c&theme=dark&chainId=5" alt="View contract" /></a> |
-| Permissioner         | [0x0045723801561079d94f0Bb1B65f322078E52635](https://goerli.etherscan.io/address/0x0045723801561079d94f0Bb1B65f322078E52635#code)  | <a href="https://thirdweb.com/goerli/0x0045723801561079d94f0Bb1B65f322078E52635?utm_source=contract_badge" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0x0045723801561079d94f0Bb1B65f322078E52635&theme=dark&chainId=5" alt="View contract" /></a> |
-| SignedMintAuthorizer | [0x5e555eE24DB66825171Ac63EA614864987CEf1Af](https://goerli.etherscan.io/address/0x5e555eE24DB66825171Ac63EA614864987CEf1Af#code)  | <a href="https://thirdweb.com/goerli/0x5e555eE24DB66825171Ac63EA614864987CEf1Af?utm_source=contract_badge" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0x5e555eE24DB66825171Ac63EA614864987CEf1Af&theme=dark&chainId=5" alt="View contract" /></a> |
+| Contract               | Address                                                                                                                            | Actions                                                                                                                                                                                                                                                                                               |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| IP-NFT                 | [0xaf7358576C9F7cD84696D28702fC5ADe33cce0e9](https://goerli.etherscan.io/address/0xaf7358576C9F7cD84696D28702fC5ADe33cce0e9#code>) | <a href="https://thirdweb.com/goerli/0xaf7358576C9F7cD84696D28702fC5ADe33cce0e9?utm_source=contract_badge" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0xaf7358576C9F7cD84696D28702fC5ADe33cce0e9&theme=dark&chainId=5" alt="View contract" /></a> |
+| SchmackoSwap           | [0x67D8ed102E2168A46FA342e39A5f7D16c103Bd0d](https://goerli.etherscan.io/address/0x67D8ed102E2168A46FA342e39A5f7D16c103Bd0d#code)  | <a href="https://thirdweb.com/goerli/0x67D8ed102E2168A46FA342e39A5f7D16c103Bd0d?utm_source=contract_badge" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0x67D8ed102E2168A46FA342e39A5f7D16c103Bd0d&theme=dark&chainId=5" alt="View contract" /></a> |
+| Mintpass               | [0xaf0f99dcc64e8a6549d32013ac9f2c3fa7834688](https://goerli.etherscan.io/address/0xaf0f99dcc64e8a6549d32013ac9f2c3fa7834688#code)  | <a href="https://thirdweb.com/goerli/0xaf0f99dcc64e8a6549d32013ac9f2c3fa7834688?utm_source=contract_badge" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0xaf0f99dcc64e8a6549d32013ac9f2c3fa7834688&theme=dark&chainId=5" alt="View contract" /></a> |
+| Synthesizer            | [0xb12494eeA6B992d0A1Db3C5423BE7a2d2337F58c](https://goerli.etherscan.io/address/0xb12494eeA6B992d0A1Db3C5423BE7a2d2337F58c#code)  | <a href="https://thirdweb.com/goerli/0xb12494eeA6B992d0A1Db3C5423BE7a2d2337F58c?utm_source=contract_badge" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0xb12494eeA6B992d0A1Db3C5423BE7a2d2337F58c&theme=dark&chainId=5" alt="View contract" /></a> |
+| Permissioner           | [0x0045723801561079d94f0Bb1B65f322078E52635](https://goerli.etherscan.io/address/0x0045723801561079d94f0Bb1B65f322078E52635#code)  | <a href="https://thirdweb.com/goerli/0x0045723801561079d94f0Bb1B65f322078E52635?utm_source=contract_badge" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0x0045723801561079d94f0Bb1B65f322078E52635&theme=dark&chainId=5" alt="View contract" /></a> |
+| StakedLockingCrowdSale | [0x46c3369dece07176ad7164906d3593aa4c126d35](https://goerli.etherscan.io/address/0x46c3369dece07176ad7164906d3593aa4c126d35#code)  | <a href="https://thirdweb.com/goerli/0x46c3369dece07176ad7164906d3593aa4c126d35?utm_source=contract_badge" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0x46c3369dece07176ad7164906d3593aa4c126d35&theme=dark&chainId=5" alt="View contract" /></a> |
+| SignedMintAuthorizer   | [0x5e555eE24DB66825171Ac63EA614864987CEf1Af](https://goerli.etherscan.io/address/0x5e555eE24DB66825171Ac63EA614864987CEf1Af#code)  | <a href="https://thirdweb.com/goerli/0x5e555eE24DB66825171Ac63EA614864987CEf1Af?utm_source=contract_badge" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0x5e555eE24DB66825171Ac63EA614864987CEf1Af&theme=dark&chainId=5" alt="View contract" /></a> |
 
 - Subgraph: <https://api.thegraph.com/subgraphs/name/dorianwilhelm/ip-nft-subgraph-goerli/graphql>
 
 - Synthesizer: 0xb12494eeA6B992d0A1Db3C5423BE7a2d2337F58c  
   (Impl no 5 0xc36888d56eD6782515CD4A259F2Aad708744Cc7d)
 
-  <https://goerli.etherscan.io/address/0xb12494eeA6B992d0A1Db3C5423BE7a2d2337F58c>
-
-- Terms Accepted Permissioner: 0x0045723801561079d94f0Bb1B65f322078E52635
-  <https://goerli.etherscan.io/address/0x0045723801561079d94f0bb1b65f322078e52635#code>
-
 - Bio pricefeed: 0x8647dEFdEAAdF5448d021B364B2F17815aba4360
   <https://goerli.etherscan.io/address/0x8647defdeaadf5448d021b364b2f17815aba4360#code>
-
-- Staked/Locking Crowdsale: 0x46c3369dece07176ad7164906d3593aa4c126d35
-  <https://goerli.etherscan.io/address/0x46c3369dece07176ad7164906d3593aa4c126d35#code>
 
 - Blind Permissioner: 0xec68a1fc8d4c2834f8dfbdb56691f9f0a3d6be11
   <https://goerli.etherscan.io/address/0xec68a1fc8d4c2834f8dfbdb56691f9f0a3d6be11#code>
@@ -284,6 +277,6 @@ The QueryIds and API-KEY are stored in the Tenderly context and can be accessed 
 To update these actions you need the Tenderly login credentials.
 
 - StakedLockingCrowdSale (Mainnet & Goerli): BidEvent => Triggers a POST request that executes Dune Queries to update the Dune Visualizations.
-  
+
 You can find out more about Web3Actions on Tenderly here: <https://docs.tenderly.co/web3-actions/intro-to-web3-actions>
 How to init & deploy new Web3Actions: <https://docs.tenderly.co/web3-actions/tutorials-and-quickstarts/deploy-web3-action-via-cli>

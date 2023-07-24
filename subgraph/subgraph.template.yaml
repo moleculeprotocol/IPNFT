@@ -146,6 +146,27 @@ dataSources:
         - event: TermsAccepted(indexed address,indexed address,bytes)
           handler: handleTermsAccepted
       file: ./src/termsAcceptedPermissionerMapping.ts
+      
+  - kind: ethereum/contract
+    name: TermsAcceptedPermissioner Old
+    network: {{network}}
+    source:
+      address: '{{termsAcceptedPermissionerOld.address}}'
+      abi: TermsAcceptedPermissioner
+      startBlock: {{termsAcceptedPermissionerOld.startBlock}}
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - IPTBalance
+      abis:
+        - name: TermsAcceptedPermissioner
+          file: ./abis/TermsAcceptedPermissioner.json
+      eventHandlers:
+        - event: TermsAccepted(indexed address,indexed address,bytes)
+          handler: handleTermsAccepted
+      file: ./src/termsAcceptedPermissionerMapping.ts
 templates:
   - name: IPToken
     kind: ethereum/contract
