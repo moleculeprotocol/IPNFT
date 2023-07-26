@@ -117,6 +117,7 @@ export function handleStarted(event: StartedEvent): void {
   crowdSale.wadFixedStakedPerBidPrice =
     event.params.staking.wadFixedStakedPerBidPrice
 
+  crowdSale.permissioner = event.params.sale.permissioner
   crowdSale.save()
   log.info('[handleStarted] crowdsale {}', [crowdSale.id])
 }

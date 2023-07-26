@@ -12,6 +12,7 @@ cat ../out/StakedLockingCrowdSale.sol/StakedLockingCrowdSale.json | jq .abi > ./
 
 cat ../out/Tokenizer.sol/Tokenizer.json | jq .abi > ./abis/_Tokenizer.json
 
+# add the old Synthesizer's `MoleculesCreated` event to the Tokenizer abi so the subgraph can index them
 jq '. +=  [{
     "anonymous": false,
     "inputs": [
