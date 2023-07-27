@@ -146,9 +146,10 @@ contract ClaimSale is CommonScript {
         stakedLockingCrowdSale.claim(saleId, abi.encodePacked(r, s, v));
         vm.stopBroadcast();
 
-        vm.startBroadcast(charlie);
-        (v, r, s) = vm.sign(charliePk, ECDSA.toEthSignedMessageHash(abi.encodePacked(terms)));
-        stakedLockingCrowdSale.claim(saleId, abi.encodePacked(r, s, v));
-        vm.stopBroadcast();
+        //we don't let charlie claim so we can test upgrades
+        // vm.startBroadcast(charlie);
+        // (v, r, s) = vm.sign(charliePk, ECDSA.toEthSignedMessageHash(abi.encodePacked(terms)));
+        // stakedLockingCrowdSale.claim(saleId, abi.encodePacked(r, s, v));
+        // vm.stopBroadcast();
     }
 }

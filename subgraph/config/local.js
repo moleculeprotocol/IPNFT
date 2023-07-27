@@ -25,9 +25,5 @@ module.exports = {
   termsAcceptedPermissioner: {
     address: process.env.TERMS_ACCEPTED_PERMISSIONER_ADDRESS,
     startBlock: 0
-  },
-  termsAcceptedPermissionerOld: {
-    address: process.env.OLD_TERMS_ACCEPTED_PERMISSIONER_ADDRESS,
-    startBlock: 0
   }
 }
