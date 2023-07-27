@@ -18,7 +18,7 @@ IP-NFTs allow their users to tokenize intellectual property. This repo contains 
 - Subgraph: <https://api.thegraph.com/subgraphs/name/moleculeprotocol/ip-nft-mainnet>
 
 synthImpl implementation 1: 0xb050A85933FF0807f05d289b7f6457c5eFbC348f
-ipnft implementation: 0x0443DfAC8E510cFBDFdb9247E77400E9728aE45D
+ipnft implementation 2.3: 0x0443DfAC8E510cFBDFdb9247E77400E9728aE45D
 
 ---
 
@@ -30,7 +30,7 @@ ipnft implementation: 0x0443DfAC8E510cFBDFdb9247E77400E9728aE45D
 | SchmackoSwap           | [0x67D8ed102E2168A46FA342e39A5f7D16c103Bd0d](https://goerli.etherscan.io/address/0x67D8ed102E2168A46FA342e39A5f7D16c103Bd0d#code)  | <a href="https://thirdweb.com/goerli/0x67D8ed102E2168A46FA342e39A5f7D16c103Bd0d?utm_source=contract_badge" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0x67D8ed102E2168A46FA342e39A5f7D16c103Bd0d&theme=dark&chainId=5" alt="View contract" /></a> |
 | Mintpass               | [0xaf0f99dcc64e8a6549d32013ac9f2c3fa7834688](https://goerli.etherscan.io/address/0xaf0f99dcc64e8a6549d32013ac9f2c3fa7834688#code)  | <a href="https://thirdweb.com/goerli/0xaf0f99dcc64e8a6549d32013ac9f2c3fa7834688?utm_source=contract_badge" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0xaf0f99dcc64e8a6549d32013ac9f2c3fa7834688&theme=dark&chainId=5" alt="View contract" /></a> |
 | Synthesizer            | [0xb12494eeA6B992d0A1Db3C5423BE7a2d2337F58c](https://goerli.etherscan.io/address/0xb12494eeA6B992d0A1Db3C5423BE7a2d2337F58c#code)  | <a href="https://thirdweb.com/goerli/0xb12494eeA6B992d0A1Db3C5423BE7a2d2337F58c?utm_source=contract_badge" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0xb12494eeA6B992d0A1Db3C5423BE7a2d2337F58c&theme=dark&chainId=5" alt="View contract" /></a> |
-| Permissioner           | [0x0045723801561079d94f0Bb1B65f322078E52635](https://goerli.etherscan.io/address/0x0045723801561079d94f0Bb1B65f322078E52635#code)  | <a href="https://thirdweb.com/goerli/0x0045723801561079d94f0Bb1B65f322078E52635?utm_source=contract_badge" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0x0045723801561079d94f0Bb1B65f322078E52635&theme=dark&chainId=5" alt="View contract" /></a> |
+| Permissioner           | [0xd735d9504cce32F2cd665b779D699B4157686fcd](https://goerli.etherscan.io/address/0xd735d9504cce32F2cd665b779D699B4157686fcd#code)  | <a href="https://thirdweb.com/goerli/0xd735d9504cce32F2cd665b779D699B4157686fcd?utm_source=contract_badge" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0xd735d9504cce32F2cd665b779D699B4157686fcd&theme=dark&chainId=5" alt="View contract" /></a> |
 | StakedLockingCrowdSale | [0x46c3369dece07176ad7164906d3593aa4c126d35](https://goerli.etherscan.io/address/0x46c3369dece07176ad7164906d3593aa4c126d35#code)  | <a href="https://thirdweb.com/goerli/0x46c3369dece07176ad7164906d3593aa4c126d35?utm_source=contract_badge" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0x46c3369dece07176ad7164906d3593aa4c126d35&theme=dark&chainId=5" alt="View contract" /></a> |
 | SignedMintAuthorizer   | [0x5e555eE24DB66825171Ac63EA614864987CEf1Af](https://goerli.etherscan.io/address/0x5e555eE24DB66825171Ac63EA614864987CEf1Af#code)  | <a href="https://thirdweb.com/goerli/0x5e555eE24DB66825171Ac63EA614864987CEf1Af?utm_source=contract_badge" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0x5e555eE24DB66825171Ac63EA614864987CEf1Af&theme=dark&chainId=5" alt="View contract" /></a> |
 
@@ -41,6 +41,9 @@ ipnft implementation: 0x0443DfAC8E510cFBDFdb9247E77400E9728aE45D
 
 - Bio pricefeed: 0x8647dEFdEAAdF5448d021B364B2F17815aba4360
   <https://goerli.etherscan.io/address/0x8647defdeaadf5448d021b364b2f17815aba4360#code>
+
+- old ("molecule") permissioner: 0x0045723801561079d94f0Bb1B65f322078E52635
+  <https://goerli.etherscan.io/address/0x0045723801561079d94f0Bb1B65f322078E52635#code>
 
 - Blind Permissioner: 0xec68a1fc8d4c2834f8dfbdb56691f9f0a3d6be11
   <https://goerli.etherscan.io/address/0xec68a1fc8d4c2834f8dfbdb56691f9f0a3d6be11#code>

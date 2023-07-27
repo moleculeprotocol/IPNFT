@@ -26,6 +26,10 @@ import {
 
 import { CommonScript } from "./Common.sol";
 
+/**
+ * @title DeploySynthesizer
+ * @notice only used for local testing. The "Synthesizer" is the old name for `Tokenizer`.
+ */
 contract DeploySynthesizer is CommonScript {
     function run() public {
         prepareAddresses();
@@ -47,9 +51,9 @@ contract DeploySynthesizer is CommonScript {
 }
 
 /**
- * @title FixtureTokenizer
+ * @title FixtureSynthesizer
  * @author
- * @notice execute Ipnft.s.sol && DeployTokenizer first
+ * @notice execute Ipnft.s.sol && DeploySynthesizer first
  * @notice assumes that bob (hh1) owns IPNFT#1
  */
 contract FixtureSynthesizer is CommonScript {
@@ -79,6 +83,9 @@ contract FixtureSynthesizer is CommonScript {
     }
 }
 
+/**
+ * @notice allows testing contract upgrades on the frontend in a controlled way
+ */
 contract UpgradeSynthesizerToTokenizer is CommonScript {
     function run() public {
         prepareAddresses();

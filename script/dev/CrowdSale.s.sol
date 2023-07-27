@@ -128,8 +128,8 @@ contract FixtureCrowdSale is CommonScript {
 contract ClaimSale is CommonScript {
     function run() public {
         prepareAddresses();
-        StakedLockingCrowdSale stakedLockingCrowdSale = StakedLockingCrowdSale(vm.envAddress("STAKED_LOCKING_CROWDSALE_ADDRESS"));
         TermsAcceptedPermissioner permissioner = TermsAcceptedPermissioner(vm.envAddress("TERMS_ACCEPTED_PERMISSIONER_ADDRESS"));
+        StakedLockingCrowdSale stakedLockingCrowdSale = StakedLockingCrowdSale(vm.envAddress("STAKED_LOCKING_CROWDSALE_ADDRESS"));
         IPToken auctionToken = IPToken(vm.envAddress("IPTS_ADDRESS"));
         uint256 saleId = SLib.stringToUint(vm.readFile("SALEID.txt"));
         vm.removeFile("SALEID.txt");

@@ -47,6 +47,7 @@ contract IPNFT is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IReser
     event Reserved(address indexed reserver, uint256 indexed reservationId);
     event IPNFTMinted(address indexed owner, uint256 indexed tokenId, string tokenURI, string symbol);
     event ReadAccessGranted(uint256 indexed tokenId, address indexed reader, uint256 until);
+    event AuthorizerUpdated(address authorizer);
 
     error NotOwningReservation(uint256 id);
     error ToZeroAddress();
@@ -79,6 +80,7 @@ contract IPNFT is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IReser
 
     function setAuthorizer(IAuthorizeMints authorizer_) external onlyOwner {
         mintAuthorizer = authorizer_;
+        emit AuthorizerUpdated(address(authorizer_));
     }
 
     /// @notice https://docs.opensea.io/docs/contract-level-metadata
