@@ -17,7 +17,7 @@ module.exports = {
     startBlock: 17481804
   },
   termsAcceptedPermissioner: {
-    address: '0xC3191dEFE827D504885f47cfB3fE0919EBd35705',
-    startBlock: 17441953
+    address: '0xC837E02982992B701A1B5e4E21fA01cEB0a628fA',
+    startBlock: 17790450
   }
 }

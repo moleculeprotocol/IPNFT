@@ -110,7 +110,7 @@ contract FixtureCrowdSale is CommonScript {
 
         auctionToken.approve(address(stakedLockingCrowdSale), 400 ether);
         uint256 saleId = stakedLockingCrowdSale.startSale(_sale, daoToken, vestedDaoToken, 1e18, 7 days);
-        TimelockedToken lockedMolToken = stakedLockingCrowdSale.lockingContracts(address(auctionToken));
+        TimelockedToken lockedIpt = stakedLockingCrowdSale.lockingContracts(address(auctionToken));
         vm.stopBroadcast();
 
         string memory terms = permissioner.specificTermsV1(auctionToken);
@@ -119,7 +119,7 @@ contract FixtureCrowdSale is CommonScript {
         placeBid(alice, 600 ether, saleId, abi.encodePacked(r, s, v));
         (v, r, s) = vm.sign(charliePk, ECDSA.toEthSignedMessageHash(abi.encodePacked(terms)));
         placeBid(charlie, 200 ether, saleId, abi.encodePacked(r, s, v));
-        console.log("LOCKED_IPTS_ADDRESS=%s", address(lockedMolToken));
+        console.log("LOCKED_IPTS_ADDRESS=%s", address(lockedIpt));
         console.log("SALE_ID=%s", saleId);
         vm.writeFile("SALEID.txt", Strings.toString(saleId));
     }

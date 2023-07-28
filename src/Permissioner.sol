@@ -53,7 +53,7 @@ contract TermsAcceptedPermissioner is IPermissioner {
 
     /**
      * @notice checks whether `signer`'s `signature` of `specificTermsV1` on `tokenContract.metadata.ipnftId` is valid
-     * @param tokenContract Molecules
+     * @param tokenContract IPToken
      */
     function isValidSignature(IPToken tokenContract, address signer, bytes calldata signature) public view returns (bool) {
         bytes32 termsHash = ECDSA.toEthSignedMessageHash(bytes(specificTermsV1(tokenContract)));
@@ -76,7 +76,7 @@ contract TermsAcceptedPermissioner is IPermissioner {
 
     /**
      * @notice this yields the message text that claimers must present as signed message to burn their molecules and claim shares
-     * @param tokenContract ISynthesizedToken
+     * @param tokenContract IPToken
      */
     function specificTermsV1(IPToken tokenContract) public view returns (string memory) {
         return (specificTermsV1(tokenContract.metadata()));
