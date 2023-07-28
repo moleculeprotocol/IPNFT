@@ -32,7 +32,7 @@ contract TokenizerTest is Test {
     string ipfsUri = "ipfs://bafkreiankqd3jvpzso6khstnaoxovtyezyatxdy7t2qzjoolqhltmasqki";
     string agreementCid = "bafkreigk5dvqblnkdniges6ft5kmuly47ebw4vho6siikzmkaovq6sjstq";
     uint256 MINTING_FEE = 0.001 ether;
-    string DEFAULT_SYMBOL = "MOL-0001";
+    string DEFAULT_SYMBOL = "IPT-0001";
 
     address deployer = makeAddr("chucknorris");
     address protocolOwner = makeAddr("protocolOwner");
@@ -84,7 +84,7 @@ contract TokenizerTest is Test {
 
     function testUrl() public {
         vm.startPrank(originalOwner);
-        IPToken tokenContract = tokenizer.tokenizeIpnft(1, 100_000, "MOLE", agreementCid, "");
+        IPToken tokenContract = tokenizer.tokenizeIpnft(1, 100_000, "IPT", agreementCid, "");
         string memory uri = tokenContract.uri();
         assertGt(bytes(uri).length, 200);
         vm.stopPrank();
@@ -93,7 +93,7 @@ contract TokenizerTest is Test {
     function testIssueIPToken() public {
         vm.startPrank(originalOwner);
         //ipnft.setApprovalForAll(address(tokenizer), true);
-        IPToken tokenContract = tokenizer.tokenizeIpnft(1, 100_000, "MOLE", agreementCid, "");
+        IPToken tokenContract = tokenizer.tokenizeIpnft(1, 100_000, "IPT", agreementCid, "");
         vm.stopPrank();
 
         assertEq(tokenContract.balanceOf(originalOwner), 100_000);
@@ -101,7 +101,7 @@ contract TokenizerTest is Test {
         assertEq(ipnft.ownerOf(1), originalOwner);
 
         assertEq(tokenContract.totalIssued(), 100_000);
-        assertEq(tokenContract.symbol(), "MOLE");
+        assertEq(tokenContract.symbol(), "IPT");
 
         vm.startPrank(originalOwner);
         tokenContract.transfer(alice, 10_000);
@@ -114,7 +114,7 @@ contract TokenizerTest is Test {
 
     function testIncreaseIPToken() public {
         vm.startPrank(originalOwner);
-        IPToken tokenContract = tokenizer.tokenizeIpnft(1, 100_000, "MOLE", agreementCid, "");
+        IPToken tokenContract = tokenizer.tokenizeIpnft(1, 100_000, "IPT", agreementCid, "");
 
         tokenContract.transfer(alice, 25_000);
         tokenContract.transfer(bob, 25_000);
@@ -147,10 +147,10 @@ contract TokenizerTest is Test {
 
     function testCanBeTokenizedOnlyOnce() public {
         vm.startPrank(originalOwner);
-        tokenizer.tokenizeIpnft(1, 100_000, "MOLE", agreementCid, "");
+        tokenizer.tokenizeIpnft(1, 100_000, "IPT", agreementCid, "");
 
         vm.expectRevert(AlreadyTokenized.selector);
-        tokenizer.tokenizeIpnft(1, 100_000, "MOLE", agreementCid, "");
+        tokenizer.tokenizeIpnft(1, 100_000, "IPT", agreementCid, "");
         vm.stopPrank();
     }
 
@@ -158,7 +158,7 @@ contract TokenizerTest is Test {
         vm.startPrank(alice);
 
         vm.expectRevert(MustOwnIpnft.selector);
-        tokenizer.tokenizeIpnft(1, 100_000, "MOLE", agreementCid, "");
+        tokenizer.tokenizeIpnft(1, 100_000, "IPT", agreementCid, "");
         vm.stopPrank();
     }
 
@@ -174,7 +174,7 @@ contract TokenizerTest is Test {
         vm.stopPrank();
 
         vm.startPrank(originalOwner);
-        IPToken tokenContract = tokenizer.tokenizeIpnft(1, 100_000, "MOLE", agreementCid, "");
+        IPToken tokenContract = tokenizer.tokenizeIpnft(1, 100_000, "IPT", agreementCid, "");
         tokenContract.safeTransfer(address(wallet), 100_000);
         vm.stopPrank();
 
@@ -203,7 +203,7 @@ contract TokenizerTest is Test {
     //     vm.stopPrank();
 
     //     vm.startPrank(originalOwner);
-    //     IPToken tokenContractOld = tokenizer.tokenizeIpnft(1, 100_000, "MOLE", agreementCid, "");
+    //     IPToken tokenContractOld = tokenizer.tokenizeIpnft(1, 100_000, "IPT", agreementCid, "");
     //     vm.stopPrank();
 
     //     vm.startPrank(deployer);

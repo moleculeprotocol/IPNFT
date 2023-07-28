@@ -44,7 +44,7 @@ contract CrowdSalePermissionedTest is Test {
         vm.startPrank(deployer);
 
         auctionToken = new IPToken();
-        auctionToken.initialize("MOLECULES", "MOL-0001", Metadata(42, msg.sender, "ipfs://abcde"));
+        auctionToken.initialize("IPTOKENS", "IPT-0001", Metadata(42, msg.sender, "ipfs://abcde"));
 
         biddingToken = new FakeERC20("USD token", "USDC");
         daoToken = new FakeERC20("DAO token", "DAO");

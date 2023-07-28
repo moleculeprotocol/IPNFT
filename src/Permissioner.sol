@@ -75,7 +75,7 @@ contract TermsAcceptedPermissioner is IPermissioner {
     }
 
     /**
-     * @notice this yields the message text that claimers must present as signed message to burn their molecules and claim shares
+     * @notice this yields the message text that claimers must present to proof they have accepted all terms
      * @param tokenContract IPToken
      */
     function specificTermsV1(IPToken tokenContract) public view returns (string memory) {

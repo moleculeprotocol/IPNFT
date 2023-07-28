@@ -15,7 +15,7 @@ abstract contract IPNFTMintHelper is Test {
     address deployer = makeAddr("chucknorris");
 
     uint256 constant MINTING_FEE = 0.001 ether;
-    string DEFAULT_SYMBOL = "MOL-0001";
+    string DEFAULT_SYMBOL = "IPT-0001";
 
     function reserveAToken(IReservable ipnft, address to) internal returns (uint256) {
         vm.startPrank(to);

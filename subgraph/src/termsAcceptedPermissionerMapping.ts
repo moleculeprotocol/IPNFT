@@ -13,7 +13,7 @@ export function handleTermsAccepted(event: TermsAcceptedEvent): void {
   if (!iptBalance) {
     let reacted = IPT.load(event.params.tokenContract.toHexString())
     if (!reacted) {
-      log.warning('molecules {} not found for signature', [balanceId])
+      log.warning('IPT {} not found for signature', [balanceId])
     }
     iptBalance = new IPTBalance(balanceId)
     iptBalance.owner = event.params.signer
