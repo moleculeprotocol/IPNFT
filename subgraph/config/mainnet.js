@@ -8,7 +8,7 @@ module.exports = {
     address: '0xc09b8577c762b5e97a7d640f242e1d9bfaa7eb9d',
     startBlock: 17441953
   },
-  synthesizer: {
+  tokenizer: {
     address: '0x58EB89C69CB389DBef0c130C6296ee271b82f436',
     startBlock: 17464363
   },
@@ -17,7 +17,7 @@ module.exports = {
     startBlock: 17481804
   },
   termsAcceptedPermissioner: {
-    address: '0xC3191dEFE827D504885f47cfB3fE0919EBd35705',
-    startBlock: 17441953
+    address: '0xC837E02982992B701A1B5e4E21fA01cEB0a628fA',
+    startBlock: 17790450
   }
 }

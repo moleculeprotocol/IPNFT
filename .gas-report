@@ -1,82 +1,67 @@
 | src/IPNFT.sol:IPNFT contract                    |                 |        |        |        |         |
-|-------------------------------------------------|-----------------|--------|--------|--------|---------|
+| ----------------------------------------------- | --------------- | ------ | ------ | ------ | ------- |
 | Deployment Cost                                 | Deployment Size |        |        |        |         |
-| 2558308                                         | 12947           |        |        |        |         |
+| 2567323                                         | 12992           |        |        |        |         |
 | Function Name                                   | min             | avg    | median | max    | # calls |
 | balanceOf                                       | 629             | 1295   | 629    | 2629   | 9       |
 | burn                                            | 5806            | 5806   | 5806   | 5806   | 1       |
 | canRead                                         | 816             | 1428   | 1082   | 3082   | 5       |
 | fallback                                        | 46              | 46     | 46     | 46     | 1       |
 | grantReadAccess                                 | 723             | 8053   | 745    | 22692  | 3       |
-| initialize                                      | 2791            | 115676 | 118499 | 118499 | 41      |
+| initialize                                      | 2791            | 115755 | 118511 | 118511 | 42      |
 | isApprovedForAll                                | 808             | 1933   | 2808   | 2808   | 16      |
-| mintReservation                                 | 1486            | 127198 | 128006 | 150605 | 39      |
-| ownerOf                                         | 624             | 1766   | 2624   | 2624   | 35      |
+| mintReservation                                 | 1486            | 127784 | 128006 | 150605 | 40      |
+| ownerOf                                         | 624             | 1790   | 2624   | 2624   | 36      |
 | pause                                           | 25810           | 25810  | 25810  | 25810  | 1       |
 | paused                                          | 2382            | 2382   | 2382   | 2382   | 1       |
 | proxiableUUID                                   | 352             | 352    | 352    | 352    | 3       |
 | reservations                                    | 568             | 568    | 568    | 568    | 3       |
-| reserve                                         | 512             | 27646  | 25329  | 36629  | 41      |
+| reserve                                         | 512             | 27591  | 25329  | 36629  | 42      |
 | safeTransferFrom(address,address,uint256)       | 3858            | 28642  | 31941  | 37069  | 14      |
 | safeTransferFrom(address,address,uint256,bytes) | 21710           | 21710  | 21710  | 21710  | 1       |
 | setApprovalForAll                               | 6104            | 23797  | 24729  | 24729  | 20      |
-| setAuthorizer                                   | 3598            | 21098  | 22698  | 22698  | 44      |
-| symbol                                          | 1486            | 1486   | 1486   | 1486   | 4       |
+| setAuthorizer                                   | 4652            | 22187  | 23752  | 23752  | 45      |
+| symbol                                          | 1486            | 1486   | 1486   | 1486   | 3       |
 | tokenURI                                        | 2122            | 2122   | 2122   | 2122   | 1       |
 | upgradeTo                                       | 3584            | 3584   | 3584   | 3584   | 1       |
 | withdrawAll                                     | 4604            | 8482   | 9422   | 11422  | 3       |
 
+| src/IPToken.sol:IPToken contract |                 |        |        |        |         |
+| -------------------------------- | --------------- | ------ | ------ | ------ | ------- |
+| Deployment Cost                  | Deployment Size |        |        |        |         |
+| 1579252                          | 7920            |        |        |        |         |
+| Function Name                    | min             | avg    | median | max    | # calls |
+| allowance                        | 2775            | 2775   | 2775   | 2775   | 1       |
+| approve                          | 22546           | 24226  | 24646  | 24646  | 5       |
+| balanceOf                        | 576             | 652    | 576    | 2576   | 26      |
+| burnFrom                         | 4444            | 4444   | 4444   | 4444   | 3       |
+| cap                              | 545             | 19327  | 21675  | 21675  | 9       |
+| capped                           | 443             | 443    | 443    | 443    | 8       |
+| decimals                         | 200             | 200    | 200    | 200    | 1       |
+| hash                             | 645             | 645    | 645    | 645    | 15      |
+| initialize                       | 161418          | 198409 | 205808 | 205808 | 18      |
+| issue                            | 779             | 56787  | 71357  | 71357  | 19      |
+| issuer                           | 432             | 432    | 432    | 432    | 15      |
+| metadata                         | 1794            | 2565   | 2079   | 7794   | 30      |
+| symbol                           | 1284            | 1284   | 1284   | 1284   | 1       |
+| totalIssued                      | 405             | 405    | 405    | 405    | 10      |
+| totalSupply                      | 382             | 382    | 382    | 382    | 4       |
+| transfer                         | 20034           | 24040  | 25042  | 25042  | 10      |
+| transferFrom                     | 22233           | 24153  | 24153  | 26073  | 2       |
+| uri                              | 65913           | 65913  | 65913  | 65913  | 2       |
 
-| src/Mintpass.sol:Mintpass contract |                 |       |        |        |         |
-|------------------------------------|-----------------|-------|--------|--------|---------|
-| Deployment Cost                    | Deployment Size |       |        |        |         |
-| 1821339                            | 9226            |       |        |        |         |
-| Function Name                      | min             | avg   | median | max    | # calls |
-| MODERATOR                          | 307             | 307   | 307    | 307    | 16      |
-| authorizeMint                      | 8871            | 8871  | 8871   | 8871   | 2       |
-| authorizeReservation               | 676             | 676   | 676    | 676    | 2       |
-| balanceOf                          | 679             | 879   | 679    | 2679   | 10      |
-| batchMint                          | 30359           | 71481 | 72050  | 169756 | 15      |
-| burn                               | 7978            | 25032 | 25032  | 42086  | 2       |
-| grantRole                          | 27565           | 27698 | 27565  | 29565  | 15      |
-| isRedeemable                       | 1064            | 3064  | 3064   | 5064   | 3       |
-| ownerOf                            | 3042            | 19456 | 3042   | 113881 | 8       |
-| redeem                             | 23250           | 23250 | 23250  | 23250  | 2       |
-| revoke                             | 26772           | 29515 | 29515  | 32258  | 2       |
-| revokeRole                         | 2845            | 2845  | 2845   | 2845   | 1       |
-| tokenURI                           | 5846            | 19109 | 25664  | 25817  | 3       |
-| totalSupply                        | 2633            | 2633  | 2633   | 2633   | 1       |
-| transferFrom                       | 1440            | 1440  | 1440   | 1440   | 1       |
-
-
-| src/Molecules.sol:Molecules contract |                 |        |        |        |         |
-|--------------------------------------|-----------------|--------|--------|--------|---------|
-| Deployment Cost                      | Deployment Size |        |        |        |         |
-| 1579252                              | 7920            |        |        |        |         |
-| Function Name                        | min             | avg    | median | max    | # calls |
-| allowance                            | 2775            | 2775   | 2775   | 2775   | 1       |
-| approve                              | 22546           | 24226  | 24646  | 24646  | 5       |
-| balanceOf                            | 576             | 656    | 576    | 2576   | 25      |
-| burnFrom                             | 4444            | 4444   | 4444   | 4444   | 3       |
-| cap                                  | 545             | 19327  | 21675  | 21675  | 9       |
-| capped                               | 443             | 443    | 443    | 443    | 8       |
-| decimals                             | 200             | 200    | 200    | 200    | 1       |
-| hash                                 | 645             | 645    | 645    | 645    | 15      |
-| initialize                           | 161418          | 198409 | 205808 | 205808 | 18      |
-| issue                                | 779             | 59746  | 71357  | 71357  | 18      |
-| issuer                               | 432             | 432    | 432    | 432    | 15      |
-| metadata                             | 1794            | 2581   | 2079   | 7794   | 29      |
-| setAStateVar                         | 260             | 260    | 260    | 260    | 1       |
-| symbol                               | 1284            | 1284   | 1284   | 1284   | 1       |
-| totalIssued                          | 405             | 405    | 405    | 405    | 10      |
-| totalSupply                          | 382             | 382    | 382    | 382    | 4       |
-| transfer                             | 20034           | 24040  | 25042  | 25042  | 10      |
-| transferFrom                         | 22233           | 24153  | 24153  | 26073  | 2       |
-| uri                                  | 65913           | 65913  | 65913  | 65913  | 1       |
-
+| src/Permissioner.sol:TermsAcceptedPermissioner contract |                 |       |        |       |         |
+| ------------------------------------------------------- | --------------- | ----- | ------ | ----- | ------- |
+| Deployment Cost                                         | Deployment Size |       |        |       |         |
+| 603038                                                  | 3044            |       |        |       |         |
+| Function Name                                           | min             | avg   | median | max   | # calls |
+| accept                                                  | 8954            | 14670 | 14345  | 27420 | 11      |
+| isValidSignature                                        | 11266           | 17584 | 17584  | 23902 | 2       |
+| specificTermsV1((uint256,address,string))(string)       | 3859            | 3859  | 3859   | 3859  | 2       |
+| specificTermsV1(address)(string)                        | 6831            | 10290 | 9482   | 14557 | 6       |
 
 | src/SchmackoSwap.sol:SchmackoSwap contract             |                 |        |        |        |         |
-|--------------------------------------------------------|-----------------|--------|--------|--------|---------|
+| ------------------------------------------------------ | --------------- | ------ | ------ | ------ | ------- |
 | Deployment Cost                                        | Deployment Size |        |        |        |         |
 | 977980                                                 | 4705            |        |        |        |         |
 | Function Name                                          | min             | avg    | median | max    | # calls |
@@ -88,63 +73,68 @@
 | list(address,uint256,address,uint256,address)(uint256) | 139522          | 139522 | 139522 | 139522 | 5       |
 | listings                                               | 1392            | 1392   | 1392   | 1392   | 15      |
 
-
-| src/Synthesizer.sol:Synthesizer contract |                 |        |        |        |         |
-|------------------------------------------|-----------------|--------|--------|--------|---------|
-| Deployment Cost                          | Deployment Size |        |        |        |         |
-| 2774789                                  | 13966           |        |        |        |         |
-| Function Name                            | min             | avg    | median | max    | # calls |
-| initialize                               | 92925           | 92925  | 92925  | 92925  | 14      |
-| synthesizeIpnft                          | 13947           | 342258 | 373309 | 373309 | 16      |
-| upgradeTo                                | 10306           | 10306  | 10306  | 10306  | 1       |
-
+| src/SignedMintAuthorizer.sol:SignedMintAuthorizer contract |                 |      |        |      |         |
+| ---------------------------------------------------------- | --------------- | ---- | ------ | ---- | ------- |
+| Deployment Cost                                            | Deployment Size |      |        |      |         |
+| 453372                                                     | 2307            |      |        |      |         |
+| Function Name                                              | min             | avg  | median | max  | # calls |
+| authorizeMint                                              | 7060            | 8260 | 9060   | 9060 | 5       |
+| authorizeReservation                                       | 351             | 351  | 351    | 351  | 2       |
+| redeem                                                     | 690             | 690  | 690    | 690  | 2       |
 
 | src/TimelockedToken.sol:TimelockedToken contract |                 |       |        |        |         |
-|--------------------------------------------------|-----------------|-------|--------|--------|---------|
+| ------------------------------------------------ | --------------- | ----- | ------ | ------ | ------- |
 | Deployment Cost                                  | Deployment Size |       |        |        |         |
 | 847083                                           | 4263            |       |        |        |         |
 | Function Name                                    | min             | avg   | median | max    | # calls |
 | approve                                          | 408             | 408   | 408    | 408    | 1       |
-| balanceOf                                        | 598             | 985   | 598    | 2598   | 31      |
-| initialize                                       | 24568           | 24568 | 24568  | 24568  | 22      |
-| lock                                             | 629             | 87329 | 97693  | 136216 | 29      |
-| release                                          | 731             | 15258 | 23495  | 24295  | 8       |
+| balanceOf                                        | 598             | 973   | 598    | 2598   | 32      |
+| initialize                                       | 24568           | 24568 | 24568  | 24568  | 23      |
+| lock                                             | 629             | 87670 | 97693  | 136216 | 31      |
+| release                                          | 731             | 17098 | 24295  | 24458  | 10      |
 | releaseMany                                      | 31359           | 31575 | 31575  | 31791  | 2       |
 | totalSupply                                      | 363             | 363   | 363    | 363    | 3       |
 | transfer                                         | 384             | 384   | 384    | 384    | 1       |
 
+| src/Tokenizer.sol:Tokenizer contract |                 |        |        |        |         |
+| ------------------------------------ | --------------- | ------ | ------ | ------ | ------- |
+| Deployment Cost                      | Deployment Size |        |        |        |         |
+| 2821010                              | 14197           |        |        |        |         |
+| Function Name                        | min             | avg    | median | max    | # calls |
+| initialize                           | 92925           | 92925  | 92925  | 92925  | 13      |
+| proxiableUUID                        | 374             | 374    | 374    | 374    | 2       |
+| reinit                               | 945             | 6958   | 9965   | 9965   | 3       |
+| tokenizeIpnft                        | 13947           | 342041 | 373309 | 373309 | 16      |
 
 | src/crowdsale/CrowdSale.sol:CrowdSale contract |                 |        |        |        |         |
-|------------------------------------------------|-----------------|--------|--------|--------|---------|
+| ---------------------------------------------- | --------------- | ------ | ------ | ------ | ------- |
 | Deployment Cost                                | Deployment Size |        |        |        |         |
 | 1278414                                        | 6312            |        |        |        |         |
 | Function Name                                  | min             | avg    | median | max    | # calls |
-| claim                                          | 4725            | 19544  | 25007  | 31836  | 17      |
+| claim                                          | 4725            | 19848  | 25007  | 31836  | 18      |
 | claimResults                                   | 507             | 28482  | 29579  | 48849  | 8       |
 | contribution                                   | 720             | 720    | 720    | 720    | 2       |
 | getSaleInfo                                    | 1282            | 1282   | 1282   | 1282   | 2       |
-| placeBid                                       | 494             | 46536  | 42946  | 84746  | 18      |
+| placeBid                                       | 494             | 45491  | 42946  | 84746  | 19      |
 | settle                                         | 4114            | 12512  | 6872   | 25690  | 9       |
 | startSale                                      | 482             | 117844 | 186298 | 192200 | 18      |
 
-
 | src/crowdsale/LockingCrowdSale.sol:LockingCrowdSale contract |                 |        |        |        |         |
-|--------------------------------------------------------------|-----------------|--------|--------|--------|---------|
+| ------------------------------------------------------------ | --------------- | ------ | ------ | ------ | ------- |
 | Deployment Cost                                              | Deployment Size |        |        |        |         |
 | 2509828                                                      | 12417           |        |        |        |         |
 | Function Name                                                | min             | avg    | median | max    | # calls |
-| claim                                                        | 9114            | 63874  | 70572  | 105612 | 5       |
+| claim                                                        | 9114            | 67846  | 76028  | 125754 | 8       |
 | claimResults                                                 | 21705           | 34755  | 39106  | 39106  | 4       |
 | createOrReturnTimelockContract                               | 93249           | 93249  | 93249  | 93249  | 1       |
 | getSaleInfo                                                  | 1304            | 1304   | 1304   | 1304   | 4       |
-| lockingContracts                                             | 542             | 542    | 542    | 542    | 5       |
-| placeBid                                                     | 84892           | 84892  | 84892  | 84892  | 5       |
-| settle                                                       | 6039            | 28039  | 33540  | 33540  | 5       |
-| startSale                                                    | 1228            | 241750 | 309338 | 309338 | 6       |
-
+| lockingContracts                                             | 542             | 542    | 542    | 542    | 6       |
+| placeBid                                                     | 43329           | 77794  | 84892  | 84892  | 7       |
+| settle                                                       | 6039            | 28677  | 33540  | 33540  | 6       |
+| startSale                                                    | 1228            | 250111 | 309338 | 309338 | 7       |
 
 | src/crowdsale/StakedLockingCrowdSale.sol:StakedLockingCrowdSale contract                                     |                 |        |        |        |         |
-|--------------------------------------------------------------------------------------------------------------|-----------------|--------|--------|--------|---------|
+| ------------------------------------------------------------------------------------------------------------ | --------------- | ------ | ------ | ------ | ------- |
 | Deployment Cost                                                                                              | Deployment Size |        |        |        |         |
 | 3182692                                                                                                      | 15757           |        |        |        |         |
 | Function Name                                                                                                | min             | avg    | median | max    | # calls |
@@ -152,7 +142,7 @@
 | claimResults                                                                                                 | 21705           | 39536  | 39106  | 48882  | 10      |
 | getSaleInfo                                                                                                  | 1304            | 1304   | 1304   | 1304   | 4       |
 | lockingContracts                                                                                             | 620             | 620    | 620    | 620    | 11      |
-| placeBid                                                                                                     | 11030           | 96630  | 85079  | 163938 | 25      |
+| placeBid                                                                                                     | 11032           | 96630  | 85079  | 163940 | 25      |
 | salesStaking                                                                                                 | 790             | 790    | 790    | 790    | 1       |
 | settle                                                                                                       | 5986            | 37518  | 33474  | 53374  | 11      |
 | stakesOf                                                                                                     | 732             | 732    | 732    | 732    | 5       |
@@ -161,5 +151,12 @@
 | startSale((address,address,address,uint256,uint256,uint64,address),uint256)(uint256)                         | 472             | 472    | 472    | 472    | 1       |
 | trustVestingContract                                                                                         | 6350            | 24808  | 25984  | 27984  | 15      |
 
+| src/helpers/test-upgrades/SynthPermissioner.sol:TermsAcceptedPermissioner contract |                 |       |        |       |         |
+| ---------------------------------------------------------------------------------- | --------------- | ----- | ------ | ----- | ------- |
+| Deployment Cost                                                                    | Deployment Size |       |        |       |         |
+| 602838                                                                             | 3043            |       |        |       |         |
+| Function Name                                                                      | min             | avg   | median | max   | # calls |
+| accept                                                                             | 13657           | 14853 | 15053  | 15053 | 7       |
+| specificTermsV1                                                                    | 3857            | 3857  | 3857   | 3857  | 5       |
 
-
+Ran 20 test suites: 104 tests passed, 0 failed, 0 skipped (104 total tests)

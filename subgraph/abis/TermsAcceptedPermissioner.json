@@ -32,7 +32,7 @@
   {
     "inputs": [
       {
-        "internalType": "contract Molecules",
+        "internalType": "contract IPToken",
         "name": "tokenContract",
         "type": "address"
       },
@@ -55,7 +55,7 @@
   {
     "inputs": [
       {
-        "internalType": "contract Molecules",
+        "internalType": "contract IPToken",
         "name": "tokenContract",
         "type": "address"
       },
@@ -120,7 +120,7 @@
   {
     "inputs": [
       {
-        "internalType": "contract Molecules",
+        "internalType": "contract IPToken",
         "name": "tokenContract",
         "type": "address"
       }

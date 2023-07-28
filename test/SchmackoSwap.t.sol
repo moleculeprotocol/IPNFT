@@ -16,7 +16,7 @@ import { FakeERC20 } from "../src/helpers/FakeERC20.sol";
 contract SchmackoSwapTest is Test {
     string arUri = "ar://tNbdHqh3AVDHVD06P0OPUXSProI5kGcZZw8IvLkekSY";
     uint256 constant MINTING_FEE = 0.001 ether;
-    string DEFAULT_SYMBOL = "MOL-0001";
+    string DEFAULT_SYMBOL = "IPT-0001";
 
     IPNFT internal ipnft;
     IERC721 internal ierc721;

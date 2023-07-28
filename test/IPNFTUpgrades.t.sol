@@ -15,6 +15,7 @@ import { IPNFTV25 } from "../src/helpers/test-upgrades/IPNFTV25.sol";
 
 contract IPNFTUpgrades is IPNFTMintHelper {
     event Reserved(address indexed reserver, uint256 indexed reservationId);
+    event AuthorizerUpdated(address authorizer);
 
     IPNFTV23 internal ipnftV23;
     IPNFT internal ipnft;
@@ -46,9 +47,11 @@ contract IPNFTUpgrades is IPNFTMintHelper {
         ipnftV23.upgradeTo(address(implementationV24));
 
         ipnft = IPNFT(address(ipnftV23));
-        ipnft.setAuthorizer(new SignedMintAuthorizer(deployer));
+        SignedMintAuthorizer authorizer = new SignedMintAuthorizer(deployer);
 
-        //ipnft.reinit();
+        vm.expectEmit(true, true, false, false);
+        emit AuthorizerUpdated(address(authorizer));
+        ipnft.setAuthorizer(authorizer);
     }
 
     function testUpgradeContract() public {

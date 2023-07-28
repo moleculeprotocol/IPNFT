@@ -8,7 +8,7 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
-import { Molecules, Metadata } from "../src/Molecules.sol";
+import { IPToken, Metadata } from "../src/IPToken.sol";
 import { CrowdSale, Sale, SaleInfo, SaleState, BadDecimals } from "../src/crowdsale/CrowdSale.sol";
 import { StakedLockingCrowdSale, BadPrice } from "../src/crowdsale/StakedLockingCrowdSale.sol";
 import { IPermissioner, TermsAcceptedPermissioner, InvalidSignature } from "../src/Permissioner.sol";
@@ -27,7 +27,7 @@ contract CrowdSalePermissionedTest is Test {
 
     address anyone = makeAddr("anyone");
 
-    Molecules internal auctionToken;
+    IPToken internal auctionToken;
     FakeERC20 internal biddingToken;
     FakeERC20 internal daoToken;
 
@@ -43,8 +43,8 @@ contract CrowdSalePermissionedTest is Test {
         (bidder, bidderPk) = makeAddrAndKey("bidder");
         vm.startPrank(deployer);
 
-        auctionToken = new Molecules();
-        auctionToken.initialize("MOLECULES", "MOL-0001", Metadata(42, msg.sender, "ipfs://abcde"));
+        auctionToken = new IPToken();
+        auctionToken.initialize("IPTOKENS", "IPT-0001", Metadata(42, msg.sender, "ipfs://abcde"));
 
         biddingToken = new FakeERC20("USD token", "USDC");
         daoToken = new FakeERC20("DAO token", "DAO");

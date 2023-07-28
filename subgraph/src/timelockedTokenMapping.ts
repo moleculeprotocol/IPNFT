@@ -1,6 +1,6 @@
 import { dataSource, log, BigInt } from '@graphprotocol/graph-ts'
 
-import { LockedSchedule, Molecule } from '../generated/schema'
+import { LockedSchedule, IPTBalance } from '../generated/schema'
 import {
   ScheduleCreated,
   ScheduleReleased
@@ -10,20 +10,20 @@ export function handleScheduled(event: ScheduleCreated): void {
   let context = dataSource.context()
   let schedule = new LockedSchedule(event.params.scheduleId)
 
-  let reactedIpnft = context.getBytes('reactedIpnft').toHexString()
-  let moleculesId = reactedIpnft + '-' + event.params.beneficiary.toHexString()
+  let ipt = context.getBytes('ipt').toHexString()
+  let balanceId = ipt + '-' + event.params.beneficiary.toHexString()
 
-  let molecule = Molecule.load(moleculesId)
-  if (!molecule) {
-    molecule = new Molecule(moleculesId)
-    molecule.reactedIpnft = reactedIpnft
-    molecule.balance = BigInt.fromI32(0)
-    molecule.owner = event.params.beneficiary
-    molecule.agreementSignature = null
-    molecule.save()
+  let iptBalance = IPTBalance.load(balanceId)
+  if (!iptBalance) {
+    iptBalance = new IPTBalance(balanceId)
+    iptBalance.ipt = ipt
+    iptBalance.balance = BigInt.fromI32(0)
+    iptBalance.owner = event.params.beneficiary
+    iptBalance.agreementSignature = null
+    iptBalance.save()
   }
 
-  schedule.molecule = moleculesId
+  schedule.iptBalance = balanceId
   schedule.tokenContract = context.getBytes('lockingContract')
   schedule.beneficiary = event.params.beneficiary
   schedule.amount = event.params.amount

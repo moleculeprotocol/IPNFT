@@ -6,7 +6,6 @@ import "forge-std/console.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
@@ -16,7 +15,8 @@ import { IPermissioner, TermsAcceptedPermissioner } from "../../src/Permissioner
 import { CrowdSale, Sale, SaleInfo } from "../../src/crowdsale/CrowdSale.sol";
 import { StakedLockingCrowdSale } from "../../src/crowdsale/StakedLockingCrowdSale.sol";
 import { FakeERC20 } from "../../src/helpers/FakeERC20.sol";
-import { Molecules } from "../../src/Molecules.sol";
+import { Strings as SLib } from "../../src/helpers/Strings.sol";
+import { IPToken } from "../../src/IPToken.sol";
 
 import { CommonScript } from "./Common.sol";
 
@@ -40,7 +40,7 @@ contract DeployCrowdSale is CommonScript {
 }
 
 /**
- * @notice execute Ipnft.s.sol && Fixture.s.sol && Synthesize.s.sol first
+ * @notice execute Ipnft.s.sol && Fixture.s.sol && Tokenizer.s.sol first
  * @notice assumes that bob (hh1) owns IPNFT#1 and has synthesized it
  */
 contract FixtureCrowdSale is CommonScript {
@@ -49,7 +49,7 @@ contract FixtureCrowdSale is CommonScript {
     FakeERC20 daoToken;
     TokenVesting vestedDaoToken;
 
-    Molecules internal auctionToken;
+    IPToken internal auctionToken;
 
     StakedLockingCrowdSale stakedLockingCrowdSale;
     TermsAcceptedPermissioner permissioner;
@@ -61,7 +61,7 @@ contract FixtureCrowdSale is CommonScript {
 
         daoToken = FakeERC20(vm.envAddress("DAO_TOKEN_ADDRESS"));
         vestedDaoToken = TokenVesting(vm.envAddress("VDAO_TOKEN_ADDRESS"));
-        auctionToken = Molecules(vm.envAddress("MOLECULES_ADDRESS"));
+        auctionToken = IPToken(vm.envAddress("IPTS_ADDRESS"));
 
         stakedLockingCrowdSale = StakedLockingCrowdSale(vm.envAddress("STAKED_LOCKING_CROWDSALE_ADDRESS"));
         permissioner = TermsAcceptedPermissioner(vm.envAddress("TERMS_ACCEPTED_PERMISSIONER_ADDRESS"));
@@ -69,7 +69,7 @@ contract FixtureCrowdSale is CommonScript {
 
     function setupVestedMolToken() internal {
         vm.startBroadcast(deployer);
-        auctionToken = Molecules(vm.envAddress("MOLECULES_ADDRESS"));
+        auctionToken = IPToken(vm.envAddress("IPTS_ADDRESS"));
 
         vestedDaoToken.grantRole(vestedDaoToken.ROLE_CREATE_SCHEDULE(), address(stakedLockingCrowdSale));
         vm.stopBroadcast();
@@ -107,9 +107,10 @@ contract FixtureCrowdSale is CommonScript {
         });
 
         vm.startBroadcast(bob);
+
         auctionToken.approve(address(stakedLockingCrowdSale), 400 ether);
         uint256 saleId = stakedLockingCrowdSale.startSale(_sale, daoToken, vestedDaoToken, 1e18, 7 days);
-        TimelockedToken lockedMolToken = stakedLockingCrowdSale.lockingContracts(address(auctionToken));
+        TimelockedToken lockedIpt = stakedLockingCrowdSale.lockingContracts(address(auctionToken));
         vm.stopBroadcast();
 
         string memory terms = permissioner.specificTermsV1(auctionToken);
@@ -118,8 +119,9 @@ contract FixtureCrowdSale is CommonScript {
         placeBid(alice, 600 ether, saleId, abi.encodePacked(r, s, v));
         (v, r, s) = vm.sign(charliePk, ECDSA.toEthSignedMessageHash(abi.encodePacked(terms)));
         placeBid(charlie, 200 ether, saleId, abi.encodePacked(r, s, v));
-        console.log("LOCKED_MOLECULES_ADDRESS=%s", address(lockedMolToken));
+        console.log("LOCKED_IPTS_ADDRESS=%s", address(lockedIpt));
         console.log("SALE_ID=%s", saleId);
+        vm.writeFile("SALEID.txt", Strings.toString(saleId));
     }
 }
 
@@ -128,9 +130,9 @@ contract ClaimSale is CommonScript {
         prepareAddresses();
         TermsAcceptedPermissioner permissioner = TermsAcceptedPermissioner(vm.envAddress("TERMS_ACCEPTED_PERMISSIONER_ADDRESS"));
         StakedLockingCrowdSale stakedLockingCrowdSale = StakedLockingCrowdSale(vm.envAddress("STAKED_LOCKING_CROWDSALE_ADDRESS"));
-        Molecules auctionToken = Molecules(vm.envAddress("MOLECULES_ADDRESS"));
-
-        uint256 saleId = vm.envUint("SALE_ID");
+        IPToken auctionToken = IPToken(vm.envAddress("IPTS_ADDRESS"));
+        uint256 saleId = SLib.stringToUint(vm.readFile("SALEID.txt"));
+        vm.removeFile("SALEID.txt");
 
         vm.startBroadcast(anyone);
         stakedLockingCrowdSale.settle(saleId);
@@ -144,9 +146,10 @@ contract ClaimSale is CommonScript {
         stakedLockingCrowdSale.claim(saleId, abi.encodePacked(r, s, v));
         vm.stopBroadcast();
 
-        vm.startBroadcast(charlie);
-        (v, r, s) = vm.sign(charliePk, ECDSA.toEthSignedMessageHash(abi.encodePacked(terms)));
-        stakedLockingCrowdSale.claim(saleId, abi.encodePacked(r, s, v));
-        vm.stopBroadcast();
+        //we don't let charlie claim so we can test upgrades
+        // vm.startBroadcast(charlie);
+        // (v, r, s) = vm.sign(charliePk, ECDSA.toEthSignedMessageHash(abi.encodePacked(terms)));
+        // stakedLockingCrowdSale.claim(saleId, abi.encodePacked(r, s, v));
+        // vm.stopBroadcast();
     }
 }

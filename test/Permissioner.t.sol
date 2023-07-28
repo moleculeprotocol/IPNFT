@@ -3,7 +3,7 @@ pragma solidity ^0.8.18;
 
 import "forge-std/Test.sol";
 import { InvalidSignature, IPermissioner, TermsAcceptedPermissioner } from "../src/Permissioner.sol";
-import { Molecules, Metadata } from "../src/Molecules.sol";
+import { IPToken, Metadata } from "../src/IPToken.sol";
 import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
 import { Safe } from "safe-global/safe-contracts/Safe.sol";
@@ -16,13 +16,13 @@ contract PermissionerTest is Test {
     address deployer = makeAddr("chucknorris");
     address originalOwner = makeAddr("daoMultisig");
 
-    //Alice, Bob  are molecules holders
+    //Alice, Bob  are ipToken holders
     address alice = makeAddr("alice");
     uint256 alicePk;
     address bob = makeAddr("bob");
     uint256 bobPk;
 
-    Molecules molecules;
+    IPToken ipToken;
     TermsAcceptedPermissioner internal permissioner;
 
     function setUp() public {
@@ -31,9 +31,9 @@ contract PermissionerTest is Test {
         vm.startPrank(deployer);
         permissioner = new TermsAcceptedPermissioner();
 
-        molecules = new Molecules();
+        ipToken = new IPToken();
         Metadata memory md = Metadata(1, originalOwner, "abcde");
-        molecules.initialize("foo", "BAR", md);
+        ipToken.initialize("foo", "BAR", md);
 
         vm.stopPrank();
     }
@@ -41,18 +41,18 @@ contract PermissionerTest is Test {
     function testProveSigAndAcceptTerms() public {
         vm.startPrank(originalOwner);
 
-        string memory terms = permissioner.specificTermsV1(molecules);
+        string memory terms = permissioner.specificTermsV1(ipToken);
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(alicePk, ECDSA.toEthSignedMessageHash(abi.encodePacked(terms)));
 
         bytes memory xsignature = abi.encodePacked(r, s, v);
-        assertTrue(permissioner.isValidSignature(molecules, alice, xsignature));
+        assertTrue(permissioner.isValidSignature(ipToken, alice, xsignature));
 
         vm.expectRevert(InvalidSignature.selector);
-        permissioner.accept(molecules, originalOwner, xsignature);
+        permissioner.accept(ipToken, originalOwner, xsignature);
         vm.stopPrank();
 
         vm.startPrank(alice);
-        permissioner.accept(molecules, alice, xsignature);
+        permissioner.accept(ipToken, alice, xsignature);
         vm.stopPrank();
     }
 
@@ -70,7 +70,7 @@ contract PermissionerTest is Test {
 
         CompatibilityFallbackHandler fallbackHandler = new CompatibilityFallbackHandler();
         bytes32 messagehash = fallbackHandler.getMessageHashForSafe(
-            wallet, abi.encodePacked(ECDSA.toEthSignedMessageHash(abi.encodePacked(permissioner.specificTermsV1(molecules))))
+            wallet, abi.encodePacked(ECDSA.toEthSignedMessageHash(abi.encodePacked(permissioner.specificTermsV1(ipToken))))
         );
 
         (uint8 v1, bytes32 r1, bytes32 s1) = vm.sign(alicePk, messagehash);
@@ -78,10 +78,10 @@ contract PermissionerTest is Test {
 
         bytes memory signature = bytes.concat(abi.encodePacked(r1, s1, v1), abi.encodePacked(r2, s2, v2));
 
-        assertTrue(permissioner.isValidSignature(molecules, address(wallet), signature));
+        assertTrue(permissioner.isValidSignature(ipToken, address(wallet), signature));
 
         vm.startPrank(alice);
-        permissioner.accept(molecules, address(wallet), signature);
+        permissioner.accept(ipToken, address(wallet), signature);
         vm.stopPrank();
     }
 }
