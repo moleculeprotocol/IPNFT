@@ -1,5 +1,5 @@
 import { BigInt, Bytes, DataSourceContext, log } from '@graphprotocol/graph-ts'
-import { IERC20Metadata } from '../generated/StakedLockingCrowdSale/IERC20Metadata'
+import { IERC20Metadata } from '../generated/CrowdSale/IERC20Metadata'
 import {
   Bid as BidEvent,
   Staked as StakedEvent,
@@ -13,6 +13,8 @@ import {
   ClaimedFundingGoal as ClaimedFundingGoalEvent
 } from '../generated/StakedLockingCrowdSale/StakedLockingCrowdSale'
 
+import { makeERC20Token } from './crowdSaleMapping'
+
 import {
   Contribution,
   CrowdSale,
@@ -22,21 +24,6 @@ import {
 } from '../generated/schema'
 
 import { TimelockedToken as TimelockedTokenTemplate } from '../generated/templates'
-
-function makeERC20Token(_contract: IERC20Metadata): ERC20Token {
-  let token = ERC20Token.load(_contract._address)
-
-  if (!token) {
-    token = new ERC20Token(_contract._address)
-    token.id = _contract._address
-    token.decimals = BigInt.fromI32(_contract.decimals())
-    token.symbol = _contract.symbol()
-    token.name = _contract.name()
-    token.save()
-  }
-
-  return token
-}
 
 function makeTimelockedToken(
   _contract: IERC20Metadata,
@@ -118,6 +105,9 @@ export function handleStarted(event: StartedEvent): void {
     event.params.staking.wadFixedStakedPerBidPrice
 
   crowdSale.permissioner = event.params.sale.permissioner
+
+  crowdSale.type = 'STAKED_LOCKING_CROWDSALE'
+
   crowdSale.save()
   log.info('[handleStarted] crowdsale {}', [crowdSale.id])
 }

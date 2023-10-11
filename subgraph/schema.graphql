@@ -107,6 +107,11 @@ enum SaleState {
   FAILED
 }
 
+enum SaleType {
+  CROWDSALE
+  STAKED_LOCKING_CROWDSALE
+}
+
 type CrowdSale @entity {
   id: ID!
   ipt: IPT!
@@ -123,11 +128,12 @@ type CrowdSale @entity {
   stakingToken: ERC20Token
   amountStaked: BigInt! #the amount of tokens staked so far
   vestedStakingToken: ERC20Token #the vested staking token that bidders partially receive after claiming
-  stakingDuration: BigInt! # The duration for how long staked tokens are locked ("cliff" in vesting terms)
+  stakingDuration: BigInt # The duration for how long staked tokens are locked ("cliff" in vesting terms)
   wadFixedStakedPerBidPrice: BigInt # the fixed price of stake / bid token
   permissioner: Bytes! #a crowdsale can be configured with an individual permissioner
   claimedAt: BigInt # the date when the auctioneer has claimed their return (depending on failed / settled sales)
   contributions: [Contribution!] @derivedFrom(field: "crowdSale")
+  type: SaleType!
 }
 
 type Contribution @entity {
