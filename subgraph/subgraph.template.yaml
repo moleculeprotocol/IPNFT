@@ -105,6 +105,10 @@ dataSources:
       eventHandlers:
         - event: Started(indexed uint256,indexed address,(address,address,address,uint256,uint256,uint64,address))
           handler: handleStarted
+        - event: Settled(indexed uint256,uint256,uint256)
+          handler: handleSettled
+        - event: Failed(indexed uint256)
+          handler: handleFailed
       file: ./src/crowdSaleMapping.ts
   - kind: ethereum/contract
     name: StakedLockingCrowdSale

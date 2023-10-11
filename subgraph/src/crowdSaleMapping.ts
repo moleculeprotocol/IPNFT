@@ -1,6 +1,10 @@
 import { BigInt, log } from '@graphprotocol/graph-ts'
 import { IERC20Metadata } from '../generated/CrowdSale/IERC20Metadata'
-import { Started as StartedEvent } from '../generated/CrowdSale/CrowdSale'
+import {
+  Started as StartedEvent,
+  Settled as SettledEvent,
+  Failed as FailedEvent
+} from '../generated/CrowdSale/CrowdSale'
 
 import { CrowdSale, ERC20Token, IPT } from '../generated/schema'
 
@@ -52,4 +56,26 @@ export function handleStarted(event: StartedEvent): void {
 
   crowdSale.save()
   log.info('[handleStarted] plain crowdsale {}', [crowdSale.id])
+}
+
+export function handleSettled(event: SettledEvent): void {
+  let crowdSale = CrowdSale.load(event.params.saleId.toString())
+  if (!crowdSale) {
+    return log.error('[handleSettled] Plain CrowdSale not found for id: {}', [
+      event.params.saleId.toString()
+    ])
+  }
+  crowdSale.state = 'SETTLED'
+  crowdSale.save()
+}
+
+export function handleFailed(event: FailedEvent): void {
+  let crowdSale = CrowdSale.load(event.params.saleId.toString())
+  if (!crowdSale) {
+    return log.error('[handleFailed] Plain CrowdSale not found for id: {}', [
+      event.params.saleId.toString()
+    ])
+  }
+  crowdSale.state = 'FAILED'
+  crowdSale.save()
 }
