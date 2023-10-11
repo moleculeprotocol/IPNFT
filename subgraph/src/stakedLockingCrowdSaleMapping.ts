@@ -1,5 +1,5 @@
 import { BigInt, Bytes, DataSourceContext, log } from '@graphprotocol/graph-ts'
-import { IERC20Metadata } from '../generated/StakedLockingCrowdSale/IERC20Metadata'
+import { IERC20Metadata } from '../generated/CrowdSale/IERC20Metadata'
 import {
   Bid as BidEvent,
   Staked as StakedEvent,

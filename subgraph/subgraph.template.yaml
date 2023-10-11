@@ -82,7 +82,6 @@ dataSources:
         # - event: TermsAccepted(indexed uint256,indexed address,bytes)
         #   handler: handleTermsAccepted
       file: ./src/tokenizerMapping.ts
-
   - kind: ethereum/contract
     name: CrowdSale
     network: {{network}}
@@ -107,7 +106,6 @@ dataSources:
         - event: Started(indexed uint256,indexed address,(address,address,address,uint256,uint256,uint64,address))
           handler: handleStarted
       file: ./src/crowdSaleMapping.ts
-
   - kind: ethereum/contract
     name: StakedLockingCrowdSale
     network: {{network}}
@@ -126,8 +124,6 @@ dataSources:
       abis:
         - name: StakedLockingCrowdSale
           file: ./abis/StakedLockingCrowdSale.json
-        - name: IERC20Metadata
-          file: ./abis/IERC20Metadata.json
       eventHandlers:
         - event: Started(indexed uint256,indexed address,(address,address,address,uint256,uint256,uint64,address),(address,address,uint256),address,uint256,uint256)
           handler: handleStarted
