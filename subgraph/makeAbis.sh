@@ -9,6 +9,7 @@ cat ../out/TimelockedToken.sol/TimelockedToken.json | jq .abi > ./abis/Timelocke
 cat ../out/SalesShareDistributor.sol/SalesShareDistributor.json | jq .abi > ./abis/SharedSalesDistributor.json
 cat ../out/Permissioner.sol/TermsAcceptedPermissioner.json | jq .abi > ./abis/TermsAcceptedPermissioner.json
 cat ../out/StakedLockingCrowdSale.sol/StakedLockingCrowdSale.json | jq .abi > ./abis/StakedLockingCrowdSale.json
+cat ../out/CrowdSale.sol/CrowdSale.json | jq .abi > ./abis/CrowdSale.json
 
 cat ../out/Tokenizer.sol/Tokenizer.json | jq .abi > ./abis/_Tokenizer.json
 
@@ -70,4 +71,4 @@ jq '. +=  [{
   }]' ./abis/_Tokenizer.json > ./abis/Tokenizer.json
 
   rm ./abis/_Tokenizer.json
-  
+
