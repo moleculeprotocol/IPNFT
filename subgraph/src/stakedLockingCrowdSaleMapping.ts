@@ -13,7 +13,7 @@ import {
   ClaimedFundingGoal as ClaimedFundingGoalEvent
 } from '../generated/StakedLockingCrowdSale/StakedLockingCrowdSale'
 
-import { makeERC20Token } from './crowdSaleMapping'
+import { makeERC20Token, handleSettledGeneric } from './crowdSaleMapping'
 
 import {
   Contribution,
@@ -24,6 +24,8 @@ import {
 } from '../generated/schema'
 
 import { TimelockedToken as TimelockedTokenTemplate } from '../generated/templates'
+
+// Helpers
 
 function makeTimelockedToken(
   _contract: IERC20Metadata,
@@ -50,6 +52,8 @@ function makeTimelockedToken(
 
   return token
 }
+
+// Actual Event handlers
 
 export function handleStarted(event: StartedEvent): void {
   let crowdSale = new CrowdSale(event.params.saleId.toString())
@@ -113,14 +117,7 @@ export function handleStarted(event: StartedEvent): void {
 }
 
 export function handleSettled(event: SettledEvent): void {
-  let crowdSale = CrowdSale.load(event.params.saleId.toString())
-  if (!crowdSale) {
-    return log.error('[handleSettled] CrowdSale not found for id: {}', [
-      event.params.saleId.toString()
-    ])
-  }
-  crowdSale.state = 'SETTLED'
-  crowdSale.save()
+  handleSettledGeneric(event.params.saleId.toString())
 }
 
 export function handleFailed(event: FailedEvent): void {

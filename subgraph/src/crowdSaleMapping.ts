@@ -12,6 +12,8 @@ import {
 
 import { CrowdSale, ERC20Token, IPT, Contribution } from '../generated/schema'
 
+// Helpers & Generic Handlers to handle different types of CrowdSales
+
 export function makeERC20Token(_contract: IERC20Metadata): ERC20Token {
   let token = ERC20Token.load(_contract._address)
 
@@ -26,6 +28,19 @@ export function makeERC20Token(_contract: IERC20Metadata): ERC20Token {
 
   return token
 }
+
+export function handleSettledGeneric(saleId: string): void {
+  let crowdSale = CrowdSale.load(saleId)
+  if (!crowdSale) {
+    return log.error('[handleSettled] Plain CrowdSale not found for id: {}', [
+      saleId
+    ])
+  }
+  crowdSale.state = 'SETTLED'
+  crowdSale.save()
+}
+
+// Actual Event handlers
 
 export function handleStarted(event: StartedEvent): void {
   let crowdSale = new CrowdSale(event.params.saleId.toString())
@@ -63,14 +78,7 @@ export function handleStarted(event: StartedEvent): void {
 }
 
 export function handleSettled(event: SettledEvent): void {
-  let crowdSale = CrowdSale.load(event.params.saleId.toString())
-  if (!crowdSale) {
-    return log.error('[handleSettled] Plain CrowdSale not found for id: {}', [
-      event.params.saleId.toString()
-    ])
-  }
-  crowdSale.state = 'SETTLED'
-  crowdSale.save()
+  handleSettledGeneric(event.params.saleId.toString())
 }
 
 export function handleFailed(event: FailedEvent): void {
