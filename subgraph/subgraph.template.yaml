@@ -111,6 +111,12 @@ dataSources:
           handler: handleFailed
         - event: Bid(indexed uint256,indexed address,uint256)
           handler: handleBid
+        - event: Claimed(indexed uint256,indexed address,uint256,uint256)
+          handler: handleClaimed
+        - event: ClaimedFundingGoal(indexed uint256)
+          handler: handleClaimedSuccessfulSale
+        - event: ClaimedAuctionTokens(indexed uint256)
+          handler: handleClaimedFailedSale
       file: ./src/crowdSaleMapping.ts
   - kind: ethereum/contract
     name: StakedLockingCrowdSale

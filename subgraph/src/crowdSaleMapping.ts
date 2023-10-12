@@ -4,7 +4,10 @@ import {
   Started as StartedEvent,
   Settled as SettledEvent,
   Failed as FailedEvent,
-  Bid as BidEvent
+  Bid as BidEvent,
+  Claimed as ClaimedEvent,
+  ClaimedAuctionTokens as ClaimedAuctionTokensEvent,
+  ClaimedFundingGoal as ClaimedFundingGoalEvent
 } from '../generated/CrowdSale/CrowdSale'
 
 import { CrowdSale, ERC20Token, IPT, Contribution } from '../generated/schema'
@@ -111,4 +114,67 @@ export function handleBid(event: BidEvent): void {
   contribution.crowdSale = crowdSale.id
 
   contribution.save()
+}
+
+export function handleClaimed(event: ClaimedEvent): void {
+  let crowdSale = CrowdSale.load(event.params.saleId.toString())
+  if (!crowdSale) {
+    log.error('[HANDLECLAIMED] Plain CrowdSale not found for id: {}', [
+      event.params.saleId.toString()
+    ])
+    return
+  }
+
+  let contributionId =
+    event.params.saleId.toString() + '-' + event.params.claimer.toHex()
+  //   Load  Contribution
+  let contribution = Contribution.load(contributionId)
+
+  if (contribution === null) {
+    log.error(
+      '[HANDLECLAIMED] No contribution found for Plain CrowdSale | user : {} | {}',
+      [event.params.saleId.toString(), event.params.claimer.toHexString()]
+    )
+    return
+  }
+  contribution.claimedAt = event.block.timestamp
+  contribution.claimedTx = event.transaction.hash.toHex()
+  contribution.claimedTokens = event.params.claimed
+  contribution.refundedTokens = event.params.refunded
+  contribution.save()
+}
+
+/**
+ * emitted when the auctioneer pulls / claims bidding tokens after the sale is successfully settled
+ */
+export function handleClaimedSuccessfulSale(
+  event: ClaimedFundingGoalEvent
+): void {
+  let crowdSale = CrowdSale.load(event.params.saleId.toString())
+  if (!crowdSale) {
+    log.error('[handleClaimed] Plain CrowdSale not found for id: {}', [
+      event.params.saleId.toString()
+    ])
+    return
+  }
+  crowdSale.claimedAt = event.block.timestamp
+  crowdSale.save()
+}
+
+/**
+ * emitted when the auctioneer pulls / claims back auction tokens after the sale has settled and is failed
+ */
+export function handleClaimedFailedSale(
+  event: ClaimedAuctionTokensEvent
+): void {
+  let crowdSale = CrowdSale.load(event.params.saleId.toString())
+  if (!crowdSale) {
+    log.error(
+      '[handleClaimedFailedSale] Plain CrowdSale not found for id: {}',
+      [event.params.saleId.toString()]
+    )
+    return
+  }
+  crowdSale.claimedAt = event.block.timestamp
+  crowdSale.save()
 }
