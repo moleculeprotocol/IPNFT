@@ -3,10 +3,11 @@ import { IERC20Metadata } from '../generated/CrowdSale/IERC20Metadata'
 import {
   Started as StartedEvent,
   Settled as SettledEvent,
-  Failed as FailedEvent
+  Failed as FailedEvent,
+  Bid as BidEvent
 } from '../generated/CrowdSale/CrowdSale'
 
-import { CrowdSale, ERC20Token, IPT } from '../generated/schema'
+import { CrowdSale, ERC20Token, IPT, Contribution } from '../generated/schema'
 
 export function makeERC20Token(_contract: IERC20Metadata): ERC20Token {
   let token = ERC20Token.load(_contract._address)
@@ -78,4 +79,36 @@ export function handleFailed(event: FailedEvent): void {
   }
   crowdSale.state = 'FAILED'
   crowdSale.save()
+}
+
+export function handleBid(event: BidEvent): void {
+  let crowdSale = CrowdSale.load(event.params.saleId.toString())
+  if (!crowdSale) {
+    log.error('[HANDLEBID] CrowdSale not found for id: {}', [
+      event.params.saleId.toString()
+    ])
+    return
+  }
+
+  //   Update CrowdSale
+  crowdSale.amountRaised = crowdSale.amountRaised.plus(event.params.amount)
+  crowdSale.save()
+
+  let contributionId =
+    event.params.saleId.toString() + '-' + event.params.bidder.toHex()
+
+  //   Load or Create Contribution
+  let contribution = Contribution.load(contributionId)
+  if (!contribution) {
+    contribution = new Contribution(contributionId)
+    contribution.amount = BigInt.fromI32(0)
+    contribution.stakedAmount = BigInt.fromI32(0)
+  }
+
+  contribution.contributor = event.params.bidder
+  contribution.createdAt = event.block.timestamp
+  contribution.amount = contribution.amount.plus(event.params.amount)
+  contribution.crowdSale = crowdSale.id
+
+  contribution.save()
 }

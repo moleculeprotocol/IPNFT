@@ -109,6 +109,8 @@ dataSources:
           handler: handleSettled
         - event: Failed(indexed uint256)
           handler: handleFailed
+        - event: Bid(indexed uint256,indexed address,uint256)
+          handler: handleBid
       file: ./src/crowdSaleMapping.ts
   - kind: ethereum/contract
     name: StakedLockingCrowdSale
