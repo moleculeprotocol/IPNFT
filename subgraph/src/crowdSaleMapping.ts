@@ -13,40 +13,6 @@ import {
 import { CrowdSale, ERC20Token, IPT, Contribution } from '../generated/schema'
 
 // Helpers & Generic Handlers to handle different types of CrowdSales
-
-export class StartedEventParams {
-  saleId: BigInt
-  issuer: Address
-  auctionToken: Address
-  biddingToken: Address
-  beneficiary: Address
-  fundingGoal: BigInt
-  salesAmount: BigInt
-  closingTime: BigInt
-  permissioner: Address
-
-  constructor(
-    saleId: BigInt,
-    issuer: Address,
-    auctionToken: Address,
-    biddingToken: Address,
-    beneficiary: Address,
-    fundingGoal: BigInt,
-    salesAmount: BigInt,
-    closingTime: BigInt,
-    permissioner: Address
-  ) {
-    this.saleId = saleId
-    this.issuer = issuer
-    this.auctionToken = auctionToken
-    this.biddingToken = biddingToken
-    this.beneficiary = beneficiary
-    this.fundingGoal = fundingGoal
-    this.salesAmount = salesAmount
-    this.closingTime = closingTime
-    this.permissioner = permissioner
-  }
-}
 export class BidEventParams {
   saleId: BigInt
   bidder: Address
