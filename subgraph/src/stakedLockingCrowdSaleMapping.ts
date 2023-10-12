@@ -109,8 +109,6 @@ export function handleStarted(event: StartedEvent): void {
 
   crowdSale.permissioner = event.params.sale.permissioner
 
-  crowdSale.type = 'STAKED_LOCKING_CROWDSALE'
-
   crowdSale.auctionLockingDuration = event.params.lockingDuration
   crowdSale.stakingToken = makeERC20Token(
     IERC20Metadata.bind(event.params.staking.stakedToken)
@@ -121,6 +119,8 @@ export function handleStarted(event: StartedEvent): void {
   crowdSale.stakingDuration = event.params.stakingDuration
   crowdSale.wadFixedStakedPerBidPrice =
     event.params.staking.wadFixedStakedPerBidPrice
+
+  crowdSale.type = 'STAKED_LOCKING_CROWDSALE'
 
   crowdSale.save()
   log.info('[handleStarted] crowdsale {}', [crowdSale.id])
