@@ -109,9 +109,7 @@ export function makeERC20Token(_contract: IERC20Metadata): ERC20Token {
 export function handleSettledGeneric(saleId: string): void {
   let crowdSale = CrowdSale.load(saleId)
   if (!crowdSale) {
-    return log.error('[handleSettled] Plain CrowdSale not found for id: {}', [
-      saleId
-    ])
+    return log.error('[handleSettled] CrowdSale not found for id: {}', [saleId])
   }
   crowdSale.state = 'SETTLED'
   crowdSale.save()
@@ -120,9 +118,7 @@ export function handleSettledGeneric(saleId: string): void {
 export function handleFailedGeneric(saleId: string): void {
   let crowdSale = CrowdSale.load(saleId)
   if (!crowdSale) {
-    return log.error('[handleFailed] Plain CrowdSale not found for id: {}', [
-      saleId
-    ])
+    return log.error('[handleFailed] CrowdSale not found for id: {}', [saleId])
   }
   crowdSale.state = 'FAILED'
   crowdSale.save()
@@ -162,7 +158,7 @@ export function handleBidGeneric(params: BidEventParams): void {
 export function handleClaimedGeneric(params: ClaimedEventParams): void {
   let crowdSale = CrowdSale.load(params.saleId.toString())
   if (!crowdSale) {
-    log.error('[HANDLECLAIMED] Plain CrowdSale not found for id: {}', [
+    log.error('[HANDLECLAIMED] CrowdSale not found for id: {}', [
       params.saleId.toString()
     ])
     return
@@ -174,7 +170,7 @@ export function handleClaimedGeneric(params: ClaimedEventParams): void {
 
   if (contribution === null) {
     log.error(
-      '[HANDLECLAIMED] No contribution found for Plain CrowdSale | user : {} | {}',
+      '[HANDLECLAIMED] No contribution found for CrowdSale | user : {} | {}',
       [params.saleId.toString(), params.claimer.toHexString()]
     )
     return
@@ -192,7 +188,7 @@ export function handleClaimedSuccessfulSaleGeneric(
 ): void {
   let crowdSale = CrowdSale.load(saleId)
   if (!crowdSale) {
-    log.error('[handleClaimed] Plain CrowdSale not found for id: {}', [saleId])
+    log.error('[handleClaimed] CrowdSale not found for id: {}', [saleId])
     return
   }
   crowdSale.claimedAt = timestamp
@@ -205,10 +201,9 @@ export function handleClaimedFailedSaleGeneric(
 ): void {
   let crowdSale = CrowdSale.load(saleId)
   if (!crowdSale) {
-    log.error(
-      '[handleClaimedFailedSale] Plain CrowdSale not found for id: {}',
-      [saleId]
-    )
+    log.error('[handleClaimedFailedSale] CrowdSale not found for id: {}', [
+      saleId
+    ])
     return
   }
   crowdSale.claimedAt = timestamp
@@ -222,7 +217,7 @@ export function handleStarted(event: StartedEvent): void {
 
   let ipt = IPT.load(event.params.sale.auctionToken.toHexString())
   if (!ipt) {
-    log.error('[Plain Crowdsale] Ipt not found for id: {}', [
+    log.error('[Crowdsale] Ipt not found for id: {}', [
       event.params.sale.auctionToken.toHexString()
     ])
     return
@@ -249,7 +244,7 @@ export function handleStarted(event: StartedEvent): void {
   crowdSale.amountStaked = BigInt.fromU32(0)
 
   crowdSale.save()
-  log.info('[handleStarted] plain crowdsale {}', [crowdSale.id])
+  log.info('[handleStarted] crowdsale {}', [crowdSale.id])
 }
 
 export function handleSettled(event: SettledEvent): void {
