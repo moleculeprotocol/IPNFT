@@ -2,68 +2,22 @@ import { BigInt, Bytes, DataSourceContext, log } from '@graphprotocol/graph-ts'
 import { IERC20Metadata } from '../generated/CrowdSale/IERC20Metadata'
 import {
   Bid as BidEvent,
-  Staked as StakedEvent,
-  Settled as SettledEvent,
-  Started as StartedEvent,
-  Failed as FailedEvent,
-  Claimed as ClaimedEvent,
-  ClaimedStakes as ClaimedStakesEvent,
-  LockingContractCreated as LockingContractCreatedEvent,
   ClaimedAuctionTokens as ClaimedAuctionTokensEvent,
-  ClaimedFundingGoal as ClaimedFundingGoalEvent
+  Claimed as ClaimedEvent,
+  ClaimedFundingGoal as ClaimedFundingGoalEvent,
+  ClaimedStakes as ClaimedStakesEvent,
+  Failed as FailedEvent,
+  LockingContractCreated as LockingContractCreatedEvent,
+  Settled as SettledEvent,
+  Staked as StakedEvent,
+  Started as StartedEvent
 } from '../generated/StakedLockingCrowdSale/StakedLockingCrowdSale'
+import * as GenericCrowdSale from './genericCrowdSale'
 
-import {
-  makeERC20Token,
-  handleSettledGeneric,
-  handleFailedGeneric,
-  handleClaimedFailedSaleGeneric,
-  handleClaimedSuccessfulSaleGeneric,
-  handleBidGeneric,
-  handleClaimedGeneric,
-  BidEventParams,
-  ClaimedEventParams
-} from './crowdSaleMapping'
-
-import {
-  Contribution,
-  CrowdSale,
-  ERC20Token,
-  IPT,
-  TimelockedToken
-} from '../generated/schema'
+import { Contribution, CrowdSale, ERC20Token, IPT } from '../generated/schema'
 
 import { TimelockedToken as TimelockedTokenTemplate } from '../generated/templates'
-
-// Helpers
-
-function makeTimelockedToken(
-  _contract: IERC20Metadata,
-  underlyingToken: ERC20Token
-): TimelockedToken {
-  let token = TimelockedToken.load(_contract._address)
-
-  if (!token) {
-    token = new TimelockedToken(_contract._address)
-    token.id = _contract._address
-    token.decimals = BigInt.fromI32(_contract.decimals())
-    token.symbol = _contract.symbol()
-    token.name = _contract.name()
-    token.underlyingToken = underlyingToken.id
-
-    let ipt = IPT.load(underlyingToken.id.toHexString())
-    if (ipt) {
-      token.ipt = ipt.id
-      ipt.lockedToken = token.id
-      ipt.save()
-    }
-    token.save()
-  }
-
-  return token
-}
-
-// Actual Event handlers
+import { makeERC20Token, makeTimelockedToken } from './common'
 
 export function handleStarted(event: StartedEvent): void {
   let crowdSale = new CrowdSale(event.params.saleId.toString())
@@ -127,11 +81,11 @@ export function handleStarted(event: StartedEvent): void {
 }
 
 export function handleSettled(event: SettledEvent): void {
-  handleSettledGeneric(event.params.saleId.toString())
+  GenericCrowdSale.handleSettled(event.params.saleId.toString())
 }
 
 export function handleFailed(event: FailedEvent): void {
-  handleFailedGeneric(event.params.saleId.toString())
+  GenericCrowdSale.handleFailed(event.params.saleId.toString())
 }
 
 export function handleLockingContractCreated(
@@ -158,14 +112,14 @@ export function handleLockingContractCreated(
 }
 
 export function handleBid(event: BidEvent): void {
-  let params: BidEventParams = new BidEventParams(
-    event.params.saleId,
-    event.params.bidder,
-    event.params.amount,
-    event.block.timestamp
+  GenericCrowdSale.handleBid(
+    new GenericCrowdSale.BidEventParams(
+      event.params.saleId,
+      event.params.bidder,
+      event.params.amount,
+      event.block.timestamp
+    )
   )
-
-  handleBidGeneric(params)
 }
 
 export function handleStaked(event: StakedEvent): void {
@@ -212,16 +166,16 @@ export function handleStaked(event: StakedEvent): void {
 }
 
 export function handleClaimed(event: ClaimedEvent): void {
-  let params: ClaimedEventParams = new ClaimedEventParams(
-    event.params.saleId,
-    event.params.claimer,
-    event.params.claimed,
-    event.params.refunded,
-    event.block.timestamp,
-    event.transaction
+  GenericCrowdSale.handleClaimed(
+    new GenericCrowdSale.ClaimedEventParams(
+      event.params.saleId,
+      event.params.claimer,
+      event.params.claimed,
+      event.params.refunded,
+      event.block.timestamp,
+      event.transaction
+    )
   )
-
-  handleClaimedGeneric(params)
 }
 
 export function handleClaimedStakes(event: ClaimedStakesEvent): void {
@@ -247,7 +201,7 @@ export function handleClaimedStakes(event: ClaimedStakesEvent): void {
 export function handleClaimedSuccessfulSale(
   event: ClaimedFundingGoalEvent
 ): void {
-  handleClaimedSuccessfulSaleGeneric(
+  GenericCrowdSale.handleClaimedSuccessfulSale(
     event.params.saleId.toString(),
     event.block.timestamp
   )
@@ -259,7 +213,7 @@ export function handleClaimedSuccessfulSale(
 export function handleClaimedFailedSale(
   event: ClaimedAuctionTokensEvent
 ): void {
-  handleClaimedFailedSaleGeneric(
+  GenericCrowdSale.handleClaimedFailedSale(
     event.params.saleId.toString(),
     event.block.timestamp
   )

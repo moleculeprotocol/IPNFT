@@ -1,11 +1,6 @@
 [
   {
     "inputs": [],
-    "stateMutability": "nonpayable",
-    "type": "constructor"
-  },
-  {
-    "inputs": [],
     "name": "AlreadyClaimed",
     "type": "error"
   },
@@ -48,6 +43,11 @@
   {
     "inputs": [],
     "name": "BidTooLow",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "FeesTooHigh",
     "type": "error"
   },
   {
@@ -225,6 +225,19 @@
       }
     ],
     "name": "Failed",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint16",
+        "name": "feeBp",
+        "type": "uint16"
+      }
+    ],
+    "name": "FeesUpdated",
     "type": "event"
   },
   {
@@ -555,6 +568,12 @@
         "internalType": "struct Sale",
         "name": "sale",
         "type": "tuple"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint16",
+        "name": "percentageFee",
+        "type": "uint16"
       }
     ],
     "name": "Started",
@@ -665,6 +684,19 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "currentFeeBp",
+    "outputs": [
+      {
+        "internalType": "uint16",
+        "name": "",
+        "type": "uint16"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "uint256",
@@ -753,6 +785,11 @@
             "internalType": "bool",
             "name": "claimed",
             "type": "bool"
+          },
+          {
+            "internalType": "uint16",
+            "name": "feeBp",
+            "type": "uint16"
           }
         ],
         "internalType": "struct SaleInfo",
@@ -871,6 +908,19 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint16",
+        "name": "newFeeBp",
+        "type": "uint16"
+      }
+    ],
+    "name": "setCurrentFeesBp",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
