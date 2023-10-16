@@ -136,8 +136,6 @@ dataSources:
       abis:
         - name: StakedLockingCrowdSale
           file: ./abis/StakedLockingCrowdSale.json
-        - name: IERC20Metadata
-          file: ./abis/IERC20Metadata.json
       eventHandlers:
         - event: Started(indexed uint256,indexed address,(address,address,address,uint256,uint256,uint64,address),(address,address,uint256),address,uint256,uint256)
           handler: handleStarted

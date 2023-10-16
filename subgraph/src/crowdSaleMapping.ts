@@ -1,182 +1,18 @@
-import { BigInt, log, Address, ethereum } from '@graphprotocol/graph-ts'
-import { IERC20Metadata } from '../generated/CrowdSale/IERC20Metadata'
+import { BigInt, log } from '@graphprotocol/graph-ts'
 import {
-  Started as StartedEvent,
-  Settled as SettledEvent,
-  Failed as FailedEvent,
   Bid as BidEvent,
-  Claimed as ClaimedEvent,
   ClaimedAuctionTokens as ClaimedAuctionTokensEvent,
-  ClaimedFundingGoal as ClaimedFundingGoalEvent
+  Claimed as ClaimedEvent,
+  ClaimedFundingGoal as ClaimedFundingGoalEvent,
+  Failed as FailedEvent,
+  Settled as SettledEvent,
+  Started as StartedEvent
 } from '../generated/CrowdSale/CrowdSale'
+import { IERC20Metadata } from '../generated/CrowdSale/IERC20Metadata'
 
-import { CrowdSale, ERC20Token, IPT, Contribution } from '../generated/schema'
-
-// Helpers & Generic Handlers to handle different types of CrowdSales
-export class BidEventParams {
-  saleId: BigInt
-  bidder: Address
-  amount: BigInt
-  blockTimestamp: BigInt
-
-  constructor(
-    saleId: BigInt,
-    bidder: Address,
-    amount: BigInt,
-    blockTimestamp: BigInt
-  ) {
-    this.saleId = saleId
-    this.bidder = bidder
-    this.amount = amount
-    this.blockTimestamp = blockTimestamp
-  }
-}
-
-export class ClaimedEventParams {
-  saleId: BigInt
-  claimer: Address
-  claimed: BigInt
-  refunded: BigInt
-  blockTimestamp: BigInt
-  transaction: ethereum.Transaction
-
-  constructor(
-    saleId: BigInt,
-    claimer: Address,
-    claimed: BigInt,
-    refunded: BigInt,
-    blockTimestamp: BigInt,
-    transaction: ethereum.Transaction
-  ) {
-    this.saleId = saleId
-    this.claimer = claimer
-    this.claimed = claimed
-    this.refunded = refunded
-    this.blockTimestamp = blockTimestamp
-    this.transaction = transaction
-  }
-}
-
-export function makeERC20Token(_contract: IERC20Metadata): ERC20Token {
-  let token = ERC20Token.load(_contract._address)
-
-  if (!token) {
-    token = new ERC20Token(_contract._address)
-    token.id = _contract._address
-    token.decimals = BigInt.fromI32(_contract.decimals())
-    token.symbol = _contract.symbol()
-    token.name = _contract.name()
-    token.save()
-  }
-
-  return token
-}
-
-export function handleSettledGeneric(saleId: string): void {
-  let crowdSale = CrowdSale.load(saleId)
-  if (!crowdSale) {
-    return log.error('[handleSettled] CrowdSale not found for id: {}', [saleId])
-  }
-  crowdSale.state = 'SETTLED'
-  crowdSale.save()
-}
-
-export function handleFailedGeneric(saleId: string): void {
-  let crowdSale = CrowdSale.load(saleId)
-  if (!crowdSale) {
-    return log.error('[handleFailed] CrowdSale not found for id: {}', [saleId])
-  }
-  crowdSale.state = 'FAILED'
-  crowdSale.save()
-}
-
-export function handleBidGeneric(params: BidEventParams): void {
-  let crowdSale = CrowdSale.load(params.saleId.toString())
-  if (!crowdSale) {
-    log.error('[HANDLEBID] CrowdSale not found for id: {}', [
-      params.saleId.toString()
-    ])
-    return
-  }
-
-  //   Update CrowdSale
-  crowdSale.amountRaised = crowdSale.amountRaised.plus(params.amount)
-  crowdSale.save()
-
-  let contributionId = params.saleId.toString() + '-' + params.bidder.toHex()
-
-  //   Load or Create Contribution
-  let contribution = Contribution.load(contributionId)
-  if (!contribution) {
-    contribution = new Contribution(contributionId)
-    contribution.amount = BigInt.fromI32(0)
-    contribution.stakedAmount = BigInt.fromI32(0)
-  }
-
-  contribution.contributor = params.bidder
-  contribution.createdAt = params.blockTimestamp
-  contribution.amount = contribution.amount.plus(params.amount)
-  contribution.crowdSale = crowdSale.id
-
-  contribution.save()
-}
-
-export function handleClaimedGeneric(params: ClaimedEventParams): void {
-  let crowdSale = CrowdSale.load(params.saleId.toString())
-  if (!crowdSale) {
-    log.error('[HANDLECLAIMED] CrowdSale not found for id: {}', [
-      params.saleId.toString()
-    ])
-    return
-  }
-
-  let contributionId = params.saleId.toString() + '-' + params.claimer.toHex()
-  //   Load  Contribution
-  let contribution = Contribution.load(contributionId)
-
-  if (contribution === null) {
-    log.error(
-      '[HANDLECLAIMED] No contribution found for CrowdSale | user : {} | {}',
-      [params.saleId.toString(), params.claimer.toHexString()]
-    )
-    return
-  }
-  contribution.claimedAt = params.blockTimestamp
-  contribution.claimedTx = params.transaction.hash.toHex()
-  contribution.claimedTokens = params.claimed
-  contribution.refundedTokens = params.refunded
-  contribution.save()
-}
-
-export function handleClaimedSuccessfulSaleGeneric(
-  saleId: string,
-  timestamp: BigInt
-): void {
-  let crowdSale = CrowdSale.load(saleId)
-  if (!crowdSale) {
-    log.error('[handleClaimed] CrowdSale not found for id: {}', [saleId])
-    return
-  }
-  crowdSale.claimedAt = timestamp
-  crowdSale.save()
-}
-
-export function handleClaimedFailedSaleGeneric(
-  saleId: string,
-  timestamp: BigInt
-): void {
-  let crowdSale = CrowdSale.load(saleId)
-  if (!crowdSale) {
-    log.error('[handleClaimedFailedSale] CrowdSale not found for id: {}', [
-      saleId
-    ])
-    return
-  }
-  crowdSale.claimedAt = timestamp
-  crowdSale.save()
-}
-
-// Actual Event handlers
+import { CrowdSale, IPT } from '../generated/schema'
+import { makeERC20Token } from './common'
+import * as GenericCrowdSale from './genericCrowdSale'
 
 export function handleStarted(event: StartedEvent): void {
   let crowdSale = new CrowdSale(event.params.saleId.toString())
@@ -214,35 +50,35 @@ export function handleStarted(event: StartedEvent): void {
 }
 
 export function handleSettled(event: SettledEvent): void {
-  handleSettledGeneric(event.params.saleId.toString())
+  GenericCrowdSale.handleSettled(event.params.saleId.toString())
 }
 
 export function handleFailed(event: FailedEvent): void {
-  handleFailedGeneric(event.params.saleId.toString())
+  GenericCrowdSale.handleFailed(event.params.saleId.toString())
 }
 
 export function handleBid(event: BidEvent): void {
-  let params: BidEventParams = new BidEventParams(
-    event.params.saleId,
-    event.params.bidder,
-    event.params.amount,
-    event.block.timestamp
+  GenericCrowdSale.handleBid(
+    new GenericCrowdSale.BidEventParams(
+      event.params.saleId,
+      event.params.bidder,
+      event.params.amount,
+      event.block.timestamp
+    )
   )
-
-  handleBidGeneric(params)
 }
 
 export function handleClaimed(event: ClaimedEvent): void {
-  let params: ClaimedEventParams = new ClaimedEventParams(
-    event.params.saleId,
-    event.params.claimer,
-    event.params.claimed,
-    event.params.refunded,
-    event.block.timestamp,
-    event.transaction
+  GenericCrowdSale.handleClaimed(
+    new GenericCrowdSale.ClaimedEventParams(
+      event.params.saleId,
+      event.params.claimer,
+      event.params.claimed,
+      event.params.refunded,
+      event.block.timestamp,
+      event.transaction
+    )
   )
-
-  handleClaimedGeneric(params)
 }
 
 /**
@@ -251,7 +87,7 @@ export function handleClaimed(event: ClaimedEvent): void {
 export function handleClaimedSuccessfulSale(
   event: ClaimedFundingGoalEvent
 ): void {
-  handleClaimedSuccessfulSaleGeneric(
+  GenericCrowdSale.handleClaimedSuccessfulSale(
     event.params.saleId.toString(),
     event.block.timestamp
   )
@@ -263,7 +99,7 @@ export function handleClaimedSuccessfulSale(
 export function handleClaimedFailedSale(
   event: ClaimedAuctionTokensEvent
 ): void {
-  handleClaimedFailedSaleGeneric(
+  GenericCrowdSale.handleClaimedFailedSale(
     event.params.saleId.toString(),
     event.block.timestamp
   )

@@ -114,6 +114,19 @@
     "inputs": [
       {
         "indexed": false,
+        "internalType": "address",
+        "name": "authorizer",
+        "type": "address"
+      }
+    ],
+    "name": "AuthorizerUpdated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
         "internalType": "uint256",
         "name": "_fromTokenId",
         "type": "uint256"
