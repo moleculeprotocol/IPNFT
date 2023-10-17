@@ -55,7 +55,7 @@ contract CrowdSaleLockedStakedTest is Test {
         // // 1=1 is the trivial case
         // priceFeed.signal(address(biddingToken), address(daoToken), 1e18);
 
-        crowdSale = new StakedLockingCrowdSale();
+        crowdSale = new StakedLockingCrowdSale(0);
 
         vestedDao = new TokenVesting(
             daoToken,

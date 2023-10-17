@@ -31,7 +31,6 @@ $FSC script/dev/Periphery.s.sol
 $FSC script/dev/Tokenizer.s.sol:DeployTokenizer  
 $FSC script/dev/CrowdSale.s.sol:DeployCrowdSale 
 $FSC script/dev/Tokens.s.sol:DeployFakeTokens
-$FSC script/dev/CrowdSaleWithFees.s.sol:DeployCrowdSale
 
 # optionally: fixtures
 if [ "$fixture" -eq "1" ]; then
@@ -39,13 +38,11 @@ if [ "$fixture" -eq "1" ]; then
 
   $FSC script/dev/Ipnft.s.sol:FixtureIpnft 
   $FSC script/dev/Tokenizer.s.sol:FixtureTokenizer 
-  # $FSC script/dev/CrowdSale.s.sol:FixtureCrowdSale
-  $FSC script/dev/CrowdSaleWithFees.s.sol:FixtureCrowdSale
+  $FSC script/dev/CrowdSale.s.sol:FixtureCrowdSale
     
   echo "Waiting 15 seconds until claiming sale..."
   sleep 16
   cast rpc evm_mine
 
-  # $FSC script/dev/CrowdSale.s.sol:ClaimSale
-  $FSC script/dev/CrowdSaleWithFees.s.sol:ClaimSale
+  $FSC script/dev/CrowdSale.s.sol:ClaimSale
 fi

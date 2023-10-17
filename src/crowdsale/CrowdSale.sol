@@ -7,6 +7,7 @@ import { ReentrancyGuard } from "@openzeppelin/contracts/security/ReentrancyGuar
 import { FixedPointMathLib } from "solmate/utils/FixedPointMathLib.sol";
 import { IPermissioner } from "../Permissioner.sol";
 import { IPToken } from "../IPToken.sol";
+import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
 enum SaleState {
     UNKNOWN,
@@ -34,6 +35,7 @@ struct SaleInfo {
     uint256 total;
     uint256 surplus;
     bool claimed;
+    uint16 percentageFee;
 }
 
 error BadDecimals();
@@ -47,13 +49,14 @@ error SaleNotFund(uint256);
 error SaleNotConcluded();
 error BadSaleState(SaleState expected, SaleState actual);
 error AlreadyClaimed();
+error InsufficientFunds();
 
 /**
  * @title CrowdSale
  * @author molecule.to
  * @notice a fixed price sales base contract
  */
-contract CrowdSale is ReentrancyGuard {
+contract CrowdSale is ReentrancyGuard, Ownable {
     using SafeERC20 for IERC20Metadata;
     using FixedPointMathLib for uint256;
 
@@ -62,7 +65,9 @@ contract CrowdSale is ReentrancyGuard {
 
     mapping(uint256 => mapping(address => uint256)) internal _contributions;
 
-    event Started(uint256 indexed saleId, address indexed issuer, Sale sale);
+    uint16 public percentageFee;
+
+    event Started(uint256 indexed saleId, address indexed issuer, Sale sale, uint16 percentageFee);
     event Settled(uint256 indexed saleId, uint256 totalBids, uint256 surplus);
     /// @notice emitted when participants of the sale claim their tokens
     event Claimed(uint256 indexed saleId, address indexed claimer, uint256 claimed, uint256 refunded);
@@ -74,6 +79,23 @@ contract CrowdSale is ReentrancyGuard {
 
     /// @notice emitted when sales owner / beneficiary claims `salesAmount` `auctionTokens` after a non successful sale
     event ClaimedAuctionTokens(uint256 indexed saleId);
+
+    /**
+     * @notice is called when we deploy this smart contract,
+     * we need to instantiate the initialFees percentage and the contract owner to send the fees to at the end of each successful auction
+     * @param _percentageFee A basis point (1/10_000) representing the percentageFee to cut to each auction
+     */
+    constructor(uint16 _percentageFee) {
+        percentageFee = _percentageFee;
+    }
+
+    /**
+     * @notice updates the currentPercentageFee that will be applied to auctions created in the future
+     * @param newFee the new feePercentage
+     */
+    function updateCrowdSaleFees(uint16 newFee) public onlyOwner {
+        percentageFee = newFee;
+    }
 
     /**
      * @notice bidding tokens can have arbitrary decimals, auctionTokens must be 18 decimals
@@ -103,7 +125,7 @@ contract CrowdSale is ReentrancyGuard {
         }
 
         _sales[saleId] = sale;
-        _saleInfo[saleId] = SaleInfo(SaleState.RUNNING, 0, 0, false);
+        _saleInfo[saleId] = SaleInfo(SaleState.RUNNING, 0, 0, false, percentageFee);
 
         sale.auctionToken.safeTransferFrom(msg.sender, address(this), sale.salesAmount);
         _afterSaleStarted(saleId);
@@ -197,10 +219,21 @@ contract CrowdSale is ReentrancyGuard {
         saleInfo.claimed = true;
 
         Sale storage sale = _sales[saleId];
+        uint256 claimableAmount = sale.fundingGoal;
         if (saleInfo.state == SaleState.SETTLED) {
+            if (saleInfo.percentageFee != 0) {
+                // this condition can never be met as the lowest fundingGoal is 10000 and the lowest percentageFee is 1
+                if (saleInfo.percentageFee * sale.fundingGoal < 10000) {
+                    revert InsufficientFunds();
+                }
+                uint256 saleFees = (saleInfo.percentageFee * sale.fundingGoal) / 10000;
+                claimableAmount -= saleFees;
+                sale.biddingToken.safeTransfer(owner(), saleFees);
+            }
+
             //transfer funds to issuer / beneficiary
             emit ClaimedFundingGoal(saleId);
-            sale.biddingToken.safeTransfer(sale.beneficiary, sale.fundingGoal);
+            sale.biddingToken.safeTransfer(sale.beneficiary, claimableAmount);
         } else if (saleInfo.state == SaleState.FAILED) {
             //return auction tokens
             emit ClaimedAuctionTokens(saleId);
@@ -319,6 +352,6 @@ contract CrowdSale is ReentrancyGuard {
      * @dev allows us to emit different events per derived contract
      */
     function _afterSaleStarted(uint256 saleId) internal virtual {
-        emit Started(saleId, msg.sender, _sales[saleId]);
+        emit Started(saleId, msg.sender, _sales[saleId], _saleInfo[saleId].percentageFee);
     }
 }

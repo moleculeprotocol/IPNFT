@@ -28,7 +28,8 @@ contract DeployCrowdSale is CommonScript {
     function run() public {
         prepareAddresses();
         vm.startBroadcast(deployer);
-        StakedLockingCrowdSale stakedLockingCrowdSale = new StakedLockingCrowdSale();
+        StakedLockingCrowdSale stakedLockingCrowdSale = new StakedLockingCrowdSale(0);
+        CrowdSale crowdSaleWithFees = new CrowdSale(10);
         TokenVesting vestedDaoToken = TokenVesting(vm.envAddress("VDAO_TOKEN_ADDRESS"));
         vestedDaoToken.grantRole(vestedDaoToken.ROLE_CREATE_SCHEDULE(), address(stakedLockingCrowdSale));
         stakedLockingCrowdSale.trustVestingContract(vestedDaoToken);
@@ -36,6 +37,7 @@ contract DeployCrowdSale is CommonScript {
 
         //console.log("vested molecules Token %s", address(vestedMolToken));
         console.log("STAKED_LOCKING_CROWDSALE_ADDRESS=%s", address(stakedLockingCrowdSale));
+        console.log("CROWDSALE_WITH_FEES=%s", address(crowdSaleWithFees));
     }
 }
 
@@ -52,6 +54,7 @@ contract FixtureCrowdSale is CommonScript {
     IPToken internal auctionToken;
 
     StakedLockingCrowdSale stakedLockingCrowdSale;
+    CrowdSale crowdSaleWithFees;
     TermsAcceptedPermissioner permissioner;
 
     function prepareAddresses() internal override {
@@ -64,6 +67,7 @@ contract FixtureCrowdSale is CommonScript {
         auctionToken = IPToken(vm.envAddress("IPTS_ADDRESS"));
 
         stakedLockingCrowdSale = StakedLockingCrowdSale(vm.envAddress("STAKED_LOCKING_CROWDSALE_ADDRESS"));
+        crowdSaleWithFees = CrowdSale(vm.envAddress("CROWDSALE_WITH_FEES_ADDRESS"));
         permissioner = TermsAcceptedPermissioner(vm.envAddress("TERMS_ACCEPTED_PERMISSIONER_ADDRESS"));
     }
 
@@ -80,6 +84,14 @@ contract FixtureCrowdSale is CommonScript {
         usdc.approve(address(stakedLockingCrowdSale), amount);
         daoToken.approve(address(stakedLockingCrowdSale), amount);
         stakedLockingCrowdSale.placeBid(saleId, amount, permission);
+        vm.stopBroadcast();
+    }
+
+    function placeBidCrowdSaleWithFees(address bidder, uint256 amount, uint256 saleId, bytes memory permission) internal {
+        vm.startBroadcast(bidder);
+        usdc.approve(address(crowdSaleWithFees), amount);
+        daoToken.approve(address(crowdSaleWithFees), amount);
+        crowdSaleWithFees.placeBid(saleId, amount, permission);
         vm.stopBroadcast();
     }
 
@@ -109,6 +121,8 @@ contract FixtureCrowdSale is CommonScript {
         vm.startBroadcast(bob);
 
         auctionToken.approve(address(stakedLockingCrowdSale), 400 ether);
+        auctionToken.approve(address(crowdSaleWithFees), 400 ether);
+        uint256 saleWithFeesId = crowdSaleWithFees.startSale(_sale);
         uint256 saleId = stakedLockingCrowdSale.startSale(_sale, daoToken, vestedDaoToken, 1e18, 7 days);
         TimelockedToken lockedIpt = stakedLockingCrowdSale.lockingContracts(address(auctionToken));
         vm.stopBroadcast();
@@ -117,10 +131,13 @@ contract FixtureCrowdSale is CommonScript {
 
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(alicePk, ECDSA.toEthSignedMessageHash(abi.encodePacked(terms)));
         placeBid(alice, 600 ether, saleId, abi.encodePacked(r, s, v));
+        placeBidCrowdSaleWithFees(alice, 600 ether, saleWithFeesId, abi.encodePacked(r, s, v));
         (v, r, s) = vm.sign(charliePk, ECDSA.toEthSignedMessageHash(abi.encodePacked(terms)));
         placeBid(charlie, 200 ether, saleId, abi.encodePacked(r, s, v));
         console.log("LOCKED_IPTS_ADDRESS=%s", address(lockedIpt));
         console.log("SALE_ID=%s", saleId);
+        console.log("SALE_ID_WITH_FEES=%s", saleWithFeesId);
+        vm.writeFile("SALEWITHFEESID.txt", Strings.toString(saleWithFeesId));
         vm.writeFile("SALEID.txt", Strings.toString(saleId));
     }
 }
@@ -130,13 +147,18 @@ contract ClaimSale is CommonScript {
         prepareAddresses();
         TermsAcceptedPermissioner permissioner = TermsAcceptedPermissioner(vm.envAddress("TERMS_ACCEPTED_PERMISSIONER_ADDRESS"));
         StakedLockingCrowdSale stakedLockingCrowdSale = StakedLockingCrowdSale(vm.envAddress("STAKED_LOCKING_CROWDSALE_ADDRESS"));
+        CrowdSale crowdSaleWithFees = CrowdSale(vm.envAddress("CROWDSALE_WITH_FEES_ADDRESS"));
         IPToken auctionToken = IPToken(vm.envAddress("IPTS_ADDRESS"));
         uint256 saleId = SLib.stringToUint(vm.readFile("SALEID.txt"));
+        uint256 saleWithFeesId = SLib.stringToUint(vm.readFile("SALEWITHFEESID.txt"));
         vm.removeFile("SALEID.txt");
+        vm.removeFile("SALEWITHFEESID.txt");
 
         vm.startBroadcast(anyone);
         stakedLockingCrowdSale.settle(saleId);
+        crowdSaleWithFees.settle(saleWithFeesId);
         stakedLockingCrowdSale.claimResults(saleId);
+        crowdSaleWithFees.claimResults(saleWithFeesId);
         vm.stopBroadcast();
 
         string memory terms = permissioner.specificTermsV1(auctionToken);
@@ -151,5 +173,19 @@ contract ClaimSale is CommonScript {
         // (v, r, s) = vm.sign(charliePk, ECDSA.toEthSignedMessageHash(abi.encodePacked(terms)));
         // stakedLockingCrowdSale.claim(saleId, abi.encodePacked(r, s, v));
         // vm.stopBroadcast();
+    }
+}
+
+contract ClaimSaleWithFees is CommonScript {
+    function run() public {
+        prepareAddresses();
+        CrowdSale crowdSaleWithFees = CrowdSale(vm.envAddress("CROWDSALE_WITH_FEES_ADDRESS"));
+        uint256 saleId = SLib.stringToUint(vm.readFile("SALEID.txt"));
+        vm.removeFile("SALEID.txt");
+
+        vm.startBroadcast(anyone);
+        crowdSaleWithFees.settle(saleId);
+        crowdSaleWithFees.claimResults(saleId);
+        vm.stopBroadcast();
     }
 }

@@ -30,6 +30,7 @@ contract LockingCrowdSale is CrowdSale {
     event Started(uint256 indexed saleId, address indexed issuer, Sale sale, TimelockedToken lockingToken, uint256 lockingDuration);
     event LockingContractCreated(TimelockedToken indexed lockingContract, IERC20Metadata indexed underlyingToken);
 
+    constructor(uint16 percentageFee) CrowdSale(percentageFee) { }
     /// @dev disable parent sale starting functions
     function startSale(Sale calldata) public pure override returns (uint256) {
         revert UnsupportedInitializer();

@@ -30,7 +30,7 @@ error BadPrice();
  * @notice a fixed price sales contract that locks the sold tokens in a configured locking contract and requires vesting another ("dao") token for a certain period of time to participate
  * @dev see https://github.com/moleculeprotocol/IPNFT
  */
-contract StakedLockingCrowdSale is LockingCrowdSale, Ownable {
+contract StakedLockingCrowdSale is LockingCrowdSale {
     using SafeERC20 for IERC20Metadata;
     using FixedPointMathLib for uint256;
 
@@ -56,7 +56,7 @@ contract StakedLockingCrowdSale is LockingCrowdSale, Ownable {
         revert UnsupportedInitializer();
     }
 
-    constructor() Ownable() { }
+    constructor(uint16 percentageFee) LockingCrowdSale(percentageFee) { }
 
     /**
      * [H-01]

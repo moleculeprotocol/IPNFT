@@ -25,7 +25,7 @@ contract CrowdSaleLockedTest is Test {
     LockingCrowdSale internal crowdSale;
 
     function setUp() public {
-        crowdSale = new LockingCrowdSale();
+        crowdSale = new LockingCrowdSale(0);
         auctionToken = new FakeERC20("IPTOKENS","IPT");
         biddingToken = new FakeERC20("USD token", "USDC");
 

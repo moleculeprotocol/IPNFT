@@ -181,7 +181,7 @@ contract SynthesizerUpgradeTest is Test {
 
         Molecules tokenContractOld = synthesizer.synthesizeIpnft(1, 500_000 ether, "MOLE", agreementCid, xsignature);
 
-        LockingCrowdSale crowdSale = new LockingCrowdSale();
+        LockingCrowdSale crowdSale = new LockingCrowdSale(0);
         Sale memory _sale = CrowdSaleHelpers.makeSale(originalOwner, IERC20Metadata(address(tokenContractOld)), erc20);
         //todo: in reality the sale has been initialized with the old interface that used the `Molecule` type
         _sale.permissioner = IPermissioner(address(oldTermsPermissioner));
