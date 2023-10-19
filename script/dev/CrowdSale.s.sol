@@ -37,7 +37,7 @@ contract DeployCrowdSale is CommonScript {
 
         //console.log("vested molecules Token %s", address(vestedMolToken));
         console.log("STAKED_LOCKING_CROWDSALE_ADDRESS=%s", address(stakedLockingCrowdSale));
-        console.log("CROWDSALE_WITH_FEES=%s", address(crowdSaleWithFees));
+        console.log("CROWDSALE_WITH_FEES_ADDRESS=%s", address(crowdSaleWithFees));
     }
 }
 
