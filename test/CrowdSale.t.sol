@@ -19,47 +19,38 @@ import {
     SaleNotFund,
     SaleNotConcluded,
     BadSaleState,
-    InsufficientFunds
+    FeesTooHigh
 } from "../src/crowdsale/CrowdSale.sol";
 import { IPermissioner } from "../src/Permissioner.sol";
 import { FakeERC20 } from "../src/helpers/FakeERC20.sol";
 import { CrowdSaleHelpers } from "./helpers/CrowdSaleHelpers.sol";
 
 contract CrowdSaleTest is Test {
+    address deployer = makeAddr("chucknorris");
     address emitter = makeAddr("emitter");
-    address highFeesCrowdSaleEmitter = makeAddr("highFeesEmitter");
     address bidder = makeAddr("bidder");
     address bidder2 = makeAddr("bidder2");
 
     address anyone = makeAddr("anyone");
-    address crowdSalesOwner = makeAddr("crowdSalesOwner");
-    uint16 percentageFees = 10;
 
     FakeERC20 internal auctionToken;
     FakeERC20 internal biddingToken;
-    FakeERC20 internal biddingToken6Decimals;
+    FakeERC20 internal usdc6;
     CrowdSale internal crowdSale;
-    CrowdSale internal lowFeesCrowdSale;
 
     function setUp() public {
-        vm.startPrank(crowdSalesOwner);
-        crowdSale = new CrowdSale(percentageFees);
-        lowFeesCrowdSale = new CrowdSale(1);
+        vm.startPrank(deployer);
+        crowdSale = new CrowdSale();
         vm.stopPrank();
         auctionToken = new FakeERC20("IPTOKENS","IPT");
         biddingToken = new FakeERC20("USD token", "USDC");
-        biddingToken6Decimals = new FakeERC20("6DECIMALS", "6DCLS");
-        biddingToken6Decimals.setDecimals(6);
 
         auctionToken.mint(emitter, 500_000 ether);
-        auctionToken.mint(highFeesCrowdSaleEmitter, 500_000 ether);
         biddingToken.mint(bidder, 1_000_000 ether);
-        biddingToken6Decimals.mint(bidder, 1_000_000 ether);
         biddingToken.mint(bidder2, 1_000_000 ether);
 
         vm.startPrank(bidder);
         biddingToken.approve(address(crowdSale), 1_000_000 ether);
-        biddingToken6Decimals.approve(address(lowFeesCrowdSale), 1_000_000 ether);
         vm.stopPrank();
 
         vm.startPrank(bidder2);
@@ -67,9 +58,23 @@ contract CrowdSaleTest is Test {
         vm.stopPrank();
     }
 
-    function testSetUp() public {
-        assertEq(crowdSale.percentageFee(), 10);
-        assertEq(crowdSale.owner(), crowdSalesOwner);
+    function testOwnerCanControlFees() public {
+        assertEq(crowdSale.currentFeeBp(), 0);
+        assertEq(crowdSale.owner(), deployer);
+
+        vm.startPrank(anyone);
+        vm.expectRevert("Ownable: caller is not the owner");
+        crowdSale.setCurrentFeesBp(2500);
+        vm.stopPrank();
+
+        vm.startPrank(deployer);
+        vm.expectRevert(FeesTooHigh.selector);
+        crowdSale.setCurrentFeesBp(5001);
+
+        //10%
+        crowdSale.setCurrentFeesBp(1000);
+        assertEq(crowdSale.currentFeeBp(), 1000);
+        vm.stopPrank();
     }
 
     function testCreateSale() public {
@@ -77,7 +82,7 @@ contract CrowdSaleTest is Test {
 
         vm.startPrank(emitter);
         auctionToken.approve(address(crowdSale), 400_000 ether);
-        uint256 saleId = crowdSale.startSale(_sale);
+        crowdSale.startSale(_sale);
         vm.stopPrank();
 
         //cant create the same sale twice
@@ -86,7 +91,6 @@ contract CrowdSaleTest is Test {
         auctionToken.approve(address(crowdSale), 400_000 ether);
         vm.expectRevert(SaleAlreadyActive.selector);
         crowdSale.startSale(_sale);
-        assertEq(crowdSale.getSaleInfo(saleId).percentageFee, 10);
         vm.stopPrank();
     }
 
@@ -219,9 +223,7 @@ contract CrowdSaleTest is Test {
         vm.expectRevert(AlreadyClaimed.selector);
         crowdSale.claimResults(saleId);
         vm.stopPrank();
-        SaleInfo memory saleInfo = crowdSale.getSaleInfo(saleId);
-        assertEq(biddingToken.balanceOf(emitter), _sale.fundingGoal - (saleInfo.percentageFee * _sale.fundingGoal / 10000));
-        assertEq(biddingToken.balanceOf(crowdSalesOwner), (saleInfo.percentageFee * _sale.fundingGoal / 10000));
+        assertEq(biddingToken.balanceOf(emitter), _sale.fundingGoal);
         SaleInfo memory info = crowdSale.getSaleInfo(saleId);
         assertEq(info.surplus, 0);
 
@@ -265,51 +267,20 @@ contract CrowdSaleTest is Test {
         assertEq(auctionToken.balanceOf(bidder), 0);
     }
 
-    // This test is for insufficientFunds error which can never be reached as fundingGoal * percentageFee is always higher or equal to 10000
-    // function testInsufficientFundsSettleRevertCrowdSale() public {
-    //     vm.startPrank(highFeesCrowdSaleEmitter);
-    //     Sale memory _sale = CrowdSaleHelpers.makeLowFundingGoalSale(highFeesCrowdSaleEmitter, auctionToken, biddingToken6Decimals);
-    //     auctionToken.approve(address(lowFeesCrowdSale), 400_000 ether);
-    //     uint256 saleId = lowFeesCrowdSale.startSale(_sale);
-    //     vm.stopPrank();
-
-    //     vm.startPrank(bidder);
-    //     lowFeesCrowdSale.placeBid(saleId, 400_000 ether, "");
-    //     vm.stopPrank();
-
-    //     vm.startPrank(anyone);
-    //     vm.warp(block.timestamp + 3 hours);
-    //     lowFeesCrowdSale.settle(saleId);
-    //     vm.expectRevert(abi.encodeWithSelector(InsufficientFunds.selector));
-    //     lowFeesCrowdSale.claimResults(saleId);
-    //     vm.stopPrank();
-
-    //     // assertEq(biddingToken.balanceOf(emitter), 0);
-    //     // assertEq(auctionToken.balanceOf(emitter), 500_000 ether);
-    //     // SaleInfo memory info = crowdSale.getSaleInfo(saleId);
-    //     // assertEq(info.surplus, 0);
-    //     // assertEq(uint256(info.state), uint256(SaleState.FAILED));
-    // }
-
-    function testUpdatePercentage() public {
+    function testFeesDontAffectExistingCrowdSale() public {
         vm.startPrank(emitter);
         Sale memory _sale = CrowdSaleHelpers.makeSale(emitter, auctionToken, biddingToken);
         auctionToken.approve(address(crowdSale), 400_000 ether);
         uint256 saleId = crowdSale.startSale(_sale);
         vm.stopPrank();
-        vm.startPrank(anyone);
-        vm.expectRevert("Ownable: caller is not the owner");
-        crowdSale.updateCrowdSaleFees(25);
 
-        vm.stopPrank();
-        vm.startPrank(crowdSalesOwner);
-        crowdSale.updateCrowdSaleFees(25);
-        assertEq(crowdSale.percentageFee(), 25);
-        assertEq(crowdSale.getSaleInfo(saleId).percentageFee, 10);
+        assertEq(crowdSale.getSaleInfo(saleId).feeBp, 0);
+
+        vm.startPrank(deployer);
+        crowdSale.setCurrentFeesBp(2500);
+        assertEq(crowdSale.getSaleInfo(saleId).feeBp, 0);
         vm.stopPrank();
     }
-
-    // //todo test bidders that bit 1 wei
 
     function testTwoBiddersMeetExactly() public {
         vm.startPrank(emitter);
@@ -511,12 +482,102 @@ contract CrowdSaleTest is Test {
         assertEq(biddingToken.balanceOf(bidder2), 915094339622641508720000);
 
         crowdSale.claimResults(saleId);
-        SaleInfo memory saleInfo = crowdSale.getSaleInfo(saleId);
-        assertEq(biddingToken.balanceOf(emitter), 200_000 ether - (saleInfo.percentageFee * _sale.fundingGoal / 10000));
 
         //some dust is left on the table
         //these are 0.0000000000004 tokens at 18 decimals
         assertEq(auctionToken.balanceOf(address(crowdSale)), 400_000);
         assertEq(biddingToken.balanceOf(address(crowdSale)), 860_000);
+    }
+
+    function testFeesAreTakenOnSettlement() public {
+        vm.startPrank(deployer);
+        crowdSale.setCurrentFeesBp(1000);
+        vm.stopPrank();
+
+        vm.startPrank(emitter);
+        Sale memory _sale = CrowdSaleHelpers.makeSale(emitter, auctionToken, biddingToken);
+        auctionToken.approve(address(crowdSale), 400_000 ether);
+        uint256 saleId = crowdSale.startSale(_sale);
+        vm.stopPrank();
+
+        vm.startPrank(bidder);
+        crowdSale.placeBid(saleId, 150_000 ether, "");
+        vm.stopPrank();
+
+        vm.startPrank(bidder2);
+        crowdSale.placeBid(saleId, 150_000 ether, "");
+        vm.stopPrank();
+
+        vm.warp(block.timestamp + 2 hours + 1);
+
+        vm.startPrank(anyone);
+        crowdSale.settle(saleId);
+        assertEq(biddingToken.balanceOf(emitter), 0);
+        crowdSale.claimResults(saleId);
+
+        //fees were taken
+        assertEq(biddingToken.balanceOf(emitter), 180_000 ether);
+        assertEq(biddingToken.balanceOf(deployer), 20_000 ether);
+
+        vm.startPrank(bidder);
+        crowdSale.claim(saleId, "");
+        vm.stopPrank();
+
+        vm.startPrank(bidder2);
+        crowdSale.claim(saleId, "");
+        vm.stopPrank();
+
+        assertEq(auctionToken.balanceOf(bidder), 200_000 ether);
+        assertEq(auctionToken.balanceOf(bidder2), 200_000 ether);
+
+        //fees don't affect refunds
+        assertEq(biddingToken.balanceOf(bidder), 900_000 ether);
+        assertEq(biddingToken.balanceOf(bidder2), 900_000 ether);
+    }
+
+    //todo check how dangerous this is
+    function testTinyBidsDustEffect() public {
+        vm.startPrank(deployer);
+        crowdSale.setCurrentFeesBp(1000);
+        vm.stopPrank();
+
+        vm.startPrank(emitter);
+        Sale memory _sale = CrowdSaleHelpers.makeSale(emitter, auctionToken, biddingToken);
+        auctionToken.approve(address(crowdSale), 400_000 ether);
+        uint256 saleId = crowdSale.startSale(_sale);
+        vm.stopPrank();
+
+        vm.startPrank(bidder);
+        crowdSale.placeBid(saleId, 200_000 ether - 1, "");
+        vm.stopPrank();
+
+        vm.startPrank(bidder2);
+        crowdSale.placeBid(saleId, 2, "");
+        vm.stopPrank();
+
+        vm.warp(block.timestamp + 2 hours + 1);
+
+        vm.startPrank(anyone);
+        crowdSale.settle(saleId);
+        crowdSale.claimResults(saleId);
+        assertEq(biddingToken.balanceOf(emitter), 180_000 ether);
+
+        vm.startPrank(bidder);
+        crowdSale.claim(saleId, "");
+        vm.stopPrank();
+
+        vm.startPrank(bidder2);
+        crowdSale.claim(saleId, "");
+        vm.stopPrank();
+
+        assertEq(auctionToken.balanceOf(bidder), 399999999999999999600000);
+        assertEq(auctionToken.balanceOf(bidder2), 0);
+
+        assertEq(biddingToken.balanceOf(bidder), 800000000000000000000001);
+        assertEq(biddingToken.balanceOf(bidder2), 999999999999999999999998);
+
+        //dust stays on the contract
+        assertEq(auctionToken.balanceOf(address(crowdSale)), 400_000);
+        assertEq(biddingToken.balanceOf(address(crowdSale)), 1);
     }
 }

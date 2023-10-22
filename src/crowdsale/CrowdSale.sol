@@ -49,7 +49,7 @@ error SaleNotFund(uint256);
 error SaleNotConcluded();
 error BadSaleState(SaleState expected, SaleState actual);
 error AlreadyClaimed();
-error FeesExceedFunds();
+error FeesTooHigh();
 
 /**
  * @title CrowdSale
@@ -83,13 +83,19 @@ contract CrowdSale is ReentrancyGuard, Ownable {
     /// @notice emitted when sales owner / beneficiary claims `salesAmount` `auctionTokens` after a non successful sale
     event ClaimedAuctionTokens(uint256 indexed saleId);
 
+    event FeesUpdated(uint256 feeBp);
+
     constructor() Ownable() { }
 
     /**
      * @notice This will only affect future auctions
-     * @param newFeeBp uint16 the new fee in basis points
+     * @param newFeeBp uint16 the new fee in basis points. Must be <= 50%
      */
     function setCurrentFeesBp(uint16 newFeeBp) public onlyOwner {
+        if (newFeeBp > 5000) {
+            revert FeesTooHigh();
+        }
+        emit FeesUpdated(newFeeBp);
         currentFeeBp = newFeeBp;
     }
 
@@ -207,7 +213,7 @@ contract CrowdSale is ReentrancyGuard, Ownable {
      *         this is callable by anonye
      * @param saleId the sale id
      */
-    function claimResults(uint256 saleId) external virtual {
+    function claimResults(uint256 saleId) external {
         SaleInfo storage saleInfo = _saleInfo[saleId];
         if (saleInfo.claimed) {
             revert AlreadyClaimed();
@@ -218,10 +224,6 @@ contract CrowdSale is ReentrancyGuard, Ownable {
         if (saleInfo.state == SaleState.SETTLED) {
             uint256 claimableAmount = sale.fundingGoal;
             if (saleInfo.feeBp > 0) {
-                // this condition can never be met as the lowest fundingGoal is 10000 and the lowest percentageFee is 1
-                if (saleInfo.feeBp * sale.fundingGoal < 10_000) {
-                    revert FeesExceedFunds();
-                }
                 uint256 saleFees = (saleInfo.feeBp * sale.fundingGoal) / 10_000;
                 claimableAmount -= saleFees;
                 sale.biddingToken.safeTransfer(owner(), saleFees);
