@@ -56,8 +56,6 @@ contract StakedLockingCrowdSale is LockingCrowdSale {
         revert UnsupportedInitializer();
     }
 
-    constructor(uint16 percentageFee) LockingCrowdSale(percentageFee) { }
-
     /**
      * [H-01]
      * @notice this contract can only vest stakes for contracts that it knows so unknown actors cannot start crowdsales with malicious contracts

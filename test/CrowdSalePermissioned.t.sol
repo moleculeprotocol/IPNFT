@@ -49,7 +49,7 @@ contract CrowdSalePermissionedTest is Test {
         biddingToken = new FakeERC20("USD token", "USDC");
         daoToken = new FakeERC20("DAO token", "DAO");
 
-        crowdSale = new StakedLockingCrowdSale(0);
+        crowdSale = new StakedLockingCrowdSale();
         auctionToken.issue(emitter, 500_000 ether);
 
         vestedDao = new TokenVesting(

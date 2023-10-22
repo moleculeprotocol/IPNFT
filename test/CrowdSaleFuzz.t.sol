@@ -21,7 +21,7 @@ contract CrowdSaleFuzzTest is Test {
     CrowdSale internal crowdSale;
 
     function setUp() public {
-        crowdSale = new CrowdSale(0);
+        crowdSale = new CrowdSale();
         auctionToken = new FakeERC20("IPTOKENS","IPT");
         biddingToken = new FakeERC20("USD token", "USDC");
     }

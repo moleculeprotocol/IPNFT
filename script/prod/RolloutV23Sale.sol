@@ -13,7 +13,7 @@ contract RolloutV23Sale is Script {
         address moleculeDevMultisig = 0xCfA0F84660fB33bFd07C369E5491Ab02C449f71B;
         vm.startBroadcast();
 
-        StakedLockingCrowdSale stakedLockingCrowdSale = new StakedLockingCrowdSale(0);
+        StakedLockingCrowdSale stakedLockingCrowdSale = new StakedLockingCrowdSale();
         stakedLockingCrowdSale.transferOwnership(moleculeDevMultisig);
         vm.stopBroadcast();
 
