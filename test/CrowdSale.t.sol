@@ -35,7 +35,6 @@ contract CrowdSaleTest is Test {
 
     FakeERC20 internal auctionToken;
     FakeERC20 internal biddingToken;
-    FakeERC20 internal usdc6;
     CrowdSale internal crowdSale;
 
     function setUp() public {
