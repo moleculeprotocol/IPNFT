@@ -19,20 +19,4 @@ library CrowdSaleHelpers {
             permissioner: IPermissioner(address(0x0))
         });
     }
-
-    function makeLowFundingGoalSale(address beneficiary, IERC20Metadata auctionToken, IERC20Metadata biddingToken)
-        internal
-        view
-        returns (Sale memory sale)
-    {
-        return Sale({
-            auctionToken: auctionToken,
-            biddingToken: biddingToken,
-            beneficiary: beneficiary,
-            fundingGoal: 0.00000000000001 ether,
-            salesAmount: 400_000 ether,
-            closingTime: uint64(block.timestamp + 2 hours),
-            permissioner: IPermissioner(address(0x0))
-        });
-    }
 }

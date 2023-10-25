@@ -50,7 +50,7 @@ contract CrowdSaleWithNonStandardERC20Test is Test {
         // // 1=1 is the trivial case
         // priceFeed.signal(address(biddingToken), address(daoToken), 1e18);
 
-        crowdSale = new StakedLockingCrowdSale(0);
+        crowdSale = new StakedLockingCrowdSale();
 
         auctionToken.mint(emitter, 500_000 ether);
 

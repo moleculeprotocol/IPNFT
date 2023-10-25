@@ -26,7 +26,7 @@ contract DeployTokenizerInfrastructure is Script {
         );
         tokenizer.initialize(IPNFT(ipnftAddress), p);
 
-        StakedLockingCrowdSale stakedLockingCrowdSale = new StakedLockingCrowdSale(0);
+        StakedLockingCrowdSale stakedLockingCrowdSale = new StakedLockingCrowdSale();
 
         vm.stopBroadcast();
 
