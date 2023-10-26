@@ -37,6 +37,8 @@ contract CrowdSaleTest is Test {
     FakeERC20 internal biddingToken;
     CrowdSale internal crowdSale;
 
+    event FeesUpdated(uint16 feeBp);
+
     function setUp() public {
         vm.startPrank(deployer);
         crowdSale = new CrowdSale();
@@ -71,6 +73,8 @@ contract CrowdSaleTest is Test {
         crowdSale.setCurrentFeesBp(5001);
 
         //10%
+        vm.expectEmit(true, true, true, true, address(crowdSale));
+        emit FeesUpdated(1000);
         crowdSale.setCurrentFeesBp(1000);
         assertEq(crowdSale.currentFeeBp(), 1000);
         vm.stopPrank();

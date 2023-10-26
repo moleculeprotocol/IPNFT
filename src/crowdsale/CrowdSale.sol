@@ -83,7 +83,7 @@ contract CrowdSale is ReentrancyGuard, Ownable {
     /// @notice emitted when sales owner / beneficiary claims `salesAmount` `auctionTokens` after a non successful sale
     event ClaimedAuctionTokens(uint256 indexed saleId);
 
-    event FeesUpdated(uint256 feeBp);
+    event FeesUpdated(uint16 feeBp);
 
     constructor() Ownable() { }
 
