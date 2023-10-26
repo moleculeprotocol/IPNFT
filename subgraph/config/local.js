@@ -18,6 +18,10 @@ module.exports = {
     address: process.env.TOKENIZER_ADDRESS,
     startBlock: 0
   },
+  crowdSale: {
+    address: process.env.PLAIN_CROWDSALE_ADDRESS,
+    startBlock: 0
+  },
   stakedLockingCrowdSale: {
     address: process.env.STAKED_LOCKING_CROWDSALE_ADDRESS,
     startBlock: 0
