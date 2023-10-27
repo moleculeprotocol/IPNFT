@@ -103,7 +103,7 @@ dataSources:
         - name: IERC20Metadata
           file: ./abis/IERC20Metadata.json
       eventHandlers:
-        - event: Started(indexed uint256,indexed address,(address,address,address,uint256,uint256,uint64,address))
+        - event: Started(indexed uint256,indexed address,(address,address,address,uint256,uint256,uint64,address),uint16)
           handler: handleStarted
         - event: Settled(indexed uint256,uint256,uint256)
           handler: handleSettled
@@ -136,8 +136,13 @@ dataSources:
       abis:
         - name: StakedLockingCrowdSale
           file: ./abis/StakedLockingCrowdSale.json
+        - name: IERC20Metadata
+          file: ./abis/IERC20Metadata.json
       eventHandlers:
+      # the initial crowdsale contract didn't use any fees
         - event: Started(indexed uint256,indexed address,(address,address,address,uint256,uint256,uint64,address),(address,address,uint256),address,uint256,uint256)
+          handler: handleStartedLegacy
+        - event: Started(indexed uint256,indexed address,(address,address,address,uint256,uint256,uint64,address),(address,address,uint256),address,uint256,uint256,uint16)
           handler: handleStarted
         - event: Settled(indexed uint256,uint256,uint256)
           handler: handleSettled

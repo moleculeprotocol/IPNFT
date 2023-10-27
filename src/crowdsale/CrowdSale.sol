@@ -70,7 +70,7 @@ contract CrowdSale is ReentrancyGuard, Ownable {
      */
     uint16 public currentFeeBp = 0;
 
-    event Started(uint256 indexed saleId, address indexed issuer, Sale sale, uint16 percentageFee);
+    event Started(uint256 indexed saleId, address indexed issuer, Sale sale, uint16 feeBp);
     event Settled(uint256 indexed saleId, uint256 totalBids, uint256 surplus);
     /// @notice emitted when participants of the sale claim their tokens
     event Claimed(uint256 indexed saleId, address indexed claimer, uint256 claimed, uint256 refunded);

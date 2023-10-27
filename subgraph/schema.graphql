@@ -133,6 +133,7 @@ type CrowdSale @entity {
   permissioner: Bytes! #a crowdsale can be configured with an individual permissioner
   claimedAt: BigInt # the date when the auctioneer has claimed their return (depending on failed / settled sales)
   contributions: [Contribution!] @derivedFrom(field: "crowdSale")
+  feeBp: Int # the percentage fee that will be cut from the crowdsale upon its success
   type: SaleType!
 }
 

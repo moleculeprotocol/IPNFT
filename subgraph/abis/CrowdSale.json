@@ -289,7 +289,7 @@
       {
         "indexed": false,
         "internalType": "uint16",
-        "name": "percentageFee",
+        "name": "feeBp",
         "type": "uint16"
       }
     ],

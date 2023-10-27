@@ -1,4 +1,10 @@
-import { BigInt, Bytes, DataSourceContext, log } from '@graphprotocol/graph-ts'
+import {
+  BigInt,
+  Bytes,
+  DataSourceContext,
+  log,
+  ethereum
+} from '@graphprotocol/graph-ts'
 import { IERC20Metadata } from '../generated/CrowdSale/IERC20Metadata'
 import {
   Bid as BidEvent,
@@ -10,8 +16,14 @@ import {
   LockingContractCreated as LockingContractCreatedEvent,
   Settled as SettledEvent,
   Staked as StakedEvent,
+  Started3 as LegacyStartedEvent,
   Started as StartedEvent
 } from '../generated/StakedLockingCrowdSale/StakedLockingCrowdSale'
+
+import { Started as PlainStartedEvent } from '../generated/CrowdSale/CrowdSale'
+
+import { handleStarted as plainHandleStarted } from './crowdSaleMapping'
+
 import * as GenericCrowdSale from './genericCrowdSale'
 
 import { Contribution, CrowdSale, ERC20Token, IPT } from '../generated/schema'
@@ -19,8 +31,52 @@ import { Contribution, CrowdSale, ERC20Token, IPT } from '../generated/schema'
 import { TimelockedToken as TimelockedTokenTemplate } from '../generated/templates'
 import { makeERC20Token, makeTimelockedToken } from './common'
 
+export function handleStartedLegacy(event: LegacyStartedEvent): void {
+  const parameters = event.parameters
+  parameters[7] = new ethereum.EventParam(
+    'feeBp',
+    new ethereum.Value(ethereum.ValueKind.UINT, 0)
+  )
+  const _started = new StartedEvent(
+    event.address,
+    event.logIndex,
+    event.transactionLogIndex,
+    event.logType,
+    event.block,
+    event.transaction,
+    parameters,
+    event.receipt
+  )
+
+  return handleStarted(_started)
+}
+
 export function handleStarted(event: StartedEvent): void {
-  let crowdSale = new CrowdSale(event.params.saleId.toString())
+  const _plain = new PlainStartedEvent(
+    event.address,
+    event.logIndex,
+    event.transactionLogIndex,
+    event.logType,
+    event.block,
+    event.transaction,
+    [
+      event.parameters[0],
+      event.parameters[1],
+      event.parameters[2],
+      event.parameters[7]
+    ],
+    event.receipt
+  )
+
+  plainHandleStarted(_plain)
+
+  let crowdSale = CrowdSale.load(event.params.saleId.toString())
+  if (!crowdSale) {
+    log.error('[Crowdsale] Creation failed for: {}', [
+      event.params.saleId.toHexString()
+    ])
+    return
+  }
 
   let ipt = IPT.load(event.params.sale.auctionToken.toHexString())
   if (!ipt) {
@@ -44,26 +100,9 @@ export function handleStarted(event: StartedEvent): void {
     }
   }
 
-  crowdSale.ipt = ipt.id
-  crowdSale.issuer = event.params.issuer
-  crowdSale.beneficiary = event.params.sale.beneficiary
-  crowdSale.closingTime = event.params.sale.closingTime
-  crowdSale.createdAt = event.block.timestamp
-  crowdSale.state = 'RUNNING'
-
-  crowdSale.salesAmount = event.params.sale.salesAmount
-
-  crowdSale.biddingToken = makeERC20Token(
-    IERC20Metadata.bind(event.params.sale.biddingToken)
-  ).id
-  crowdSale.fundingGoal = event.params.sale.fundingGoal
-  crowdSale.amountRaised = BigInt.fromU32(0)
-
   crowdSale.amountStaked = BigInt.fromU32(0)
-
-  crowdSale.permissioner = event.params.sale.permissioner
-
   crowdSale.auctionLockingDuration = event.params.lockingDuration
+
   crowdSale.stakingToken = makeERC20Token(
     IERC20Metadata.bind(event.params.staking.stakedToken)
   ).id
@@ -77,7 +116,7 @@ export function handleStarted(event: StartedEvent): void {
   crowdSale.type = 'STAKED_LOCKING_CROWDSALE'
 
   crowdSale.save()
-  log.info('[handleStarted] crowdsale {}', [crowdSale.id])
+  log.info('[handleStarted] staked locking crowdsale {}', [crowdSale.id])
 }
 
 export function handleSettled(event: SettledEvent): void {

@@ -27,6 +27,7 @@ export function handleStarted(event: StartedEvent): void {
 
   crowdSale.ipt = ipt.id
   crowdSale.issuer = event.params.issuer
+  crowdSale.feeBp = event.params.feeBp
   crowdSale.beneficiary = event.params.sale.beneficiary
   crowdSale.closingTime = event.params.sale.closingTime
   crowdSale.createdAt = event.block.timestamp
