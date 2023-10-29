@@ -1,11 +1,6 @@
 [
   {
     "inputs": [],
-    "stateMutability": "nonpayable",
-    "type": "constructor"
-  },
-  {
-    "inputs": [],
     "name": "AlreadyClaimed",
     "type": "error"
   },
@@ -48,6 +43,11 @@
   {
     "inputs": [],
     "name": "BidTooLow",
+    "type": "error"
+  },
+  {
+    "inputs": [],
+    "name": "FeesTooHigh",
     "type": "error"
   },
   {
@@ -225,6 +225,19 @@
       }
     ],
     "name": "Failed",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint16",
+        "name": "feeBp",
+        "type": "uint16"
+      }
+    ],
+    "name": "FeesUpdated",
     "type": "event"
   },
   {
@@ -419,6 +432,12 @@
         "internalType": "uint256",
         "name": "stakingDuration",
         "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint16",
+        "name": "feeBp",
+        "type": "uint16"
       }
     ],
     "name": "Started",
@@ -493,6 +512,12 @@
         "internalType": "uint256",
         "name": "lockingDuration",
         "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint16",
+        "name": "feeBp",
+        "type": "uint16"
       }
     ],
     "name": "Started",
@@ -555,6 +580,12 @@
         "internalType": "struct Sale",
         "name": "sale",
         "type": "tuple"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint16",
+        "name": "feeBp",
+        "type": "uint16"
       }
     ],
     "name": "Started",
@@ -665,6 +696,19 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "currentFeeBp",
+    "outputs": [
+      {
+        "internalType": "uint16",
+        "name": "",
+        "type": "uint16"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "uint256",
@@ -753,6 +797,11 @@
             "internalType": "bool",
             "name": "claimed",
             "type": "bool"
+          },
+          {
+            "internalType": "uint16",
+            "name": "feeBp",
+            "type": "uint16"
           }
         ],
         "internalType": "struct SaleInfo",
@@ -871,6 +920,19 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint16",
+        "name": "newFeeBp",
+        "type": "uint16"
+      }
+    ],
+    "name": "setCurrentFeesBp",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -1160,5 +1222,108 @@
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "saleId",
+        "type": "uint256"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "issuer",
+        "type": "address"
+      },
+      {
+        "components": [
+          {
+            "internalType": "contract IERC20Metadata",
+            "name": "auctionToken",
+            "type": "address"
+          },
+          {
+            "internalType": "contract IERC20Metadata",
+            "name": "biddingToken",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "beneficiary",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "fundingGoal",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "salesAmount",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint64",
+            "name": "closingTime",
+            "type": "uint64"
+          },
+          {
+            "internalType": "contract IPermissioner",
+            "name": "permissioner",
+            "type": "address"
+          }
+        ],
+        "indexed": false,
+        "internalType": "struct Sale",
+        "name": "sale",
+        "type": "tuple"
+      },
+      {
+        "components": [
+          {
+            "internalType": "contract IERC20Metadata",
+            "name": "stakedToken",
+            "type": "address"
+          },
+          {
+            "internalType": "contract TokenVesting",
+            "name": "stakesVestingContract",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "wadFixedStakedPerBidPrice",
+            "type": "uint256"
+          }
+        ],
+        "indexed": false,
+        "internalType": "struct StakingInfo",
+        "name": "staking",
+        "type": "tuple"
+      },
+      {
+        "indexed": false,
+        "internalType": "contract TimelockedToken",
+        "name": "lockingToken",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "lockingDuration",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "stakingDuration",
+        "type": "uint256"
+      }
+    ],
+    "name": "Started",
+    "type": "event"
   }
 ]

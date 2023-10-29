@@ -27,7 +27,7 @@ contract LockingCrowdSale is CrowdSale {
 
     address immutable lockingTokenImplementation = address(new TimelockedToken());
 
-    event Started(uint256 indexed saleId, address indexed issuer, Sale sale, TimelockedToken lockingToken, uint256 lockingDuration);
+    event Started(uint256 indexed saleId, address indexed issuer, Sale sale, TimelockedToken lockingToken, uint256 lockingDuration, uint16 feeBp);
     event LockingContractCreated(TimelockedToken indexed lockingContract, IERC20Metadata indexed underlyingToken);
 
     /// @dev disable parent sale starting functions
@@ -71,7 +71,14 @@ contract LockingCrowdSale is CrowdSale {
     }
 
     function _afterSaleStarted(uint256 saleId) internal virtual override {
-        emit Started(saleId, msg.sender, _sales[saleId], lockingContracts[address(_sales[saleId].auctionToken)], salesLockingDuration[saleId]);
+        emit Started(
+            saleId,
+            msg.sender,
+            _sales[saleId],
+            lockingContracts[address(_sales[saleId].auctionToken)],
+            salesLockingDuration[saleId],
+            _saleInfo[saleId].feeBp
+        );
     }
 
     function _afterSaleSettled(uint256 saleId) internal override {

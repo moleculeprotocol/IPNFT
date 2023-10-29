@@ -45,7 +45,8 @@ contract StakedLockingCrowdSale is LockingCrowdSale {
         StakingInfo staking,
         TimelockedToken lockingToken,
         uint256 lockingDuration,
-        uint256 stakingDuration
+        uint256 stakingDuration,
+        uint16 feeBp
     );
     event Staked(uint256 indexed saleId, address indexed bidder, uint256 stakedAmount, uint256 price);
     event ClaimedStakes(uint256 indexed saleId, address indexed claimer, uint256 stakesClaimed, uint256 stakesRefunded);
@@ -139,7 +140,8 @@ contract StakedLockingCrowdSale is LockingCrowdSale {
             salesStaking[saleId],
             lockingContracts[address(_sales[saleId].auctionToken)],
             salesLockingDuration[saleId],
-            stakingDuration
+            stakingDuration,
+            _saleInfo[saleId].feeBp
         );
     }
 

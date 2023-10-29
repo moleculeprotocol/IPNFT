@@ -54,7 +54,6 @@ dataSources:
         - event: AllowlistUpdated(uint256,indexed address,bool)
           handler: handleAllowlistUpdated
       file: ./src/swapMapping.ts
-  
   - kind: ethereum/contract
     name: Tokenizer
     network: {{network}}
@@ -84,6 +83,42 @@ dataSources:
         #   handler: handleTermsAccepted
       file: ./src/tokenizerMapping.ts
   - kind: ethereum/contract
+    name: CrowdSale
+    network: {{network}}
+    source:
+      address: '{{crowdSale.address}}'
+      abi: CrowdSale
+      startBlock: {{crowdSale.startBlock}}
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - CrowdSale
+        - Contribution
+        - ERC20Token
+      abis:
+        - name: CrowdSale
+          file: ./abis/CrowdSale.json
+        - name: IERC20Metadata
+          file: ./abis/IERC20Metadata.json
+      eventHandlers:
+        - event: Started(indexed uint256,indexed address,(address,address,address,uint256,uint256,uint64,address),uint16)
+          handler: handleStarted
+        - event: Settled(indexed uint256,uint256,uint256)
+          handler: handleSettled
+        - event: Failed(indexed uint256)
+          handler: handleFailed
+        - event: Bid(indexed uint256,indexed address,uint256)
+          handler: handleBid
+        - event: Claimed(indexed uint256,indexed address,uint256,uint256)
+          handler: handleClaimed
+        - event: ClaimedFundingGoal(indexed uint256)
+          handler: handleClaimedSuccessfulSale
+        - event: ClaimedAuctionTokens(indexed uint256)
+          handler: handleClaimedFailedSale
+      file: ./src/crowdSaleMapping.ts
+  - kind: ethereum/contract
     name: StakedLockingCrowdSale
     network: {{network}}
     source:
@@ -104,7 +139,10 @@ dataSources:
         - name: IERC20Metadata
           file: ./abis/IERC20Metadata.json
       eventHandlers:
+      # the initial crowdsale contract didn't use any fees
         - event: Started(indexed uint256,indexed address,(address,address,address,uint256,uint256,uint64,address),(address,address,uint256),address,uint256,uint256)
+          handler: handleStartedLegacy
+        - event: Started(indexed uint256,indexed address,(address,address,address,uint256,uint256,uint64,address),(address,address,uint256),address,uint256,uint256,uint16)
           handler: handleStarted
         - event: Settled(indexed uint256,uint256,uint256)
           handler: handleSettled
@@ -124,7 +162,6 @@ dataSources:
           handler: handleClaimedSuccessfulSale
         - event: ClaimedAuctionTokens(indexed uint256)
           handler: handleClaimedFailedSale
-
       file: ./src/stakedLockingCrowdSaleMapping.ts
   - kind: ethereum/contract
     name: TermsAcceptedPermissioner
@@ -146,7 +183,7 @@ dataSources:
         - event: TermsAccepted(indexed address,indexed address,bytes)
           handler: handleTermsAccepted
       file: ./src/termsAcceptedPermissionerMapping.ts
-      
+
 templates:
   - name: IPToken
     kind: ethereum/contract
