@@ -494,7 +494,7 @@ contract CrowdSaleTest is Test {
 
     function testFeesAreTakenOnSettlement() public {
         vm.startPrank(deployer);
-        crowdSale.setCurrentFeesBp(1000);
+        crowdSale.setCurrentFeesBp(50);
         vm.stopPrank();
 
         vm.startPrank(emitter);
@@ -519,8 +519,8 @@ contract CrowdSaleTest is Test {
         crowdSale.claimResults(saleId);
 
         //fees were taken
-        assertEq(biddingToken.balanceOf(emitter), 180_000 ether);
-        assertEq(biddingToken.balanceOf(deployer), 20_000 ether);
+        assertEq(biddingToken.balanceOf(emitter), 199_000 ether);
+        assertEq(biddingToken.balanceOf(deployer), 1_000 ether);
 
         vm.startPrank(bidder);
         crowdSale.claim(saleId, "");
