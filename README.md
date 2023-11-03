@@ -13,6 +13,7 @@ IP-NFTs allow their users to tokenize intellectual property. This repo contains 
 | SchmackoSwap           | [0xc09b8577c762b5e97a7d640f242e1d9bfaa7eb9d](https://etherscan.io/address/0xc09b8577c762b5e97a7d640f242e1d9bfaa7eb9d#code) | <a href="https://thirdweb.com/ethereum/0xc09b8577c762b5E97a7D640F242E1D9bfAa7EB9d?utm_source=contract_badge" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0xc09b8577c762b5E97a7D640F242E1D9bfAa7EB9d&theme=dark&chainId=1" alt="View contract" /></a> |
 | Tokenizer              | [0x58EB89C69CB389DBef0c130C6296ee271b82f436](https://etherscan.io/address/0x58EB89C69CB389DBef0c130C6296ee271b82f436#code) | <a href="https://thirdweb.com/ethereum/0x58EB89C69CB389DBef0c130C6296ee271b82f436?utm_source=contract_badge" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0x58EB89C69CB389DBef0c130C6296ee271b82f436&theme=dark&chainId=1" alt="View contract" /></a> |
 | Permissioner           | [0xC837E02982992B701A1B5e4E21fA01cEB0a628fA](https://etherscan.io/address/0xC837E02982992B701A1B5e4E21fA01cEB0a628fA#code) | <a href="https://thirdweb.com/ethereum/0xC837E02982992B701A1B5e4E21fA01cEB0a628fA?utm_source=contract_badge" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0xC837E02982992B701A1B5e4E21fA01cEB0a628fA&theme=dark&chainId=1" alt="View contract" /></a> |
+| Crowdsale              | [0xf0a8d23f38e9cbbe01c4ed37f23bd519b65bc6c2](https://etherscan.io/address/0xf0a8d23f38e9cbbe01c4ed37f23bd519b65bc6c2#code) | <a href="https://thirdweb.com/ethereum/0xf0a8d23f38e9cbbe01c4ed37f23bd519b65bc6c2?utm_source=contract_badge" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0xf0a8d23f38e9cbbe01c4ed37f23bd519b65bc6c2&theme=dark&chainId=1" alt="View contract" /></a> |
 | StakedLockingCrowdSale | [0x35Bce29F52f51f547998717CD598068Afa2B29B7](https://etherscan.io/address/0x35Bce29F52f51f547998717CD598068Afa2B29B7#code) | <a href="https://thirdweb.com/ethereum/0x35Bce29F52f51f547998717CD598068Afa2B29B7?utm_source=contract_badge" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0x35Bce29F52f51f547998717CD598068Afa2B29B7&theme=dark&chainId=1" alt="View contract" /></a> |
 
 - Subgraph: <https://api.thegraph.com/subgraphs/name/moleculeprotocol/ip-nft-mainnet>
@@ -33,11 +34,11 @@ Defender Relayer that signs off minting requests from our side:
 | SchmackoSwap           | [0x67D8ed102E2168A46FA342e39A5f7D16c103Bd0d](https://goerli.etherscan.io/address/0x67D8ed102E2168A46FA342e39A5f7D16c103Bd0d#code)  | <a href="https://thirdweb.com/goerli/0x67D8ed102E2168A46FA342e39A5f7D16c103Bd0d?utm_source=contract_badge" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0x67D8ed102E2168A46FA342e39A5f7D16c103Bd0d&theme=dark&chainId=5" alt="View contract" /></a> |
 | Tokenizer              | [0xb12494eeA6B992d0A1Db3C5423BE7a2d2337F58c](https://goerli.etherscan.io/address/0xb12494eeA6B992d0A1Db3C5423BE7a2d2337F58c#code)  | <a href="https://thirdweb.com/goerli/0xb12494eeA6B992d0A1Db3C5423BE7a2d2337F58c?utm_source=contract_badge" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0xb12494eeA6B992d0A1Db3C5423BE7a2d2337F58c&theme=dark&chainId=5" alt="View contract" /></a> |
 | Permissioner           | [0xd735d9504cce32F2cd665b779D699B4157686fcd](https://goerli.etherscan.io/address/0xd735d9504cce32F2cd665b779D699B4157686fcd#code)  | <a href="https://thirdweb.com/goerli/0xd735d9504cce32F2cd665b779D699B4157686fcd?utm_source=contract_badge" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0xd735d9504cce32F2cd665b779D699B4157686fcd&theme=dark&chainId=5" alt="View contract" /></a> |
-| Crowdsale                | [0x8c83DA72b4591bE526ca8C7cb848bC89c0e23373](https://goerli.etherscan.io/address/0x8c83DA72b4591bE526ca8C7cb848bC89c0e23373#code>) | <a href="https://thirdweb.com/goerli/0x8c83DA72b4591bE526ca8C7cb848bC89c0e23373?utm_source=contract_badge" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0x8c83DA72b4591bE526ca8C7cb848bC89c0e23373&theme=dark&chainId=5" alt="View contract" /></a> |
+| Crowdsale              | [0x8c83DA72b4591bE526ca8C7cb848bC89c0e23373](https://goerli.etherscan.io/address/0x8c83DA72b4591bE526ca8C7cb848bC89c0e23373#code>) | <a href="https://thirdweb.com/goerli/0x8c83DA72b4591bE526ca8C7cb848bC89c0e23373?utm_source=contract_badge" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0x8c83DA72b4591bE526ca8C7cb848bC89c0e23373&theme=dark&chainId=5" alt="View contract" /></a> |
 | StakedLockingCrowdSale | [0x46c3369dece07176ad7164906d3593aa4c126d35](https://goerli.etherscan.io/address/0x46c3369dece07176ad7164906d3593aa4c126d35#code)  | <a href="https://thirdweb.com/goerli/0x46c3369dece07176ad7164906d3593aa4c126d35?utm_source=contract_badge" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0x46c3369dece07176ad7164906d3593aa4c126d35&theme=dark&chainId=5" alt="View contract" /></a> |
 | SignedMintAuthorizer   | [0x5e555eE24DB66825171Ac63EA614864987CEf1Af](https://goerli.etherscan.io/address/0x5e555eE24DB66825171Ac63EA614864987CEf1Af#code)  | <a href="https://thirdweb.com/goerli/0x5e555eE24DB66825171Ac63EA614864987CEf1Af?utm_source=contract_badge" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0x5e555eE24DB66825171Ac63EA614864987CEf1Af&theme=dark&chainId=5" alt="View contract" /></a> |
 
-- Subgraph: <https://api.thegraph.com/subgraphs/name/dorianwilhelm/ip-nft-subgraph-goerli/graphql>
+- Subgraph: https://api.thegraph.com/subgraphs/name/moleculeprotocol/ip-nft-goerli>
 
 - Tokenizer: 0xb12494eeA6B992d0A1Db3C5423BE7a2d2337F58c (formerly known as Synthesizer)
   Implementation: 0x64580CC2c28aaEd31B2DF9a154dA9620C690BDec (reinit 4)
@@ -50,6 +51,10 @@ Defender Relayer that signs off minting requests from our side:
 
 - Blind Permissioner: 0xec68a1fc8d4c2834f8dfbdb56691f9f0a3d6be11
   <https://goerli.etherscan.io/address/0xec68a1fc8d4c2834f8dfbdb56691f9f0a3d6be11#code>
+
+### Sepolia
+
+Plain Crowdsale 0xc272b3e980ee3c1e52a9814b1a1d6c48295e8d91 https://sepolia.etherscan.io/address/0xc272b3e980ee3c1e52a9814b1a1d6c48295e8d91
 
 #### some test tokens
 
