@@ -12,11 +12,10 @@ module.exports = {
     address: '0x58EB89C69CB389DBef0c130C6296ee271b82f436',
     startBlock: 17464363
   },
-  // TO DO: add the correct values
-  // crowdSale: {
-  //   address: '0x8c83DA72b4591bE526ca8C7cb848bC89c0e23373',
-  //   startBlock: 9933419
-  // },
+  crowdSale: {
+    address: '0xf0a8d23f38e9cbbe01c4ed37f23bd519b65bc6c2',
+    startBlock: 18490640
+  },
   stakedLockingCrowdSale: {
     address: '0x35Bce29F52f51f547998717CD598068Afa2B29B7',
     startBlock: 17481804
