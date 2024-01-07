@@ -56,13 +56,14 @@ contract FixtureIpnft is CommonScript {
         vm.startBroadcast(from);
         uint256 reservationId = ipnft.reserve();
 
-        bytes32 messageHash =
-            ECDSA.toEthSignedMessageHash(keccak256(abi.encodePacked(from, to, reservationId, "ar://cy7I6VoEXhO5rHrq8siFYtelM9YZKyoGj3vmGwJZJOc")));
+        bytes32 messageHash = ECDSA.toEthSignedMessageHash(
+            keccak256(abi.encodePacked(from, to, reservationId, "ipfs://bafkreigmssfgo5t3ig2ghx4zk2syrezpv46cbirdg4aah5ma4gvvesxevi"))
+        );
 
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(deployerPk, messageHash);
 
         ipnft.mintReservation{ value: 0.001 ether }(
-            to, reservationId, "ar://cy7I6VoEXhO5rHrq8siFYtelM9YZKyoGj3vmGwJZJOc", "BIO-00001", abi.encodePacked(r, s, v)
+            to, reservationId, "ipfs://bafkreigmssfgo5t3ig2ghx4zk2syrezpv46cbirdg4aah5ma4gvvesxevi", "CAT-101", abi.encodePacked(r, s, v)
         );
 
         vm.stopBroadcast();
