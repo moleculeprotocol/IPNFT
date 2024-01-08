@@ -5,9 +5,9 @@ import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils
 import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import { Clones } from "@openzeppelin/contracts/proxy/Clones.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
-import { IPToken, Metadata as TokenMetadata } from "./IPToken.sol";
-import { IPermissioner } from "./Permissioner.sol";
-import { IPNFT } from "./IPNFT.sol";
+import { IPToken, Metadata as TokenMetadata } from "../../IPToken.sol";
+import { IPermissioner } from "../../Permissioner.sol";
+import { IPNFT } from "../../IPNFT.sol";
 
 error MustOwnIpnft();
 error AlreadyTokenized();
@@ -31,9 +31,8 @@ contract Tokenizer is UUPSUpgradeable, OwnableUpgradeable {
 
     //this is the old term to keep the storage layout intact
     mapping(uint256 => IPToken) public synthesized;
-
-     
-    address tokenImplementation;
+    /// @custom:oz-upgrades-unsafe-allow state-variable-immutable
+    address immutable tokenImplementation;
 
     /// @dev the permissioner checks if senders have agreed to legal requirements
     IPermissioner permissioner;
@@ -51,20 +50,8 @@ contract Tokenizer is UUPSUpgradeable, OwnableUpgradeable {
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
-        //tokenImplementation = address(new IPToken());
+        tokenImplementation = address(new IPToken());
         _disableInitializers();
-    }
-
-    /**
-     * 
-     * @notice sets the new implementation address of the IPToken
-     * @param impl the new implementation
-     */
-    function setTokenImpl(address impl) public onlyOwner {
-        /*
-        could call some functions on old contract to make sure its tokenizer not another contract behind a proxy for safety
-        */
-        tokenImplementation = impl;
     }
 
     /**

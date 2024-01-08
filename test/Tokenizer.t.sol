@@ -18,6 +18,7 @@ import { AcceptAllAuthorizer } from "./helpers/AcceptAllAuthorizer.sol";
 
 import { FakeERC20 } from "../src/helpers/FakeERC20.sol";
 import { MustOwnIpnft, AlreadyTokenized, Tokenizer } from "../src/Tokenizer.sol";
+import { Tokenizer as OldTokenizer } from "../src/helpers/test-upgrades/TokenizerOld.sol";
 
 import { IPToken, OnlyIssuerOrOwner, TokenCapped } from "../src/IPToken.sol";
 import { Molecules } from "../src/helpers/test-upgrades/Molecules.sol";
@@ -28,6 +29,8 @@ import { SchmackoSwap, ListingState } from "../src/SchmackoSwap.sol";
 
 contract TokenizerTest is Test {
     using SafeERC20Upgradeable for IPToken;
+    uint256 mainnetFork;
+
 
     string ipfsUri = "ipfs://bafkreiankqd3jvpzso6khstnaoxovtyezyatxdy7t2qzjoolqhltmasqki";
     string agreementCid = "bafkreigk5dvqblnkdniges6ft5kmuly47ebw4vho6siikzmkaovq6sjstq";
@@ -49,6 +52,7 @@ contract TokenizerTest is Test {
     address escrow = makeAddr("escrow");
 
     IPNFT internal ipnft;
+    OldTokenizer internal oldTokenizer;
     Tokenizer internal tokenizer;
     SchmackoSwap internal schmackoSwap;
     IPermissioner internal blindPermissioner;
@@ -56,6 +60,10 @@ contract TokenizerTest is Test {
     FakeERC20 internal erc20;
 
     function setUp() public {
+        console.log("mainnetFork: ", vm.envString("RPC_URL"));
+        mainnetFork = vm.createFork(
+            vm.envString("RPC_URL")
+        );
         (alice, alicePk) = makeAddrAndKey("alice");
         (bob, bobPk) = makeAddrAndKey("bob");
         vm.startPrank(deployer);
@@ -70,8 +78,8 @@ contract TokenizerTest is Test {
 
         blindPermissioner = new BlindPermissioner();
 
-        tokenizer = Tokenizer(address(new ERC1967Proxy(address(new Tokenizer()), "")));
-        tokenizer.initialize(ipnft, blindPermissioner);
+        oldTokenizer = OldTokenizer(address(new ERC1967Proxy(address(new OldTokenizer()), "")));
+        oldTokenizer.initialize(ipnft, blindPermissioner);
 
         vm.stopPrank();
 
@@ -84,7 +92,7 @@ contract TokenizerTest is Test {
 
     function testUrl() public {
         vm.startPrank(originalOwner);
-        IPToken tokenContract = tokenizer.tokenizeIpnft(1, 100_000, "IPT", agreementCid, "");
+        IPToken tokenContract = oldTokenizer.tokenizeIpnft(1, 100_000, "IPT", agreementCid, "");
         string memory uri = tokenContract.uri();
         assertGt(bytes(uri).length, 200);
         vm.stopPrank();
@@ -93,7 +101,7 @@ contract TokenizerTest is Test {
     function testIssueIPToken() public {
         vm.startPrank(originalOwner);
         //ipnft.setApprovalForAll(address(tokenizer), true);
-        IPToken tokenContract = tokenizer.tokenizeIpnft(1, 100_000, "IPT", agreementCid, "");
+        IPToken tokenContract = oldTokenizer.tokenizeIpnft(1, 100_000, "IPT", agreementCid, "");
         vm.stopPrank();
 
         assertEq(tokenContract.balanceOf(originalOwner), 100_000);
@@ -114,7 +122,7 @@ contract TokenizerTest is Test {
 
     function testIncreaseIPToken() public {
         vm.startPrank(originalOwner);
-        IPToken tokenContract = tokenizer.tokenizeIpnft(1, 100_000, "IPT", agreementCid, "");
+        IPToken tokenContract = oldTokenizer.tokenizeIpnft(1, 100_000, "IPT", agreementCid, "");
 
         tokenContract.transfer(alice, 25_000);
         tokenContract.transfer(bob, 25_000);
@@ -147,10 +155,10 @@ contract TokenizerTest is Test {
 
     function testCanBeTokenizedOnlyOnce() public {
         vm.startPrank(originalOwner);
-        tokenizer.tokenizeIpnft(1, 100_000, "IPT", agreementCid, "");
+        oldTokenizer.tokenizeIpnft(1, 100_000, "IPT", agreementCid, "");
 
         vm.expectRevert(AlreadyTokenized.selector);
-        tokenizer.tokenizeIpnft(1, 100_000, "IPT", agreementCid, "");
+        oldTokenizer.tokenizeIpnft(1, 100_000, "IPT", agreementCid, "");
         vm.stopPrank();
     }
 
@@ -158,7 +166,7 @@ contract TokenizerTest is Test {
         vm.startPrank(alice);
 
         vm.expectRevert(MustOwnIpnft.selector);
-        tokenizer.tokenizeIpnft(1, 100_000, "IPT", agreementCid, "");
+        oldTokenizer.tokenizeIpnft(1, 100_000, "IPT", agreementCid, "");
         vm.stopPrank();
     }
 
@@ -174,7 +182,7 @@ contract TokenizerTest is Test {
         vm.stopPrank();
 
         vm.startPrank(originalOwner);
-        IPToken tokenContract = tokenizer.tokenizeIpnft(1, 100_000, "IPT", agreementCid, "");
+        IPToken tokenContract = oldTokenizer.tokenizeIpnft(1, 100_000, "IPT", agreementCid, "");
         tokenContract.safeTransfer(address(wallet), 100_000);
         vm.stopPrank();
 
@@ -198,8 +206,12 @@ contract TokenizerTest is Test {
         assertEq(tokenContract.balanceOf(bob), 10_000);
     }
 
-    // function testCanUpgradeErc20TokenImplementation() public {
-    //     vm.startPrank(deployer);
+    function testCanUpgradeErc20TokenImplementation() public {
+        vm.selectFork(mainnetFork);
+        tokenizer = new Tokenizer();
+        //oldTokenizer.upgradeTo(address(tokenizer));
+
+    //    vm.startPrank(deployer);
     //     vm.stopPrank();
 
     //     vm.startPrank(originalOwner);
@@ -234,5 +246,5 @@ contract TokenizerTest is Test {
     //     IPTokenNext oldTokenImplWrapped = IPTokenNext(address(tokenContractOld));
     //     vm.expectRevert();
     //     oldTokenImplWrapped.setAStateVar(42);
-    // }
+    }
 }
