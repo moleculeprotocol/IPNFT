@@ -208,8 +208,9 @@ contract TokenizerTest is Test {
 
     function testCanUpgradeErc20TokenImplementation() public {
         vm.selectFork(mainnetFork);
+        vm.startPrank(0xCfA0F84660fB33bFd07C369E5491Ab02C449f71B); // Owner address on mainnet
         tokenizer = new Tokenizer();
-        //oldTokenizer.upgradeTo(address(tokenizer));
+        oldTokenizer.upgradeTo(address(tokenizer));
 
     //    vm.startPrank(deployer);
     //     vm.stopPrank();
