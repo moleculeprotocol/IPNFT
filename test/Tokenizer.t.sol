@@ -212,18 +212,17 @@ contract TokenizerTest is Test {
 
     function testCanUpgradeErc20TokenImplementation() public {
         vm.selectFork(mainnetFork);
+
         address mainnetOwner = 0xCfA0F84660fB33bFd07C369E5491Ab02C449f71B;
         address mainnetTokenizer = 0x58EB89C69CB389DBef0c130C6296ee271b82f436;
         address mainnetIPNFT = 0xcaD88677CA87a7815728C72D74B4ff4982d54Fc1;
 
-
         Tokenizer upgradedTokenizer = Tokenizer(mainnetTokenizer);
         IPNFT ipnftMainnetInstance = IPNFT(mainnetIPNFT);
 
-
         IPToken newIPTokenImplementation = new IPToken();
+        
         vm.startPrank(mainnetOwner); // Owner address on mainnet
-
         tokenizer11 = Tokenizer11(mainnetTokenizer);
         tokenizer11.upgradeTo(address(new Tokenizer()));
 
@@ -232,14 +231,26 @@ contract TokenizerTest is Test {
         
         IPermissioner _permissioner = new BlindPermissioner();
         upgradedTokenizer.reinit(_permissioner); // project is already initialized
-
         vm.stopPrank();
 
-        address vitaUser = 0xD920E60b798A2F5a8332799d8a23075c9E77d5F8;
+        address ipnftHolder = 0xD920E60b798A2F5a8332799d8a23075c9E77d5F8;
         console.log(ipnftMainnetInstance.ownerOf(3));
+        assertEq(ipnftMainnetInstance.ownerOf(3), ipnftHolder);
+        
+        vm.startPrank(ipnftHolder);
+        IPToken createdIPToken =  upgradedTokenizer.tokenizeIpnft(3, 100_000, "IPT", agreementCid, "");
+        assertEq(createdIPToken.balanceOf(ipnftHolder), 100_000);
+        createdIPToken.transfer(alice, 1);
+        assertEq(createdIPToken.balanceOf(ipnftHolder), 99_999);
+        vm.stopPrank();
 
-        vm.startPrank(vitaUser);
-        upgradedTokenizer.tokenizeIpnft(3, 100_000, "IPT", agreementCid, "");
+        address vitaFastHolder = 0x45602BFBA960277bF917C1b2007D1f03d7bd29e4;
+        IPToken vitaFast = IPToken(0x6034e0d6999741f07cb6Fb1162cBAA46a1D33d36);
+       
+        vm.startPrank(vitaFastHolder);
+        assertEq(vitaFast.balanceOf(vitaFastHolder), 16942857059768483219100);
+        vitaFast.transfer(alice, 100);
+        assertEq(vitaFast.balanceOf(vitaFastHolder), 16942857059768483219000);
         vm.stopPrank();
         
         //IPToken exampleVitaFast = IPToken(0x6034e0d6999741f07cb6Fb1162cBAA46a1D33d36);
