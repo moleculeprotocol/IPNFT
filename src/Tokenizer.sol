@@ -8,7 +8,7 @@ import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 import { IPToken, Metadata as TokenMetadata } from "./IPToken.sol";
 import { IPermissioner } from "./Permissioner.sol";
 import { IPNFT } from "./IPNFT.sol";
-import 'forge-std/console.sol';
+
 error MustOwnIpnft();
 error AlreadyTokenized();
 
