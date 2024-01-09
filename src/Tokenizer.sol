@@ -8,7 +8,7 @@ import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 import { IPToken, Metadata as TokenMetadata } from "./IPToken.sol";
 import { IPermissioner } from "./Permissioner.sol";
 import { IPNFT } from "./IPNFT.sol";
-
+import 'forge-std/console.sol';
 error MustOwnIpnft();
 error AlreadyTokenized();
 
@@ -38,7 +38,7 @@ contract Tokenizer is UUPSUpgradeable, OwnableUpgradeable {
     mapping(uint256 => IPToken) public synthesized;
 
      
-    address tokenImplementation;
+    address public tokenImplementation;
 
     /// @dev the permissioner checks if senders have agreed to legal requirements
     IPermissioner permissioner;
@@ -71,8 +71,10 @@ contract Tokenizer is UUPSUpgradeable, OwnableUpgradeable {
         /*
         could call some functions on old contract to make sure its tokenizer not another contract behind a proxy for safety
         */
+       console.log('hello setting IPToken Impl');
         address oldImplementation = tokenImplementation;
         tokenImplementation = _tokenImplementation;
+        console.log('tokenImplementation', tokenImplementation);
         emit IPTokenUpgraded(
             oldImplementation,
             _tokenImplementation
