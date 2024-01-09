@@ -62,7 +62,8 @@ contract TokenizerTest is Test {
     function setUp() public {
         console.log("mainnetFork: ", vm.envString("RPC_URL"));
         mainnetFork = vm.createFork(
-            vm.envString("RPC_URL")
+            vm.envString("RPC_URL"),
+            18968463
         );
         (alice, alicePk) = makeAddrAndKey("alice");
         (bob, bobPk) = makeAddrAndKey("bob");
@@ -211,34 +212,43 @@ contract TokenizerTest is Test {
 
     function testCanUpgradeErc20TokenImplementation() public {
         vm.selectFork(mainnetFork);
-        vm.startPrank(0xCfA0F84660fB33bFd07C369E5491Ab02C449f71B); // Owner address on mainnet
-        tokenizer11 = Tokenizer11(0x58EB89C69CB389DBef0c130C6296ee271b82f436);
+        address mainnetOwner = 0xCfA0F84660fB33bFd07C369E5491Ab02C449f71B;
+        address mainnetTokenizer = 0x58EB89C69CB389DBef0c130C6296ee271b82f436;
+        address mainnetIPNFT = 0xcaD88677CA87a7815728C72D74B4ff4982d54Fc1;
+
+
+        Tokenizer upgradedTokenizer = Tokenizer(mainnetTokenizer);
+        IPNFT ipnftMainnetInstance = IPNFT(mainnetIPNFT);
+
+
+        IPToken newIPTokenImplementation = new IPToken();
+        vm.startPrank(mainnetOwner); // Owner address on mainnet
+
+        tokenizer11 = Tokenizer11(mainnetTokenizer);
         tokenizer11.upgradeTo(address(new Tokenizer()));
-        Tokenizer upgradedTokenizer = Tokenizer(0x58EB89C69CB389DBef0c130C6296ee271b82f436);
-        assertEq(upgradedTokenizer.tokenImplementation(), address(ipToken));
-        IPToken newIPToken = new IPToken();
-        upgradedTokenizer.setIPTokenImplementation(address(newIPToken));
-        upgradedTokenizer = Tokenizer(0x58EB89C69CB389DBef0c130C6296ee271b82f436);
-        console.log('ipToken', address(ipToken));
-        console.log('newIPToken', address(newIPToken));
-        assertEq(upgradedTokenizer.tokenImplementation(), address(newIPToken));
+
+        upgradedTokenizer.setIPTokenImplementation(address(newIPTokenImplementation));
+        assertEq(upgradedTokenizer.ipTokenImplementation(), address(newIPTokenImplementation));
+        
+        IPermissioner _permissioner = new BlindPermissioner();
+        upgradedTokenizer.reinit(_permissioner); // project is already initialized
+
         vm.stopPrank();
 
-    //    vm.startPrank(deployer);
-    //     vm.stopPrank();
+        address vitaUser = 0xD920E60b798A2F5a8332799d8a23075c9E77d5F8;
+        console.log(ipnftMainnetInstance.ownerOf(3));
 
-    //     vm.startPrank(originalOwner);
-    //     IPToken tokenContractOld = tokenizer.tokenizeIpnft(1, 100_000, "IPT", agreementCid, "");
-    //     vm.stopPrank();
+        vm.startPrank(vitaUser);
+        upgradedTokenizer.tokenizeIpnft(3, 100_000, "IPT", agreementCid, "");
+        vm.stopPrank();
+        
+        //IPToken exampleVitaFast = IPToken(0x6034e0d6999741f07cb6Fb1162cBAA46a1D33d36);
+        //console.log(exampleVitaFast.balanceOf(vitaUser));
+        //exampleVitaFast.transfer(alice, 100 wei);
 
-    //     vm.startPrank(deployer);
-    //     TokenizerNext synthNext = new TokenizerNext();
-    //     tokenizer.upgradeTo(address(synthNext));
-    //     TokenizerNext synth2 = TokenizerNext(address(tokenizer));
 
-    //     IPermissioner _permissioner = new BlindPermissioner();
-    //     synth2.reinit(_permissioner);
-    //     vm.stopPrank();
+        //vm.stopPrank();
+
 
     //     assertEq(tokenContractOld.balanceOf(originalOwner), 100_000);
 
