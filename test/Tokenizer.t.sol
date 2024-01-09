@@ -214,6 +214,14 @@ contract TokenizerTest is Test {
         vm.startPrank(0xCfA0F84660fB33bFd07C369E5491Ab02C449f71B); // Owner address on mainnet
         tokenizer11 = Tokenizer11(0x58EB89C69CB389DBef0c130C6296ee271b82f436);
         tokenizer11.upgradeTo(address(new Tokenizer()));
+        Tokenizer upgradedTokenizer = Tokenizer(0x58EB89C69CB389DBef0c130C6296ee271b82f436);
+        assertEq(upgradedTokenizer.tokenImplementation(), address(ipToken));
+        IPToken newIPToken = new IPToken();
+        upgradedTokenizer.setIPTokenImplementation(address(newIPToken));
+        upgradedTokenizer = Tokenizer(0x58EB89C69CB389DBef0c130C6296ee271b82f436);
+        console.log('ipToken', address(ipToken));
+        console.log('newIPToken', address(newIPToken));
+        assertEq(upgradedTokenizer.tokenImplementation(), address(newIPToken));
         vm.stopPrank();
 
     //    vm.startPrank(deployer);
