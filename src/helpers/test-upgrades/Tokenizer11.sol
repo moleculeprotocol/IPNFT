@@ -15,7 +15,7 @@ error AlreadyTokenized();
 /// @title Tokenizer 1.1
 /// @author molecule.to
 /// @notice tokenizes an IPNFT to an ERC20 token (called IPT) and controls its supply.
-contract Tokenizer is UUPSUpgradeable, OwnableUpgradeable {
+contract Tokenizer11 is UUPSUpgradeable, OwnableUpgradeable {
     event TokensCreated(
         uint256 indexed moleculesId,
         uint256 indexed ipnftId,

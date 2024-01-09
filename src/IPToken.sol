@@ -60,7 +60,8 @@ contract IPToken is ERC20BurnableUpgradeable, OwnableUpgradeable {
      */
 
     function hash() external view returns (uint256) {
-        return uint256(keccak256(abi.encodePacked(_metadata.originalOwner, _metadata.ipnftId)));
+        uint256 keccak = uint256(keccak256(abi.encodePacked(_metadata.originalOwner, _metadata.ipnftId)));
+        return keccak;
     }
 
     /**
