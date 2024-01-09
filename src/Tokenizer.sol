@@ -37,12 +37,12 @@ contract Tokenizer is UUPSUpgradeable, OwnableUpgradeable {
     //this is the old term to keep the storage layout intact
     mapping(uint256 => IPToken) public synthesized;
 
-     
-    address public tokenImplementation;
+    address immutable tokenImplementation;
 
     /// @dev the permissioner checks if senders have agreed to legal requirements
     IPermissioner permissioner;
 
+    address public ipTokenImplementation;
     /**
      * @param _ipnft the IPNFT contract
      * @param _permissioner a permissioning contract that checks if callers have agreed to the tokenized token's legal agreements
@@ -56,28 +56,26 @@ contract Tokenizer is UUPSUpgradeable, OwnableUpgradeable {
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
-        //tokenImplementation = address(new IPToken());
+        tokenImplementation = address(0);
         _disableInitializers();
     }
 
     /**
      * 
      * @notice sets the new implementation address of the IPToken
-     * @param _tokenImplementation address pointing to the new implementation
+     * @param _ipTokenImplementation address pointing to the new implementation
      */
     function setIPTokenImplementation(
-        address _tokenImplementation
+        address _ipTokenImplementation
         ) public onlyOwner {
         /*
         could call some functions on old contract to make sure its tokenizer not another contract behind a proxy for safety
         */
-       console.log('hello setting IPToken Impl');
-        address oldImplementation = tokenImplementation;
-        tokenImplementation = _tokenImplementation;
-        console.log('tokenImplementation', tokenImplementation);
+        address oldIpTokenImplementation = ipTokenImplementation;
+        ipTokenImplementation = _ipTokenImplementation;
         emit IPTokenUpgraded(
-            oldImplementation,
-            _tokenImplementation
+            oldIpTokenImplementation,
+            _ipTokenImplementation
         );
     }
 
@@ -85,7 +83,7 @@ contract Tokenizer is UUPSUpgradeable, OwnableUpgradeable {
      * @dev called after an upgrade to reinitialize a new permissioner impl. This is 4 for görli compatibility
      * @param _permissioner the new TermsPermissioner
      */
-    function reinit(IPermissioner _permissioner) public onlyOwner reinitializer(4) {
+    function reinit(IPermissioner _permissioner) public onlyOwner reinitializer(5) {
         permissioner = _permissioner;
     }
 
@@ -111,7 +109,7 @@ contract Tokenizer is UUPSUpgradeable, OwnableUpgradeable {
         }
 
         // https://github.com/OpenZeppelin/workshops/tree/master/02-contracts-clone
-        token = IPToken(Clones.clone(tokenImplementation));
+        token = IPToken(Clones.clone(ipTokenImplementation));
         string memory name = string.concat("IP Tokens of IPNFT #", Strings.toString(ipnftId));
         token.initialize(name, tokenSymbol, TokenMetadata(ipnftId, _msgSender(), agreementCid));
 
