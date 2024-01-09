@@ -18,7 +18,7 @@ import { AcceptAllAuthorizer } from "./helpers/AcceptAllAuthorizer.sol";
 
 import { FakeERC20 } from "../src/helpers/FakeERC20.sol";
 import { MustOwnIpnft, AlreadyTokenized, Tokenizer } from "../src/Tokenizer.sol";
-import { Tokenizer as OldTokenizer } from "../src/helpers/test-upgrades/TokenizerOld.sol";
+import { Tokenizer11 } from "../src/helpers/test-upgrades/Tokenizer11.sol";
 
 import { IPToken, OnlyIssuerOrOwner, TokenCapped } from "../src/IPToken.sol";
 import { Molecules } from "../src/helpers/test-upgrades/Molecules.sol";
@@ -52,11 +52,11 @@ contract TokenizerTest is Test {
     address escrow = makeAddr("escrow");
 
     IPNFT internal ipnft;
-    OldTokenizer internal oldTokenizer;
+    Tokenizer11 internal tokenizer11;
     Tokenizer internal tokenizer;
     SchmackoSwap internal schmackoSwap;
     IPermissioner internal blindPermissioner;
-
+    IPToken internal ipToken;
     FakeERC20 internal erc20;
 
     function setUp() public {
@@ -78,8 +78,11 @@ contract TokenizerTest is Test {
 
         blindPermissioner = new BlindPermissioner();
 
-        oldTokenizer = OldTokenizer(address(new ERC1967Proxy(address(new OldTokenizer()), "")));
-        oldTokenizer.initialize(ipnft, blindPermissioner);
+        ipToken = new IPToken();
+
+        tokenizer = Tokenizer(address(new ERC1967Proxy(address(new Tokenizer()), "")));
+        tokenizer.initialize(ipnft, blindPermissioner);
+        tokenizer.setIPTokenImplementation(address(ipToken));
 
         vm.stopPrank();
 
@@ -92,7 +95,7 @@ contract TokenizerTest is Test {
 
     function testUrl() public {
         vm.startPrank(originalOwner);
-        IPToken tokenContract = oldTokenizer.tokenizeIpnft(1, 100_000, "IPT", agreementCid, "");
+        IPToken tokenContract = tokenizer.tokenizeIpnft(1, 100_000, "IPT", agreementCid, "");
         string memory uri = tokenContract.uri();
         assertGt(bytes(uri).length, 200);
         vm.stopPrank();
@@ -101,7 +104,7 @@ contract TokenizerTest is Test {
     function testIssueIPToken() public {
         vm.startPrank(originalOwner);
         //ipnft.setApprovalForAll(address(tokenizer), true);
-        IPToken tokenContract = oldTokenizer.tokenizeIpnft(1, 100_000, "IPT", agreementCid, "");
+        IPToken tokenContract = tokenizer.tokenizeIpnft(1, 100_000, "IPT", agreementCid, "");
         vm.stopPrank();
 
         assertEq(tokenContract.balanceOf(originalOwner), 100_000);
@@ -122,7 +125,7 @@ contract TokenizerTest is Test {
 
     function testIncreaseIPToken() public {
         vm.startPrank(originalOwner);
-        IPToken tokenContract = oldTokenizer.tokenizeIpnft(1, 100_000, "IPT", agreementCid, "");
+        IPToken tokenContract = tokenizer.tokenizeIpnft(1, 100_000, "IPT", agreementCid, "");
 
         tokenContract.transfer(alice, 25_000);
         tokenContract.transfer(bob, 25_000);
@@ -155,10 +158,10 @@ contract TokenizerTest is Test {
 
     function testCanBeTokenizedOnlyOnce() public {
         vm.startPrank(originalOwner);
-        oldTokenizer.tokenizeIpnft(1, 100_000, "IPT", agreementCid, "");
+        tokenizer.tokenizeIpnft(1, 100_000, "IPT", agreementCid, "");
 
         vm.expectRevert(AlreadyTokenized.selector);
-        oldTokenizer.tokenizeIpnft(1, 100_000, "IPT", agreementCid, "");
+        tokenizer.tokenizeIpnft(1, 100_000, "IPT", agreementCid, "");
         vm.stopPrank();
     }
 
@@ -166,7 +169,7 @@ contract TokenizerTest is Test {
         vm.startPrank(alice);
 
         vm.expectRevert(MustOwnIpnft.selector);
-        oldTokenizer.tokenizeIpnft(1, 100_000, "IPT", agreementCid, "");
+        tokenizer.tokenizeIpnft(1, 100_000, "IPT", agreementCid, "");
         vm.stopPrank();
     }
 
@@ -182,7 +185,7 @@ contract TokenizerTest is Test {
         vm.stopPrank();
 
         vm.startPrank(originalOwner);
-        IPToken tokenContract = oldTokenizer.tokenizeIpnft(1, 100_000, "IPT", agreementCid, "");
+        IPToken tokenContract = tokenizer.tokenizeIpnft(1, 100_000, "IPT", agreementCid, "");
         tokenContract.safeTransfer(address(wallet), 100_000);
         vm.stopPrank();
 
@@ -209,8 +212,9 @@ contract TokenizerTest is Test {
     function testCanUpgradeErc20TokenImplementation() public {
         vm.selectFork(mainnetFork);
         vm.startPrank(0xCfA0F84660fB33bFd07C369E5491Ab02C449f71B); // Owner address on mainnet
-        tokenizer = new Tokenizer();
-        oldTokenizer.upgradeTo(address(tokenizer));
+        tokenizer11 = Tokenizer11(0x58EB89C69CB389DBef0c130C6296ee271b82f436);
+        tokenizer11.upgradeTo(address(new Tokenizer()));
+        vm.stopPrank();
 
     //    vm.startPrank(deployer);
     //     vm.stopPrank();

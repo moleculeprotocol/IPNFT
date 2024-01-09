@@ -27,6 +27,11 @@ contract Tokenizer is UUPSUpgradeable, OwnableUpgradeable {
         string symbol
     );
 
+    event IPTokenUpgraded(
+       address indexed oldAddress,
+       address indexed newAddress
+    );
+
     IPNFT internal ipnft;
 
     //this is the old term to keep the storage layout intact
@@ -58,13 +63,20 @@ contract Tokenizer is UUPSUpgradeable, OwnableUpgradeable {
     /**
      * 
      * @notice sets the new implementation address of the IPToken
-     * @param impl the new implementation
+     * @param _tokenImplementation address pointing to the new implementation
      */
-    function setTokenImpl(address impl) public onlyOwner {
+    function setIPTokenImplementation(
+        address _tokenImplementation
+        ) public onlyOwner {
         /*
         could call some functions on old contract to make sure its tokenizer not another contract behind a proxy for safety
         */
-        tokenImplementation = impl;
+        address oldImplementation = tokenImplementation;
+        tokenImplementation = _tokenImplementation;
+        emit IPTokenUpgraded(
+            oldImplementation,
+            _tokenImplementation
+        );
     }
 
     /**
