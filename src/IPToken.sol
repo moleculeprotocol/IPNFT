@@ -6,7 +6,6 @@ import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/O
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 import { Base64 } from "@openzeppelin/contracts/utils/Base64.sol";
 
-import "forge-std/console.sol";
 struct Metadata {
     uint256 ipnftId;
     address originalOwner;
