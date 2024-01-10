@@ -71,7 +71,7 @@ contract TokenizerTest is Test {
 
         tokenizer = Tokenizer(address(new ERC1967Proxy(address(new Tokenizer()), "")));
         tokenizer.initialize(ipnft, blindPermissioner);
-        tokenizer.setIPTokenImplementation(address(new IPToken()));
+        tokenizer.setIPTokenImplementation(new IPToken());
 
         vm.stopPrank();
 

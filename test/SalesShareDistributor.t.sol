@@ -88,7 +88,7 @@ contract SalesShareDistributorTest is Test {
             )
         );
         tokenizer.initialize(ipnft, blindPermissioner);
-        tokenizer.setIPTokenImplementation(address(ipTokenImplementation));
+        tokenizer.setIPTokenImplementation(ipTokenImplementation);
 
         distributor = SalesShareDistributor(
             address(
