@@ -11,10 +11,11 @@ import { IPNFT } from "./IPNFT.sol";
 
 error MustOwnIpnft();
 error AlreadyTokenized();
-
+error ZeroAddress();
 /// @title Tokenizer 1.2
 /// @author molecule.to
 /// @notice tokenizes an IPNFT to an ERC20 token (called IPT) and controls its supply.
+
 contract Tokenizer is UUPSUpgradeable, OwnableUpgradeable {
     event TokensCreated(
         uint256 indexed moleculesId,
@@ -67,15 +68,22 @@ contract Tokenizer is UUPSUpgradeable, OwnableUpgradeable {
      * @notice sets the new implementation address of the IPToken
      * @param _ipTokenImplementation address pointing to the new implementation
      */
-    function setIPTokenImplementation(IPToken _ipTokenImplementation) public onlyOwner {
+    function setIPTokenImplementation(IPToken _ipTokenImplementation) external onlyOwner {
         /*
         could call some functions on old contract to make sure its tokenizer not another contract behind a proxy for safety
         */
+        if (address(_ipTokenImplementation) == address(0)) {
+            revert ZeroAddress();
+        }
+
         emit IPTokenImplementationUpdated(ipTokenImplementation, _ipTokenImplementation);
         ipTokenImplementation = _ipTokenImplementation;
     }
 
     function setPermissioner(IPermissioner _permissioner) external onlyOwner {
+        if (address(_permissioner) == address(0)) {
+            revert ZeroAddress();
+        }
         emit PermissionerUpdated(permissioner, _permissioner);
         permissioner = _permissioner;
     }
