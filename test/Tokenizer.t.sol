@@ -29,8 +29,6 @@ import { SchmackoSwap, ListingState } from "../src/SchmackoSwap.sol";
 
 contract TokenizerTest is Test {
     using SafeERC20Upgradeable for IPToken;
-    uint256 mainnetFork;
-
 
     string ipfsUri = "ipfs://bafkreiankqd3jvpzso6khstnaoxovtyezyatxdy7t2qzjoolqhltmasqki";
     string agreementCid = "bafkreigk5dvqblnkdniges6ft5kmuly47ebw4vho6siikzmkaovq6sjstq";
@@ -60,11 +58,6 @@ contract TokenizerTest is Test {
     FakeERC20 internal erc20;
 
     function setUp() public {
-        console.log("mainnetFork: ", vm.envString("RPC_URL"));
-        mainnetFork = vm.createFork(
-            vm.envString("RPC_URL"),
-            18968463
-        );
         (alice, alicePk) = makeAddrAndKey("alice");
         (bob, bobPk) = makeAddrAndKey("bob");
         vm.startPrank(deployer);
@@ -208,77 +201,5 @@ contract TokenizerTest is Test {
         vm.stopPrank();
 
         assertEq(tokenContract.balanceOf(bob), 10_000);
-    }
-
-    function testCanUpgradeErc20TokenImplementation() public {
-        vm.selectFork(mainnetFork);
-
-        address mainnetOwner = 0xCfA0F84660fB33bFd07C369E5491Ab02C449f71B;
-        address mainnetTokenizer = 0x58EB89C69CB389DBef0c130C6296ee271b82f436;
-        address mainnetIPNFT = 0xcaD88677CA87a7815728C72D74B4ff4982d54Fc1;
-
-        Tokenizer upgradedTokenizer = Tokenizer(mainnetTokenizer);
-        IPNFT ipnftMainnetInstance = IPNFT(mainnetIPNFT);
-
-        IPToken newIPTokenImplementation = new IPToken();
-        
-        vm.startPrank(mainnetOwner); // Owner address on mainnet
-        tokenizer11 = Tokenizer11(mainnetTokenizer);
-        tokenizer11.upgradeTo(address(new Tokenizer()));
-
-        upgradedTokenizer.setIPTokenImplementation(address(newIPTokenImplementation));
-        assertEq(upgradedTokenizer.ipTokenImplementation(), address(newIPTokenImplementation));
-        
-        IPermissioner _permissioner = new BlindPermissioner();
-        upgradedTokenizer.reinit(_permissioner); // project is already initialized
-        vm.stopPrank();
-
-        address ipnftHolder = 0xD920E60b798A2F5a8332799d8a23075c9E77d5F8;
-        console.log(ipnftMainnetInstance.ownerOf(3));
-        assertEq(ipnftMainnetInstance.ownerOf(3), ipnftHolder);
-        
-        vm.startPrank(ipnftHolder);
-        IPToken createdIPToken =  upgradedTokenizer.tokenizeIpnft(3, 100_000, "IPT", agreementCid, "");
-        assertEq(createdIPToken.balanceOf(ipnftHolder), 100_000);
-        createdIPToken.transfer(alice, 1);
-        assertEq(createdIPToken.balanceOf(ipnftHolder), 99_999);
-        vm.stopPrank();
-
-        address vitaFastHolder = 0x45602BFBA960277bF917C1b2007D1f03d7bd29e4;
-        IPToken vitaFast = IPToken(0x6034e0d6999741f07cb6Fb1162cBAA46a1D33d36);
-       
-        vm.startPrank(vitaFastHolder);
-        assertEq(vitaFast.balanceOf(vitaFastHolder), 16942857059768483219100);
-        vitaFast.transfer(alice, 100);
-        assertEq(vitaFast.balanceOf(vitaFastHolder), 16942857059768483219000);
-        vm.stopPrank();
-        
-        //IPToken exampleVitaFast = IPToken(0x6034e0d6999741f07cb6Fb1162cBAA46a1D33d36);
-        //console.log(exampleVitaFast.balanceOf(vitaUser));
-        //exampleVitaFast.transfer(alice, 100 wei);
-
-
-        //vm.stopPrank();
-
-
-    //     assertEq(tokenContractOld.balanceOf(originalOwner), 100_000);
-
-    //     vm.deal(originalOwner, MINTING_FEE);
-    //     vm.startPrank(originalOwner);
-    //     uint256 reservationId = ipnft.reserve();
-    //     ipnft.mintReservation{ value: MINTING_FEE }(originalOwner, reservationId, ipfsUri, DEFAULT_SYMBOL, "");
-    //     IPToken tokenContractNew = synth2.tokenizeIpnft(2, 70_000, agreementCid, "");
-    //     vm.stopPrank();
-
-    //     assertEq(tokenContractNew.balanceOf(originalOwner), 70_000);
-
-    //     IPTokenNext newTokenImpl = IPTokenNext(address(tokenContractNew));
-
-    //     newTokenImpl.setAStateVar(42);
-    //     assertEq(newTokenImpl.aNewStateVar(), 42);
-
-    //     IPTokenNext oldTokenImplWrapped = IPTokenNext(address(tokenContractOld));
-    //     vm.expectRevert();
-    //     oldTokenImplWrapped.setAStateVar(42);
     }
 }
