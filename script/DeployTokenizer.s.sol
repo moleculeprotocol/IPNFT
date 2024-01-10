@@ -8,31 +8,32 @@ import { Tokenizer } from "../src/Tokenizer.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import { BioPriceFeed } from "../src/BioPriceFeed.sol";
 import { IPermissioner, TermsAcceptedPermissioner } from "../src/Permissioner.sol";
+import { CrowdSale } from "../src/crowdsale/CrowdSale.sol";
 import { StakedLockingCrowdSale } from "../src/crowdsale/StakedLockingCrowdSale.sol";
 
 contract DeployTokenizerInfrastructure is Script {
     function run() public {
         vm.startBroadcast();
         address ipnftAddress = vm.envAddress("IPNFT_ADDRESS");
-        BioPriceFeed feed = new BioPriceFeed();
         IPermissioner p = new TermsAcceptedPermissioner();
 
         Tokenizer tokenizer = Tokenizer(
             address(
-                new ERC1967Proxy(
-                    address(new Tokenizer()), ""
+                address(
+                    new ERC1967Proxy(address(new Tokenizer()), 
+                    abi.encodeWithSelector(Tokenizer.initialize.selector, IPNFT(ipnftAddress)))
                 )
             )
         );
-        tokenizer.initialize(IPNFT(ipnftAddress), p);
 
+        CrowdSale crowdSale = new CrowdSale();
         StakedLockingCrowdSale stakedLockingCrowdSale = new StakedLockingCrowdSale();
 
         vm.stopBroadcast();
 
-        console.log("PRICEFEED_ADDRESS=%s", address(feed));
         console.log("TERMS_ACCEPTED_PERMISSIONER_ADDRESS=%s", address(p));
         console.log("TOKENIZER_ADDRESS=%s", address(tokenizer));
+        console.log("CROWDSALE_ADDRESS=%s", address(crowdSale));
         console.log("STAKED_LOCKING_CROWDSALE_ADDRESS=%s", address(stakedLockingCrowdSale));
     }
 }

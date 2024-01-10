@@ -24,8 +24,12 @@ contract DeployIpnftSuite is CommonScript {
     function run() public {
         prepareAddresses();
         vm.startBroadcast(deployer);
-        IPNFT ipnft = IPNFT(address(new ERC1967Proxy(address(new IPNFT()), "")));
-        ipnft.initialize();
+        IPNFT ipnft = IPNFT(
+            address(
+                new ERC1967Proxy(address(new IPNFT()), 
+                abi.encodeWithSelector(IPNFT.initialize.selector, ""))
+            )
+        );
 
         SchmackoSwap swap = new SchmackoSwap();
 
