@@ -77,7 +77,6 @@ contract TokenizerTest is Test {
         tokenizer11.upgradeToAndCall(address(new Tokenizer()), data);
         Tokenizer upgradedTokenizer = Tokenizer(mainnetTokenizer);
 
-        //upgradedTokenizer.setIPTokenImplementation(address(newIPTokenImplementation));
         assertEq(upgradedTokenizer.ipTokenImplementation(), address(newIPTokenImplementation));
         
         IPermissioner _permissioner = new BlindPermissioner();
