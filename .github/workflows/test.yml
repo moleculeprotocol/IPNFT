@@ -41,7 +41,7 @@ jobs:
         id: test
 
       - name: Run Hardhat tests
-        run: yarn hardhat test --network hardhat
+        run: yarn test
 
       # - name: Run Slither
       #   uses: crytic/slither-action@v0.2.0
