@@ -34,12 +34,14 @@ jobs:
         id: build
 
       - name: Run Forge tests
+        env:
+          MAINNET_RPC_URL: ${{ secrets.MAINNET_RPC_URL }}
         run: |
           forge test -vvv
         id: test
 
       - name: Run Hardhat tests
-        run: yarn hardhat test --network hardhat
+        run: yarn test
 
       # - name: Run Slither
       #   uses: crytic/slither-action@v0.2.0
