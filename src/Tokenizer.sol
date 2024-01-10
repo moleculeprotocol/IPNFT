@@ -36,6 +36,7 @@ contract Tokenizer is UUPSUpgradeable, OwnableUpgradeable {
 
     // Non Utilized, Left to insure no overlapping of storage slots ono proxy upgrades doesn't happen
     // please use ipTokenImplementation
+    /// @custom:oz-upgrades-unsafe-allow state-variable-immutable
     address immutable tokenImplementation;
 
     /// @dev the permissioner checks if senders have agreed to legal requirements
