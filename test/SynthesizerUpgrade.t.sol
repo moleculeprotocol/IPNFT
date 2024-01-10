@@ -20,7 +20,7 @@ import { AcceptAllAuthorizer } from "./helpers/AcceptAllAuthorizer.sol";
 import { TimelockedToken, StillLocked } from "../src/TimelockedToken.sol";
 
 import { FakeERC20 } from "../src/helpers/FakeERC20.sol";
-import { MustOwnIpnft, AlreadyTokenized, Tokenizer } from "../src/Tokenizer.sol";
+import { MustOwnIpnft, AlreadyTokenized, Tokenizer11 } from "../src/helpers/test-upgrades/Tokenizer11.sol";
 
 import { IPToken, Metadata as IPTMetadata, OnlyIssuerOrOwner, TokenCapped } from "../src/IPToken.sol";
 import { Molecules, Metadata as MoleculeMetadata } from "../src/helpers/test-upgrades/Molecules.sol";
@@ -117,11 +117,11 @@ contract SynthesizerUpgradeTest is Test {
         Molecules tokenContractOld = synthesizer.synthesizeIpnft(1, 100_000, "MOLE", agreementCid, xsignature);
 
         vm.startPrank(deployer);
-        Tokenizer tokenizerImpl = new Tokenizer();
+        Tokenizer11 tokenizerImpl = new Tokenizer11();
 
         synthesizer.upgradeTo(address(tokenizerImpl));
 
-        Tokenizer tokenizer = Tokenizer(address(synthesizer));
+        Tokenizer11 tokenizer = Tokenizer11(address(synthesizer));
 
         TermsAcceptedPermissioner termsPermissioner = new TermsAcceptedPermissioner();
         tokenizer.reinit(termsPermissioner);
@@ -222,10 +222,10 @@ contract SynthesizerUpgradeTest is Test {
 
         //upgrade after sale concluded
         vm.startPrank(deployer);
-        Tokenizer tokenizerImpl = new Tokenizer();
+        Tokenizer11 tokenizerImpl = new Tokenizer11();
         synthesizer.upgradeTo(address(tokenizerImpl));
 
-        Tokenizer tokenizer = Tokenizer(address(synthesizer));
+        Tokenizer11 tokenizer = Tokenizer11(address(synthesizer));
         TermsAcceptedPermissioner termsPermissioner = new TermsAcceptedPermissioner();
         tokenizer.reinit(termsPermissioner);
         vm.stopPrank();

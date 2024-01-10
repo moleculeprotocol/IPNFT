@@ -34,6 +34,8 @@ jobs:
         id: build
 
       - name: Run Forge tests
+        env:
+          MAINNET_RPC_URL: ${{ secrets.MAINNET_RPC_URL }}
         run: |
           forge test -vvv
         id: test

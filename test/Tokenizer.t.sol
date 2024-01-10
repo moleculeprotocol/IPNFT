@@ -18,7 +18,6 @@ import { AcceptAllAuthorizer } from "./helpers/AcceptAllAuthorizer.sol";
 
 import { FakeERC20 } from "../src/helpers/FakeERC20.sol";
 import { MustOwnIpnft, AlreadyTokenized, Tokenizer } from "../src/Tokenizer.sol";
-import { Tokenizer11 } from "../src/helpers/test-upgrades/Tokenizer11.sol";
 
 import { IPToken, OnlyIssuerOrOwner, TokenCapped } from "../src/IPToken.sol";
 import { Molecules } from "../src/helpers/test-upgrades/Molecules.sol";
@@ -50,11 +49,9 @@ contract TokenizerTest is Test {
     address escrow = makeAddr("escrow");
 
     IPNFT internal ipnft;
-    Tokenizer11 internal tokenizer11;
     Tokenizer internal tokenizer;
     SchmackoSwap internal schmackoSwap;
     IPermissioner internal blindPermissioner;
-    IPToken internal ipToken;
     FakeERC20 internal erc20;
 
     function setUp() public {
@@ -72,11 +69,9 @@ contract TokenizerTest is Test {
 
         blindPermissioner = new BlindPermissioner();
 
-        ipToken = new IPToken();
-
         tokenizer = Tokenizer(address(new ERC1967Proxy(address(new Tokenizer()), "")));
         tokenizer.initialize(ipnft, blindPermissioner);
-        tokenizer.setIPTokenImplementation(address(ipToken));
+        tokenizer.setIPTokenImplementation(address(new IPToken()));
 
         vm.stopPrank();
 

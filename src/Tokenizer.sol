@@ -12,7 +12,7 @@ import { IPNFT } from "./IPNFT.sol";
 error MustOwnIpnft();
 error AlreadyTokenized();
 
-/// @title Tokenizer 1.1
+/// @title Tokenizer 1.2
 /// @author molecule.to
 /// @notice tokenizes an IPNFT to an ERC20 token (called IPT) and controls its supply.
 contract Tokenizer is UUPSUpgradeable, OwnableUpgradeable {
@@ -27,10 +27,7 @@ contract Tokenizer is UUPSUpgradeable, OwnableUpgradeable {
         string symbol
     );
 
-    event IPTokenImplementationUpgraded(
-       address indexed oldAddress,
-       address indexed newAddress
-    );
+    event IPTokenImplementationUpgraded(address indexed oldAddress, address indexed newAddress);
 
     IPNFT internal ipnft;
 
@@ -49,6 +46,7 @@ contract Tokenizer is UUPSUpgradeable, OwnableUpgradeable {
      * @param _ipnft the IPNFT contract
      * @param _permissioner a permissioning contract that checks if callers have agreed to the tokenized token's legal agreements
      */
+
     function initialize(IPNFT _ipnft, IPermissioner _permissioner) external initializer {
         __UUPSUpgradeable_init();
         __Ownable_init();
@@ -63,26 +61,21 @@ contract Tokenizer is UUPSUpgradeable, OwnableUpgradeable {
     }
 
     /**
-     * 
+     *
      * @notice sets the new implementation address of the IPToken
      * @param _ipTokenImplementation address pointing to the new implementation
      */
-    function setIPTokenImplementation(
-        address _ipTokenImplementation
-        ) public onlyOwner {
+    function setIPTokenImplementation(address _ipTokenImplementation) public onlyOwner {
         /*
         could call some functions on old contract to make sure its tokenizer not another contract behind a proxy for safety
         */
         address oldIpTokenImplementation = ipTokenImplementation;
         ipTokenImplementation = _ipTokenImplementation;
-        emit IPTokenImplementationUpgraded(
-            oldIpTokenImplementation,
-            _ipTokenImplementation
-        );
+        emit IPTokenImplementationUpgraded(oldIpTokenImplementation, _ipTokenImplementation);
     }
 
     /**
-     * @dev called after an upgrade to reinitialize a new permissioner impl. This is 4 for görli compatibility
+     * @dev called after an upgrade to reinitialize a new permissioner impl.
      * @param _permissioner the new TermsPermissioner
      */
     function reinit(IPermissioner _permissioner) public onlyOwner reinitializer(5) {

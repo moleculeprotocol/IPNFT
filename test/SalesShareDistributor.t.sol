@@ -75,6 +75,8 @@ contract SalesShareDistributorTest is Test {
 
         blindPermissioner = new BlindPermissioner();
 
+        IPToken ipTokenImplementation = new IPToken();
+
         tokenizer = Tokenizer(
             address(
                 new ERC1967Proxy(
@@ -86,6 +88,7 @@ contract SalesShareDistributorTest is Test {
             )
         );
         tokenizer.initialize(ipnft, blindPermissioner);
+        tokenizer.setIPTokenImplementation(address(ipTokenImplementation));
 
         distributor = SalesShareDistributor(
             address(
