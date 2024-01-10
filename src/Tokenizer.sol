@@ -27,7 +27,7 @@ contract Tokenizer is UUPSUpgradeable, OwnableUpgradeable {
         string symbol
     );
 
-    event IPTokenUpgraded(
+    event IPTokenImplementationUpgraded(
        address indexed oldAddress,
        address indexed newAddress
     );
@@ -37,6 +37,8 @@ contract Tokenizer is UUPSUpgradeable, OwnableUpgradeable {
     //this is the old term to keep the storage layout intact
     mapping(uint256 => IPToken) public synthesized;
 
+    // Non Utilized, Left to insure no overlapping of storage slots ono proxy upgrades doesn't happen
+    // please use ipTokenImplementation
     address immutable tokenImplementation;
 
     /// @dev the permissioner checks if senders have agreed to legal requirements
@@ -73,7 +75,7 @@ contract Tokenizer is UUPSUpgradeable, OwnableUpgradeable {
         */
         address oldIpTokenImplementation = ipTokenImplementation;
         ipTokenImplementation = _ipTokenImplementation;
-        emit IPTokenUpgraded(
+        emit IPTokenImplementationUpgraded(
             oldIpTokenImplementation,
             _ipTokenImplementation
         );
