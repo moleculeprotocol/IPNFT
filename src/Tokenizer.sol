@@ -12,10 +12,10 @@ import { IPNFT } from "./IPNFT.sol";
 error MustOwnIpnft();
 error AlreadyTokenized();
 error ZeroAddress();
+
 /// @title Tokenizer 1.2
 /// @author molecule.to
-/// @notice tokenizes an IPNFT to an ERC20 token (called IPT) and controls its supply.
-
+/// @notice tokenizes an IPNFT to an ERC20 token (called IPToken or IPT) and controls its supply.
 contract Tokenizer is UUPSUpgradeable, OwnableUpgradeable {
     event TokensCreated(
         uint256 indexed moleculesId,
@@ -33,23 +33,23 @@ contract Tokenizer is UUPSUpgradeable, OwnableUpgradeable {
 
     IPNFT internal ipnft;
 
-    //this is the old term to keep the storage layout intact
+    /// @dev a map of all IPTs. We're staying with the the initial term "synthesized" to keep the storage layout intact
     mapping(uint256 => IPToken) public synthesized;
 
-    // Non Utilized, Left to insure no overlapping of storage slots ono proxy upgrades doesn't happen
-    // please use ipTokenImplementation
+    /// @dev not used, needed to ensure that storage slots are still in order after 1.1 -> 1.2, use ipTokenImplementation
     /// @custom:oz-upgrades-unsafe-allow state-variable-immutable
     address immutable tokenImplementation;
 
     /// @dev the permissioner checks if senders have agreed to legal requirements
     IPermissioner public permissioner;
 
+    /// @notice the IPToken implementation this Tokenizer spawns
     IPToken public ipTokenImplementation;
+
     /**
      * @param _ipnft the IPNFT contract
      * @param _permissioner a permissioning contract that checks if callers have agreed to the tokenized token's legal agreements
      */
-
     function initialize(IPNFT _ipnft, IPermissioner _permissioner) external initializer {
         __UUPSUpgradeable_init();
         __Ownable_init();
@@ -64,7 +64,6 @@ contract Tokenizer is UUPSUpgradeable, OwnableUpgradeable {
     }
 
     /**
-     *
      * @notice sets the new implementation address of the IPToken
      * @param _ipTokenImplementation address pointing to the new implementation
      */

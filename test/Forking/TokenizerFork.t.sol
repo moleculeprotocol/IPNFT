@@ -63,7 +63,7 @@ contract TokenizerForkTest is Test {
         vm.stopPrank();
 
         vm.startPrank(mainnetOwner);
-        bytes memory upgradeCallData = abi.encodeWithSignature("setIPTokenImplementation(address)", address(newIPTokenImplementation));
+        bytes memory upgradeCallData = abi.encodeWithSelector(Tokenizer.setIPTokenImplementation.selector, address(newIPTokenImplementation));
         tokenizer11.upgradeToAndCall(address(newTokenizerImplementation), upgradeCallData);
         Tokenizer upgradedTokenizer = Tokenizer(mainnetTokenizer);
 
