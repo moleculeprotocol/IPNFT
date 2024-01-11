@@ -80,14 +80,6 @@ contract Tokenizer is UUPSUpgradeable, OwnableUpgradeable {
         ipTokenImplementation = _ipTokenImplementation;
     }
 
-    function setPermissioner(IPermissioner _permissioner) external onlyOwner {
-        if (address(_permissioner) == address(0)) {
-            revert ZeroAddress();
-        }
-        emit PermissionerUpdated(permissioner, _permissioner);
-        permissioner = _permissioner;
-    }
-
     /**
      * @dev called after an upgrade to reinitialize a new permissioner impl.
      * @param _permissioner the new TermsPermissioner

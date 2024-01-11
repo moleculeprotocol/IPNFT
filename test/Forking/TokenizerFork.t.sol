@@ -16,7 +16,7 @@ import { IPermissioner, BlindPermissioner } from "../../src/Permissioner.sol";
 
 //import { SchmackoSwap, ListingState } from "../../src/SchmackoSwap.sol";
 
-contract TokenizerTest is Test {
+contract TokenizerForkTest is Test {
     using SafeERC20Upgradeable for IPToken;
 
     uint256 mainnetFork;
@@ -69,8 +69,7 @@ contract TokenizerTest is Test {
 
         assertEq(address(upgradedTokenizer.ipTokenImplementation()), address(newIPTokenImplementation));
 
-        upgradedTokenizer.setPermissioner(new BlindPermissioner());
-
+        deployCodeTo("Permissioner.sol:BlindPermissioner", "", address(upgradedTokenizer.permissioner()));
         vm.stopPrank();
 
         assertEq(ipnftMainnetInstance.ownerOf(valleyDaoIpnftId), valleyDaoMultisig);
