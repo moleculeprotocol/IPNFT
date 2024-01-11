@@ -11,10 +11,11 @@ import { IPNFT } from "./IPNFT.sol";
 
 error MustOwnIpnft();
 error AlreadyTokenized();
-
+error ZeroAddress();
 /// @title Tokenizer 1.2
 /// @author molecule.to
 /// @notice tokenizes an IPNFT to an ERC20 token (called IPT) and controls its supply.
+
 contract Tokenizer is UUPSUpgradeable, OwnableUpgradeable {
     event TokensCreated(
         uint256 indexed moleculesId,
@@ -27,7 +28,8 @@ contract Tokenizer is UUPSUpgradeable, OwnableUpgradeable {
         string symbol
     );
 
-    event IPTokenImplementationUpgraded(address indexed oldAddress, address indexed newAddress);
+    event IPTokenImplementationUpdated(IPToken indexed old, IPToken indexed _new);
+    event PermissionerUpdated(IPermissioner indexed old, IPermissioner indexed _new);
 
     IPNFT internal ipnft;
 
@@ -42,7 +44,7 @@ contract Tokenizer is UUPSUpgradeable, OwnableUpgradeable {
     /// @dev the permissioner checks if senders have agreed to legal requirements
     IPermissioner permissioner;
 
-    address public ipTokenImplementation;
+    IPToken public ipTokenImplementation;
     /**
      * @param _ipnft the IPNFT contract
      * @param _permissioner a permissioning contract that checks if callers have agreed to the tokenized token's legal agreements
@@ -66,20 +68,31 @@ contract Tokenizer is UUPSUpgradeable, OwnableUpgradeable {
      * @notice sets the new implementation address of the IPToken
      * @param _ipTokenImplementation address pointing to the new implementation
      */
-    function setIPTokenImplementation(address _ipTokenImplementation) public onlyOwner {
+    function setIPTokenImplementation(IPToken _ipTokenImplementation) external onlyOwner {
         /*
         could call some functions on old contract to make sure its tokenizer not another contract behind a proxy for safety
         */
-        address oldIpTokenImplementation = ipTokenImplementation;
+        if (address(_ipTokenImplementation) == address(0)) {
+            revert ZeroAddress();
+        }
+
+        emit IPTokenImplementationUpdated(ipTokenImplementation, _ipTokenImplementation);
         ipTokenImplementation = _ipTokenImplementation;
-        emit IPTokenImplementationUpgraded(oldIpTokenImplementation, _ipTokenImplementation);
+    }
+
+    function setPermissioner(IPermissioner _permissioner) external onlyOwner {
+        if (address(_permissioner) == address(0)) {
+            revert ZeroAddress();
+        }
+        emit PermissionerUpdated(permissioner, _permissioner);
+        permissioner = _permissioner;
     }
 
     /**
      * @dev called after an upgrade to reinitialize a new permissioner impl.
      * @param _permissioner the new TermsPermissioner
      */
-    function reinit(IPermissioner _permissioner) public onlyOwner reinitializer(5) {
+    function reinit(IPermissioner _permissioner) public onlyOwner reinitializer(4) {
         permissioner = _permissioner;
     }
 
@@ -105,7 +118,7 @@ contract Tokenizer is UUPSUpgradeable, OwnableUpgradeable {
         }
 
         // https://github.com/OpenZeppelin/workshops/tree/master/02-contracts-clone
-        token = IPToken(Clones.clone(ipTokenImplementation));
+        token = IPToken(Clones.clone(address(ipTokenImplementation)));
         string memory name = string.concat("IP Tokens of IPNFT #", Strings.toString(ipnftId));
         token.initialize(name, tokenSymbol, TokenMetadata(ipnftId, _msgSender(), agreementCid));
 

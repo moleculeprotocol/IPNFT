@@ -67,10 +67,10 @@ contract TokenizerTest is Test {
         tokenizer11.upgradeToAndCall(address(newTokenizerImplementation), upgradeCallData);
         Tokenizer upgradedTokenizer = Tokenizer(mainnetTokenizer);
 
-        assertEq(upgradedTokenizer.ipTokenImplementation(), address(newIPTokenImplementation));
+        assertEq(address(upgradedTokenizer.ipTokenImplementation()), address(newIPTokenImplementation));
 
-        IPermissioner _permissioner = new BlindPermissioner();
-        upgradedTokenizer.reinit(_permissioner);
+        upgradedTokenizer.setPermissioner(new BlindPermissioner());
+
         vm.stopPrank();
 
         assertEq(ipnftMainnetInstance.ownerOf(valleyDaoIpnftId), valleyDaoMultisig);
