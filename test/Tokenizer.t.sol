@@ -17,7 +17,7 @@ import { IPNFT } from "../src/IPNFT.sol";
 import { AcceptAllAuthorizer } from "./helpers/AcceptAllAuthorizer.sol";
 
 import { FakeERC20 } from "../src/helpers/FakeERC20.sol";
-import { MustOwnIpnft, AlreadyTokenized, Tokenizer } from "../src/Tokenizer.sol";
+import { MustOwnIpnft, AlreadyTokenized, Tokenizer, ZeroAddress } from "../src/Tokenizer.sol";
 
 import { IPToken, OnlyIssuerOrOwner, TokenCapped } from "../src/IPToken.sol";
 import { Molecules } from "../src/helpers/test-upgrades/Molecules.sol";
@@ -82,30 +82,18 @@ contract TokenizerTest is Test {
         vm.stopPrank();
     }
 
-    function testSetPermissioner() public {
-        vm.startPrank(deployer);
-        assertEq(address(tokenizer.permissioner()), address(blindPermissioner));
-        BlindPermissioner newPermissioner = new BlindPermissioner();
-        tokenizer.setPermissioner(newPermissioner);
-        assertEq(address(tokenizer.permissioner()), address(newPermissioner)); 
-        vm.expectRevert();
-        tokenizer.setPermissioner(IPermissioner(address(0)));
-        vm.stopPrank();
-        vm.startPrank(originalOwner);
-        vm.expectRevert();
-        tokenizer.setPermissioner(newPermissioner);
-        vm.stopPrank();
-    }
     function testSetIPTokenImplementation() public {
         vm.startPrank(deployer);
         IPToken newIPTokenImplementation = new IPToken();
         tokenizer.setIPTokenImplementation(newIPTokenImplementation);
-        assertEq(address(tokenizer.ipTokenImplementation()), address(newIPTokenImplementation)); 
-        vm.expectRevert();
+        assertEq(address(tokenizer.ipTokenImplementation()), address(newIPTokenImplementation));
+
+        vm.expectRevert(ZeroAddress.selector);
         tokenizer.setIPTokenImplementation(IPToken(address(0)));
         vm.stopPrank();
+
         vm.startPrank(originalOwner);
-        vm.expectRevert();
+        vm.expectRevert("Ownable: caller is not the owner");
         tokenizer.setIPTokenImplementation(newIPTokenImplementation);
         vm.stopPrank();
     }
