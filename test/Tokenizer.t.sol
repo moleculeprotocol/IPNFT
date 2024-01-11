@@ -82,6 +82,34 @@ contract TokenizerTest is Test {
         vm.stopPrank();
     }
 
+    function testSetPermissioner() public {
+        vm.startPrank(deployer);
+        assertEq(address(tokenizer.permissioner()), address(blindPermissioner));
+        BlindPermissioner newPermissioner = new BlindPermissioner();
+        tokenizer.setPermissioner(newPermissioner);
+        assertEq(address(tokenizer.permissioner()), address(newPermissioner)); 
+        vm.expectRevert();
+        tokenizer.setPermissioner(IPermissioner(address(0)));
+        vm.stopPrank();
+        vm.startPrank(originalOwner);
+        vm.expectRevert();
+        tokenizer.setPermissioner(newPermissioner);
+        vm.stopPrank();
+    }
+    function testSetIPTokenImplementation() public {
+        vm.startPrank(deployer);
+        IPToken newIPTokenImplementation = new IPToken();
+        tokenizer.setIPTokenImplementation(newIPTokenImplementation);
+        assertEq(address(tokenizer.ipTokenImplementation()), address(newIPTokenImplementation)); 
+        vm.expectRevert();
+        tokenizer.setIPTokenImplementation(IPToken(address(0)));
+        vm.stopPrank();
+        vm.startPrank(originalOwner);
+        vm.expectRevert();
+        tokenizer.setIPTokenImplementation(newIPTokenImplementation);
+        vm.stopPrank();
+    }
+
     function testUrl() public {
         vm.startPrank(originalOwner);
         IPToken tokenContract = tokenizer.tokenizeIpnft(1, 100_000, "IPT", agreementCid, "");
