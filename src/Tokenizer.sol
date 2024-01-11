@@ -42,7 +42,7 @@ contract Tokenizer is UUPSUpgradeable, OwnableUpgradeable {
     address immutable tokenImplementation;
 
     /// @dev the permissioner checks if senders have agreed to legal requirements
-    IPermissioner permissioner;
+    IPermissioner public permissioner;
 
     IPToken public ipTokenImplementation;
     /**
