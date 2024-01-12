@@ -37,11 +37,11 @@ Defender Relayer that signs off minting requests from our side:
 | Crowdsale              | [0x8c83DA72b4591bE526ca8C7cb848bC89c0e23373](https://goerli.etherscan.io/address/0x8c83DA72b4591bE526ca8C7cb848bC89c0e23373#code>) | <a href="https://thirdweb.com/goerli/0x8c83DA72b4591bE526ca8C7cb848bC89c0e23373?utm_source=contract_badge" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0x8c83DA72b4591bE526ca8C7cb848bC89c0e23373&theme=dark&chainId=5" alt="View contract" /></a> |
 | StakedLockingCrowdSale | [0x46c3369dece07176ad7164906d3593aa4c126d35](https://goerli.etherscan.io/address/0x46c3369dece07176ad7164906d3593aa4c126d35#code)  | <a href="https://thirdweb.com/goerli/0x46c3369dece07176ad7164906d3593aa4c126d35?utm_source=contract_badge" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0x46c3369dece07176ad7164906d3593aa4c126d35&theme=dark&chainId=5" alt="View contract" /></a> |
 | SignedMintAuthorizer   | [0x5e555eE24DB66825171Ac63EA614864987CEf1Af](https://goerli.etherscan.io/address/0x5e555eE24DB66825171Ac63EA614864987CEf1Af#code)  | <a href="https://thirdweb.com/goerli/0x5e555eE24DB66825171Ac63EA614864987CEf1Af?utm_source=contract_badge" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0x5e555eE24DB66825171Ac63EA614864987CEf1Af&theme=dark&chainId=5" alt="View contract" /></a> |
+| IPToken Implementation | [0x315C39cF2fC52f7f4CE86689d6585091b36FF543](https://goerli.etherscan.io/address/0x315C39cF2fC52f7f4CE86689d6585091b36FF543#code)  | <a href="https://thirdweb.com/goerli/0x315C39cF2fC52f7f4CE86689d6585091b36FF543?utm_source=contract_badge" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0x315C39cF2fC52f7f4CE86689d6585091b36FF543&theme=dark&chainId=5" alt="View contract" /></a> |
 
-- Subgraph: https://api.thegraph.com/subgraphs/name/moleculeprotocol/ip-nft-goerli>
+- Subgraph: https://api.thegraph.com/subgraphs/name/moleculeprotocol/ip-nft-goerli
 
-- Tokenizer: 0xb12494eeA6B992d0A1Db3C5423BE7a2d2337F58c (formerly known as Synthesizer)
-  Implementation: 0x64580CC2c28aaEd31B2DF9a154dA9620C690BDec (reinit 4)
+- Tokenizer Implementation 1.2: 0x18E5ae026CFC8020b2eDbA7050eA6144Fd313c02 (reinit 4) <https://goerli.etherscan.io/address/0x18E5ae026CFC8020b2eDbA7050eA6144Fd313c02#code>
 
 - Bio pricefeed: 0x8647dEFdEAAdF5448d021B364B2F17815aba4360
   <https://goerli.etherscan.io/address/0x8647defdeaadf5448d021b364b2f17815aba4360#code>
