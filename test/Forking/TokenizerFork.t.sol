@@ -11,7 +11,7 @@ import { IPNFT } from "../../src/IPNFT.sol";
 
 import { MustOwnIpnft, AlreadyTokenized, Tokenizer } from "../../src/Tokenizer.sol";
 import { Tokenizer11 } from "../../src/helpers/test-upgrades/Tokenizer11.sol";
-import { IPToken, OnlyIssuerOrOwner, TokenCapped } from "../../src/IPToken.sol";
+import { IPToken, OnlyIssuerOrOwner, TokenCapped, Metadata } from "../../src/IPToken.sol";
 import { IPermissioner, BlindPermissioner } from "../../src/Permissioner.sol";
 
 //import { SchmackoSwap, ListingState } from "../../src/SchmackoSwap.sol";
@@ -70,6 +70,13 @@ contract TokenizerForkTest is Test {
         assertEq(address(upgradedTokenizer.ipTokenImplementation()), address(newIPTokenImplementation));
 
         deployCodeTo("Permissioner.sol:BlindPermissioner", "", address(upgradedTokenizer.permissioner()));
+        vm.stopPrank();
+
+        vm.startPrank(alice);
+        vm.expectRevert("Initializable: contract is already initialized");
+        newTokenizerImplementation.initialize(IPNFT(address(0)), BlindPermissioner(address(0)));
+        vm.expectRevert("Initializable: contract is already initialized");
+        newIPTokenImplementation.initialize("Foo", "Bar", Metadata(2, alice, "abcde"));
         vm.stopPrank();
 
         assertEq(ipnftMainnetInstance.ownerOf(valleyDaoIpnftId), valleyDaoMultisig);
