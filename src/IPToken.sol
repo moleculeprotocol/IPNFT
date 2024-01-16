@@ -40,6 +40,10 @@ contract IPToken is ERC20BurnableUpgradeable, OwnableUpgradeable {
         _metadata = metadata_;
     }
 
+    constructor() {
+        _disableInitializers();
+    }
+
     modifier onlyIssuerOrOwner() {
         if (_msgSender() != _metadata.originalOwner && _msgSender() != owner()) {
             revert OnlyIssuerOrOwner();
