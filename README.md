@@ -18,7 +18,9 @@ IP-NFTs allow their users to tokenize intellectual property. This repo contains 
 
 - Subgraph: <https://api.thegraph.com/subgraphs/name/moleculeprotocol/ip-nft-mainnet>
 
-tokenizer implementation 2: 0x9C70FA8c87D7e94Fd63eeCCcA657D5c4224a36f3
+tokenizer implementation 1.2: 0xE8701330F196FeFe415b28dAA767AB076F42557A
+tokenizer implementation 1.1: 0x9C70FA8c87D7e94Fd63eeCCcA657D5c4224a36f3
+iptoken implementation: 0x0d6866f3369e4825CE07F226A424F1c11861AdD1
 ipnft implementation 2.4: 0x6B179Dffac5E190c670176606f552cB792847f80
 
 Defender Relayer that signs off minting requests from our side:
