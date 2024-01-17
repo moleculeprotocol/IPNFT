@@ -17,7 +17,7 @@ import { IPNFT } from "../src/IPNFT.sol";
 import { AcceptAllAuthorizer } from "./helpers/AcceptAllAuthorizer.sol";
 
 import { FakeERC20 } from "../src/helpers/FakeERC20.sol";
-import { MustOwnIpnft, AlreadyTokenized, Tokenizer } from "../src/Tokenizer.sol";
+import { MustOwnIpnft, AlreadyTokenized, Tokenizer, ZeroAddress } from "../src/Tokenizer.sol";
 
 import { IPToken, OnlyIssuerOrOwner, TokenCapped } from "../src/IPToken.sol";
 import { Molecules } from "../src/helpers/test-upgrades/Molecules.sol";
@@ -52,7 +52,6 @@ contract TokenizerTest is Test {
     Tokenizer internal tokenizer;
     SchmackoSwap internal schmackoSwap;
     IPermissioner internal blindPermissioner;
-
     FakeERC20 internal erc20;
 
     function setUp() public {
@@ -72,6 +71,7 @@ contract TokenizerTest is Test {
 
         tokenizer = Tokenizer(address(new ERC1967Proxy(address(new Tokenizer()), "")));
         tokenizer.initialize(ipnft, blindPermissioner);
+        tokenizer.setIPTokenImplementation(new IPToken());
 
         vm.stopPrank();
 
@@ -79,6 +79,22 @@ contract TokenizerTest is Test {
         vm.startPrank(originalOwner);
         uint256 reservationId = ipnft.reserve();
         ipnft.mintReservation{ value: MINTING_FEE }(originalOwner, reservationId, ipfsUri, DEFAULT_SYMBOL, "");
+        vm.stopPrank();
+    }
+
+    function testSetIPTokenImplementation() public {
+        vm.startPrank(deployer);
+        IPToken newIPTokenImplementation = new IPToken();
+        tokenizer.setIPTokenImplementation(newIPTokenImplementation);
+        assertEq(address(tokenizer.ipTokenImplementation()), address(newIPTokenImplementation));
+
+        vm.expectRevert(ZeroAddress.selector);
+        tokenizer.setIPTokenImplementation(IPToken(address(0)));
+        vm.stopPrank();
+
+        vm.startPrank(originalOwner);
+        vm.expectRevert("Ownable: caller is not the owner");
+        tokenizer.setIPTokenImplementation(newIPTokenImplementation);
         vm.stopPrank();
     }
 
@@ -197,42 +213,4 @@ contract TokenizerTest is Test {
 
         assertEq(tokenContract.balanceOf(bob), 10_000);
     }
-
-    // function testCanUpgradeErc20TokenImplementation() public {
-    //     vm.startPrank(deployer);
-    //     vm.stopPrank();
-
-    //     vm.startPrank(originalOwner);
-    //     IPToken tokenContractOld = tokenizer.tokenizeIpnft(1, 100_000, "IPT", agreementCid, "");
-    //     vm.stopPrank();
-
-    //     vm.startPrank(deployer);
-    //     TokenizerNext synthNext = new TokenizerNext();
-    //     tokenizer.upgradeTo(address(synthNext));
-    //     TokenizerNext synth2 = TokenizerNext(address(tokenizer));
-
-    //     IPermissioner _permissioner = new BlindPermissioner();
-    //     synth2.reinit(_permissioner);
-    //     vm.stopPrank();
-
-    //     assertEq(tokenContractOld.balanceOf(originalOwner), 100_000);
-
-    //     vm.deal(originalOwner, MINTING_FEE);
-    //     vm.startPrank(originalOwner);
-    //     uint256 reservationId = ipnft.reserve();
-    //     ipnft.mintReservation{ value: MINTING_FEE }(originalOwner, reservationId, ipfsUri, DEFAULT_SYMBOL, "");
-    //     IPToken tokenContractNew = synth2.tokenizeIpnft(2, 70_000, agreementCid, "");
-    //     vm.stopPrank();
-
-    //     assertEq(tokenContractNew.balanceOf(originalOwner), 70_000);
-
-    //     IPTokenNext newTokenImpl = IPTokenNext(address(tokenContractNew));
-
-    //     newTokenImpl.setAStateVar(42);
-    //     assertEq(newTokenImpl.aNewStateVar(), 42);
-
-    //     IPTokenNext oldTokenImplWrapped = IPTokenNext(address(tokenContractOld));
-    //     vm.expectRevert();
-    //     oldTokenImplWrapped.setAStateVar(42);
-    // }
 }

@@ -7,25 +7,27 @@ import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
 import { IPToken, Metadata } from "../src/IPToken.sol";
 import { CrowdSale, Sale, SaleInfo, SaleState, BadDecimals } from "../src/crowdsale/CrowdSale.sol";
 import { StakedLockingCrowdSale, BadPrice } from "../src/crowdsale/StakedLockingCrowdSale.sol";
-import { IPermissioner, TermsAcceptedPermissioner, InvalidSignature } from "../src/Permissioner.sol";
-
+import { IPermissioner, TermsAcceptedPermissioner, InvalidSignature, BlindPermissioner } from "../src/Permissioner.sol";
+import { MustOwnIpnft, AlreadyTokenized, Tokenizer, ZeroAddress } from "../src/Tokenizer.sol";
+import { IPNFT } from "../src/IPNFT.sol";
 import { TokenVesting } from "@moleculeprotocol/token-vesting/TokenVesting.sol";
 import { TimelockedToken } from "../src/TimelockedToken.sol";
 import { FakeERC20 } from "../src/helpers/FakeERC20.sol";
 //import { BioPriceFeed, IPriceFeedConsumer } from "../src/BioPriceFeed.sol";
 import { CrowdSaleHelpers } from "./helpers/CrowdSaleHelpers.sol";
+import { AcceptAllAuthorizer } from "./helpers/AcceptAllAuthorizer.sol";
 
 contract CrowdSalePermissionedTest is Test {
     address deployer = makeAddr("chucknorris");
     address emitter = makeAddr("emitter");
+    address anyone = makeAddr("anyone");
     address bidder;
     uint256 bidderPk;
-
-    address anyone = makeAddr("anyone");
 
     IPToken internal auctionToken;
     FakeERC20 internal biddingToken;
@@ -39,27 +41,47 @@ contract CrowdSalePermissionedTest is Test {
 
     StakedLockingCrowdSale internal crowdSale;
 
+    uint256 MINTING_FEE = 0.001 ether;
+    string agreementCid = "bafkrei";
+
     function setUp() public {
         (bidder, bidderPk) = makeAddrAndKey("bidder");
-        vm.startPrank(deployer);
 
-        auctionToken = new IPToken();
-        auctionToken.initialize("IPTOKENS", "IPT-0001", Metadata(42, msg.sender, "ipfs://abcde"));
+        vm.startPrank(deployer);
+        IPNFT ipnft = IPNFT(address(new ERC1967Proxy(address(new IPNFT()), "")));
+        ipnft.initialize();
+        ipnft.setAuthorizer(new AcceptAllAuthorizer());
+
+        Tokenizer tokenizer = Tokenizer(address(new ERC1967Proxy(address(new Tokenizer()), "")));
+        tokenizer.initialize(ipnft, new BlindPermissioner());
+        tokenizer.setIPTokenImplementation(new IPToken());
 
         biddingToken = new FakeERC20("USD token", "USDC");
         daoToken = new FakeERC20("DAO token", "DAO");
 
         crowdSale = new StakedLockingCrowdSale();
-        auctionToken.issue(emitter, 500_000 ether);
 
         vestedDao = new TokenVesting(
             daoToken,
             string(abi.encodePacked("Vested ", daoToken.name())),
             string(abi.encodePacked("v", daoToken.symbol()))
         );
-
         vestedDao.grantRole(vestedDao.ROLE_CREATE_SCHEDULE(), address(crowdSale));
         crowdSale.trustVestingContract(vestedDao);
+        vm.stopPrank();
+
+        vm.startPrank(emitter);
+        vm.deal(emitter, MINTING_FEE);
+        uint256 reservationId = ipnft.reserve();
+        ipnft.mintReservation{ value: MINTING_FEE }(emitter, reservationId, "", "", "");
+
+        auctionToken = tokenizer.tokenizeIpnft(1, 100_000, "IPT", agreementCid, "");
+        auctionToken.issue(emitter, 500_000 ether);
+        vm.stopPrank();
+
+        vm.startPrank(deployer);
+        permissioner = new TermsAcceptedPermissioner();
+        tokenizer.reinit(permissioner);
         vm.stopPrank();
 
         vm.startPrank(bidder);
@@ -68,8 +90,6 @@ contract CrowdSalePermissionedTest is Test {
         biddingToken.approve(address(crowdSale), 1_000_000 ether);
         daoToken.approve(address(crowdSale), 1_000_000 ether);
         vm.stopPrank();
-
-        permissioner = new TermsAcceptedPermissioner();
     }
 
     function testPermissionedSettlementAndSimpleClaims() public {
