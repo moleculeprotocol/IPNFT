@@ -79,6 +79,13 @@ contract TokenizerForkTest is Test {
         newIPTokenImplementation.initialize("Foo", "Bar", Metadata(2, alice, "abcde"));
         vm.stopPrank();
 
+        vm.startPrank(mainnetOwner);
+        vm.expectRevert("Initializable: contract is already initialized");
+        upgradedTokenizer.initialize(IPNFT(address(0)), BlindPermissioner(address(0)));
+        vm.expectRevert("Initializable: contract is already initialized");
+        upgradedTokenizer.reinit(BlindPermissioner(address(0)));
+        vm.stopPrank();
+
         assertEq(ipnftMainnetInstance.ownerOf(valleyDaoIpnftId), valleyDaoMultisig);
 
         vm.startPrank(valleyDaoMultisig);

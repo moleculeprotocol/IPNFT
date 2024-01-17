@@ -20,7 +20,7 @@ IP-NFTs allow their users to tokenize intellectual property. This repo contains 
 
 tokenizer implementation 1.2: 0xE8701330F196FeFe415b28dAA767AB076F42557A
 tokenizer implementation 1.1: 0x9C70FA8c87D7e94Fd63eeCCcA657D5c4224a36f3
-iptoken implementation: 0x0d6866f3369e4825CE07F226A424F1c11861AdD1
+iptoken implementation: 0x9E4fc6E6d1A64e3429aB852d3CB31AD7aa06997A
 ipnft implementation 2.4: 0x6B179Dffac5E190c670176606f552cB792847f80
 
 Defender Relayer that signs off minting requests from our side:
@@ -39,7 +39,7 @@ Defender Relayer that signs off minting requests from our side:
 | Crowdsale              | [0x8c83DA72b4591bE526ca8C7cb848bC89c0e23373](https://goerli.etherscan.io/address/0x8c83DA72b4591bE526ca8C7cb848bC89c0e23373#code>) | <a href="https://thirdweb.com/goerli/0x8c83DA72b4591bE526ca8C7cb848bC89c0e23373?utm_source=contract_badge" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0x8c83DA72b4591bE526ca8C7cb848bC89c0e23373&theme=dark&chainId=5" alt="View contract" /></a> |
 | StakedLockingCrowdSale | [0x46c3369dece07176ad7164906d3593aa4c126d35](https://goerli.etherscan.io/address/0x46c3369dece07176ad7164906d3593aa4c126d35#code)  | <a href="https://thirdweb.com/goerli/0x46c3369dece07176ad7164906d3593aa4c126d35?utm_source=contract_badge" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0x46c3369dece07176ad7164906d3593aa4c126d35&theme=dark&chainId=5" alt="View contract" /></a> |
 | SignedMintAuthorizer   | [0x5e555eE24DB66825171Ac63EA614864987CEf1Af](https://goerli.etherscan.io/address/0x5e555eE24DB66825171Ac63EA614864987CEf1Af#code)  | <a href="https://thirdweb.com/goerli/0x5e555eE24DB66825171Ac63EA614864987CEf1Af?utm_source=contract_badge" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0x5e555eE24DB66825171Ac63EA614864987CEf1Af&theme=dark&chainId=5" alt="View contract" /></a> |
-| IPToken Implementation | [0x315C39cF2fC52f7f4CE86689d6585091b36FF543](https://goerli.etherscan.io/address/0x315C39cF2fC52f7f4CE86689d6585091b36FF543#code)  | <a href="https://thirdweb.com/goerli/0x315C39cF2fC52f7f4CE86689d6585091b36FF543?utm_source=contract_badge" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0x315C39cF2fC52f7f4CE86689d6585091b36FF543&theme=dark&chainId=5" alt="View contract" /></a> |
+| IPToken Implementation | [0x38Ca0fEEc7cd48629f9388727bfA747859a6feE7](https://goerli.etherscan.io/address/0x38Ca0fEEc7cd48629f9388727bfA747859a6feE7#code)  | <a href="https://thirdweb.com/goerli/0x38Ca0fEEc7cd48629f9388727bfA747859a6feE7?utm_source=contract_badge" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0x38Ca0fEEc7cd48629f9388727bfA747859a6feE7&theme=dark&chainId=5" alt="View contract" /></a> |
 
 - Subgraph: https://api.thegraph.com/subgraphs/name/moleculeprotocol/ip-nft-goerli
 
