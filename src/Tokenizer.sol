@@ -8,6 +8,7 @@ import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 import { IPToken, Metadata as TokenMetadata } from "./IPToken.sol";
 import { IPermissioner } from "./Permissioner.sol";
 import { IPNFT } from "./IPNFT.sol";
+import { IPSeedMarket } from "./IPSeedMarket.sol";
 
 error MustOwnIpnft();
 error AlreadyTokenized();
@@ -31,7 +32,7 @@ contract Tokenizer is UUPSUpgradeable, OwnableUpgradeable {
     event IPTokenImplementationUpdated(IPToken indexed old, IPToken indexed _new);
     event PermissionerUpdated(IPermissioner indexed old, IPermissioner indexed _new);
 
-    IPNFT internal ipnft;
+    IPNFT public ipnft;
 
     /// @dev a map of all IPTs. We're staying with the the initial term "synthesized" to keep the storage layout intact
     mapping(uint256 => IPToken) public synthesized;
@@ -46,15 +47,18 @@ contract Tokenizer is UUPSUpgradeable, OwnableUpgradeable {
     /// @notice the IPToken implementation this Tokenizer spawns
     IPToken public ipTokenImplementation;
 
+    IPSeedMarket public seedMarket;
+
     /**
      * @param _ipnft the IPNFT contract
      * @param _permissioner a permissioning contract that checks if callers have agreed to the tokenized token's legal agreements
      */
-    function initialize(IPNFT _ipnft, IPermissioner _permissioner) external initializer {
+    function initialize(IPNFT _ipnft, IPermissioner _permissioner, IPSeedMarket _market) external initializer {
         __UUPSUpgradeable_init();
         __Ownable_init();
         ipnft = _ipnft;
         permissioner = _permissioner;
+        seedMarket = _seedMarket;
     }
 
     /// @custom:oz-upgrades-unsafe-allow constructor
@@ -97,13 +101,10 @@ contract Tokenizer is UUPSUpgradeable, OwnableUpgradeable {
      * @param signedAgreement the sender's signature over the signed agreemeent text (must be created on the client)
      * @return token a new created ERC20 token contract that represents the tokenized ipnft
      */
-    function tokenizeIpnft(
-        uint256 ipnftId,
-        uint256 tokenAmount,
-        string memory tokenSymbol,
-        string memory agreementCid,
-        bytes calldata signedAgreement
-    ) external returns (IPToken token) {
+    function tokenizeIpnft(uint256 ipnftId, string memory tokenSymbol, string memory agreementCid, bytes calldata signedAgreement)
+        external
+        returns (IPToken token)
+    {
         if (ipnft.ownerOf(ipnftId) != _msgSender()) {
             revert MustOwnIpnft();
         }
@@ -124,7 +125,7 @@ contract Tokenizer is UUPSUpgradeable, OwnableUpgradeable {
         //this has been called MoleculesCreated before
         emit TokensCreated(tokenHash, ipnftId, address(token), _msgSender(), tokenAmount, agreementCid, name, tokenSymbol);
         permissioner.accept(token, _msgSender(), signedAgreement);
-        token.issue(_msgSender(), tokenAmount);
+        // token.issue(_msgSender(), tokenAmount);
     }
 
     /// @notice upgrade authorization logic

@@ -34,6 +34,8 @@ contract IPToken is ERC20BurnableUpgradeable, OwnableUpgradeable {
     bool public capped;
     Metadata internal _metadata;
 
+    bool public transferable;
+
     function initialize(string calldata name, string calldata symbol, Metadata calldata metadata_) external initializer {
         __Ownable_init();
         __ERC20_init(name, symbol);
@@ -65,6 +67,20 @@ contract IPToken is ERC20BurnableUpgradeable, OwnableUpgradeable {
 
     function hash() external view returns (uint256) {
         return uint256(keccak256(abi.encodePacked(_metadata.originalOwner, _metadata.ipnftId)));
+    }
+
+    function stopTransfers() external onlyIssuerOrOwner {
+        transferable = false;
+    }
+
+    function _transfer(address from, address to, uint256 amount) internal virtual override {
+        if (!transferable) {
+            if (from != address(0) || to != address(0)) {
+                revert("arbitrary transfers are paused");
+            }
+        }
+
+        super._transfer(from, to, amount);
     }
 
     /**

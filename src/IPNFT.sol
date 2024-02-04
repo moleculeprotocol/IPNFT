@@ -10,6 +10,8 @@ import { CountersUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/C
 import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import { IAuthorizeMints, SignedMintAuthorization } from "./IAuthorizeMints.sol";
 import { IReservable } from "./IReservable.sol";
+import { IPToken } from "./IPToken.sol";
+import { Tokenizer } from "./Tokenizer.sol";
 
 /*
  ______ _______         __    __ ________ ________
@@ -26,7 +28,13 @@ import { IReservable } from "./IReservable.sol";
 /// @title IPNFT V2.4
 /// @author molecule.to
 /// @notice IP-NFTs capture intellectual property to be traded and synthesized
-contract IPNFT is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IReservable, UUPSUpgradeable, OwnableUpgradeable, PausableUpgradeable {
+
+enum IPNFTState {
+    Proposed,
+    Assigned
+}
+
+contract IPNFT is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, UUPSUpgradeable, OwnableUpgradeable, PausableUpgradeable {
     using CountersUpgradeable for CountersUpgradeable.Counter;
 
     CountersUpgradeable.Counter private _reservationCounter;
@@ -44,12 +52,15 @@ contract IPNFT is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IReser
     /// @notice an IPNFT's base symbol, to be determined by the minter / owner, e.g. BIO-00001
     mapping(uint256 => string) public symbol;
 
-    event Reserved(address indexed reserver, uint256 indexed reservationId);
+    ///--- 2.5:
+    mapping(uint256 => IPNFTState) public state;
+    mapping(uint256 => IPToken) public ipts;
+
     event IPNFTMinted(address indexed owner, uint256 indexed tokenId, string tokenURI, string symbol);
     event ReadAccessGranted(uint256 indexed tokenId, address indexed reader, uint256 until);
     event AuthorizerUpdated(address authorizer);
 
-    error NotOwningReservation(uint256 id);
+    error InvalidTokenId();
     error ToZeroAddress();
     error Unauthorized();
     error InsufficientBalance();
@@ -67,7 +78,6 @@ contract IPNFT is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IReser
         __Ownable_init();
         __Pausable_init();
         __ERC721_init("IPNFT", "IPNFT");
-        _reservationCounter.increment(); //start at 1.
     }
 
     function pause() external onlyOwner {
@@ -83,6 +93,13 @@ contract IPNFT is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IReser
         emit AuthorizerUpdated(address(authorizer_));
     }
 
+    /**
+     * @notice computes the token id for a given sourcer and project id
+     */
+    function computeTokenId(address sourcer, string memory streamId) public pure returns (uint256) {
+        return uint256(keccak256(abi.encodePacked(sourcer, streamId)));
+    }
+
     /// @notice https://docs.opensea.io/docs/contract-level-metadata
     function contractURI() public pure returns (string memory) {
         return "https://mint.molecule.to/contract-metadata/ipnft.json";
@@ -92,54 +109,48 @@ contract IPNFT is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IReser
      * @notice reserves a new token id. Checks that the caller is authorized, according to the current implementation of IAuthorizeMints.
      * @return reservationId a new reservation id
      */
-    function reserve() external whenNotPaused returns (uint256 reservationId) {
-        if (!mintAuthorizer.authorizeReservation(_msgSender())) {
-            revert Unauthorized();
-        }
-        reservationId = _reservationCounter.current();
-        _reservationCounter.increment();
-        reservations[reservationId] = _msgSender();
-        emit Reserved(_msgSender(), reservationId);
-    }
+    // function reserve() external whenNotPaused returns (uint256 reservationId) {
+    //     if (!mintAuthorizer.authorizeReservation(_msgSender())) {
+    //         revert Unauthorized();
+    //     }
+    //     reservationId = _reservationCounter.current();
+    //     _reservationCounter.increment();
+    //     reservations[reservationId] = _msgSender();
+    //     emit Reserved(_msgSender(), reservationId);
+    // }
 
     /**
      * @notice mints an IPNFT with `tokenURI` as source of metadata. Invalidates the reservation. Redeems `mintpassId` on the authorizer contract
      * @notice We are charging a nominal fee to symbolically represent the transfer of ownership rights, for a price of .001 ETH (<$2USD at current prices). This helps the ensure the protocol is affordable to almost all projects, but discourages frivolous IP-NFT minting.
      *
-     * @param to the recipient of the NFT
-     * @param reservationId the reserved token id that has been reserved with `reserve()`
-     * @param _tokenURI a location that resolves to a valid IP-NFT metadata structure
-     * @param _symbol a symbol that represents the IPNFT's derivatives. Can be changed by the owner
+     * @param tokenId the precomputed token id, contains the sourcer's address as its hash
+     * @param streamId the orbis project id (usually a base36 encoded ceramic stream id)
+     * @param to the first owner of the ipnft
      * @param authorization a bytes encoded parameter that's handed to the current authorizer
-     * @return the `reservationId`
      */
-    function mintReservation(address to, uint256 reservationId, string calldata _tokenURI, string calldata _symbol, bytes calldata authorization)
-        external
-        payable
-        override
-        whenNotPaused
-        returns (uint256)
-    {
-        if (reservations[reservationId] != _msgSender()) {
-            revert NotOwningReservation(reservationId);
+    function spawn(uint256 tokenId, string calldata streamId, address to, bytes calldata authorization) external payable whenNotPaused {
+        if (bytes(streamId).length < 10 || tokenId != computeTokenId(_msgSender(), streamId)) {
+            revert InvalidTokenId();
         }
 
-        if (msg.value < SYMBOLIC_MINT_FEE) {
-            revert MintingFeeTooLow();
-        }
+        //todo if (msg.value < SYMBOLIC_MINT_FEE) {
+        //     revert MintingFeeTooLow();
+        // }
 
-        if (!mintAuthorizer.authorizeMint(_msgSender(), to, abi.encode(SignedMintAuthorization(reservationId, _tokenURI, authorization)))) {
-            revert Unauthorized();
-        }
+        //todo if (!mintAuthorizer.authorizeMint(_msgSender(), to, abi.encode(SignedMintAuthorization(reservationId, _tokenURI, authorization)))) {
+        //     revert Unauthorized();
+        // }
 
-        delete reservations[reservationId];
-        symbol[reservationId] = _symbol;
-        mintAuthorizer.redeem(authorization);
+        // delete reservations[reservationId];
+        // symbol[reservationId] = _symbol;
+        // mintAuthorizer.redeem(authorization);
 
-        _mint(to, reservationId);
-        _setTokenURI(reservationId, _tokenURI);
-        emit IPNFTMinted(to, reservationId, _tokenURI, _symbol);
-        return reservationId;
+        state[tokenId] = IPNFTState.Proposed;
+        _setTokenURI(tokenId, streamId);
+
+        _mint(to, tokenId);
+        emit IPNFTMinted(to, tokenId, streamId, "");
+        //return reservationId;
     }
 
     /**
