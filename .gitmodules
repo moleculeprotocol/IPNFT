@@ -27,3 +27,6 @@
 [submodule "lib/solidity-base64"]
 	path = lib/solidity-base64
 	url = https://github.com/hir0min/solidity-base64
+[submodule "lib/prb-math"]
+	path = lib/prb-math
+	url = https://github.com/PaulRBerg/prb-math
