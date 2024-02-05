@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.18;
+pragma solidity ^0.8.18;
 
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
@@ -26,7 +26,6 @@ interface IPriceFeedConsumer {
  * @author molecule.to
  * @notice lets signallers push prices to chain
  */
-
 contract BioPriceFeed is IPriceFeedConsumer, AccessControl {
     mapping(bytes32 => Signal) signals;
     mapping(bytes32 => Meta) meta;

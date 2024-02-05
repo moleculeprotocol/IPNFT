@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.18;
 
 import { IIPSeedCurve } from "./IIPSeedCurve.sol";
 import { UD60x18, ud, convert } from "@prb/math/UD60x18.sol";

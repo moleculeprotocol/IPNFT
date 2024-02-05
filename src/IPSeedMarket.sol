@@ -4,7 +4,7 @@ pragma solidity ^0.8.18;
 import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import { ReentrancyGuardUpgradeable } from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
-import {EscrowUpgradeable} "@openzeppelin/contracts-upgradeable/utils/escrow/EscrowUpgradeable.sol";
+import { EscrowUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/escrow/EscrowUpgradeable.sol";
 
 import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
@@ -12,7 +12,7 @@ import { Base64 } from "@openzeppelin/contracts/utils/Base64.sol";
 
 import { isContract } from "./helpers/IsContract.sol";
 import { IIPSeedCurve, TradeType } from "./curves/IIPSeedCurve.sol";
-import {IPToken} from "./IPToken.sol";
+import { IPToken } from "./IPToken.sol";
 
 struct MarketData {
     /// the curve that this token is traded on
@@ -21,10 +21,9 @@ struct MarketData {
     bytes32 curveParameters;
     uint256 fundingGoal;
     uint64 fundingEndTime;
-
     /// the initial IPT supply reserved for the sourcer
     uint256 sourcerSupply;
-    /// the `to` address during seeded IPNFT mints 
+    /// the `to` address during seeded IPNFT mints
     address beneficiary;
 }
 
@@ -61,7 +60,7 @@ contract IPSeedMarket is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardUpg
     EscrowUpgradeable private feeEscrow;
     Tokenizer public tokenizer;
     mapping(address => bool) private trustedCurves;
-    
+
     mapping(IPToken => MarketData) private marketData;
     mapping(IPToken => mapping(address => uint256)) private contributions;
 
@@ -161,7 +160,7 @@ contract IPSeedMarket is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardUpg
             revert CurveParametersOutOfBounds();
         }
         if (ipToken.totalSupply() > _marketData.sourcerSupply) {
-            revert "can only seed tokens with max sourcer supply";
+            revert("can only seed tokens with max sourcer supply");
         }
         ipToken.stopTransfers();
 
@@ -239,11 +238,8 @@ contract IPSeedMarket is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardUpg
         Address.sendValue(payable(_msgSender()), net);
     }
 
-    function endSeeding() public {
+    function endSeeding() public { }
 
-    }
-
-    
     /**
      * @notice withdraws the protocol fees that have accumulated for the caller
      *         this function is deliberately completely open and unconditional right now but will be successively restricted while the protocol matures
@@ -258,7 +254,7 @@ contract IPSeedMarket is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardUpg
      * @return net the amount of ETH that's actually collateralized
      */
     function getBuyPrice(IPToken ipToken, uint256 want) public view returns (uint256 gross, uint256 net, uint256 protocolFee, uint256 sourcerFee) {
-        net = marketData[iptToken].priceCurve.getBuyPrice(ipToken.totalSupply()), want, marketData[ipToken].curveParameters);
+        net = marketData[iptToken].priceCurve.getBuyPrice(ipToken.totalSupply(), want, marketData[ipToken].curveParameters);
 
         (protocolFee, sourcerFee) = computeFees(net, TradeType.Buy);
         gross = net + protocolFee + sourcerFee;
@@ -318,5 +314,4 @@ contract IPSeedMarket is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardUpg
         override
         onlyOwner // solhint-disable-next-line no-empty-blocks
     { }
-
 }
