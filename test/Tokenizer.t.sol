@@ -64,7 +64,7 @@ contract TokenizerTest is Test {
         ipnft.setAuthorizer(new AcceptAllAuthorizer());
 
         schmackoSwap = new SchmackoSwap();
-        erc20 = new FakeERC20('Fake ERC20', 'FERC');
+        erc20 = new FakeERC20("Fake ERC20", "FERC");
         erc20.mint(ipnftBuyer, 1_000_000 ether);
 
         blindPermissioner = new BlindPermissioner();

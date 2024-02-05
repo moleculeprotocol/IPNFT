@@ -13,6 +13,7 @@ import { Base64 } from "@openzeppelin/contracts/utils/Base64.sol";
 import { isContract } from "./helpers/IsContract.sol";
 import { IIPSeedCurve, TradeType } from "./curves/IIPSeedCurve.sol";
 import { IPToken } from "./IPToken.sol";
+import { Tokenizer } from "./Tokenizer.sol";
 
 struct MarketData {
     /// the curve that this token is traded on
@@ -92,7 +93,7 @@ contract IPSeedMarket is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardUpg
 
     function initialize(address payable _protocolFeeBeneficiary) public initializer {
         __UUPSUpgradeable_init();
-        __Ownable_init(_msgSender());
+        __Ownable_init();
         __ReentrancyGuard_init();
         protocolFeeBeneficiary = _protocolFeeBeneficiary;
 
@@ -102,11 +103,12 @@ contract IPSeedMarket is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardUpg
         emit FeesUpdated(fees);
 
         // note: address(this) indeed refers to the proxy contract here.
-        feeEscrow.initialize(address(this));
+        feeEscrow.initialize();
     }
 
-    modifier onlySourcer(uint256 tokenId) {
-        if (_msgSender() != tokenMeta[tokenId].sourcer) {
+    modifier onlySourcer(IPToken ipToken) {
+        //todo likely not the beneficiary but the sourcer
+        if (_msgSender() != marketData[ipToken].beneficiary) {
             revert UnauthorizedAccess();
         }
         _;
@@ -141,22 +143,20 @@ contract IPSeedMarket is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardUpg
      * @dev in the future we might consider nailing down some curve deployments / parameter sets that we control so no one can use custom ones without forking
      *
      * @param ipToken ipt token to start seeding
-     * @param projectId the orbis project id (usually a base36 encoded ceramic stream id)
-     * @param curve an IIPSeedCurve implementation address
-     * @param curveParameters the fixed parameters that define the curve's shape, encoded as bytes32
+     * @param _marketData the market information including curve parameters & funding goals
      */
     function start(IPToken ipToken, MarketData calldata _marketData) public {
         // ERC1155's `exists` function checks for totalSupply > 0, which is not what we want here
-        if (address(marketData[ipToken].curve) != address(0)) {
+        if (address(marketData[ipToken].priceCurve) != address(0)) {
             //todo: MarketAlreadyActive
             revert TokenAlreadyExists();
         }
 
-        if (!trustedCurves[address(curve)]) {
+        if (!trustedCurves[address(marketData[ipToken].priceCurve)]) {
             revert UntrustedCurve();
         }
 
-        if (!curve.areParametersInRange(curveParameters)) {
+        if (!marketData[ipToken].priceCurve.areParametersInRange(marketData[ipToken].curveParameters)) {
             revert CurveParametersOutOfBounds();
         }
         if (ipToken.totalSupply() > _marketData.sourcerSupply) {
@@ -166,13 +166,13 @@ contract IPSeedMarket is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardUpg
 
         //MarketData memory _marketData = MarketData(sourcer, sourcer, curve, curveParameters);
         marketData[ipToken] = _marketData;
-        emit SaleStarted(ipToken, ipToken.metadata().ipnftId, sourcer, _marketData);
+        emit SaleStarted(ipToken, ipToken.metadata().ipnftId, _msgSender(), _marketData);
     }
 
     /**
      * @notice buy tokens on the token's bonding curve. This requires the user to send the exact amount of ETH that can be queried by calling `getBuyPrice` -> `gross`
      *         users can send more ETH than required, the surplus will be refunded
-     * @param tokenId token id
+     * @param ipToken the traded token
      * @param amount the amount of tokens to buy
      */
     function mint(IPToken ipToken, uint256 amount) external payable nonReentrant {
@@ -191,11 +191,11 @@ contract IPSeedMarket is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardUpg
             revert InsufficientPayment();
         }
 
-        escrowFees(protocolFee, tokenMeta[tokenId].beneficiary, sourcerFee);
+        escrowFees(protocolFee, marketData[ipToken].beneficiary, sourcerFee);
 
-        emit Traded(_msgSender(), tokenId, TradeType.Buy, amount, gross, totalSupply(tokenId) + amount, sourcerFee, protocolFee);
+        emit Traded(_msgSender(), ipToken, TradeType.Buy, amount, gross, ipToken.totalSupply() + amount, sourcerFee, protocolFee);
         ipToken.issue(_msgSender(), amount);
-        contributions[tokenId][_msgSender()] += msg.value;
+        contributions[ipToken][_msgSender()] += msg.value;
 
         //refund surplus; that might help against frontrunners blocking trades by pushing the price up only by a tiny bit
         if (msg.value > gross) {
@@ -204,12 +204,12 @@ contract IPSeedMarket is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardUpg
     }
 
     /**
-     * @notice sell tokens on the token's bonding curve by burning them. Fees are deducted and escrowed from the returned value
-     * @param tokenId token id
-     * @param amount the amount of tokens to burn
+     * @notice redeem an user's contribution on the bonding curve and burn / put away some of them. Fees are deducted and escrowed from the returned value
+     * @param ipToken token
      */
     function exit(IPToken ipToken) external virtual nonReentrant {
         uint256 currentBalance = ipToken.balanceOf(_msgSender());
+        uint256 redeemableEth = contributions[ipToken][_msgSender()];
 
         // if (currentBalance < amount) {
         //     revert BalanceTooLow();
@@ -230,12 +230,15 @@ contract IPSeedMarket is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardUpg
         //     revert PriceDriftTooHigh(minOutNetAmount, net);
         // }
 
-        emit Traded(_msgSender(), TradeType.Sell, amount, gross, ipToken.totalSupply() - amount, sourcerFee, protocolFee);
+        //emit Traded(_msgSender(), TradeType.Sell, amount, gross, ipToken.totalSupply() - amount, sourcerFee, protocolFee);
 
-        ipToken.burnFrom(_msgSender(), amount);
+        //that's computed on the curve
+        uint256 toBurn = currentBalance / 2;
 
-        escrowFees(protocolFee, tokenMeta[tokenId].beneficiary, sourcerFee);
-        Address.sendValue(payable(_msgSender()), net);
+        ipToken.burnFrom(_msgSender(), toBurn);
+
+        //escrowFees(protocolFee, tokenMeta[tokenId].beneficiary, sourcerFee);
+        Address.sendValue(payable(_msgSender()), redeemableEth);
     }
 
     function endSeeding() public { }
@@ -254,7 +257,7 @@ contract IPSeedMarket is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardUpg
      * @return net the amount of ETH that's actually collateralized
      */
     function getBuyPrice(IPToken ipToken, uint256 want) public view returns (uint256 gross, uint256 net, uint256 protocolFee, uint256 sourcerFee) {
-        net = marketData[iptToken].priceCurve.getBuyPrice(ipToken.totalSupply(), want, marketData[ipToken].curveParameters);
+        net = marketData[ipToken].priceCurve.getBuyPrice(ipToken.totalSupply(), want, marketData[ipToken].curveParameters);
 
         (protocolFee, sourcerFee) = computeFees(net, TradeType.Buy);
         gross = net + protocolFee + sourcerFee;
@@ -274,8 +277,8 @@ contract IPSeedMarket is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardUpg
     /**
      * @dev the total amount of collateral that's currently locked on token id's bonding curve
      */
-    function collateral(address ipToken) external view returns (uint256) {
-        return marketData[tokenId].priceCurve.getBuyPrice(0, tokenId.totalSupply(), marketData[ipToken].curveParameters);
+    function collateral(IPToken ipToken) external view returns (uint256) {
+        return marketData[ipToken].priceCurve.getBuyPrice(0, ipToken.totalSupply(), marketData[ipToken].curveParameters);
     }
 
     /**

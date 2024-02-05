@@ -73,6 +73,11 @@ contract AlgebraicSigmoidCurve is IIPSeedCurve {
         return getBuyPrice(supply - sell, sell, curveParameters);
     }
 
+    function getTokensForValue(uint256 supply, uint256 amount, bytes32 curveParameters) external pure returns (uint256) {
+        //todo implement or drop
+        return 0;
+    }
+
     /**
      * @notice ranges are (after decoding):
      * a: [0.00001 ether - 1_000_000_000_000 ether]

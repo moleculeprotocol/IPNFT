@@ -8,13 +8,12 @@ import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 import { IPToken, Metadata as TokenMetadata } from "./IPToken.sol";
 import { IPermissioner } from "./Permissioner.sol";
 import { IPNFT } from "./IPNFT.sol";
-import { IPSeedMarket } from "./IPSeedMarket.sol";
 
 error MustOwnIpnft();
 error AlreadyTokenized();
 error ZeroAddress();
 
-/// @title Tokenizer 1.2
+/// @title Tokenizer 1.3
 /// @author molecule.to
 /// @notice tokenizes an IPNFT to an ERC20 token (called IPToken or IPT) and controls its supply.
 contract Tokenizer is UUPSUpgradeable, OwnableUpgradeable {
@@ -47,18 +46,15 @@ contract Tokenizer is UUPSUpgradeable, OwnableUpgradeable {
     /// @notice the IPToken implementation this Tokenizer spawns
     IPToken public ipTokenImplementation;
 
-    IPSeedMarket public seedMarket;
-
     /**
      * @param _ipnft the IPNFT contract
      * @param _permissioner a permissioning contract that checks if callers have agreed to the tokenized token's legal agreements
      */
-    function initialize(IPNFT _ipnft, IPermissioner _permissioner, IPSeedMarket _market) external initializer {
+    function initialize(IPNFT _ipnft, IPermissioner _permissioner) external initializer {
         __UUPSUpgradeable_init();
         __Ownable_init();
         ipnft = _ipnft;
         permissioner = _permissioner;
-        seedMarket = _seedMarket;
     }
 
     /// @custom:oz-upgrades-unsafe-allow constructor

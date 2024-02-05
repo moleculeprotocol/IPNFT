@@ -12,7 +12,7 @@ import { IAuthorizeMints, SignedMintAuthorization } from "./IAuthorizeMints.sol"
 import { IReservable } from "./IReservable.sol";
 import { IPToken } from "./IPToken.sol";
 import { Tokenizer } from "./Tokenizer.sol";
-import { MarketData } from "./IPSeedMarket.sol";
+import { MarketData, IPSeedMarket } from "./IPSeedMarket.sol";
 
 /*
  ______ _______         __    __ ________ ________
@@ -26,7 +26,7 @@ import { MarketData } from "./IPSeedMarket.sol";
  \▓▓▓▓▓▓\▓▓             \▓▓   \▓▓\▓▓         \▓▓
  */
 
-/// @title IPNFT V2.4
+/// @title IPNFT V2.5
 /// @author molecule.to
 /// @notice IP-NFTs capture intellectual property to be traded and synthesized
 
@@ -64,14 +64,17 @@ contract IPNFT is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, UUPSUp
     mapping(string => uint256) public streams;
 
     /// @notice the protocol signer who will automatically become a signer on seed multisigs
-    address public protocolSigner;
+    //todo: required when we want to setup control wallets automatically: address public protocolSigner;
+
     IPSeedMarket public seedMarket;
     Tokenizer public tokenizer;
 
+    event Reserved(address indexed reserver, uint256 indexed reservationId);
     event IPNFTMinted(address indexed owner, uint256 indexed tokenId, string tokenURI, string symbol);
     event ReadAccessGranted(uint256 indexed tokenId, address indexed reader, uint256 until);
     event AuthorizerUpdated(address authorizer);
 
+    error NotOwningReservation(uint256 id);
     error InvalidTokenId();
     error ToZeroAddress();
     error Unauthorized();
@@ -85,13 +88,13 @@ contract IPNFT is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, UUPSUp
     }
 
     /// @notice Contract initialization logic
-    function initialize(address protocolSigner_) external initializer {
+    function initialize( /*address protocolSigner_*/ ) external initializer {
         __UUPSUpgradeable_init();
         __Ownable_init();
         __Pausable_init();
         __ERC721_init("IPNFT", "IPNFT");
 
-        protocolSigner = protocolSigner_;
+        //protocolSigner = protocolSigner_;
     }
 
     function pause() external onlyOwner {
@@ -133,15 +136,54 @@ contract IPNFT is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, UUPSUp
      * @notice reserves a new token id. Checks that the caller is authorized, according to the current implementation of IAuthorizeMints.
      * @return reservationId a new reservation id
      */
-    // function reserve() external whenNotPaused returns (uint256 reservationId) {
-    //     if (!mintAuthorizer.authorizeReservation(_msgSender())) {
-    //         revert Unauthorized();
-    //     }
-    //     reservationId = _reservationCounter.current();
-    //     _reservationCounter.increment();
-    //     reservations[reservationId] = _msgSender();
-    //     emit Reserved(_msgSender(), reservationId);
-    // }
+    function reserve() external whenNotPaused returns (uint256 reservationId) {
+        if (!mintAuthorizer.authorizeReservation(_msgSender())) {
+            revert Unauthorized();
+        }
+        reservationId = _reservationCounter.current();
+        _reservationCounter.increment();
+        reservations[reservationId] = _msgSender();
+        emit Reserved(_msgSender(), reservationId);
+    }
+
+    /**
+     * @notice mints an IPNFT with `tokenURI` as source of metadata. Invalidates the reservation. Redeems `mintpassId` on the authorizer contract
+     * @notice We are charging a nominal fee to symbolically represent the transfer of ownership rights, for a price of .001 ETH (<$2USD at current prices). This helps the ensure the protocol is affordable to almost all projects, but discourages frivolous IP-NFT minting.
+     *
+     * @param to the recipient of the NFT
+     * @param reservationId the reserved token id that has been reserved with `reserve()`
+     * @param _tokenURI a location that resolves to a valid IP-NFT metadata structure
+     * @param _symbol a symbol that represents the IPNFT's derivatives. Can be changed by the owner
+     * @param authorization a bytes encoded parameter that's handed to the current authorizer
+     * @return the `reservationId`
+     */
+    function mintReservation(address to, uint256 reservationId, string calldata _tokenURI, string calldata _symbol, bytes calldata authorization)
+        external
+        payable
+        whenNotPaused
+        returns (uint256)
+    {
+        if (reservations[reservationId] != _msgSender()) {
+            revert NotOwningReservation(reservationId);
+        }
+
+        if (msg.value < SYMBOLIC_MINT_FEE) {
+            revert MintingFeeTooLow();
+        }
+
+        if (!mintAuthorizer.authorizeMint(_msgSender(), to, abi.encode(SignedMintAuthorization(reservationId, _tokenURI, authorization)))) {
+            revert Unauthorized();
+        }
+
+        delete reservations[reservationId];
+        symbol[reservationId] = _symbol;
+        mintAuthorizer.redeem(authorization);
+
+        _mint(to, reservationId);
+        _setTokenURI(reservationId, _tokenURI);
+        emit IPNFTMinted(to, reservationId, _tokenURI, _symbol);
+        return reservationId;
+    }
 
     /**
      * @notice mints an IPNFT with `tokenURI` as source of metadata. Invalidates the reservation. Redeems `mintpassId` on the authorizer contract
@@ -150,13 +192,18 @@ contract IPNFT is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, UUPSUp
      * @param tokenId the precomputed token id, contains the sourcer's address as its hash
      * @param streamId the orbis project id (usually a base36 encoded ceramic stream id)
      * @param to the first owner of the ipnft (should be a multisig)
+     * @param _symbol the ipt's ticker symbol
+     * @param marketData the market data for the seed market
      * @param authorization a bytes encoded parameter that's handed to the current authorizer
      */
-    function seed(uint256 tokenId, string calldata streamId, address to, MarketData calldata marketData, bytes calldata authorization)
-        external
-        payable
-        whenNotPaused
-    {
+    function seed(
+        uint256 tokenId,
+        string calldata streamId,
+        address to,
+        string calldata _symbol,
+        MarketData memory marketData,
+        bytes calldata authorization
+    ) external payable whenNotPaused {
         if (bytes(streamId).length < 10 || tokenId != computeTokenId(_msgSender(), streamId)) {
             revert InvalidTokenId();
         }
@@ -179,12 +226,12 @@ contract IPNFT is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, UUPSUp
         _mint(address(this), tokenId);
 
         //todo: provide an "original" owner for the ipt contract
-        IPToken ipToken = this.tokenizer.tokenizeIpnft(tokenId, marketData.sourcerSupply, marketData.symbol, "", bytes(string("")));
-        ipToken.safeTransferFrom(address(this), _msgSender(), marketData.sourcerSupply);
+        IPToken ipToken = tokenizer.tokenizeIpnft(tokenId, marketData.sourcerSupply, _symbol, "", bytes(string("")));
+        ipToken.transfer(_msgSender(), marketData.sourcerSupply);
 
         ipToken.transferOwnership(address(seedMarket));
         marketData.beneficiary = to;
-        this.seedMarket.start(ipToken, marketData);
+        seedMarket.start(ipToken, marketData);
         safeTransferFrom(address(this), to, tokenId);
 
         emit IPNFTMinted(to, tokenId, streamId, "");

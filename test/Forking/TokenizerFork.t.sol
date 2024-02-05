@@ -13,6 +13,7 @@ import { MustOwnIpnft, AlreadyTokenized, Tokenizer } from "../../src/Tokenizer.s
 import { Tokenizer11 } from "../../src/helpers/test-upgrades/Tokenizer11.sol";
 import { IPToken, OnlyIssuerOrOwner, TokenCapped, Metadata } from "../../src/IPToken.sol";
 import { IPermissioner, BlindPermissioner } from "../../src/Permissioner.sol";
+import { IPSeedMarket } from "../../src/IPSeedMarket.sol";
 
 //import { SchmackoSwap, ListingState } from "../../src/SchmackoSwap.sol";
 

@@ -4,7 +4,7 @@ pragma solidity ^0.8.18;
 import "forge-std/Test.sol";
 import "forge-std/console.sol";
 
-import { IReservable } from "../src/IReservable.sol";
+import { IPNFT } from "../src/IPNFT.sol";
 import { IAuthorizeMints } from "../src/IAuthorizeMints.sol";
 
 abstract contract IPNFTMintHelper is Test {
@@ -17,18 +17,18 @@ abstract contract IPNFTMintHelper is Test {
     uint256 constant MINTING_FEE = 0.001 ether;
     string DEFAULT_SYMBOL = "IPT-0001";
 
-    function reserveAToken(IReservable ipnft, address to) internal returns (uint256) {
+    function reserveAToken(IPNFT ipnft, address to) internal returns (uint256) {
         vm.startPrank(to);
         uint256 reservationId = ipnft.reserve();
         vm.stopPrank();
         return reservationId;
     }
 
-    function mintAToken(IReservable ipnft, address to) internal returns (uint256) {
+    function mintAToken(IPNFT ipnft, address to) internal returns (uint256) {
         return mintAToken(ipnft, to, "");
     }
 
-    function mintAToken(IReservable ipnft, address to, bytes memory authorization) internal returns (uint256) {
+    function mintAToken(IPNFT ipnft, address to, bytes memory authorization) internal returns (uint256) {
         vm.startPrank(to);
         uint256 reservationId = ipnft.reserve();
 
