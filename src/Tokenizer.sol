@@ -101,10 +101,13 @@ contract Tokenizer is UUPSUpgradeable, OwnableUpgradeable {
      * @param signedAgreement the sender's signature over the signed agreemeent text (must be created on the client)
      * @return token a new created ERC20 token contract that represents the tokenized ipnft
      */
-    function tokenizeIpnft(uint256 ipnftId, string memory tokenSymbol, string memory agreementCid, bytes calldata signedAgreement)
-        external
-        returns (IPToken token)
-    {
+    function tokenizeIpnft(
+        uint256 ipnftId,
+        uint256 tokenAmount,
+        string memory tokenSymbol,
+        string memory agreementCid,
+        bytes calldata signedAgreement
+    ) external returns (IPToken token) {
         if (ipnft.ownerOf(ipnftId) != _msgSender()) {
             revert MustOwnIpnft();
         }
@@ -112,6 +115,8 @@ contract Tokenizer is UUPSUpgradeable, OwnableUpgradeable {
         // https://github.com/OpenZeppelin/workshops/tree/master/02-contracts-clone
         token = IPToken(Clones.clone(address(ipTokenImplementation)));
         string memory name = string.concat("IP Tokens of IPNFT #", Strings.toString(ipnftId));
+
+        //todo: if called from IPNFT (auto-tokenize), use a provided "to" field as the originalOwner
         token.initialize(name, tokenSymbol, TokenMetadata(ipnftId, _msgSender(), agreementCid));
 
         uint256 tokenHash = token.hash();
@@ -125,7 +130,7 @@ contract Tokenizer is UUPSUpgradeable, OwnableUpgradeable {
         //this has been called MoleculesCreated before
         emit TokensCreated(tokenHash, ipnftId, address(token), _msgSender(), tokenAmount, agreementCid, name, tokenSymbol);
         permissioner.accept(token, _msgSender(), signedAgreement);
-        // token.issue(_msgSender(), tokenAmount);
+        token.issue(_msgSender(), tokenAmount);
     }
 
     /// @notice upgrade authorization logic
