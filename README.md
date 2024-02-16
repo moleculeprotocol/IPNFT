@@ -28,7 +28,51 @@ Defender Relayer that signs off minting requests from our side:
 
 ---
 
-### Goerli
+### Sepolia
+
+| Contract           | Address                                    | Explorer                                                                                                                                                                                                                                                                                  |
+| ------------------ | ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| IPNFT              | 0x152B444e60C526fe4434C721561a077269FcF61a | <a href="https://sepolia.etherscan.io/address/0x152B444e60C526fe4434C721561a077269FcF61a#code" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0x152B444e60C526fe4434C721561a077269FcF61a&theme=dark&chainId=1" alt="View contract" /></a> |
+| Swap               | 0x9e4c638e703d0Af3a3B9eb488dE79A16d402698f | <a href="https://sepolia.etherscan.io/address/0x9e4c638e703d0Af3a3B9eb488dE79A16d402698f#code" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0x9e4c638e703d0Af3a3B9eb488dE79A16d402698f&theme=dark&chainId=1" alt="View contract" /></a> |
+| Authorizer         | 0x7a9F3773352e4ee0Da6307Cd32C45fE89602129A | <a href="https://sepolia.etherscan.io/address/0x7a9F3773352e4ee0Da6307Cd32C45fE89602129A#code" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0x7a9F3773352e4ee0Da6307Cd32C45fE89602129A&theme=dark&chainId=1" alt="View contract" /></a> |
+| Terms Permissioner | 0xC05D649368d8A5e2E98CAa205d47795de5fCB599 | <a href="https://sepolia.etherscan.io/address/0xC05D649368d8A5e2E98CAa205d47795de5fCB599#code" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0xC05D649368d8A5e2E98CAa205d47795de5fCB599&theme=dark&chainId=1" alt="View contract" /></a> |
+| Tokenizer          | 0xca63411FF5187431028d003eD74B57531408d2F9 | <a href="https://sepolia.etherscan.io/address/0xca63411FF5187431028d003eD74B57531408d2F9#code" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0xca63411FF5187431028d003eD74B57531408d2F9&theme=dark&chainId=1" alt="View contract" /></a> |
+| Crowdsale          | 0x8cA737E2cdaE1Ceb332bEf7ba9eA711a3a2f8037 | <a href="https://sepolia.etherscan.io/address/0x8cA737E2cdaE1Ceb332bEf7ba9eA711a3a2f8037#code" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0x8cA737E2cdaE1Ceb332bEf7ba9eA711a3a2f8037&theme=dark&chainId=1" alt="View contract" /></a> |
+| Staked Crowdsale   | 0xd1cE2EA7d3b0C9cAB025A4aD762FC00315141ad7 | <a href="https://sepolia.etherscan.io/address/0xd1cE2EA7d3b0C9cAB025A4aD762FC00315141ad7#code" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0xd1cE2EA7d3b0C9cAB025A4aD762FC00315141ad7&theme=dark&chainId=1" alt="View contract" /></a> |
+
+#### Tokens
+
+| Contract       | Address                                    |                                                                                                                                                                                                                                                                                           |
+| -------------- | ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| USDC           | 0x309EFD49752803D0B3Ddba2B66A7A900F99B4E70 | <a href="https://sepolia.etherscan.io/address/0x309EFD49752803D0B3Ddba2B66A7A900F99B4E70#code" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0x309EFD49752803D0B3Ddba2B66A7A900F99B4E70&theme=dark&chainId=1" alt="View contract" /></a> |
+| Bio Dao        | 0x62f3cBab2C84fbA31DEc50CD21dbb5577333C69a | <a href="https://sepolia.etherscan.io/address/0x62f3cBab2C84fbA31DEc50CD21dbb5577333C69a#code" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0x62f3cBab2C84fbA31DEc50CD21dbb5577333C69a&theme=dark&chainId=1" alt="View contract" /></a> |
+| vested Bio Dao | 0x19A3036b828bffB5E14da2659E950E76f8e6BAA2 | <a href="https://sepolia.etherscan.io/address/0x19A3036b828bffB5E14da2659E950E76f8e6BAA2#code" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0x19A3036b828bffB5E14da2659E950E76f8e6BAA2&theme=dark&chainId=1" alt="View contract" /></a> |
+
+old
+Plain Crowdsale 0xc272b3e980ee3c1e52a9814b1a1d6c48295e8d91 https://sepolia.etherscan.io/address/0xc272b3e980ee3c1e52a9814b1a1d6c48295e8d91
+
+```
+IPNFT_ADDRESS=0x152B444e60C526fe4434C721561a077269FcF61a
+ipnft impl 0x67881bbE2d58f5eeb2f2cad3a1FB7Bb6CB834A5A
+SOS_ADDRESS=0x9e4c638e703d0Af3a3B9eb488dE79A16d402698f
+AUTHORIZER_ADDRESS=0x7a9F3773352e4ee0Da6307Cd32C45fE89602129A
+
+TERMS_ACCEPTED_PERMISSIONER_ADDRESS=0xC05D649368d8A5e2E98CAa205d47795de5fCB599
+TOKENIZER_ADDRESS=0xca63411FF5187431028d003eD74B57531408d2F9
+CROWDSALE_ADDRESS=0x8cA737E2cdaE1Ceb332bEf7ba9eA711a3a2f8037
+STAKED_LOCKING_CROWDSALE_ADDRESS=0xd1cE2EA7d3b0C9cAB025A4aD762FC00315141ad7
+
+initial IP Token implementation=0xB16e92029De283800df9030De2F255DcB99F19e9
+tokenizer imple 0x672d3389b5c5a050ad93100d548817d87edc8597
+
+USDC_ADDRESS=0x309EFD49752803D0B3Ddba2B66A7A900F99B4E70
+DAO_TOKEN_ADDRESS=0x62f3cBab2C84fbA31DEc50CD21dbb5577333C69a
+VDAO_TOKEN_ADDRESS=0x19A3036b828bffB5E14da2659E950E76f8e6BAA2
+```
+
+---
+
+### ~~Deprecated Goerli~~
 
 | Contract               | Address                                                                                                                            | Actions                                                                                                                                                                                                                                                                                               |
 | ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -54,11 +98,7 @@ Defender Relayer that signs off minting requests from our side:
 - Blind Permissioner: 0xec68a1fc8d4c2834f8dfbdb56691f9f0a3d6be11
   <https://goerli.etherscan.io/address/0xec68a1fc8d4c2834f8dfbdb56691f9f0a3d6be11#code>
 
-### Sepolia
-
-Plain Crowdsale 0xc272b3e980ee3c1e52a9814b1a1d6c48295e8d91 https://sepolia.etherscan.io/address/0xc272b3e980ee3c1e52a9814b1a1d6c48295e8d91
-
-#### some test tokens
+#### ~~Tokens~~
 
 | Token name               | Symbol  | address                                                                                                                           |
 | ------------------------ | ------- | --------------------------------------------------------------------------------------------------------------------------------- |

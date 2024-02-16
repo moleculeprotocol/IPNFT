@@ -18,12 +18,7 @@ contract DeploySuite is Script {
         address relayer = vm.envAddress("RELAYER_ADDRESS");
         vm.startBroadcast();
 
-        IPNFT ipnft = IPNFT(
-            address(
-                new ERC1967Proxy(address(new IPNFT()), 
-                abi.encodeWithSelector(IPNFT.initialize.selector, ""))
-            )
-        );
+        IPNFT ipnft = IPNFT(address(new ERC1967Proxy(address(new IPNFT()), abi.encodeWithSelector(IPNFT.initialize.selector, ""))));
 
         SchmackoSwap swap = new SchmackoSwap();
         SignedMintAuthorizer authorizer = new SignedMintAuthorizer(relayer);
