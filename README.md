@@ -16,15 +16,19 @@ IP-NFTs allow their users to tokenize intellectual property. This repo contains 
 | Crowdsale              | [0xf0a8d23f38e9cbbe01c4ed37f23bd519b65bc6c2](https://etherscan.io/address/0xf0a8d23f38e9cbbe01c4ed37f23bd519b65bc6c2#code) | <a href="https://thirdweb.com/ethereum/0xf0a8d23f38e9cbbe01c4ed37f23bd519b65bc6c2?utm_source=contract_badge" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0xf0a8d23f38e9cbbe01c4ed37f23bd519b65bc6c2&theme=dark&chainId=1" alt="View contract" /></a> |
 | StakedLockingCrowdSale | [0x35Bce29F52f51f547998717CD598068Afa2B29B7](https://etherscan.io/address/0x35Bce29F52f51f547998717CD598068Afa2B29B7#code) | <a href="https://thirdweb.com/ethereum/0x35Bce29F52f51f547998717CD598068Afa2B29B7?utm_source=contract_badge" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0x35Bce29F52f51f547998717CD598068Afa2B29B7&theme=dark&chainId=1" alt="View contract" /></a> |
 
-- Subgraph: <https://api.thegraph.com/subgraphs/name/moleculeprotocol/ip-nft-mainnet>
+#### Subgraph
+
+API: https://api.thegraph.com/subgraphs/name/moleculeprotocol/ip-nft-mainnet
+Playground: https://api.thegraph.com/subgraphs/name/moleculeprotocol/ip-nft-mainnet/graphql
 
 tokenizer implementation 1.2: 0xE8701330F196FeFe415b28dAA767AB076F42557A
 tokenizer implementation 1.1: 0x9C70FA8c87D7e94Fd63eeCCcA657D5c4224a36f3
 iptoken implementation: 0x9E4fc6E6d1A64e3429aB852d3CB31AD7aa06997A
 ipnft implementation 2.4: 0x6B179Dffac5E190c670176606f552cB792847f80
 
-Defender Relayer that signs off minting requests from our side:
-0x3D30452c48F2448764d5819a9A2b684Ae2CC5AcF
+#### Defender Relayer
+
+signs off minting requests from our side: 0x3D30452c48F2448764d5819a9A2b684Ae2CC5AcF
 
 ---
 
@@ -39,6 +43,17 @@ Defender Relayer that signs off minting requests from our side:
 | Tokenizer          | 0xca63411FF5187431028d003eD74B57531408d2F9 | <a href="https://sepolia.etherscan.io/address/0xca63411FF5187431028d003eD74B57531408d2F9#code" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0xca63411FF5187431028d003eD74B57531408d2F9&theme=dark&chainId=1" alt="View contract" /></a> |
 | Crowdsale          | 0x8cA737E2cdaE1Ceb332bEf7ba9eA711a3a2f8037 | <a href="https://sepolia.etherscan.io/address/0x8cA737E2cdaE1Ceb332bEf7ba9eA711a3a2f8037#code" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0x8cA737E2cdaE1Ceb332bEf7ba9eA711a3a2f8037&theme=dark&chainId=1" alt="View contract" /></a> |
 | Staked Crowdsale   | 0xd1cE2EA7d3b0C9cAB025A4aD762FC00315141ad7 | <a href="https://sepolia.etherscan.io/address/0xd1cE2EA7d3b0C9cAB025A4aD762FC00315141ad7#code" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0xd1cE2EA7d3b0C9cAB025A4aD762FC00315141ad7&theme=dark&chainId=1" alt="View contract" /></a> |
+
+#### Subgraphs
+
+on Satsuma, Tech Account
+
+API: https://subgraph.satsuma-prod.com/techs-team--4017766/moleculexyz-ipnft-sepolia/version/v0.0.1/api
+Playground: https://subgraph.satsuma-prod.com/techs-team--4017766/moleculexyz-ipnft-sepolia/playground
+
+#### Defender Relayer
+
+signs off minting requests from our side: 0xd7B298c9fB0377124d01D4E826d9D5beFB7CD6FE
 
 #### Tokens
 

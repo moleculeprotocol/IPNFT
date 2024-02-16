@@ -1,5 +1,15 @@
 # IPNFT subgraph
 
+## Sepolia
+
+API: https://subgraph.satsuma-prod.com/techs-team--4017766/moleculexyz-ipnft-sepolia/version/v0.0.1/api
+Playground: https://subgraph.satsuma-prod.com/techs-team--4017766/moleculexyz-ipnft-sepolia/playground
+
+## Mainnet
+
+API: https://api.thegraph.com/subgraphs/name/moleculeprotocol/ip-nft-mainnet
+Playground: https://api.thegraph.com/subgraphs/name/moleculeprotocol/ip-nft-mainnet/graphql
+
 ## Prerequisites
 
 - you can deploy contracts locally (see [the main README](../README.md))
