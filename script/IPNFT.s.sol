@@ -9,8 +9,12 @@ import "../src/IPNFT.sol";
 contract Deploy is Script {
     function run() public {
         vm.startBroadcast();
-        IPNFT ipnft = IPNFT(address(new ERC1967Proxy(address(new IPNFT()), "")));
-        ipnft.initialize();
+        IPNFT ipnft = IPNFT(
+            address(
+                new ERC1967Proxy(address(new IPNFT()), 
+                abi.encodeWithSelector(IPNFT.initialize.selector, ""))
+            )
+        );
         vm.stopBroadcast();
 
         console.log("IPNFT_ADDRESS=%s", address(ipnft));

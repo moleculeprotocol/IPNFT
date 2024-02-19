@@ -15,15 +15,13 @@ import { SignedMintAuthorizer } from "../src/SignedMintAuthorizer.sol";
  */
 contract DeploySuite is Script {
     function run() public {
-        address moderator = vm.envAddress("MODERATOR_ADDRESS");
+        address relayer = vm.envAddress("RELAYER_ADDRESS");
         vm.startBroadcast();
-        IPNFT implementation = new IPNFT();
-        ERC1967Proxy proxy = new ERC1967Proxy(address(implementation), "");
-        IPNFT ipnft = IPNFT(address(proxy));
-        ipnft.initialize();
+
+        IPNFT ipnft = IPNFT(address(new ERC1967Proxy(address(new IPNFT()), abi.encodeWithSelector(IPNFT.initialize.selector, ""))));
 
         SchmackoSwap swap = new SchmackoSwap();
-        SignedMintAuthorizer authorizer = new SignedMintAuthorizer(moderator);
+        SignedMintAuthorizer authorizer = new SignedMintAuthorizer(relayer);
         ipnft.setAuthorizer(authorizer);
 
         console.log("IPNFT_ADDRESS=%s", address(ipnft));

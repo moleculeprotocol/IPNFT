@@ -6,9 +6,9 @@
     "codegen": "graph codegen",
     "build": "graph codegen && graph build",
     "prepare:local": "mustache config/local.js subgraph.template.yaml > subgraph.yaml",
-    "prepare:goerli": "mustache config/goerli.js subgraph.template.yaml > subgraph.yaml",
+    "prepare:sepolia": "mustache config/sepolia.js subgraph.template.yaml > subgraph.yaml",
     "prepare:mainnet": "mustache config/mainnet.js subgraph.template.yaml > subgraph.yaml",
-    "deploy:goerli": "graph deploy --product hosted-service moleculeprotocol/ip-nft-goerli",
+    "deploy:sepolia": "env-cmd -x -f ../.env graph deploy moleculexyz-ipnft-sepolia --version-label v0.0.1 --node https://subgraphs.alchemy.com/api/subgraphs/deploy --ipfs https://ipfs.satsuma.xyz --deploy-key \\$SATSUMA_DEPLOY_KEY",
     "deploy": "graph deploy --product hosted-service moleculeprotocol/ip-nft-mainnet",
     "create:local": "graph create --node http://localhost:8020/ moleculeprotocol/ipnft-subgraph",
     "remove:local": "graph remove --node http://localhost:8020/ moleculeprotocol/ipnft-subgraph",
@@ -22,5 +22,7 @@
     "matchstick-as": "0.5.2",
     "mustache": "^4.2.0"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "env-cmd": "^10.1.0"
+  }
 }

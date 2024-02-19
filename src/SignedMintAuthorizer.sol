@@ -10,12 +10,16 @@ import { IAuthorizeMints, SignedMintAuthorization } from "./IAuthorizeMints.sol"
 contract SignedMintAuthorizer is IAuthorizeMints, Ownable {
     mapping(address => bool) trustedSigners;
 
+    event SignerTrustChanged(address indexed signer, bool trusted);
+
     constructor(address initialSigner) Ownable() {
         trustedSigners[initialSigner] = true;
+        emit SignerTrustChanged(initialSigner, true);
     }
 
     function trustSigner(address signer, bool trust) external onlyOwner {
         trustedSigners[signer] = trust;
+        emit SignerTrustChanged(signer, trust);
     }
 
     /// @inheritdoc IAuthorizeMints
