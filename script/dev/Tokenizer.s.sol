@@ -16,17 +16,16 @@ contract DeployTokenizer is CommonScript {
     function run() public {
         prepareAddresses();
         vm.startBroadcast(deployer);
-        Tokenizer tokenizer = Tokenizer(
-            address(
-                new ERC1967Proxy(
-                    address(new Tokenizer()), ""
-                )
-            )
-        );
+        Tokenizer tokenizer = Tokenizer(address(new ERC1967Proxy(address(new Tokenizer()), "")));
         IPermissioner permissioner = IPermissioner(vm.envAddress("TERMS_ACCEPTED_PERMISSIONER_ADDRESS"));
         tokenizer.initialize(IPNFT(vm.envAddress("IPNFT_ADDRESS")), permissioner);
+
+        IPToken initialIpTokenImplementation = new IPToken();
+        tokenizer.setIPTokenImplementation(initialIpTokenImplementation);
+
         vm.stopBroadcast();
         console.log("TOKENIZER_ADDRESS=%s", address(tokenizer));
+        console.log("IPTOKEN_IMPLEMENTATION_ADDRESS=%s", address(initialIpTokenImplementation));
     }
 }
 
