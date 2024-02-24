@@ -7,3 +7,6 @@
 [submodule "packages/contracts/lib/forge-std"]
 	path = packages/contracts/lib/forge-std
 	url = https://github.com/foundry-rs/forge-std
+[submodule "packages/contracts/lib/token-vesting-contract"]
+	path = packages/contracts/lib/token-vesting-contract
+	url = https://github.com/moleculeprotocol/token-vesting-contract
