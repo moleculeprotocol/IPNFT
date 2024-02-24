@@ -7,8 +7,10 @@ import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import { MessageHashUtils } from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
+import { TokenVesting } from "@moleculeprotocol/token-vesting/TokenVesting.sol";
 import { CrowdSale, Sale, SaleInfo, SaleState, BadDecimals } from "../src/crowdsale/CrowdSale.sol";
 import { StakedLockingCrowdSale, BadPrice } from "../src/crowdsale/StakedLockingCrowdSale.sol";
 import { IPermissioner, TermsAcceptedPermissioner, InvalidSignature, BlindPermissioner } from "../src/Permissioner.sol";
@@ -16,7 +18,7 @@ import { TimelockedToken } from "../src/TimelockedToken.sol";
 import { FakeERC20 } from "../src/helpers/FakeERC20.sol";
 //import { BioPriceFeed, IPriceFeedConsumer } from "../src/BioPriceFeed.sol";
 import { CrowdSaleHelpers } from "./helpers/CrowdSaleHelpers.sol";
-import { ITokenVesting } from "../src/ITokenVesting.sol";
+import { ITokenVesting, ROLE_CREATE_SCHEDULE } from "../src/ITokenVesting.sol";
 
 contract CrowdSalePermissionedTest is Test {
     address deployer = makeAddr("chucknorris");
@@ -48,19 +50,19 @@ contract CrowdSalePermissionedTest is Test {
 
         crowdSale = new StakedLockingCrowdSale();
 
-        vestedDao = new ITokenVesting(
+        vestedDao = ITokenVesting(address(new TokenVesting(
             daoToken,
             string(abi.encodePacked("Vested ", daoToken.name())),
             string(abi.encodePacked("v", daoToken.symbol()))
-        );
-        vestedDao.grantRole(vestedDao.ROLE_CREATE_SCHEDULE(), address(crowdSale));
+        )));
+        vestedDao.grantRole(ROLE_CREATE_SCHEDULE, address(crowdSale));
         crowdSale.trustVestingContract(vestedDao);
         vm.stopPrank();
 
         vm.startPrank(emitter);
         vm.deal(emitter, MINTING_FEE);
         
-        auctionToken.issue(emitter, 500_000 ether);
+        auctionToken.mint(emitter, 500_000 ether);
         vm.stopPrank();
 
         vm.startPrank(deployer);
@@ -84,8 +86,8 @@ contract CrowdSalePermissionedTest is Test {
         uint256 saleId = crowdSale.startSale(_sale, daoToken, vestedDao, 1e18, 60 days);
         vm.stopPrank();
 
-        string memory terms = permissioner.specificTermsV1(auctionToken);
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(bidderPk, ECDSA.toEthSignedMessageHash(abi.encodePacked(terms)));
+        string memory terms = permissioner.specificTerms("abcde");
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(bidderPk, MessageHashUtils.toEthSignedMessageHash(abi.encodePacked(terms)));
 
         bytes memory xsignature = abi.encodePacked(r, s, v);
 

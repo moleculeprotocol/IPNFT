@@ -4,9 +4,9 @@ pragma solidity ^0.8.24;
 import "forge-std/Test.sol";
 import { InvalidSignature, IPermissioner, TermsAcceptedPermissioner, BlindPermissioner } from "../src/Permissioner.sol";
 import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
-import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
+import { MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
-import { FakeERC20 } from "../src/helpers/FakeERC20.sol";
+import { FakeERC20, PermissionedERC20Token } from "../src/helpers/FakeERC20.sol";
 
 contract PermissionerTest is Test {
     address deployer = makeAddr("chucknorris");
@@ -18,7 +18,7 @@ contract PermissionerTest is Test {
     address bob = makeAddr("bob");
     uint256 bobPk;
 
-    FakeERC20 ipToken;
+    PermissionedERC20Token ipToken;
     TermsAcceptedPermissioner internal permissioner;
 
     uint256 MINTING_FEE = 0.001 ether;
@@ -34,17 +34,18 @@ contract PermissionerTest is Test {
 
         vm.startPrank(deployer);
         permissioner = new TermsAcceptedPermissioner();
+        ipToken = new PermissionedERC20Token("IP Token", "IPT", agreementCid);
         vm.stopPrank();
     }
 
     function testProveSigAndAcceptTerms() public {
         vm.startPrank(originalOwner);
 
-        string memory terms = permissioner.specificTermsV1(ipToken);
+        string memory terms = permissioner.specificTerms(agreementCid);
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(alicePk, MessageHashUtils.toEthSignedMessageHash(abi.encodePacked(terms)));
 
         bytes memory xsignature = abi.encodePacked(r, s, v);
-        assertTrue(permissioner.isValidSignature(ipToken, alice, xsignature));
+        assertTrue(permissioner.validateSignature(ipToken, alice, xsignature));
 
         vm.expectRevert(InvalidSignature.selector);
         permissioner.accept(ipToken, originalOwner, xsignature);

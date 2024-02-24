@@ -59,7 +59,7 @@ contract TermsAcceptedPermissioner is IPermissioner {
      * @notice checks whether `signer`'s `signature` of `specificTermsV1` on `tokenContract.metadata.ipnftId` is valid
      * @param permissionable IPermissionable
      */
-    function validateSignature(IPermissionable permissionable, address signer, bytes calldata signature) public view returns (bool) {
+    function validateSignature(IPermissionable permissionable, address signer, bytes calldata signature) public returns (bool) {
         bytes32 termsHash = MessageHashUtils.toEthSignedMessageHash(bytes(specificTerms(permissionable)));
         return SignatureChecker.isValidSignatureNow(signer, termsHash, signature);
     }

@@ -6,6 +6,7 @@ import "forge-std/console.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import { FakeERC20 } from "../src/helpers/FakeERC20.sol";
 
 import { CrowdSale, Sale, SaleInfo, SaleState, BadDecimals } from "../src/crowdsale/CrowdSale.sol";
 import { UnsupportedInitializer } from "../src/crowdsale/LockingCrowdSale.sol";
@@ -18,7 +19,7 @@ import {
     InvalidDuration
 } from "../src/crowdsale/StakedLockingCrowdSale.sol";
 import { TimelockedToken } from "../src/TimelockedToken.sol";
-import { ITokenVesting } from "../src/ITokenVesting.sol";
+import { ITokenVesting, ROLE_CREATE_SCHEDULE } from "../src/ITokenVesting.sol";
 import { TokenVesting } from "@moleculeprotocol/token-vesting/TokenVesting.sol";
 //import { BioPriceFeed, IPriceFeedConsumer } from "../src/BioPriceFeed.sol";
 import { CrowdSaleHelpers } from "./helpers/CrowdSaleHelpers.sol";
@@ -56,13 +57,13 @@ contract CrowdSaleLockedStakedTest is Test {
 
         crowdSale = new StakedLockingCrowdSale();
 
-        vestedDao = new TokenVesting(
+        vestedDao = ITokenVesting(address(new TokenVesting(
             daoToken,
             string(abi.encodePacked("Vested ", daoToken.name())),
             string(abi.encodePacked("v", daoToken.symbol()))
-        );
+        )));
 
-        vestedDao.grantRole(vestedDao.ROLE_CREATE_SCHEDULE(), address(crowdSale));
+        vestedDao.grantRole(ROLE_CREATE_SCHEDULE, address(crowdSale));
         crowdSale.trustVestingContract(vestedDao);
         vm.stopPrank();
 
@@ -83,7 +84,7 @@ contract CrowdSaleLockedStakedTest is Test {
 
     function testStakeLockingCrowdSalesBadParameters() public {
         vm.startPrank(deployer);
-        ITokenVesting wrongStakeVestingContract = new ITokenVesting(auctionToken, "vested mol", "vmol");
+        ITokenVesting wrongStakeVestingContract = ITokenVesting(address(new TokenVesting(auctionToken, "vested mol", "vmol")));
         vm.stopPrank();
 
         vm.startPrank(emitter);
@@ -104,7 +105,7 @@ contract CrowdSaleLockedStakedTest is Test {
         vm.expectRevert(UnmanageableVestingContract.selector);
         crowdSale.trustVestingContract(wrongStakeVestingContract);
 
-        wrongStakeVestingContract.grantRole(wrongStakeVestingContract.ROLE_CREATE_SCHEDULE(), address(crowdSale));
+        wrongStakeVestingContract.grantRole(ROLE_CREATE_SCHEDULE, address(crowdSale));
         crowdSale.trustVestingContract(wrongStakeVestingContract);
         vm.stopPrank();
 
@@ -418,20 +419,23 @@ contract CrowdSaleLockedStakedTest is Test {
         assertEq(lockedAuctionToken.balanceOf(bidder), 200_000 ether);
 
         (, ITokenVesting stakesVestingContract,) = crowdSale.salesStaking(saleId);
-        bytes32 _scheduledId = stakesVestingContract.computeVestingScheduleIdForAddressAndIndex(bidder, 0);
-        assertEq(stakesVestingContract.computeReleasableAmount(_scheduledId), 0);
+        
+        //this code is specific to your individual vesting contract, we're using the molecule one
+        TokenVesting _vestingImpl = TokenVesting(address(stakesVestingContract));
+        bytes32 _scheduledId = _vestingImpl.computeVestingScheduleIdForAddressAndIndex(bidder, 0);
+        assertEq(_vestingImpl.computeReleasableAmount(_scheduledId), 0);
 
         //even though duration is 3 days, the vesting duration is 7 (the minimum of a vesting contract) and the remaining days now are 5
         vm.warp(_sale.closingTime + 6 days);
-        assertEq(stakesVestingContract.computeReleasableAmount(_scheduledId), 0);
+        assertEq(_vestingImpl.computeReleasableAmount(_scheduledId), 0);
 
         vm.warp(_sale.closingTime + 7 days);
-        assertEq(stakesVestingContract.computeReleasableAmount(_scheduledId), 100_000 ether);
+        assertEq(_vestingImpl.computeReleasableAmount(_scheduledId), 100_000 ether);
 
         vm.warp(_sale.closingTime + 4440 days);
 
         vm.startPrank(bidder);
-        stakesVestingContract.releaseAvailableTokensForHolder(bidder);
+        _vestingImpl.releaseAvailableTokensForHolder(bidder);
         assertEq(daoToken.balanceOf(bidder), 1_000_000 ether);
         assertEq(auctionToken.balanceOf(bidder), 0 ether);
         vm.stopPrank();

@@ -6,6 +6,7 @@ import "forge-std/console.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import { TokenVesting } from "@moleculeprotocol/token-vesting/TokenVesting.sol";
 
 import { CrowdSale, Sale, SaleInfo, SaleState, BadDecimals } from "../src/crowdsale/CrowdSale.sol";
 import { StakedLockingCrowdSale, BadPrice, StakingInfo } from "../src/crowdsale/StakedLockingCrowdSale.sol";
@@ -13,7 +14,7 @@ import { TimelockedToken } from "../src/TimelockedToken.sol";
 
 import { FakeERC20 } from "../src/helpers/FakeERC20.sol";
 import { CrowdSaleHelpers } from "./helpers/CrowdSaleHelpers.sol";
-import { ITokenVesting } from "../src/ITokenVesting.sol";
+import { ITokenVesting, ROLE_CREATE_SCHEDULE } from "../src/ITokenVesting.sol";
 
 
 /**
@@ -55,13 +56,13 @@ contract CrowdSaleWithNonStandardERC20Test is Test {
 
         auctionToken.mint(emitter, 500_000 ether);
 
-        vestedDao = new ITokenVesting(
+        vestedDao = ITokenVesting(address(new TokenVesting(
             daoToken,
             string(abi.encodePacked("Vested ", daoToken.name())),
             string(abi.encodePacked("v", daoToken.symbol()))
-        );
+        )));
 
-        vestedDao.grantRole(vestedDao.ROLE_CREATE_SCHEDULE(), address(crowdSale));
+        vestedDao.grantRole(ROLE_CREATE_SCHEDULE, address(crowdSale));
         crowdSale.trustVestingContract(vestedDao);
         vm.stopPrank();
         vm.startPrank(bidder);

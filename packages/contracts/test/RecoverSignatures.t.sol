@@ -4,6 +4,8 @@ pragma solidity ^0.8.24;
 import "forge-std/Test.sol";
 import "forge-std/console.sol";
 import { SignatureChecker } from "@openzeppelin/contracts/utils/cryptography/SignatureChecker.sol";
+import { MessageHashUtils } from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
+
 import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
 // TODO: Rename to "As a molecule holder..." and create new signatures
@@ -29,7 +31,7 @@ contract ReoverSigs is Test {
             "As a fraction holder of IPNFT #10, I accept all terms that I've read here: 0x616e2061677265656d656e742068617368000000000000000000000000000000\n\nChain Id: 31337\nVersion: 1";
         bytes memory signature =
             hex"c4bbbf808b38943567915f2f5e6dc87a44d8e2f3f2fd298a850ea87bf632afd41c993814d8d69aacc9b0f438d05bfc58e99b3c09296dde3fb813fe18673fa98b1b";
-        bytes32 ethSignedMessageHash = ECDSA.toEthSignedMessageHash(abi.encodePacked(message));
+        bytes32 ethSignedMessageHash = MessageHashUtils.toEthSignedMessageHash(abi.encodePacked(message));
         bool isValid = SignatureChecker.isValidSignatureNow(_signer, ethSignedMessageHash, signature);
 
         console.log(isValid);
