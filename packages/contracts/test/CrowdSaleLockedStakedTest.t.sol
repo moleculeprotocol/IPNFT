@@ -19,8 +19,7 @@ import {
 } from "../src/crowdsale/StakedLockingCrowdSale.sol";
 import { TimelockedToken } from "../src/TimelockedToken.sol";
 import { ITokenVesting } from "../src/ITokenVesting.sol";
-
-import { FakeERC20 } from "../src/helpers/FakeERC20.sol";
+import { TokenVesting } from "@moleculeprotocol/token-vesting/TokenVesting.sol";
 //import { BioPriceFeed, IPriceFeedConsumer } from "../src/BioPriceFeed.sol";
 import { CrowdSaleHelpers } from "./helpers/CrowdSaleHelpers.sol";
 
@@ -57,7 +56,7 @@ contract CrowdSaleLockedStakedTest is Test {
 
         crowdSale = new StakedLockingCrowdSale();
 
-        vestedDao = new ITokenVesting(
+        vestedDao = new TokenVesting(
             daoToken,
             string(abi.encodePacked("Vested ", daoToken.name())),
             string(abi.encodePacked("v", daoToken.symbol()))
