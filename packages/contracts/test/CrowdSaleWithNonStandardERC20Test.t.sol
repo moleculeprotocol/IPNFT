@@ -35,8 +35,6 @@ contract CrowdSaleWithNonStandardERC20Test is Test {
     //this typically is the DAO's general vesting contract
     ITokenVesting internal vestedDao;
 
-    //BioPriceFeed internal priceFeed;
-
     StakedLockingCrowdSale internal crowdSale;
 
     function setUp() public {
@@ -47,11 +45,6 @@ contract CrowdSaleWithNonStandardERC20Test is Test {
         biddingToken.setDecimals(6);
 
         daoToken = new FakeERC20("DAO token", "DAO");
-
-        // BioPriceFeed internal priceFeed = new BioPriceFeed();
-        // // 1=1 is the trivial case
-        // priceFeed.signal(address(biddingToken), address(daoToken), 1e18);
-
         crowdSale = new StakedLockingCrowdSale();
 
         auctionToken.mint(emitter, 500_000 ether);

@@ -16,7 +16,6 @@ import { StakedLockingCrowdSale, BadPrice } from "../src/crowdsale/StakedLocking
 import { IPermissioner, TermsAcceptedPermissioner, InvalidSignature, BlindPermissioner } from "../src/Permissioner.sol";
 import { TimelockedToken } from "../src/TimelockedToken.sol";
 import { FakeERC20, PermissionedERC20Token } from "../src/helpers/FakeERC20.sol";
-//import { BioPriceFeed, IPriceFeedConsumer } from "../src/BioPriceFeed.sol";
 import { CrowdSaleHelpers } from "./helpers/CrowdSaleHelpers.sol";
 import { ITokenVesting, ROLE_CREATE_SCHEDULE } from "../src/ITokenVesting.sol";
 
@@ -35,7 +34,6 @@ contract CrowdSalePermissionedTest is Test {
     ITokenVesting internal vestedDao;
 
     TermsAcceptedPermissioner internal permissioner;
-    //BioPriceFeed internal priceFeed;
 
     StakedLockingCrowdSale internal crowdSale;
 

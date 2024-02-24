@@ -21,7 +21,6 @@ import {
 import { TimelockedToken } from "../src/TimelockedToken.sol";
 import { ITokenVesting, ROLE_CREATE_SCHEDULE } from "../src/ITokenVesting.sol";
 import { TokenVesting } from "@moleculeprotocol/token-vesting/TokenVesting.sol";
-//import { BioPriceFeed, IPriceFeedConsumer } from "../src/BioPriceFeed.sol";
 import { CrowdSaleHelpers } from "./helpers/CrowdSaleHelpers.sol";
 
 contract CrowdSaleLockedStakedTest is Test {
@@ -39,8 +38,6 @@ contract CrowdSaleLockedStakedTest is Test {
     //this typically is the DAO's general vesting contract
     ITokenVesting internal vestedDao;
 
-    //BioPriceFeed internal priceFeed;
-
     StakedLockingCrowdSale internal crowdSale;
 
     function setUp() public {
@@ -50,11 +47,6 @@ contract CrowdSaleLockedStakedTest is Test {
         auctionToken.mint(emitter, 500_000 ether);
         biddingToken = new FakeERC20("USD token", "USDC");
         daoToken = new FakeERC20("DAO token", "DAO");
-
-        // BioPriceFeed internal priceFeed = new BioPriceFeed();
-        // // 1=1 is the trivial case
-        // priceFeed.signal(address(biddingToken), address(daoToken), 1e18);
-
         crowdSale = new StakedLockingCrowdSale();
 
         vestedDao = ITokenVesting(address(new TokenVesting(
