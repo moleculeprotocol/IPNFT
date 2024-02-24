@@ -5,6 +5,9 @@ import "forge-std/Test.sol";
 import "forge-std/console.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import { IERC20Errors } from "@openzeppelin/contracts/interfaces/draft-IERC6093.sol";
+import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
+
 import {
     CrowdSale,
     SaleState,
@@ -64,7 +67,7 @@ contract CrowdSaleTest is Test {
         assertEq(crowdSale.owner(), deployer);
 
         vm.startPrank(anyone);
-        vm.expectRevert("Ownable: caller is not the owner");
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, anyone));
         crowdSale.setCurrentFeesBp(2500);
         vm.stopPrank();
 
@@ -102,7 +105,7 @@ contract CrowdSaleTest is Test {
         Sale memory _sale = CrowdSaleHelpers.makeSale(poorguy, auctionToken, biddingToken);
 
         vm.startPrank(poorguy);
-        vm.expectRevert("ERC20: insufficient allowance");
+        vm.expectRevert(abi.encodeWithSelector(IERC20Errors.ERC20InsufficientAllowance.selector, crowdSale, 0, 400_000 ether));
         crowdSale.startSale(_sale);
         vm.stopPrank();
     }

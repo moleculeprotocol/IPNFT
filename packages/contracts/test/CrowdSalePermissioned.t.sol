@@ -15,7 +15,7 @@ import { CrowdSale, Sale, SaleInfo, SaleState, BadDecimals } from "../src/crowds
 import { StakedLockingCrowdSale, BadPrice } from "../src/crowdsale/StakedLockingCrowdSale.sol";
 import { IPermissioner, TermsAcceptedPermissioner, InvalidSignature, BlindPermissioner } from "../src/Permissioner.sol";
 import { TimelockedToken } from "../src/TimelockedToken.sol";
-import { FakeERC20 } from "../src/helpers/FakeERC20.sol";
+import { FakeERC20, PermissionedERC20Token } from "../src/helpers/FakeERC20.sol";
 //import { BioPriceFeed, IPriceFeedConsumer } from "../src/BioPriceFeed.sol";
 import { CrowdSaleHelpers } from "./helpers/CrowdSaleHelpers.sol";
 import { ITokenVesting, ROLE_CREATE_SCHEDULE } from "../src/ITokenVesting.sol";
@@ -47,7 +47,7 @@ contract CrowdSalePermissionedTest is Test {
 
         biddingToken = new FakeERC20("USD token", "USDC");
         daoToken = new FakeERC20("DAO token", "DAO");
-
+        auctionToken = new PermissionedERC20Token("IP Token", "IPT", agreementCid);
         crowdSale = new StakedLockingCrowdSale();
 
         vestedDao = ITokenVesting(address(new TokenVesting(
@@ -86,7 +86,7 @@ contract CrowdSalePermissionedTest is Test {
         uint256 saleId = crowdSale.startSale(_sale, daoToken, vestedDao, 1e18, 60 days);
         vm.stopPrank();
 
-        string memory terms = permissioner.specificTerms("abcde");
+        string memory terms = permissioner.specificTerms(agreementCid);
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(bidderPk, MessageHashUtils.toEthSignedMessageHash(abi.encodePacked(terms)));
 
         bytes memory xsignature = abi.encodePacked(r, s, v);
