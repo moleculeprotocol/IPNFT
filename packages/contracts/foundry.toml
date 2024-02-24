@@ -1,0 +1,25 @@
+[profile.default]
+src = 'src'
+out = 'out'
+libs = ['lib']
+test = 'test'
+gas_reports = [
+  "CrowdSale",
+  "LockingCrowdSale",
+  "StakedLockingCrowdSale",
+  "TimelockedToken",
+  "TermsAcceptedPermissioner",
+]
+
+[fmt]
+bracket_spacing = true
+line_length = 120
+tab_width = 4
+quote_style = 'double'
+func_attrs_with_params_multiline = true
+override_spacing = false
+
+[rpc_endpoints]
+optimism = "https://optimism-goerli.infura.io/v3/${INFURA_KEY}"
+goerli = "https://goerli.infura.io/v3/${INFURA_KEY}"
+mainnet = "https://mainnet.infura.io/v3/${INFURA_KEY}"
