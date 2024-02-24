@@ -1,0 +1,15 @@
+[submodule "lib/forge-std"]
+	path = lib/forge-std
+	url = https://github.com/foundry-rs/forge-std
+[submodule "lib/safe-contracts"]
+	path = lib/safe-contracts
+	url = https://github.com/safe-global/safe-contracts
+	branch = v1.4.0
+
+[submodule "lib/solidity-base64"]
+	path = lib/solidity-base64
+	url = https://github.com/hir0min/solidity-base64
+[submodule "lib/openzeppelin-contracts"]
+	path = lib/openzeppelin-contracts
+	url = https://github.com/OpenZeppelin/openzeppelin-contracts
+	branch = oz5

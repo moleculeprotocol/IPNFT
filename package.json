@@ -1,16 +1,6 @@
 {
-  "license": "MIT",
-  "scripts": {
-    "test": "hardhat test --network hardhat"
-  },
-  "devDependencies": {
-    "@nomicfoundation/hardhat-foundry": "^1.0.0",
-    "@nomicfoundation/hardhat-network-helpers": "^1.0.6",
-    "@nomiclabs/hardhat-ethers": "^2.2.1",
-    "@nomiclabs/hardhat-etherscan": "^3.1.2",
-    "@openzeppelin/hardhat-upgrades": "^1.21.0",
-    "chai": "^4.3.7",
-    "ethers": "^5.7.2",
-    "hardhat": "^2.14.0"
+  "engines": {
+      "node": ">=20",
+      "pnpm": ">=8"
   }
 }

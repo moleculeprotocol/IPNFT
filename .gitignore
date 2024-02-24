@@ -13,8 +13,7 @@ out/
 
 # hardhat 
 node_modules
-cache_hardhat/
-cache_forge/
+cache/
 artifacts/
 .openzeppelin/unknown-*
 backup/
