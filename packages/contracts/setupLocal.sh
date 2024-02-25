@@ -23,32 +23,31 @@ while [ "$#" -gt 0 ]; do
 done
 
 FSC="forge script  -f $RPC_URL --broadcast --legacy --revert-strings debug"
+DEPLOY_KEY="0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
 
 # Deployments
-$FSC script/dev/Ipnft.s.sol:DeployIpnftSuite 
-$FSC script/dev/Tokens.s.sol:DeployTokens  
-$FSC script/dev/Periphery.s.sol 
-$FSC script/dev/Tokenizer.s.sol:DeployTokenizer  
-$FSC script/dev/CrowdSale.s.sol:DeployStakedCrowdSale 
-$FSC script/dev/Tokens.s.sol:DeployFakeTokens
-$FSC script/dev/CrowdSale.s.sol:DeployCrowdSale 
+$FSC --private-key $DEPLOY_KEY script/CrowdSale.s.sol:DeployPeriphery 
+$FSC --private-key $DEPLOY_KEY script/CrowdSale.s.sol:DeployCrowdSale 
+$FSC --private-key $DEPLOY_KEY script/CrowdSale.s.sol:DeployStakedCrowdSale 
 
 # optionally: fixtures
 if [ "$fixture" -eq "1" ]; then
   echo "Running fixture scripts."
 
-  $FSC script/dev/Ipnft.s.sol:FixtureIpnft 
-  $FSC script/dev/Tokenizer.s.sol:FixtureTokenizer 
+  $FSC script/dev/TestSetup.s.sol:DeployFakeTokens
+  forge create --rpc-url $RPC_URL --private-key $DEPLOY_KEY WETH9
+  $FSC script/dev/TestSetup.s.sol:DeployPermissionedToken
+  $FSC script/dev/TestSetup.s.sol:DeployTokenVesting
+  $FSC script/dev/TestSetup.s.sol:FixtureCrowdSale 
 
-  $FSC script/dev/CrowdSale.s.sol:FixtureCrowdSale 
   echo "Waiting 15 seconds until claiming plain sale..."
-  sleep 16
-  cast rpc evm_mine
-  CROWDSALE=$PLAIN_CROWDSALE_ADDRESS $FSC script/dev/CrowdSale.s.sol:ClaimSale
+  sleep 15
+  cast rpc --rpc-url $RPC_URL evm_mine
+  CROWDSALE=$PLAIN_CROWDSALE_ADDRESS $FSC script/dev/TestSetup.s.sol:ClaimSale
 
-  $FSC script/dev/CrowdSale.s.sol:FixtureStakedCrowdSale
+  $FSC script/dev/TestSetup.s.sol:FixtureStakedCrowdSale
   echo "Waiting 15 seconds until claiming staked sale..."
-  sleep 16
-  cast rpc evm_mine
-  CROWDSALE=$STAKED_LOCKING_CROWDSALE_ADDRESS $FSC script/dev/CrowdSale.s.sol:ClaimSale
+  sleep 15
+  cast rpc --rpc-url $RPC_URL evm_mine
+  CROWDSALE=$STAKED_LOCKING_CROWDSALE_ADDRESS $FSC script/dev/TestSetup.s.sol:ClaimSale
 fi

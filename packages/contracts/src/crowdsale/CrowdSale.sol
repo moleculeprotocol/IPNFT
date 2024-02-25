@@ -98,6 +98,10 @@ contract CrowdSale is ReentrancyGuard, Ownable {
         currentFeeBp = newFeeBp;
     }
 
+    function getSale(uint256 saleId) external view returns (Sale memory) {
+        return _sales[saleId];
+    }
+    
     /**
      * @notice bidding tokens can have arbitrary decimals, auctionTokens must be 18 decimals
      *         if no beneficiary is provided, the beneficiary will be set to msg.sender

@@ -30,5 +30,5 @@ contract PermissionedERC20Token is FakeERC20, IPermissionable {
 
     constructor(string memory name_, string memory symbol_, string memory agreementCid_) FakeERC20(name_, symbol_){
         agreementCid = agreementCid_;
-        }
+    }
 }
