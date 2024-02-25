@@ -1,41 +1,25 @@
-type Ipnft @entity {
-  id: ID! #tokenId
-  owner: Bytes! # address
-  createdAt: BigInt!
-  tokenURI: String!
-  symbol: String
-  listings: [Listing!] @derivedFrom(field: "ipnft")
-  readers: [CanRead!] @derivedFrom(field: "ipnft")
-  ipts: [IPT!] @derivedFrom(field: "ipnft")
-}
-
-type IPT @entity {
+type Token @entity {
   id: ID! # ipt address
   name: String!
   symbol: String!
   decimals: BigInt!
   agreementCid: String! #IPFS CID string of FAM Agreement
-  originalOwner: Bytes! # address of the issuer
   # these will be updated by the underlying IPT subgraph template
   totalIssued: BigInt! #the highest amount of IPTs issued, this can be raised by the owner
   circulatingSupply: BigInt! #the amount of unburnt IPTs
-  #   paymentToken: Bytes #address ERC20 Token
-  #   paidPrice: BigInt #the price paid for the original ipnft
-  #   claimedShares: BigInt! # the amount of shares that have already been claimed. This needs to have a fulfilledListingId to be set
-  ipnft: Ipnft
   lockedToken: TimelockedToken #the locked token that bidders partially receive when claiming
-  iptBalances: [IPTBalance!] @derivedFrom(field: "ipt")
-  crowdsales: [CrowdSale!] @derivedFrom(field: "ipt")
+  balances: [Balance!] @derivedFrom(field: "token")
+  crowdsales: [CrowdSale!] @derivedFrom(field: "token")
   createdAt: BigInt!
 }
 
-type IPTBalance @entity {
+type Balance @entity {
   id: ID! # erc20address + owner address
-  ipt: IPT!
+  token: Token!
   balance: BigInt! # Token balance of the owner
   owner: Bytes! #Address of the token owner
   agreementSignature: Bytes #the agreement signature, to be reused for other operations
-  schedules: [LockedSchedule!] @derivedFrom(field: "iptBalance")
+  schedules: [LockedSchedule!] @derivedFrom(field: "balance")
 }
 
 type ERC20Token @entity {
@@ -51,7 +35,7 @@ type TimelockedToken @entity {
   symbol: String!
   name: String
   underlyingToken: ERC20Token
-  ipt: IPT
+  token: Token
   schedules: [LockedSchedule!] @derivedFrom(field: "tokenContract")
 }
 
@@ -62,43 +46,9 @@ type LockedSchedule @entity {
   amount: BigInt!
   expiresAt: BigInt!
   claimedAt: BigInt
-  iptBalance: IPTBalance!
+  balance: Balance!
 }
 
-type Listing @entity {
-  id: ID!
-  ipnft: Ipnft!
-  creator: Bytes! #address
-  paymentToken: Bytes! #address ERC20 Token
-  beneficiary: Bytes! #address of the account that'll receive the payment
-  askPrice: BigInt!
-  createdAt: BigInt!
-  unlistedAt: BigInt
-  purchasedAt: BigInt
-  buyer: Bytes #address
-  allowed: [Allowed!] @derivedFrom(field: "listing")
-}
-
-type CanRead @entity {
-  id: ID! #keccak(tokenId,address)
-  ipnft: Ipnft!
-  reader: Bytes! #address
-  until: BigInt
-}
-
-type Allowed @entity {
-  id: ID! #listingid-account
-  account: Bytes!
-  listing: Listing!
-  allowed: Boolean!
-}
-
-type Reservation @entity {
-  id: ID! #reservationId will be future tokenId
-  owner: Bytes! #address
-  uri: String
-  createdAt: BigInt!
-}
 
 enum SaleState {
   UNKNOWN
@@ -114,9 +64,10 @@ enum SaleType {
 
 type CrowdSale @entity {
   id: ID!
-  ipt: IPT!
-  issuer: Bytes! #address of the creator
-  beneficiary: Bytes! #address of the receiver of fundingGoal (usually issuer)
+  type: SaleType!
+  token: Token!
+  creator: Bytes! #address of the creator
+  beneficiary: Bytes! #address of the receiver of fundingGoal (usually creator)
   closingTime: BigInt! #the time when the auction ends
   createdAt: BigInt! #the time when the auction was created
   state: SaleState!
@@ -130,11 +81,11 @@ type CrowdSale @entity {
   vestedStakingToken: ERC20Token #the vested staking token that bidders partially receive after claiming
   stakingDuration: BigInt # The duration for how long staked tokens are locked ("cliff" in vesting terms)
   wadFixedStakedPerBidPrice: BigInt # the fixed price of stake / bid token
-  permissioner: Bytes! #a crowdsale can be configured with an individual permissioner
+  permissioner: Bytes #a crowdsale can be configured with an individual permissioner
   claimedAt: BigInt # the date when the auctioneer has claimed their return (depending on failed / settled sales)
   contributions: [Contribution!] @derivedFrom(field: "crowdSale")
   feeBp: Int # the percentage fee that will be cut from the crowdsale upon its success
-  type: SaleType!
+
 }
 
 type Contribution @entity {

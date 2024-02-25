@@ -10,23 +10,23 @@ import {
 } from '../generated/CrowdSale/CrowdSale'
 import { IERC20Metadata } from '../generated/CrowdSale/IERC20Metadata'
 
-import { CrowdSale, IPT } from '../generated/schema'
+import { CrowdSale, Token } from '../generated/schema'
 import { makeERC20Token } from './common'
 import * as GenericCrowdSale from './genericCrowdSale'
 
 export function handleStarted(event: StartedEvent): void {
   let crowdSale = new CrowdSale(event.params.saleId.toString())
 
-  let ipt = IPT.load(event.params.sale.auctionToken.toHexString())
-  if (!ipt) {
-    log.error('[Crowdsale] Ipt not found for id: {}', [
+  let token = Token.load(event.params.sale.auctionToken.toHexString())
+  if (!token) {
+    log.error('[Crowdsale] Token not found for id: {}', [
       event.params.sale.auctionToken.toHexString()
     ])
     return
   }
 
-  crowdSale.ipt = ipt.id
-  crowdSale.issuer = event.params.issuer
+  crowdSale.token = token.id
+  crowdSale.creator = event.params.issuer
   crowdSale.feeBp = event.params.feeBp
   crowdSale.beneficiary = event.params.sale.beneficiary
   crowdSale.closingTime = event.params.sale.closingTime

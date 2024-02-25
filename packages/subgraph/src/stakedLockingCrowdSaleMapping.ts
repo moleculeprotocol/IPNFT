@@ -16,8 +16,8 @@ import {
   LockingContractCreated as LockingContractCreatedEvent,
   Settled as SettledEvent,
   Staked as StakedEvent,
-  Started3 as LegacyStartedEvent,
-  Started as StartedEvent
+  Started as StartedEvent,
+  Started3 as StakedLockingStartedEvent
 } from '../generated/StakedLockingCrowdSale/StakedLockingCrowdSale'
 
 import { Started as PlainStartedEvent } from '../generated/CrowdSale/CrowdSale'
@@ -26,32 +26,12 @@ import { handleStarted as plainHandleStarted } from './crowdSaleMapping'
 
 import * as GenericCrowdSale from './genericCrowdSale'
 
-import { Contribution, CrowdSale, ERC20Token, IPT } from '../generated/schema'
+import { Contribution, CrowdSale, ERC20Token, Token } from '../generated/schema'
 
 import { TimelockedToken as TimelockedTokenTemplate } from '../generated/templates'
 import { makeERC20Token, makeTimelockedToken } from './common'
 
-export function handleStartedLegacy(event: LegacyStartedEvent): void {
-  const parameters = event.parameters
-  parameters[7] = new ethereum.EventParam(
-    'feeBp',
-    new ethereum.Value(ethereum.ValueKind.UINT, 0)
-  )
-  const _started = new StartedEvent(
-    event.address,
-    event.logIndex,
-    event.transactionLogIndex,
-    event.logType,
-    event.block,
-    event.transaction,
-    parameters,
-    event.receipt
-  )
-
-  return handleStarted(_started)
-}
-
-export function handleStarted(event: StartedEvent): void {
+export function handleStarted(event: StakedLockingStartedEvent): void {
   const _plain = new PlainStartedEvent(
     event.address,
     event.logIndex,
@@ -78,22 +58,22 @@ export function handleStarted(event: StartedEvent): void {
     return
   }
 
-  let ipt = IPT.load(event.params.sale.auctionToken.toHexString())
-  if (!ipt) {
-    log.error('[Crowdsale] Ipt not found for id: {}', [
+  let token = Token.load(event.params.sale.auctionToken.toHexString())
+  if (!token) {
+    log.error('[Crowdsale] Token not found for id: {}', [
       event.params.sale.auctionToken.toHexString()
     ])
     return
   }
 
-  if (!ipt.lockedToken) {
-    ipt.lockedToken = event.params.lockingToken
-    ipt.save()
+  if (!token.lockedToken) {
+    token.lockedToken = event.params.lockingToken
+    token.save()
   } else {
-    let _ipt = changetype<Bytes>(ipt.lockedToken).toHexString()
+    let _ipt = changetype<Bytes>(token.lockedToken).toHexString()
     let _newToken = event.params.lockingToken.toHexString()
     if (_ipt != _newToken) {
-      log.error('the locking token per IPT should be unique {} != {}', [
+      log.error('the locking token per Token should be unique {} != {}', [
         _ipt,
         _newToken
       ])
@@ -131,7 +111,7 @@ export function handleLockingContractCreated(
   event: LockingContractCreatedEvent
 ): void {
   let context = new DataSourceContext()
-  context.setBytes('ipt', event.params.underlyingToken)
+  context.setBytes('token', event.params.underlyingToken)
   context.setBytes('lockingContract', event.params.lockingContract)
   TimelockedTokenTemplate.createWithContext(
     event.params.lockingContract,

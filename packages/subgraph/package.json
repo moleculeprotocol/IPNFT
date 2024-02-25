@@ -1,21 +1,18 @@
 {
-  "name": "@molecule/ipfnt-subgraph",
+  "name": "@moleculexyz/crowdsale-subgraph",
   "license": "MIT",
   "scripts": {
-    "abis": "./makeAbis.sh",
     "codegen": "graph codegen",
-    "build": "graph codegen && graph build",
-    "prepare:local": "mustache config/local.js subgraph.template.yaml > subgraph.yaml",
-    "prepare:sepolia": "mustache config/sepolia.js subgraph.template.yaml > subgraph.yaml",
-    "prepare:mainnet": "mustache config/mainnet.js subgraph.template.yaml > subgraph.yaml",
-    "deploy:sepolia": "env-cmd -x -f ../.env graph deploy moleculexyz-ipnft-sepolia --version-label v0.0.1 --node https://subgraphs.alchemy.com/api/subgraphs/deploy --ipfs https://ipfs.satsuma.xyz --deploy-key \\$SATSUMA_DEPLOY_KEY",
-    "deploy": "graph deploy --product hosted-service moleculeprotocol/ip-nft-mainnet",
-    "create:local": "graph create --node http://localhost:8020/ moleculeprotocol/ipnft-subgraph",
-    "remove:local": "graph remove --node http://localhost:8020/ moleculeprotocol/ipnft-subgraph",
-    "deploy:local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 moleculeprotocol/ipnft-subgraph",
+    "build:local": "graph build --network foundry",
+    "build:sepolia": "graph build --network sepolia",
+    "create:local": "graph create --node http://localhost:8020/ moleculexyz/crowdsale",
+    "remove:local": "graph remove --node http://localhost:8020/ moleculexyz/crowdsale",
+    "deploy:local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 moleculexyz/crowdsale",
+    "deploy": "graph deploy --studio molecule-crowdsale",    
     "test": "graph test"
   },
   "dependencies": {
+    "@moleculexyz/crowdsale": "workspace:*",
     "@graphprotocol/graph-cli": "^0.68.3",
     "@graphprotocol/graph-ts": "^0.33.0",
     "matchstick-as": "0.6.0"

@@ -1,6 +1,6 @@
 import { dataSource, log, BigInt } from '@graphprotocol/graph-ts'
 
-import { LockedSchedule, IPTBalance } from '../generated/schema'
+import { LockedSchedule, Balance } from '../generated/schema'
 import {
   ScheduleCreated,
   ScheduleReleased
@@ -10,20 +10,20 @@ export function handleScheduled(event: ScheduleCreated): void {
   let context = dataSource.context()
   let schedule = new LockedSchedule(event.params.scheduleId)
 
-  let ipt = context.getBytes('ipt').toHexString()
-  let balanceId = ipt + '-' + event.params.beneficiary.toHexString()
+  let token = context.getBytes('token').toHexString()
+  let balanceId = token + '-' + event.params.beneficiary.toHexString()
 
-  let iptBalance = IPTBalance.load(balanceId)
-  if (!iptBalance) {
-    iptBalance = new IPTBalance(balanceId)
-    iptBalance.ipt = ipt
-    iptBalance.balance = BigInt.fromI32(0)
-    iptBalance.owner = event.params.beneficiary
-    iptBalance.agreementSignature = null
-    iptBalance.save()
+  let balance = Balance.load(balanceId)
+  if (!balance) {
+    balance = new Balance(balanceId)
+    balance.token = token
+    balance.balance = BigInt.fromI32(0)
+    balance.owner = event.params.beneficiary
+    balance.agreementSignature = null
+    balance.save()
   }
 
-  schedule.iptBalance = balanceId
+  schedule.balance = balanceId
   schedule.tokenContract = context.getBytes('lockingContract')
   schedule.beneficiary = event.params.beneficiary
   schedule.amount = event.params.amount
