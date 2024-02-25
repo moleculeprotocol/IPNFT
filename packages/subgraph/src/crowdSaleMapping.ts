@@ -10,20 +10,15 @@ import {
 } from '../generated/CrowdSale/CrowdSale'
 import { IERC20Metadata } from '../generated/CrowdSale/IERC20Metadata'
 
-import { CrowdSale, Token } from '../generated/schema'
-import { makeERC20Token } from './common'
+import { CrowdSale,  Token } from '../generated/schema'
+import { makeToken } from './common'
 import * as GenericCrowdSale from './genericCrowdSale'
 
 export function handleStarted(event: StartedEvent): void {
   let crowdSale = new CrowdSale(event.params.saleId.toString())
 
-  let token = Token.load(event.params.sale.auctionToken.toHexString())
-  if (!token) {
-    log.error('[Crowdsale] Token not found for id: {}', [
-      event.params.sale.auctionToken.toHexString()
-    ])
-    return
-  }
+  //let token = Token.load(event.params.sale.auctionToken)
+  let token = makeToken(IERC20Metadata.bind(event.params.sale.auctionToken))
 
   crowdSale.token = token.id
   crowdSale.creator = event.params.issuer
@@ -35,7 +30,7 @@ export function handleStarted(event: StartedEvent): void {
 
   crowdSale.salesAmount = event.params.sale.salesAmount
 
-  crowdSale.biddingToken = makeERC20Token(
+  crowdSale.biddingToken = makeToken(
     IERC20Metadata.bind(event.params.sale.biddingToken)
   ).id
   crowdSale.fundingGoal = event.params.sale.fundingGoal
@@ -48,6 +43,7 @@ export function handleStarted(event: StartedEvent): void {
 
   crowdSale.save()
   log.info('[handleStarted] crowdsale {}', [crowdSale.id])
+
 }
 
 export function handleSettled(event: SettledEvent): void {

@@ -26,10 +26,10 @@ import { handleStarted as plainHandleStarted } from './crowdSaleMapping'
 
 import * as GenericCrowdSale from './genericCrowdSale'
 
-import { Contribution, CrowdSale, ERC20Token, Token } from '../generated/schema'
+import { Contribution, CrowdSale, Token } from '../generated/schema'
 
 import { TimelockedToken as TimelockedTokenTemplate } from '../generated/templates'
-import { makeERC20Token, makeTimelockedToken } from './common'
+import { makeToken, makeTimelockedToken } from './common'
 
 export function handleStarted(event: StakedLockingStartedEvent): void {
   const _plain = new PlainStartedEvent(
@@ -58,35 +58,30 @@ export function handleStarted(event: StakedLockingStartedEvent): void {
     return
   }
 
-  let token = Token.load(event.params.sale.auctionToken.toHexString())
+  let token = Token.load(event.params.sale.auctionToken)
   if (!token) {
-    log.error('[Crowdsale] Token not found for id: {}', [
-      event.params.sale.auctionToken.toHexString()
-    ])
+    log.error("[LSCS:handleStarted] Token wasnt created by plain handler: {}", [event.params.saleId.toHexString()])
     return
   }
 
-  if (!token.lockedToken) {
-    token.lockedToken = event.params.lockingToken
-    token.save()
-  } else {
-    let _ipt = changetype<Bytes>(token.lockedToken).toHexString()
-    let _newToken = event.params.lockingToken.toHexString()
-    if (_ipt != _newToken) {
-      log.error('the locking token per Token should be unique {} != {}', [
-        _ipt,
-        _newToken
-      ])
-    }
-  }
+  // if (token.lockedToken) {
+  //   if (token.lockedToken._id != event.params.lockingToken) {
+  //     log.error('the locking token per Token should be unique {} != {}', [
+  //       token.lockedToken.toHexString(),
+  //       event.params.lockingToken.toHexString()
+  //     ])
+  //   } 
+  // } else {
+  //   token.lockedToken = event.params.lockingToken
+  // }
 
   crowdSale.amountStaked = BigInt.fromU32(0)
   crowdSale.auctionLockingDuration = event.params.lockingDuration
 
-  crowdSale.stakingToken = makeERC20Token(
+  crowdSale.stakingToken = makeToken(
     IERC20Metadata.bind(event.params.staking.stakedToken)
   ).id
-  crowdSale.vestedStakingToken = makeERC20Token(
+  crowdSale.vestedStakingToken = makeToken(
     IERC20Metadata.bind(event.params.staking.stakesVestingContract)
   ).id
   crowdSale.stakingDuration = event.params.stakingDuration
@@ -95,6 +90,7 @@ export function handleStarted(event: StakedLockingStartedEvent): void {
 
   crowdSale.type = 'STAKED_LOCKING_CROWDSALE'
 
+  token.save()
   crowdSale.save()
   log.info('[handleStarted] staked locking crowdsale {}', [crowdSale.id])
 }
@@ -117,16 +113,16 @@ export function handleLockingContractCreated(
     event.params.lockingContract,
     context
   )
-  const _underlyingTokenContract: IERC20Metadata = IERC20Metadata.bind(
-    event.params.underlyingToken
-  )
-  const underlyingErc20Token: ERC20Token = makeERC20Token(
-    _underlyingTokenContract
+
+  const underlyingToken: Token = makeToken(
+    IERC20Metadata.bind(
+      event.params.underlyingToken
+    )
   )
 
   makeTimelockedToken(
     IERC20Metadata.bind(event.params.lockingContract),
-    underlyingErc20Token
+    underlyingToken
   )
 }
 

@@ -10,8 +10,8 @@ export function handleScheduled(event: ScheduleCreated): void {
   let context = dataSource.context()
   let schedule = new LockedSchedule(event.params.scheduleId)
 
-  let token = context.getBytes('token').toHexString()
-  let balanceId = token + '-' + event.params.beneficiary.toHexString()
+  let token = context.getBytes('token')
+  let balanceId = token.toHexString() + '-' + event.params.beneficiary.toHexString()
 
   let balance = Balance.load(balanceId)
   if (!balance) {

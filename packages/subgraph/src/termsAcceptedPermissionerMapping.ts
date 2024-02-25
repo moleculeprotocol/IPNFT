@@ -8,18 +8,18 @@ export function handleTermsAccepted(event: TermsAcceptedEvent): void {
     '-' +
     event.params.signer.toHexString()
 
-  let iptBalance = Balance.load(balanceId)
+  let balance = Balance.load(balanceId)
 
-  if (!iptBalance) {
-    let reacted = Token.load(event.params.tokenContract.toHexString())
-    if (!reacted) {
+  if (!balance) {
+    let token = Token.load(event.params.tokenContract)
+    if (!token) {
       log.warning('Token {} not found for signature', [balanceId])
     }
-    iptBalance = new Balance(balanceId)
-    iptBalance.owner = event.params.signer
-    iptBalance.token = event.params.tokenContract.toHexString()
-    iptBalance.balance = BigInt.fromI32(0)
+    balance = new Balance(balanceId)
+    balance.owner = event.params.signer
+    balance.token = event.params.tokenContract
+    balance.balance = BigInt.fromI32(0)
   }
-  iptBalance.agreementSignature = event.params.signature
-  iptBalance.save()
+  balance.agreementSignature = event.params.signature
+  balance.save()
 }

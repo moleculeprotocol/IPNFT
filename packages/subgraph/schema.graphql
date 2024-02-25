@@ -1,17 +1,16 @@
-type Token @entity {
-  id: ID! # ipt address
-  name: String!
-  symbol: String!
-  decimals: BigInt!
-  agreementCid: String! #IPFS CID string of FAM Agreement
-  # these will be updated by the underlying IPT subgraph template
-  totalIssued: BigInt! #the highest amount of IPTs issued, this can be raised by the owner
-  circulatingSupply: BigInt! #the amount of unburnt IPTs
-  lockedToken: TimelockedToken #the locked token that bidders partially receive when claiming
-  balances: [Balance!] @derivedFrom(field: "token")
-  crowdsales: [CrowdSale!] @derivedFrom(field: "token")
-  createdAt: BigInt!
-}
+# type Token @entity {
+#   id: ID! # ipt address
+#   name: String!
+#   symbol: String!
+#   decimals: BigInt!
+#   # agreementCid: String! #IPFS CID string of FAM Agreement
+#   # these will be updated by the underlying IPT subgraph template
+#   #totalIssued: BigInt! #the highest amount of IPTs issued, this can be raised by the owner
+#   #circulatingSupply: BigInt! #the amount of unburnt IPTs
+#   lockedToken: TimelockedToken #the locked token that bidders partially receive when claiming
+#   # balances: [Balance!] @derivedFrom(field: "token")
+#   crowdsales: [CrowdSale!] @derivedFrom(field: "token")
+# }
 
 type Balance @entity {
   id: ID! # erc20address + owner address
@@ -22,20 +21,21 @@ type Balance @entity {
   schedules: [LockedSchedule!] @derivedFrom(field: "balance")
 }
 
-type ERC20Token @entity {
+type Token @entity {
   id: Bytes!
-  decimals: BigInt!
+  decimals: Int!
   symbol: String!
   name: String
+  #the locked token that bidders partially receive when claiming
+  lockedToken: TimelockedToken @derivedFrom(field: "underlyingToken")
 }
 
 type TimelockedToken @entity {
   id: Bytes!
-  decimals: BigInt!
+  decimals: Int!
   symbol: String!
   name: String
-  underlyingToken: ERC20Token
-  token: Token
+  underlyingToken: Token
   schedules: [LockedSchedule!] @derivedFrom(field: "tokenContract")
 }
 
@@ -73,12 +73,12 @@ type CrowdSale @entity {
   state: SaleState!
   salesAmount: BigInt! #the amount of tokens to be auctioned
   auctionLockingDuration: BigInt # The duration for how long auction tokens are locked
-  biddingToken: ERC20Token
+  biddingToken: Token
   fundingGoal: BigInt! #the amount of tokens to be raised
   amountRaised: BigInt! #the amount of tokens raised so far
-  stakingToken: ERC20Token
+  stakingToken: Token
   amountStaked: BigInt! #the amount of tokens staked so far
-  vestedStakingToken: ERC20Token #the vested staking token that bidders partially receive after claiming
+  vestedStakingToken: Token #the vested staking token that bidders partially receive after claiming
   stakingDuration: BigInt # The duration for how long staked tokens are locked ("cliff" in vesting terms)
   wadFixedStakedPerBidPrice: BigInt # the fixed price of stake / bid token
   permissioner: Bytes #a crowdsale can be configured with an individual permissioner

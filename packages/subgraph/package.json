@@ -3,7 +3,7 @@
   "license": "MIT",
   "scripts": {
     "codegen": "graph codegen",
-    "build:local": "graph build --network foundry",
+    "build:local": "graph build --network foundry && sed -ire  's/network\\: foundry/network\\: mainnet/g' subgraph.yaml",
     "build:sepolia": "graph build --network sepolia",
     "create:local": "graph create --node http://localhost:8020/ moleculexyz/crowdsale",
     "remove:local": "graph remove --node http://localhost:8020/ moleculexyz/crowdsale",
