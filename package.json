@@ -2,5 +2,8 @@
   "engines": {
       "node": ">=20",
       "pnpm": ">=8"
+  },
+  "scripts": {
+    "infra": "./infra/init.sh"
   }
 }

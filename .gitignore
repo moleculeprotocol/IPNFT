@@ -17,3 +17,5 @@ cache/
 artifacts/
 .openzeppelin/unknown-*
 backup/
+data/
+*.yamlre
