@@ -4,7 +4,7 @@ pragma solidity ^0.8.24;
 import "forge-std/Script.sol";
 import "forge-std/console.sol";
 import { IPermissioner, BlindPermissioner, TermsAcceptedPermissioner } from "../../src/Permissioner.sol";
-import {FakeERC20, PermissionedERC20Token} from "../../src/helpers/FakeERC20.sol";    
+import { FakeERC20, PermissionedERC20Token } from "../../src/helpers/FakeERC20.sol";
 import { CommonScript } from "./Common.sol";
 import { ERC20 } from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -27,7 +27,7 @@ contract DeployFakeTokens is CommonScript {
         vm.startBroadcast(deployer);
         FakeERC20 usdc = new FakeERC20("Usdc", "USDC");
         usdc.setDecimals(6);
-        
+
         FakeERC20 daotoken = new FakeERC20("Bio DAO", "BDAO");
         vm.stopBroadcast();
 
@@ -53,20 +53,24 @@ contract DeployTokenVesting is CommonScript {
         vm.startBroadcast(deployer);
 
         IERC20Metadata daoToken = IERC20Metadata(vm.envAddress("DAO_TOKEN_ADDRESS"));
-        
-        StakedLockingCrowdSale stakedLockingCrowdSale = StakedLockingCrowdSale(vm.envAddress("STAKED_LOCKING_CROWDSALE_ADDRESS"));
 
-        ITokenVesting tokenVesting = ITokenVesting(address(new TokenVesting(
-            daoToken,
-            string(abi.encodePacked("Vested ", daoToken.name())),
-            string(abi.encodePacked("v", daoToken.symbol()))
-        )));
-        
+        StakedLockingCrowdSale stakedLockingCrowdSale =
+            StakedLockingCrowdSale(vm.envAddress("STAKED_LOCKING_CROWDSALE_ADDRESS"));
+
+        ITokenVesting tokenVesting = ITokenVesting(
+            address(
+                new TokenVesting(
+                    daoToken,
+                    string(abi.encodePacked("Vested ", daoToken.name())),
+                    string(abi.encodePacked("v", daoToken.symbol()))
+                )
+            )
+        );
+
         tokenVesting.grantRole(ROLE_CREATE_SCHEDULE, address(stakedLockingCrowdSale));
         stakedLockingCrowdSale.trustVestingContract(tokenVesting);
         vm.stopBroadcast();
         console.log("TOKEN_VESTING_ADDRESS=%s", address(tokenVesting));
-
     }
 }
 
@@ -96,7 +100,6 @@ contract FixtureCrowdSale is CommonScript {
     }
 
     function prepareRun() internal virtual returns (Sale memory _sale) {
-        
         dealERC20(bob, 100_000 ether, auctionToken);
         dealERC20(alice, 50_000e6, usdc);
         dealERC20(charlie, 50_000e6, usdc);
@@ -135,7 +138,8 @@ contract FixtureCrowdSale is CommonScript {
 
         string memory terms = permissioner.specificTerms("bafkrei");
 
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(alicePk, MessageHashUtils.toEthSignedMessageHash(abi.encodePacked(terms)));
+        (uint8 v, bytes32 r, bytes32 s) =
+            vm.sign(alicePk, MessageHashUtils.toEthSignedMessageHash(abi.encodePacked(terms)));
         placeBid(alice, 600e6, saleId, abi.encodePacked(r, s, v));
 
         (v, r, s) = vm.sign(charliePk, MessageHashUtils.toEthSignedMessageHash(abi.encodePacked(terms)));
@@ -168,7 +172,7 @@ contract FixtureStakedCrowdSale is FixtureCrowdSale {
     function startSale() internal override returns (uint256 saleId) {
         Sale memory _sale = prepareRun();
         vm.startBroadcast(bob);
-        saleId = _slCrowdSale.startSale(_sale, daoToken, vestedDaoToken, 1e6,7 days);
+        saleId = _slCrowdSale.startSale(_sale, daoToken, vestedDaoToken, 1e6, 7 days);
         vm.stopBroadcast();
     }
 
@@ -191,7 +195,8 @@ contract ClaimSale is CommonScript {
     function run() public {
         prepareAddresses();
         CrowdSale crowdSale = CrowdSale(vm.envAddress("CROWDSALE"));
-        TermsAcceptedPermissioner permissioner = TermsAcceptedPermissioner(vm.envAddress("TERMS_ACCEPTED_PERMISSIONER_ADDRESS"));
+        TermsAcceptedPermissioner permissioner =
+            TermsAcceptedPermissioner(vm.envAddress("TERMS_ACCEPTED_PERMISSIONER_ADDRESS"));
 
         FakeERC20 auctionToken = FakeERC20(vm.envAddress("IPTOKEN_ADDRESS"));
         uint256 saleId = SLib.stringToUint(vm.readFile("SALEID.txt"));
@@ -203,7 +208,8 @@ contract ClaimSale is CommonScript {
 
         string memory terms = permissioner.specificTerms("bafkrei");
 
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(alicePk, MessageHashUtils.toEthSignedMessageHash(abi.encodePacked(terms)));
+        (uint8 v, bytes32 r, bytes32 s) =
+            vm.sign(alicePk, MessageHashUtils.toEthSignedMessageHash(abi.encodePacked(terms)));
         vm.startBroadcast(alice);
         crowdSale.claim(saleId, abi.encodePacked(r, s, v));
         vm.stopBroadcast();
