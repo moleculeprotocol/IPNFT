@@ -1,16 +1,18 @@
 import {
   crowdSaleAddress,
   useReadErc20Decimals,
+  useWriteCrowdSale,
   useWriteCrowdSaleStartSale,
 } from "@/generated/wagmi";
 import { SaleType, makeDefaultValues } from "@/lib/crowdsale";
 import { FormProvider, SubmitHandler, useForm } from "react-hook-form";
-import { Address } from "viem";
-import { useChainId } from "wagmi";
+import { Address, zeroAddress } from "viem";
+import { useChainId, useWaitForTransactionReceipt } from "wagmi";
 import { BNInput } from "../atoms/BNInput";
 import { TokenInput } from "../atoms/TokenInput";
 import { TokenSelector } from "../atoms/TokenSelector";
 import { CreateCrowdSaleInputType } from "../shared/inputSchemas/Crowdsale";
+import { useCallback, useEffect } from "react";
 
 export const CreatePlainCrowdsaleForm = () => {
   const chainId = useChainId();
@@ -22,7 +24,7 @@ export const CreatePlainCrowdsaleForm = () => {
     defaultValues: makeDefaultValues(SaleType.Crowdsale, undefined),
   });
 
-  const { writeContractAsync: startSale } = useWriteCrowdSaleStartSale();
+  const { writeContractAsync: crowdSale, data: txHash } = useWriteCrowdSale();
 
   const { formState, handleSubmit, control, watch, register } = formProps;
 
@@ -32,23 +34,30 @@ export const CreatePlainCrowdsaleForm = () => {
     address: biddingTokenAddress as Address,
   });
 
-  const onSubmit: SubmitHandler<CreateCrowdSaleInputType> = (data) => {
-    console.log(data);
+  const { data: receipt } = useWaitForTransactionReceipt({ hash: txHash });
 
-    // startSale({
-    //   args: [
-    //     {
-    //       auctionToken: data.auctionToken as Address,
-    //       biddingToken: data.biddingToken as Address,
-    //       beneficiary: data.beneficiary as Address,
-    //       fundingGoal: parseEther(data.fundingGoal),
-    //       salesAmount: parseEther(data.salesAmount),
-    //       closingTime: BigInt(data.closingTime.getTime() / 1000),
-    //       permissioner: zeroAddress,
-    //     },
-    //   ],
-    // });
-  };
+  useEffect(() => {
+    console.log(receipt);
+  }, [receipt]);
+  const onSubmit: SubmitHandler<CreateCrowdSaleInputType> = useCallback(
+    async (data) => {
+      crowdSale({
+        functionName: "startSale",
+        args: [
+          {
+            auctionToken: data.auctionToken as Address,
+            biddingToken: data.biddingToken as Address,
+            beneficiary: data.beneficiary as Address,
+            fundingGoal: data.fundingGoal,
+            salesAmount: data.salesAmount,
+            closingTime: BigInt(new Date(data.closingTime).getTime() / 1000),
+            permissioner: zeroAddress,
+          },
+        ],
+      });
+    },
+    [crowdSale]
+  );
 
   return (
     <FormProvider {...formProps}>
