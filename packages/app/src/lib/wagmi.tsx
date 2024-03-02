@@ -6,12 +6,6 @@ import { sepolia, foundry } from "wagmi/chains";
 import { Config, WagmiProvider, createConfig, http } from "wagmi";
 import { useEffect, useState } from "react";
 
-declare module "wagmi" {
-  interface Register {
-    config: typeof config;
-  }
-}
-
 export const Web3Provider = ({ children }: { children: React.ReactNode }) => {
   const [config, setConfig] = useState<Config>();
 

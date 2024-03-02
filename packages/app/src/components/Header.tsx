@@ -3,7 +3,7 @@ import { ConnectKitButton } from "connectkit";
 
 export const Header = () => {
   return (
-    <div>
+    <div className="p-2 mb-4">
       <ConnectKitButton />
     </div>
   );
