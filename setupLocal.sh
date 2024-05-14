@@ -22,7 +22,7 @@ while [ "$#" -gt 0 ]; do
   shift
 done
 
-FSC="forge script  -f $RPC_URL --broadcast --legacy --revert-strings debug"
+FSC="forge script  -f $RPC_URL --broadcast"
 
 # Deployments
 $FSC script/dev/Ipnft.s.sol:DeployIpnftSuite 
