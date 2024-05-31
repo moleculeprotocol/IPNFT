@@ -18,8 +18,8 @@ IP-NFTs allow their users to tokenize intellectual property. This repo contains 
 
 #### Subgraph
 
-API: https://api.thegraph.com/subgraphs/name/moleculeprotocol/ip-nft-mainnet
-Playground: https://api.thegraph.com/subgraphs/name/moleculeprotocol/ip-nft-mainnet/graphql
+API: https://subgraph.satsuma-prod.com/742d8952ab24/molecule--4039244/ip-nft-mainnet/api
+Playground: https://subgraph.satsuma-prod.com/molecule--4039244/ip-nft-mainnet/playground
 
 tokenizer implementation 1.2: 0xE8701330F196FeFe415b28dAA767AB076F42557A
 tokenizer implementation 1.1: 0x9C70FA8c87D7e94Fd63eeCCcA657D5c4224a36f3
@@ -28,7 +28,7 @@ ipnft implementation 2.4: 0x6B179Dffac5E190c670176606f552cB792847f80
 
 #### Defender Relayer
 
-signs off minting requests from our side: 0x3D30452c48F2448764d5819a9A2b684Ae2CC5AcF
+Deprecated after migrating to Defender 2 (was 0x3D30452c48F2448764d5819a9A2b684Ae2CC5AcF). We're using a key signoff with 0x8626c6293B5101E5E534B5B60F411a37294D8cBE.
 
 ---
 
@@ -46,14 +46,14 @@ signs off minting requests from our side: 0x3D30452c48F2448764d5819a9A2b684Ae2CC
 
 #### Subgraphs
 
-on Satsuma, Tech Account
+on Satsuma, Techprod Account
 
-API: https://subgraph.satsuma-prod.com/techs-team--4017766/moleculexyz-ipnft-sepolia/version/v0.0.1/api
-Playground: https://subgraph.satsuma-prod.com/techs-team--4017766/moleculexyz-ipnft-sepolia/playground
+API: https://subgraph.satsuma-prod.com/742d8952ab24/molecule--4039244/ip-nft-sepolia/api
+Playground: https://subgraph.satsuma-prod.com/molecule--4039244/ip-nft-sepolia/playground
 
 #### Defender Relayer
 
-signs off minting requests from our side: 0xd7B298c9fB0377124d01D4E826d9D5beFB7CD6FE
+Deprecated after migrating to Defender 2 (was 0xd7B298c9fB0377124d01D4E826d9D5beFB7CD6FE). We're using a key signoff with 0x8626c6293B5101E5E534B5B60F411a37294D8cBE.
 
 #### Tokens
 
