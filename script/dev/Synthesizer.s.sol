@@ -34,13 +34,7 @@ contract DeploySynthesizer is CommonScript {
     function run() public {
         prepareAddresses();
         vm.startBroadcast(deployer);
-        Synthesizer synthesizer = Synthesizer(
-            address(
-                new ERC1967Proxy(
-                    address(new Synthesizer()), ""
-                )
-            )
-        );
+        Synthesizer synthesizer = Synthesizer(address(new ERC1967Proxy(address(new Synthesizer()), "")));
         MolTermsAcceptedPermissioner oldPermissioner = new MolTermsAcceptedPermissioner();
 
         synthesizer.initialize(IPNFT(vm.envAddress("IPNFT_ADDRESS")), oldPermissioner);
@@ -97,7 +91,7 @@ contract UpgradeSynthesizerToTokenizer is CommonScript {
         Tokenizer tokenizer = Tokenizer(address(synthesizer));
 
         TermsAcceptedPermissioner newTermsPermissioner = new TermsAcceptedPermissioner();
-        tokenizer.reinit(newTermsPermissioner);
+        //todo tokenizer.reinit(newTermsPermissioner);
         vm.stopBroadcast();
 
         console.log("TOKENIZER_ADDRESS=%s", address(tokenizer)); //should equal synthesizer

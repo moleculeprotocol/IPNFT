@@ -55,7 +55,7 @@ contract PermissionerTest is Test {
 
         vm.startPrank(deployer);
         permissioner = new TermsAcceptedPermissioner();
-        tokenizer.reinit(permissioner);
+        vm.store(address(tokenizer), bytes32(uint256(3)), bytes32(uint256(uint160(address(permissioner)))));
         vm.stopPrank();
     }
 

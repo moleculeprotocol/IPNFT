@@ -5,17 +5,20 @@ import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils
 import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import { Clones } from "@openzeppelin/contracts/proxy/Clones.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
-import { IPToken, Metadata as TokenMetadata } from "../../IPToken.sol";
+import { IPToken12 as IPToken, Metadata as TokenMetadata } from "./IPToken12.sol";
 import { IPermissioner } from "../../Permissioner.sol";
 import { IPNFT } from "../../IPNFT.sol";
 
+import { IPToken as NewIPtoken } from "../../IPToken.sol";
+
 error MustOwnIpnft();
 error AlreadyTokenized();
+error ZeroAddress();
 
-/// @title Tokenizer 1.1
+/// @title Tokenizer 1.2
 /// @author molecule.to
-/// @notice tokenizes an IPNFT to an ERC20 token (called IPT) and controls its supply.
-contract Tokenizer11 is UUPSUpgradeable, OwnableUpgradeable {
+/// @notice tokenizes an IPNFT to an ERC20 token (called IPToken or IPT) and controls its supply.
+contract Tokenizer12 is UUPSUpgradeable, OwnableUpgradeable {
     event TokensCreated(
         uint256 indexed moleculesId,
         uint256 indexed ipnftId,
@@ -27,15 +30,23 @@ contract Tokenizer11 is UUPSUpgradeable, OwnableUpgradeable {
         string symbol
     );
 
+    event IPTokenImplementationUpdated(IPToken indexed old, IPToken indexed _new);
+    event PermissionerUpdated(IPermissioner indexed old, IPermissioner indexed _new);
+
     IPNFT internal ipnft;
 
-    //this is the old term to keep the storage layout intact
+    /// @dev a map of all IPTs. We're staying with the the initial term "synthesized" to keep the storage layout intact
     mapping(uint256 => IPToken) public synthesized;
+
+    /// @dev not used, needed to ensure that storage slots are still in order after 1.1 -> 1.2, use ipTokenImplementation
     /// @custom:oz-upgrades-unsafe-allow state-variable-immutable
     address immutable tokenImplementation;
 
     /// @dev the permissioner checks if senders have agreed to legal requirements
-    IPermissioner permissioner;
+    IPermissioner public permissioner;
+
+    /// @notice the IPToken implementation this Tokenizer spawns
+    IPToken public ipTokenImplementation;
 
     /**
      * @param _ipnft the IPNFT contract
@@ -50,12 +61,28 @@ contract Tokenizer11 is UUPSUpgradeable, OwnableUpgradeable {
 
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
-        tokenImplementation = address(new IPToken());
+        tokenImplementation = address(0);
         _disableInitializers();
     }
 
     /**
-     * @dev called after an upgrade to reinitialize a new permissioner impl. This is 4 for görli compatibility
+     * @notice sets the new implementation address of the IPToken
+     * @param _ipTokenImplementation address pointing to the new implementation
+     */
+    function setIPTokenImplementation(IPToken _ipTokenImplementation) external onlyOwner {
+        /*
+        could call some functions on old contract to make sure its tokenizer not another contract behind a proxy for safety
+        */
+        if (address(_ipTokenImplementation) == address(0)) {
+            revert ZeroAddress();
+        }
+
+        emit IPTokenImplementationUpdated(ipTokenImplementation, _ipTokenImplementation);
+        ipTokenImplementation = _ipTokenImplementation;
+    }
+
+    /**
+     * @dev called after an upgrade to reinitialize a new permissioner impl.
      * @param _permissioner the new TermsPermissioner
      */
     function reinit(IPermissioner _permissioner) public onlyOwner reinitializer(4) {
@@ -84,7 +111,7 @@ contract Tokenizer11 is UUPSUpgradeable, OwnableUpgradeable {
         }
 
         // https://github.com/OpenZeppelin/workshops/tree/master/02-contracts-clone
-        token = IPToken(Clones.clone(tokenImplementation));
+        token = IPToken(Clones.clone(address(ipTokenImplementation)));
         string memory name = string.concat("IP Tokens of IPNFT #", Strings.toString(ipnftId));
         token.initialize(name, tokenSymbol, TokenMetadata(ipnftId, _msgSender(), agreementCid));
 
@@ -98,7 +125,7 @@ contract Tokenizer11 is UUPSUpgradeable, OwnableUpgradeable {
 
         //this has been called MoleculesCreated before
         emit TokensCreated(tokenHash, ipnftId, address(token), _msgSender(), tokenAmount, agreementCid, name, tokenSymbol);
-        permissioner.accept(token, _msgSender(), signedAgreement);
+        permissioner.accept(NewIPtoken(address(token)), _msgSender(), signedAgreement);
         token.issue(_msgSender(), tokenAmount);
     }
 

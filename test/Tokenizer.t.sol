@@ -128,14 +128,16 @@ contract TokenizerTest is Test {
         tokenContract.transfer(alice, 25_000);
         tokenContract.transfer(bob, 25_000);
 
-        vm.expectRevert("Ownable: caller is not the owner");
-        tokenContract.issue(originalOwner, 100_000);
-
-        tokenizer.issue(tokenContract, 100_000, originalOwner);
+        tokenContract.issue(originalOwner, 50_000);
+        // this allows new owners of legacy IPTs to increase their supply:
+        tokenizer.issue(tokenContract, 50_000, originalOwner);
 
         vm.startPrank(bob);
-        vm.expectRevert("Ownable: caller is not the owner");
+        vm.expectRevert(MustOwnIpnft.selector);
         tokenContract.issue(bob, 12345);
+
+        vm.expectRevert(MustOwnIpnft.selector);
+        tokenContract.cap();
 
         assertEq(tokenContract.balanceOf(alice), 25_000);
         assertEq(tokenContract.balanceOf(bob), 25_000);
@@ -143,15 +145,11 @@ contract TokenizerTest is Test {
         assertEq(tokenContract.totalSupply(), 200_000);
         assertEq(tokenContract.totalIssued(), 200_000);
 
-        vm.startPrank(bob);
-        vm.expectRevert("Ownable: caller is not the owner");
-        tokenContract.cap();
-
         vm.startPrank(originalOwner);
-        vm.expectRevert("Ownable: caller is not the owner");
+        // both work and cap can be called multiple times without reverting
         tokenContract.cap();
-
         tokenizer.cap(tokenContract);
+
         vm.expectRevert(TokenCapped.selector);
         tokenizer.issue(tokenContract, 12345, bob);
     }

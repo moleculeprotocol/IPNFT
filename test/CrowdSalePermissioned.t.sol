@@ -79,18 +79,15 @@ contract CrowdSalePermissionedTest is Test {
         ipnft.mintReservation{ value: MINTING_FEE }(emitter, reservationId, "", "", "");
 
         auctionToken = tokenizer.tokenizeIpnft(1, 100_000, "IPT", agreementCid, "");
-        tokenizer.issue(auctionToken, 500_000 ether, emitter);
+        auctionToken.issue(emitter, 500_000 ether);
+
         vm.stopPrank();
 
-        vm.startPrank(deployer);
         // here's a funny hack we're utilizing only for this test:
         // to make the tokenization easier, we're using a BlindPermissioner above
         // from now on, we're switching to a TermsAcceptedPermissioner
-        // we utilize the reinit function with it's code based version id here to easily update it once after initialization.
-        // this oc is not how it'd work in real life: the permissioner is fixed during the contract deployment and can *only* be updated during a full contract implementation upgrade
         permissioner = new TermsAcceptedPermissioner();
-        tokenizer.reinit(permissioner);
-        vm.stopPrank();
+        vm.store(address(tokenizer), bytes32(uint256(3)), bytes32(uint256(uint160(address(permissioner)))));
 
         vm.startPrank(bidder);
         biddingToken.mint(bidder, 1_000_000 ether);

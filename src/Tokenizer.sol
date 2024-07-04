@@ -19,14 +19,7 @@ error IPTNotControlledByTokenizer();
 /// @notice tokenizes an IPNFT to an ERC20 token (called IPToken or IPT) and controls its supply.
 contract Tokenizer is UUPSUpgradeable, OwnableUpgradeable {
     event TokensCreated(
-        uint256 indexed moleculesId,
-        uint256 indexed ipnftId,
-        address indexed tokenContract,
-        address emitter,
-        uint256 amount,
-        string agreementCid,
-        string name,
-        string symbol
+        uint256 indexed ipnftId, address indexed tokenContract, address emitter, uint256 amount, string agreementCid, string name, string symbol
     );
 
     event IPTokenImplementationUpdated(IPToken indexed old, IPToken indexed _new);
@@ -64,21 +57,14 @@ contract Tokenizer is UUPSUpgradeable, OwnableUpgradeable {
         _disableInitializers();
     }
 
-    modifier onlyIPNFTHolder(uint256 ipnftId) {
-        if (ipnft.ownerOf(ipnftId) != _msgSender()) {
-            revert MustOwnIpnft();
-        }
-        _;
-    }
-
     //todo: try breaking this with a faked IPToken
     modifier onlyControlledIPTs(IPToken ipToken) {
-        IPToken token = synthesized[ipToken.hash()];
-        if (address(token) != address(ipToken)) {
+        TokenMetadata memory metadata = ipToken.metadata();
+
+        if (address(synthesized[metadata.ipnftId]) != address(ipToken)) {
             revert IPTNotControlledByTokenizer();
         }
 
-        TokenMetadata memory metadata = token.metadata();
         if (_msgSender() != ipnft.ownerOf(metadata.ipnftId)) {
             revert MustOwnIpnft();
         }
@@ -89,7 +75,7 @@ contract Tokenizer is UUPSUpgradeable, OwnableUpgradeable {
      * @notice sets the new implementation address of the IPToken
      * @param _ipTokenImplementation address pointing to the new implementation
      */
-    function setIPTokenImplementation(IPToken _ipTokenImplementation) external onlyOwner {
+    function setIPTokenImplementation(IPToken _ipTokenImplementation) public onlyOwner {
         /*
         could call some functions on old contract to make sure its tokenizer not another contract behind a proxy for safety
         */
@@ -102,16 +88,18 @@ contract Tokenizer is UUPSUpgradeable, OwnableUpgradeable {
     }
 
     /**
-     * @dev called after an upgrade to reinitialize a new permissioner impl.
-     * @param _permissioner the new TermsPermissioner
+     * @dev sets legacy IPTs on the tokenized mapping
      */
-    function reinit(IPermissioner _permissioner) public onlyOwner reinitializer(4) {
-        permissioner = _permissioner;
+    function reinit(IPToken _ipTokenImplementation) public onlyOwner reinitializer(5) {
+        synthesized[2] = IPToken(0x6034e0d6999741f07cb6Fb1162cBAA46a1D33d36);
+        synthesized[28] = IPToken(0x7b66E84Be78772a3afAF5ba8c1993a1B5D05F9C2);
+        synthesized[37] = IPToken(0xBcE56276591128047313e64744b3EBE03998783f);
+
+        setIPTokenImplementation(_ipTokenImplementation);
     }
 
     /**
-     * @notice initializes synthesis on ipnft#id for the current asset holder.
-     *         IPTokens are identified by the original token holder and the token id
+     * @notice tokenizes ipnft#id for the current asset holder.
      * @param ipnftId the token id on the underlying nft collection
      * @param tokenAmount the initially issued supply of IP tokens
      * @param tokenSymbol the ip token's ticker symbol
@@ -125,30 +113,30 @@ contract Tokenizer is UUPSUpgradeable, OwnableUpgradeable {
         string memory tokenSymbol,
         string memory agreementCid,
         bytes calldata signedAgreement
-    ) external onlyIPNFTHolder(ipnftId) returns (IPToken token) {
-        // https://github.com/OpenZeppelin/workshops/tree/master/02-contracts-clone
-        token = IPToken(Clones.clone(address(ipTokenImplementation)));
-        string memory name = string.concat("IP Tokens of IPNFT #", Strings.toString(ipnftId));
-        token.initialize(name, tokenSymbol, TokenMetadata(ipnftId, _msgSender(), agreementCid));
-
-        uint256 tokenHash = token.hash();
-
-        if (address(synthesized[tokenHash]) != address(0) || address(synthesized[legacyHash(ipnftId, _msgSender())]) != address(0)) {
+    ) external returns (IPToken token) {
+        if (ipnft.ownerOf(ipnftId) != _msgSender()) {
+            revert MustOwnIpnft();
+        }
+        if (address(synthesized[ipnftId]) != address(0)) {
             revert AlreadyTokenized();
         }
 
-        synthesized[tokenHash] = token;
+        // https://github.com/OpenZeppelin/workshops/tree/master/02-contracts-clone
+        token = IPToken(Clones.clone(address(ipTokenImplementation)));
+        string memory name = string.concat("IP Tokens of IPNFT #", Strings.toString(ipnftId));
+        token.initialize(ipnftId, name, tokenSymbol, _msgSender(), agreementCid);
+
+        synthesized[ipnftId] = token;
 
         //this has been called MoleculesCreated before
-        emit TokensCreated(tokenHash, ipnftId, address(token), _msgSender(), tokenAmount, agreementCid, name, tokenSymbol);
+        emit TokensCreated(ipnftId, address(token), _msgSender(), tokenAmount, agreementCid, name, tokenSymbol);
         permissioner.accept(token, _msgSender(), signedAgreement);
         token.issue(_msgSender(), tokenAmount);
     }
 
     /**
-     * @notice issues more IPTs for a given IPNFT
-     * @dev you must compute the ipt hash externally.
-     * @param ipToken the hash of the IPToken. See `IPToken.hash()` and `legacyHash()`. Some older IPT implementations required to compute the has as `uint256(keccak256(abi.encodePacked(owner,ipnftId)))`
+     * @notice issues more IPTs when not capped. This can be used for new owners of legacy IPTs that otherwise wouldn't be able to pass their `onlyIssuerOrOwner` gate
+     * @param ipToken The ip token to control
      * @param amount the amount of tokens to issue
      * @param receiver the address that receives the tokens
      */
@@ -165,13 +153,9 @@ contract Tokenizer is UUPSUpgradeable, OwnableUpgradeable {
         ipToken.cap();
     }
 
-    /**
-     * @dev computes the legacy hash for an IPToken. It depended on the IPNFT owner before. Helps ensuring that the current holder cannot refractionalize an IPT
-     * @param ipnftId IPNFT token id
-     * @param owner the owner for the current IPT sales cycle (old concept)
-     */
-    function legacyHash(uint256 ipnftId, address owner) public pure returns (uint256) {
-        return uint256(keccak256(abi.encodePacked(owner, ipnftId)));
+    /// @dev this will be called by IPTs to avoid handing over yet another IPNFT address (they already know this Tokenizer contract as their owner)
+    function ownerOf(uint256 ipnftId) external view returns (address) {
+        return ipnft.ownerOf(ipnftId);
     }
 
     /// @notice upgrade authorization logic

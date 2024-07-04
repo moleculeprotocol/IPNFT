@@ -10,7 +10,7 @@ import { SafeERC20Upgradeable } from "@openzeppelin/contracts-upgradeable/token/
 import { IPNFT } from "../../src/IPNFT.sol";
 
 import { MustOwnIpnft, AlreadyTokenized, Tokenizer } from "../../src/Tokenizer.sol";
-import { Tokenizer11 } from "../../src/helpers/test-upgrades/Tokenizer11.sol";
+import { Tokenizer12 } from "../../src/helpers/test-upgrades/Tokenizer12.sol";
 import { IPToken, TokenCapped, Metadata } from "../../src/IPToken.sol";
 import { IPermissioner, BlindPermissioner } from "../../src/Permissioner.sol";
 
@@ -54,9 +54,9 @@ contract TokenizerForkTest is Test {
         vm.selectFork(mainnetFork);
     }
 
-    function testCanUpgradeErc20TokenImplementation() public {
+    function testCanUpgradeToV13() public {
         IPNFT ipnftMainnetInstance = IPNFT(mainnetIPNFT);
-        Tokenizer11 tokenizer11 = Tokenizer11(mainnetTokenizer);
+        Tokenizer12 tokenizer12 = Tokenizer12(mainnetTokenizer);
 
         vm.startPrank(mainnetDeployer);
         Tokenizer newTokenizerImplementation = new Tokenizer();
@@ -64,8 +64,9 @@ contract TokenizerForkTest is Test {
         vm.stopPrank();
 
         vm.startPrank(mainnetOwner);
-        bytes memory upgradeCallData = abi.encodeWithSelector(Tokenizer.setIPTokenImplementation.selector, address(newIPTokenImplementation));
-        tokenizer11.upgradeToAndCall(address(newTokenizerImplementation), upgradeCallData);
+        bytes memory upgradeCallData = abi.encodeWithSelector(Tokenizer.reinit.selector, address(newIPTokenImplementation));
+        //todo: make sure that the legacy IPTs are indexed now
+        tokenizer12.upgradeToAndCall(address(newTokenizerImplementation), upgradeCallData);
         Tokenizer upgradedTokenizer = Tokenizer(mainnetTokenizer);
 
         assertEq(address(upgradedTokenizer.ipTokenImplementation()), address(newIPTokenImplementation));
@@ -77,14 +78,14 @@ contract TokenizerForkTest is Test {
         vm.expectRevert("Initializable: contract is already initialized");
         newTokenizerImplementation.initialize(IPNFT(address(0)), BlindPermissioner(address(0)));
         vm.expectRevert("Initializable: contract is already initialized");
-        newIPTokenImplementation.initialize("Foo", "Bar", Metadata(2, alice, "abcde"));
+        newIPTokenImplementation.initialize(2, "Foo", "Bar", alice, "abcde");
         vm.stopPrank();
 
         vm.startPrank(mainnetOwner);
         vm.expectRevert("Initializable: contract is already initialized");
         upgradedTokenizer.initialize(IPNFT(address(0)), BlindPermissioner(address(0)));
         vm.expectRevert("Initializable: contract is already initialized");
-        upgradedTokenizer.reinit(BlindPermissioner(address(0)));
+        upgradedTokenizer.reinit(IPToken(address(0)));
         vm.stopPrank();
 
         assertEq(ipnftMainnetInstance.ownerOf(valleyDaoIpnftId), valleyDaoMultisig);

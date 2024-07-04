@@ -58,6 +58,5 @@ contract FixtureTokenizer is CommonScript {
         vm.stopBroadcast();
 
         console.log("IPTS_ADDRESS=%s", address(tokenContract));
-        console.log("IPT round hash: %s", tokenContract.hash());
     }
 }
