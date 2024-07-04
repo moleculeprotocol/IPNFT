@@ -12,8 +12,9 @@ import { IPNFT } from "./IPNFT.sol";
 error MustOwnIpnft();
 error AlreadyTokenized();
 error ZeroAddress();
+error IPTNotControlledByTokenizer();
 
-/// @title Tokenizer 1.2
+/// @title Tokenizer 1.3
 /// @author molecule.to
 /// @notice tokenizes an IPNFT to an ERC20 token (called IPToken or IPT) and controls its supply.
 contract Tokenizer is UUPSUpgradeable, OwnableUpgradeable {
@@ -63,6 +64,27 @@ contract Tokenizer is UUPSUpgradeable, OwnableUpgradeable {
         _disableInitializers();
     }
 
+    modifier onlyIPNFTHolder(uint256 ipnftId) {
+        if (ipnft.ownerOf(ipnftId) != _msgSender()) {
+            revert MustOwnIpnft();
+        }
+        _;
+    }
+
+    //todo: try breaking this with a faked IPToken
+    modifier onlyControlledIPTs(IPToken ipToken) {
+        IPToken token = synthesized[ipToken.hash()];
+        if (address(token) != address(ipToken)) {
+            revert IPTNotControlledByTokenizer();
+        }
+
+        TokenMetadata memory metadata = token.metadata();
+        if (_msgSender() != ipnft.ownerOf(metadata.ipnftId)) {
+            revert MustOwnIpnft();
+        }
+        _;
+    }
+
     /**
      * @notice sets the new implementation address of the IPToken
      * @param _ipTokenImplementation address pointing to the new implementation
@@ -103,19 +125,15 @@ contract Tokenizer is UUPSUpgradeable, OwnableUpgradeable {
         string memory tokenSymbol,
         string memory agreementCid,
         bytes calldata signedAgreement
-    ) external returns (IPToken token) {
-        if (ipnft.ownerOf(ipnftId) != _msgSender()) {
-            revert MustOwnIpnft();
-        }
-
+    ) external onlyIPNFTHolder(ipnftId) returns (IPToken token) {
         // https://github.com/OpenZeppelin/workshops/tree/master/02-contracts-clone
         token = IPToken(Clones.clone(address(ipTokenImplementation)));
         string memory name = string.concat("IP Tokens of IPNFT #", Strings.toString(ipnftId));
         token.initialize(name, tokenSymbol, TokenMetadata(ipnftId, _msgSender(), agreementCid));
 
         uint256 tokenHash = token.hash();
-        // ensure we can only call this once per sales cycle
-        if (address(synthesized[tokenHash]) != address(0)) {
+
+        if (address(synthesized[tokenHash]) != address(0) || address(synthesized[legacyHash(ipnftId, _msgSender())]) != address(0)) {
             revert AlreadyTokenized();
         }
 
@@ -125,6 +143,35 @@ contract Tokenizer is UUPSUpgradeable, OwnableUpgradeable {
         emit TokensCreated(tokenHash, ipnftId, address(token), _msgSender(), tokenAmount, agreementCid, name, tokenSymbol);
         permissioner.accept(token, _msgSender(), signedAgreement);
         token.issue(_msgSender(), tokenAmount);
+    }
+
+    /**
+     * @notice issues more IPTs for a given IPNFT
+     * @dev you must compute the ipt hash externally.
+     * @param ipToken the hash of the IPToken. See `IPToken.hash()` and `legacyHash()`. Some older IPT implementations required to compute the has as `uint256(keccak256(abi.encodePacked(owner,ipnftId)))`
+     * @param amount the amount of tokens to issue
+     * @param receiver the address that receives the tokens
+     */
+    function issue(IPToken ipToken, uint256 amount, address receiver) external onlyControlledIPTs(ipToken) {
+        ipToken.issue(receiver, amount);
+    }
+
+    /**
+     * @notice caps the supply of an IPT. After calling this, no new tokens can be `issue`d
+     * @dev you must compute the ipt hash externally.
+     * @param ipToken the IPToken to cap.
+     */
+    function cap(IPToken ipToken) external onlyControlledIPTs(ipToken) {
+        ipToken.cap();
+    }
+
+    /**
+     * @dev computes the legacy hash for an IPToken. It depended on the IPNFT owner before. Helps ensuring that the current holder cannot refractionalize an IPT
+     * @param ipnftId IPNFT token id
+     * @param owner the owner for the current IPT sales cycle (old concept)
+     */
+    function legacyHash(uint256 ipnftId, address owner) public pure returns (uint256) {
+        return uint256(keccak256(abi.encodePacked(owner, ipnftId)));
     }
 
     /// @notice upgrade authorization logic

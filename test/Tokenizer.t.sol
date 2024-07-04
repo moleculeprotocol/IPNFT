@@ -19,12 +19,10 @@ import { AcceptAllAuthorizer } from "./helpers/AcceptAllAuthorizer.sol";
 import { FakeERC20 } from "../src/helpers/FakeERC20.sol";
 import { MustOwnIpnft, AlreadyTokenized, Tokenizer, ZeroAddress } from "../src/Tokenizer.sol";
 
-import { IPToken, OnlyIssuerOrOwner, TokenCapped } from "../src/IPToken.sol";
+import { IPToken, TokenCapped } from "../src/IPToken.sol";
 import { Molecules } from "../src/helpers/test-upgrades/Molecules.sol";
 import { Synthesizer } from "../src/helpers/test-upgrades/Synthesizer.sol";
 import { IPermissioner, BlindPermissioner } from "../src/Permissioner.sol";
-
-import { SchmackoSwap, ListingState } from "../src/SchmackoSwap.sol";
 
 contract TokenizerTest is Test {
     using SafeERC20Upgradeable for IPToken;
@@ -50,7 +48,7 @@ contract TokenizerTest is Test {
 
     IPNFT internal ipnft;
     Tokenizer internal tokenizer;
-    SchmackoSwap internal schmackoSwap;
+
     IPermissioner internal blindPermissioner;
     FakeERC20 internal erc20;
 
@@ -63,8 +61,7 @@ contract TokenizerTest is Test {
         ipnft.initialize();
         ipnft.setAuthorizer(new AcceptAllAuthorizer());
 
-        schmackoSwap = new SchmackoSwap();
-        erc20 = new FakeERC20('Fake ERC20', 'FERC');
+        erc20 = new FakeERC20("Fake ERC20", "FERC");
         erc20.mint(ipnftBuyer, 1_000_000 ether);
 
         blindPermissioner = new BlindPermissioner();
@@ -79,7 +76,6 @@ contract TokenizerTest is Test {
         vm.startPrank(originalOwner);
         uint256 reservationId = ipnft.reserve();
         ipnft.mintReservation{ value: MINTING_FEE }(originalOwner, reservationId, ipfsUri, DEFAULT_SYMBOL, "");
-        vm.stopPrank();
     }
 
     function testSetIPTokenImplementation() public {
@@ -95,7 +91,6 @@ contract TokenizerTest is Test {
         vm.startPrank(originalOwner);
         vm.expectRevert("Ownable: caller is not the owner");
         tokenizer.setIPTokenImplementation(newIPTokenImplementation);
-        vm.stopPrank();
     }
 
     function testUrl() public {
@@ -103,7 +98,6 @@ contract TokenizerTest is Test {
         IPToken tokenContract = tokenizer.tokenizeIpnft(1, 100_000, "IPT", agreementCid, "");
         string memory uri = tokenContract.uri();
         assertGt(bytes(uri).length, 200);
-        vm.stopPrank();
     }
 
     function testIssueIPToken() public {
@@ -121,27 +115,27 @@ contract TokenizerTest is Test {
 
         vm.startPrank(originalOwner);
         tokenContract.transfer(alice, 10_000);
-        vm.stopPrank();
 
         assertEq(tokenContract.balanceOf(alice), 10_000);
         assertEq(tokenContract.balanceOf(originalOwner), 90_000);
         assertEq(tokenContract.totalSupply(), 100_000);
     }
 
-    function testIncreaseIPToken() public {
+    function testIncreaseIPTokenSupply() public {
         vm.startPrank(originalOwner);
         IPToken tokenContract = tokenizer.tokenizeIpnft(1, 100_000, "IPT", agreementCid, "");
 
         tokenContract.transfer(alice, 25_000);
         tokenContract.transfer(bob, 25_000);
 
+        vm.expectRevert("Ownable: caller is not the owner");
         tokenContract.issue(originalOwner, 100_000);
-        vm.stopPrank();
+
+        tokenizer.issue(tokenContract, 100_000, originalOwner);
 
         vm.startPrank(bob);
-        vm.expectRevert(OnlyIssuerOrOwner.selector);
+        vm.expectRevert("Ownable: caller is not the owner");
         tokenContract.issue(bob, 12345);
-        vm.stopPrank();
 
         assertEq(tokenContract.balanceOf(alice), 25_000);
         assertEq(tokenContract.balanceOf(bob), 25_000);
@@ -150,15 +144,16 @@ contract TokenizerTest is Test {
         assertEq(tokenContract.totalIssued(), 200_000);
 
         vm.startPrank(bob);
-        vm.expectRevert(OnlyIssuerOrOwner.selector);
+        vm.expectRevert("Ownable: caller is not the owner");
         tokenContract.cap();
-        vm.stopPrank();
 
         vm.startPrank(originalOwner);
+        vm.expectRevert("Ownable: caller is not the owner");
         tokenContract.cap();
+
+        tokenizer.cap(tokenContract);
         vm.expectRevert(TokenCapped.selector);
-        tokenContract.issue(bob, 12345);
-        vm.stopPrank();
+        tokenizer.issue(tokenContract, 12345, bob);
     }
 
     function testCanBeTokenizedOnlyOnce() public {
@@ -209,7 +204,6 @@ contract TokenizerTest is Test {
         wallet.execTransaction(
             address(tokenContract), 0, transferCall, Enum.Operation.Call, 80_000, 1 gwei, 20 gwei, address(0x0), payable(0x0), xsignatures
         );
-        vm.stopPrank();
 
         assertEq(tokenContract.balanceOf(bob), 10_000);
     }

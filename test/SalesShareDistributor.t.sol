@@ -28,7 +28,7 @@ import {
     InsufficientBalance
 } from "../src/SalesShareDistributor.sol";
 
-import { IPToken, OnlyIssuerOrOwner } from "../src/IPToken.sol";
+import { IPToken } from "../src/IPToken.sol";
 import { SchmackoSwap, ListingState } from "../src/SchmackoSwap.sol";
 import { FakeERC20 } from "../src/helpers/FakeERC20.sol";
 
@@ -77,29 +77,11 @@ contract SalesShareDistributorTest is Test {
 
         IPToken ipTokenImplementation = new IPToken();
 
-        tokenizer = Tokenizer(
-            address(
-                new ERC1967Proxy(
-                    address(
-                        new Tokenizer()
-                    ),
-                    ""
-                )
-            )
-        );
+        tokenizer = Tokenizer(address(new ERC1967Proxy(address(new Tokenizer()), "")));
         tokenizer.initialize(ipnft, blindPermissioner);
         tokenizer.setIPTokenImplementation(ipTokenImplementation);
 
-        distributor = SalesShareDistributor(
-            address(
-                new ERC1967Proxy(
-                    address(
-                        new SalesShareDistributor()
-                    ),
-                    ""
-                )
-            )
-        );
+        distributor = SalesShareDistributor(address(new ERC1967Proxy(address(new SalesShareDistributor()), "")));
         distributor.initialize(schmackoSwap);
         vm.stopPrank();
 
@@ -145,14 +127,12 @@ contract SalesShareDistributorTest is Test {
 
     function testStartClaimingPhase() public {
         vm.startPrank(originalOwner);
-        // ipnft.setApprovalForAll(address(tokenizer), true);
         IPToken tokenContract = tokenizer.tokenizeIpnft(1, 100_000, "MOLE", agreementCid, "");
 
-        uint256 listingId = helpCreateListing(1_000_000 ether, address(distributor));
-        vm.stopPrank();
+        // This is maximally important to do upfront. Otherwise the new buyer could simply issue new tokens and claim it back for themselves
+        tokenizer.cap(tokenContract);
 
-        assertEq(tokenContract.issuer(), originalOwner);
-        vm.startPrank(originalOwner);
+        uint256 listingId = helpCreateListing(1_000_000 ether, address(distributor));
         vm.expectRevert(ListingNotFulfilled.selector);
         distributor.afterSale(tokenContract, listingId, blindPermissioner);
         vm.stopPrank();
@@ -160,15 +140,10 @@ contract SalesShareDistributorTest is Test {
         vm.startPrank(ipnftBuyer);
         erc20.approve(address(schmackoSwap), 1_000_000 ether);
         schmackoSwap.fulfill(listingId);
-        vm.stopPrank();
 
         assertEq(erc20.balanceOf(address(distributor)), 1_000_000 ether);
 
         vm.startPrank(originalOwner);
-        vm.expectRevert(UncappedToken.selector);
-        distributor.afterSale(tokenContract, listingId, blindPermissioner);
-
-        tokenContract.cap();
         distributor.afterSale(tokenContract, listingId, blindPermissioner);
         vm.stopPrank();
 
@@ -179,20 +154,16 @@ contract SalesShareDistributorTest is Test {
     function testManuallyStartClaimingPhase() public {
         vm.startPrank(originalOwner);
         IPToken tokenContract = tokenizer.tokenizeIpnft(1, 100_000, "MOLE", agreementCid, "");
+        tokenizer.cap(tokenContract);
         ipnft.safeTransferFrom(originalOwner, ipnftBuyer, 1);
-        assertEq(tokenContract.issuer(), originalOwner);
-        tokenContract.cap();
-        vm.stopPrank();
 
         vm.startPrank(ipnftBuyer);
         erc20.transfer(originalOwner, 1_000_000 ether);
-        vm.stopPrank();
 
         // only the owner can manually start the claiming phase.
         vm.startPrank(bob);
         vm.expectRevert(OnlyIssuer.selector);
         distributor.afterSale(tokenContract, erc20, 1_000_000 ether, blindPermissioner);
-        vm.stopPrank();
 
         vm.startPrank(originalOwner);
         vm.expectRevert(); // not approved
@@ -200,7 +171,6 @@ contract SalesShareDistributorTest is Test {
 
         erc20.approve(address(distributor), 1_000_000 ether);
         distributor.afterSale(tokenContract, erc20, 1_000_000 ether, blindPermissioner);
-        vm.stopPrank();
 
         assertEq(erc20.balanceOf(address(originalOwner)), 0);
         (uint256 fulfilledListingId,,,) = distributor.sales(address(tokenContract));
@@ -210,7 +180,7 @@ contract SalesShareDistributorTest is Test {
     function testClaimBuyoutShares() public {
         vm.startPrank(originalOwner);
         IPToken tokenContract = tokenizer.tokenizeIpnft(1, 100_000, "MOLE", agreementCid, "");
-        tokenContract.cap();
+        tokenizer.cap(tokenContract);
 
         TermsAcceptedPermissioner permissioner = new TermsAcceptedPermissioner();
 
@@ -220,11 +190,9 @@ contract SalesShareDistributorTest is Test {
 
         vm.startPrank(ipnftBuyer);
         erc20.transfer(originalOwner, 1_000_000 ether);
-        vm.stopPrank();
 
         vm.startPrank(originalOwner);
         ipnft.safeTransferFrom(originalOwner, ipnftBuyer, 1);
-        vm.stopPrank();
 
         (uint8 v, bytes32 r, bytes32 s) =
             vm.sign(alicePk, ECDSA.toEthSignedMessageHash(abi.encodePacked(permissioner.specificTermsV1(tokenContract))));
@@ -233,12 +201,10 @@ contract SalesShareDistributorTest is Test {
         //someone must start the claiming phase first
         vm.expectRevert(NotClaimingYet.selector);
         distributor.claim(tokenContract, abi.encodePacked(r, s, v));
-        vm.stopPrank();
 
         vm.startPrank(originalOwner);
         erc20.approve(address(distributor), 1_000_000 ether);
         distributor.afterSale(tokenContract, erc20, 1_000_000 ether, permissioner);
-        vm.stopPrank();
 
         vm.startPrank(alice);
         (, uint256 amount) = distributor.claimableTokens(tokenContract, alice);
@@ -279,7 +245,7 @@ contract SalesShareDistributorTest is Test {
     function testClaimBuyoutSharesAfterSwap() public {
         vm.startPrank(originalOwner);
         IPToken tokenContract = tokenizer.tokenizeIpnft(1, 100_000, "MOLE", agreementCid, "");
-        tokenContract.cap();
+        tokenizer.cap(tokenContract);
 
         uint256 listingId = helpCreateListing(1_000_000 ether, address(distributor));
         tokenContract.safeTransfer(alice, 25_000);
@@ -324,7 +290,7 @@ contract SalesShareDistributorTest is Test {
 
         vm.startPrank(originalOwner);
         IPToken tokenContract = tokenizer.tokenizeIpnft(1, iptokenAmount, "MOLE", agreementCid, "");
-        tokenContract.cap();
+        tokenizer.cap(tokenContract);
 
         assertEq(tokenContract.balanceOf(originalOwner), iptokenAmount);
         tokenContract.safeTransfer(alice, iptokenAmount);
@@ -344,23 +310,19 @@ contract SalesShareDistributorTest is Test {
     function testClaimingFraud() public {
         vm.startPrank(originalOwner);
         IPToken tokenContract1 = tokenizer.tokenizeIpnft(1, 100_000, "MOLE", agreementCid, "");
-        tokenContract1.cap();
+        tokenizer.cap(tokenContract1);
+
         ipnft.setApprovalForAll(address(schmackoSwap), true);
         uint256 listingId1 = schmackoSwap.list(IERC721(address(ipnft)), 1, erc20, 1000 ether, address(distributor));
         schmackoSwap.changeBuyerAllowance(listingId1, ipnftBuyer, true);
 
-        vm.stopPrank();
-
-        vm.deal(bob, MINTING_FEE);
-        vm.startPrank(deployer);
-        vm.stopPrank();
-
         vm.startPrank(bob);
+        vm.deal(bob, MINTING_FEE);
         uint256 reservationId = ipnft.reserve();
         ipnft.mintReservation{ value: MINTING_FEE }(bob, reservationId, ipfsUri, DEFAULT_SYMBOL, "");
         ipnft.setApprovalForAll(address(schmackoSwap), true);
         IPToken tokenContract2 = tokenizer.tokenizeIpnft(2, 70_000, "MOLE", agreementCid, "");
-        tokenContract2.cap();
+        tokenizer.cap(tokenContract2);
         uint256 listingId2 = schmackoSwap.list(IERC721(address(ipnft)), 2, erc20, 700 ether, address(originalOwner));
         schmackoSwap.changeBuyerAllowance(listingId2, ipnftBuyer, true);
         vm.stopPrank();
@@ -369,12 +331,10 @@ contract SalesShareDistributorTest is Test {
         erc20.approve(address(schmackoSwap), 1_000_000 ether);
         schmackoSwap.fulfill(listingId1);
         schmackoSwap.fulfill(listingId2);
-        vm.stopPrank();
 
         vm.startPrank(bob);
         vm.expectRevert(InsufficientBalance.selector);
         distributor.afterSale(tokenContract2, listingId2, blindPermissioner);
-        vm.stopPrank();
 
         vm.startPrank(originalOwner);
         vm.expectRevert(ListingMismatch.selector);
@@ -384,7 +344,6 @@ contract SalesShareDistributorTest is Test {
         distributor.afterSale(tokenContract2, listingId2, blindPermissioner);
 
         distributor.afterSale(tokenContract1, listingId1, blindPermissioner);
-        vm.stopPrank();
 
         vm.startPrank(bob);
         vm.expectRevert(InsufficientBalance.selector);

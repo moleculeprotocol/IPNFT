@@ -13,25 +13,25 @@ struct Metadata {
 }
 
 error TokenCapped();
-error OnlyIssuerOrOwner();
+error OnlyIssuer();
 
 /**
  * @title IPToken
  * @author molecule.to
  * @notice this is a template contract that's spawned by the Tokenizer
- * @notice the owner of this contract is always the Tokenizer contract.
- *         the issuer of a token bears the right to increase the supply as long as the token is not capped.
+ * @notice the owner of this contract is always the Tokenizer contract which enforces IPNFT holdership rules.
+ *         The owner can increase the token supply as long as it's not explicitly capped.
  * @dev formerly known as "molecules"
  */
 contract IPToken is ERC20BurnableUpgradeable, OwnableUpgradeable {
     event Capped(uint256 atSupply);
 
-    //this will only go up.
+    /// @notice the amount of tokens that ever have been issued (not necessarily == supply)
     uint256 public totalIssued;
-    /**
-     * @notice when true, no one can ever mint tokens again.
-     */
+
+    /// @notice when true, no one can ever mint tokens again.
     bool public capped;
+
     Metadata internal _metadata;
 
     function initialize(string calldata name, string calldata symbol, Metadata calldata metadata_) external initializer {
@@ -44,36 +44,28 @@ contract IPToken is ERC20BurnableUpgradeable, OwnableUpgradeable {
         _disableInitializers();
     }
 
-    modifier onlyIssuerOrOwner() {
-        if (_msgSender() != _metadata.originalOwner && _msgSender() != owner()) {
-            revert OnlyIssuerOrOwner();
-        }
-        _;
-    }
-
-    function issuer() external view returns (address) {
-        return _metadata.originalOwner;
-    }
-
     function metadata() external view returns (Metadata memory) {
         return _metadata;
     }
     /**
-     * @notice ip tokens are identified by the original ipnft token holder and the underlying ip token id
-     * @return uint256 a token hash that's unique for [`originaOwner`,`ipnftid`]
+     * @notice ip tokens are identified by underlying ipnft token id
+     * @dev this once also included the current IPNFT owner address. We're leaving it a hash to stay downward compatible.
+     * @return uint256 a token hash that's unique for this token instance's `ipnftId`
      */
 
     function hash() external view returns (uint256) {
-        return uint256(keccak256(abi.encodePacked(_metadata.originalOwner, _metadata.ipnftId)));
+        return uint256(keccak256(abi.encodePacked(_metadata.ipnftId)));
     }
 
     /**
-     * @notice we deliberately allow the synthesis initializer to increase the supply of IP Tokens at will as long as the underlying asset has not been sold yet
+     * @notice the supply of IP Tokens is controlled by the tokenizer contract.
      * @param receiver address
      * @param amount uint256
      */
-    function issue(address receiver, uint256 amount) external onlyIssuerOrOwner {
-        if (capped) revert TokenCapped();
+    function issue(address receiver, uint256 amount) external onlyOwner {
+        if (capped) {
+            revert TokenCapped();
+        }
         totalIssued += amount;
         _mint(receiver, amount);
     }
@@ -81,7 +73,7 @@ contract IPToken is ERC20BurnableUpgradeable, OwnableUpgradeable {
     /**
      * @notice mark this token as capped. After calling this, no new tokens can be `issue`d
      */
-    function cap() external onlyIssuerOrOwner {
+    function cap() external onlyOwner {
         capped = true;
         emit Capped(totalIssued);
     }

@@ -11,10 +11,11 @@ import { IPNFT } from "../../src/IPNFT.sol";
 
 import { MustOwnIpnft, AlreadyTokenized, Tokenizer } from "../../src/Tokenizer.sol";
 import { Tokenizer11 } from "../../src/helpers/test-upgrades/Tokenizer11.sol";
-import { IPToken, OnlyIssuerOrOwner, TokenCapped, Metadata } from "../../src/IPToken.sol";
+import { IPToken, TokenCapped, Metadata } from "../../src/IPToken.sol";
 import { IPermissioner, BlindPermissioner } from "../../src/Permissioner.sol";
 
-//import { SchmackoSwap, ListingState } from "../../src/SchmackoSwap.sol";
+// an error thrown by IPToken before 1.3
+//error OnlyIssuerOrOwner();
 
 contract TokenizerForkTest is Test {
     using SafeERC20Upgradeable for IPToken;

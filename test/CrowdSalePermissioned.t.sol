@@ -52,8 +52,15 @@ contract CrowdSalePermissionedTest is Test {
         ipnft.initialize();
         ipnft.setAuthorizer(new AcceptAllAuthorizer());
 
-        Tokenizer tokenizer = Tokenizer(address(new ERC1967Proxy(address(new Tokenizer()), "")));
-        tokenizer.initialize(ipnft, new BlindPermissioner());
+        Tokenizer tokenizer = Tokenizer(
+            address(
+                new ERC1967Proxy(
+                    address(new Tokenizer()),
+                    abi.encodeWithSelector(Tokenizer.initialize.selector, [address(ipnft), address(new BlindPermissioner())])
+                )
+            )
+        );
+
         tokenizer.setIPTokenImplementation(new IPToken());
 
         biddingToken = new FakeERC20("USD token", "USDC");
@@ -61,11 +68,7 @@ contract CrowdSalePermissionedTest is Test {
 
         crowdSale = new StakedLockingCrowdSale();
 
-        vestedDao = new TokenVesting(
-            daoToken,
-            string(abi.encodePacked("Vested ", daoToken.name())),
-            string(abi.encodePacked("v", daoToken.symbol()))
-        );
+        vestedDao = new TokenVesting(daoToken, string(abi.encodePacked("Vested ", daoToken.name())), string(abi.encodePacked("v", daoToken.symbol())));
         vestedDao.grantRole(vestedDao.ROLE_CREATE_SCHEDULE(), address(crowdSale));
         crowdSale.trustVestingContract(vestedDao);
         vm.stopPrank();
@@ -76,10 +79,15 @@ contract CrowdSalePermissionedTest is Test {
         ipnft.mintReservation{ value: MINTING_FEE }(emitter, reservationId, "", "", "");
 
         auctionToken = tokenizer.tokenizeIpnft(1, 100_000, "IPT", agreementCid, "");
-        auctionToken.issue(emitter, 500_000 ether);
+        tokenizer.issue(auctionToken, 500_000 ether, emitter);
         vm.stopPrank();
 
         vm.startPrank(deployer);
+        // here's a funny hack we're utilizing only for this test:
+        // to make the tokenization easier, we're using a BlindPermissioner above
+        // from now on, we're switching to a TermsAcceptedPermissioner
+        // we utilize the reinit function with it's code based version id here to easily update it once after initialization.
+        // this oc is not how it'd work in real life: the permissioner is fixed during the contract deployment and can *only* be updated during a full contract implementation upgrade
         permissioner = new TermsAcceptedPermissioner();
         tokenizer.reinit(permissioner);
         vm.stopPrank();

@@ -26,6 +26,12 @@ error OnlyIssuer();
 
 error NotClaimingYet();
 
+/**
+ * @title SalesShareDistributor
+ * @author molecule.xyz
+ * @notice THIS IS NOT SAFE TO BE USED IN PRODUCTION!!
+ *         This is a one time sell out contract for a "final" IPT sale and requires the IP token to be capped.
+ */
 contract SalesShareDistributor is UUPSUpgradeable, OwnableUpgradeable, ReentrancyGuardUpgradeable {
     using SafeERC20 for IERC20;
 
@@ -41,7 +47,7 @@ contract SalesShareDistributor is UUPSUpgradeable, OwnableUpgradeable, Reentranc
     }
 
     /**
-     * @notice returns the `amount` of `paymentToken` that `tokenHolder` can claim by burning their molecules
+     * @notice returns the `amount` of `paymentToken` that `tokenHolder` can claim by burning their IP Tokens
      *
      * @param tokenContract address
      * @param holder address
@@ -85,7 +91,7 @@ contract SalesShareDistributor is UUPSUpgradeable, OwnableUpgradeable, Reentranc
 
     /**
      * @notice anyone should be able to call this function after having observed the sale
-     *         rn we restrict it to the token issuer since they must provide a permissioner that controls the claiming rules
+     *         rn we restrict it to the original owner since they must provide a permissioner that controls the claiming rules
      *         this is a deep dependency on our own sales contract
      *
      * @param tokenContract IPToken     the tokenContract of the IPToken
@@ -93,11 +99,12 @@ contract SalesShareDistributor is UUPSUpgradeable, OwnableUpgradeable, Reentranc
      * @param permissioner  IPermissioner   the permissioner that permits claims
      */
     function afterSale(IPToken tokenContract, uint256 listingId, IPermissioner permissioner) external {
-        if (_msgSender() != tokenContract.issuer()) {
+        Metadata memory metadata = tokenContract.metadata();
+        //todo: this should be the *former* holder of the IPNFT, not the 1st owner :)
+        if (_msgSender() != metadata.originalOwner) {
             revert OnlyIssuer();
         }
 
-        Metadata memory metadata = tokenContract.metadata();
         (, uint256 ipnftId,, IERC20 _paymentToken, uint256 askPrice, address beneficiary, ListingState listingState) =
             schmackoSwap.listings(listingId);
 
@@ -130,11 +137,11 @@ contract SalesShareDistributor is UUPSUpgradeable, OwnableUpgradeable, Reentranc
      * @param permissioner  IPermissioner   the permissioner that permits claims
      */
     function afterSale(IPToken tokenContract, IERC20 paymentToken, uint256 paidPrice, IPermissioner permissioner) external nonReentrant {
-        if (_msgSender() != tokenContract.issuer()) {
+        Metadata memory metadata = tokenContract.metadata();
+        //todo: this should be the *former* holder of the IPNFT, not the 1st owner :)
+        if (_msgSender() != metadata.originalOwner) {
             revert OnlyIssuer();
         }
-
-        Metadata memory metadata = tokenContract.metadata();
 
         //create a fake (but valid) schmackoswap listing id
         uint256 fulfilledListingId = uint256(
@@ -160,9 +167,10 @@ contract SalesShareDistributor is UUPSUpgradeable, OwnableUpgradeable, Reentranc
     function _startClaimingPhase(IPToken tokenContract, uint256 fulfilledListingId, IERC20 _paymentToken, uint256 price, IPermissioner permissioner)
         internal
     {
-        if (!tokenContract.capped()) {
-            revert UncappedToken();
-        }
+        //todo: this actually must be enforced before a sale starts
+        // if (!tokenContract.capped()) {
+        //     revert UncappedToken();
+        // }
         sales[address(tokenContract)] = Sales(fulfilledListingId, _paymentToken, price, permissioner);
         emit SalesActivated(address(tokenContract), address(_paymentToken), price);
     }
