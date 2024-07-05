@@ -6,6 +6,19 @@
   },
   {
     "type": "function",
+    "name": "cap",
+    "inputs": [
+      {
+        "name": "ipToken",
+        "type": "address",
+        "internalType": "contract IPToken"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "initialize",
     "inputs": [
       {
@@ -37,8 +50,50 @@
   },
   {
     "type": "function",
+    "name": "issue",
+    "inputs": [
+      {
+        "name": "ipToken",
+        "type": "address",
+        "internalType": "contract IPToken"
+      },
+      {
+        "name": "amount",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "receiver",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "owner",
     "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "ownerOf",
+    "inputs": [
+      {
+        "name": "ipnftId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
     "outputs": [
       {
         "name": "",
@@ -79,9 +134,9 @@
     "name": "reinit",
     "inputs": [
       {
-        "name": "_permissioner",
+        "name": "_ipTokenImplementation",
         "type": "address",
-        "internalType": "contract IPermissioner"
+        "internalType": "contract IPToken"
       }
     ],
     "outputs": [],
@@ -316,12 +371,6 @@
     "name": "TokensCreated",
     "inputs": [
       {
-        "name": "moleculesId",
-        "type": "uint256",
-        "indexed": true,
-        "internalType": "uint256"
-      },
-      {
         "name": "ipnftId",
         "type": "uint256",
         "indexed": true,
@@ -382,6 +431,11 @@
   {
     "type": "error",
     "name": "AlreadyTokenized",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "IPTNotControlledByTokenizer",
     "inputs": []
   },
   {
@@ -448,5 +502,60 @@
     ],
     "name": "MoleculesCreated",
     "type": "event"
+  },
+  {
+    "type": "event",
+    "name": "TokensCreated",
+    "inputs": [
+      {
+        "name": "moleculesId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "ipnftId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "tokenContract",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "emitter",
+        "type": "address",
+        "indexed": false,
+        "internalType": "address"
+      },
+      {
+        "name": "amount",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "agreementCid",
+        "type": "string",
+        "indexed": false,
+        "internalType": "string"
+      },
+      {
+        "name": "name",
+        "type": "string",
+        "indexed": false,
+        "internalType": "string"
+      },
+      {
+        "name": "symbol",
+        "type": "string",
+        "indexed": false,
+        "internalType": "string"
+      }
+    ],
+    "anonymous": false
   }
 ]

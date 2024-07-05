@@ -13,7 +13,7 @@ cat ../out/CrowdSale.sol/CrowdSale.json | jq .abi > ./abis/CrowdSale.json
 
 cat ../out/Tokenizer.sol/Tokenizer.json | jq .abi > ./abis/_Tokenizer.json
 
-# add the old Synthesizer's `MoleculesCreated` event to the Tokenizer abi so the subgraph can index them
+# add the old Synthesizer's `MoleculesCreated` and `TokensCreated` event to the Tokenizer abi so the subgraph can index them
 jq '. +=  [{
     "anonymous": false,
     "inputs": [
@@ -68,6 +68,60 @@ jq '. +=  [{
     ],
     "name": "MoleculesCreated",
     "type": "event"
+  },{
+    "type": "event",
+    "name": "TokensCreated",
+    "inputs": [
+      {
+        "name": "moleculesId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "ipnftId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "tokenContract",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "emitter",
+        "type": "address",
+        "indexed": false,
+        "internalType": "address"
+      },
+      {
+        "name": "amount",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      },
+      {
+        "name": "agreementCid",
+        "type": "string",
+        "indexed": false,
+        "internalType": "string"
+      },
+      {
+        "name": "name",
+        "type": "string",
+        "indexed": false,
+        "internalType": "string"
+      },
+      {
+        "name": "symbol",
+        "type": "string",
+        "indexed": false,
+        "internalType": "string"
+      }
+    ],
+    "anonymous": false
   }]' ./abis/_Tokenizer.json > ./abis/Tokenizer.json
 
   rm ./abis/_Tokenizer.json

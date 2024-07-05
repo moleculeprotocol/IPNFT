@@ -161,19 +161,6 @@
   },
   {
     "type": "function",
-    "name": "hash",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
     "name": "increaseAllowance",
     "inputs": [
       {
@@ -201,6 +188,11 @@
     "name": "initialize",
     "inputs": [
       {
+        "name": "ipnftId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
         "name": "name",
         "type": "string",
         "internalType": "string"
@@ -211,26 +203,14 @@
         "internalType": "string"
       },
       {
-        "name": "metadata_",
-        "type": "tuple",
-        "internalType": "struct Metadata",
-        "components": [
-          {
-            "name": "ipnftId",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          {
-            "name": "originalOwner",
-            "type": "address",
-            "internalType": "address"
-          },
-          {
-            "name": "agreementCid",
-            "type": "string",
-            "internalType": "string"
-          }
-        ]
+        "name": "originalOwner",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "agreementCid",
+        "type": "string",
+        "internalType": "string"
       }
     ],
     "outputs": [],
@@ -253,19 +233,6 @@
     ],
     "outputs": [],
     "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "issuer",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "stateMutability": "view"
   },
   {
     "type": "function",
@@ -545,7 +512,7 @@
   },
   {
     "type": "error",
-    "name": "OnlyIssuerOrOwner",
+    "name": "MustOwnIpnft",
     "inputs": []
   },
   {

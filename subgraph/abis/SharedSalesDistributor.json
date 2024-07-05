@@ -372,10 +372,5 @@
     "type": "error",
     "name": "OnlyIssuer",
     "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "UncappedToken",
-    "inputs": []
   }
 ]
