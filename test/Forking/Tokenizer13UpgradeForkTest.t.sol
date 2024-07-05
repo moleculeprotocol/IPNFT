@@ -17,7 +17,7 @@ import { IPermissioner, BlindPermissioner } from "../../src/Permissioner.sol";
 // an error thrown by IPToken before 1.3
 //error OnlyIssuerOrOwner();
 
-contract TokenizerForkTest is Test {
+contract Tokenizer13UpgradeForkTest is Test {
     using SafeERC20Upgradeable for IPToken;
 
     uint256 mainnetFork;

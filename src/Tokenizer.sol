@@ -37,7 +37,7 @@ contract Tokenizer is UUPSUpgradeable, OwnableUpgradeable {
     /// @dev the permissioner checks if senders have agreed to legal requirements
     IPermissioner public permissioner;
 
-    /// @notice the IPToken implementation this Tokenizer spawns
+    /// @notice the IPToken implementation this Tokenizer clones from
     IPToken public ipTokenImplementation;
 
     /**

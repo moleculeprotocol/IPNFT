@@ -18,7 +18,7 @@ error TokenCapped();
 /**
  * @title IPToken 1.3
  * @author molecule.xyz
- * @notice this is a template contract that's spawned by the Tokenizer
+ * @notice this is a template contract that's cloned by the Tokenizer
  * @notice the owner of this contract is always the Tokenizer contract which enforces IPNFT holdership rules.
  *         The owner can increase the token supply as long as it's not explicitly capped.
  * @dev formerly known as "molecules"
@@ -34,8 +34,6 @@ contract IPToken is ERC20BurnableUpgradeable, OwnableUpgradeable {
 
     Metadata internal _metadata;
 
-    Tokenizer internal tokenizer;
-
     function initialize(uint256 ipnftId, string calldata name, string calldata symbol, address originalOwner, string memory agreementCid)
         external
         initializer
@@ -43,7 +41,6 @@ contract IPToken is ERC20BurnableUpgradeable, OwnableUpgradeable {
         __Ownable_init();
         __ERC20_init(name, symbol);
         _metadata = Metadata({ ipnftId: ipnftId, originalOwner: originalOwner, agreementCid: agreementCid });
-        tokenizer = Tokenizer(owner());
     }
 
     constructor() {
@@ -51,7 +48,7 @@ contract IPToken is ERC20BurnableUpgradeable, OwnableUpgradeable {
     }
 
     modifier onlyTokenizerOrIPNFTHolder() {
-        if (_msgSender() != owner() && _msgSender() != tokenizer.ownerOf(_metadata.ipnftId)) {
+        if (_msgSender() != owner() && _msgSender() != Tokenizer(owner()).ownerOf(_metadata.ipnftId)) {
             revert MustOwnIpnft();
         }
         _;

@@ -129,15 +129,18 @@ contract TokenizerTest is Test {
         tokenContract.transfer(bob, 25_000);
 
         tokenContract.issue(originalOwner, 50_000);
-        // this allows new owners of legacy IPTs to increase their supply:
         tokenizer.issue(tokenContract, 50_000, originalOwner);
 
         vm.startPrank(bob);
         vm.expectRevert(MustOwnIpnft.selector);
         tokenContract.issue(bob, 12345);
+        vm.expectRevert(MustOwnIpnft.selector);
+        tokenizer.issue(tokenContract, 12345, bob);
 
         vm.expectRevert(MustOwnIpnft.selector);
         tokenContract.cap();
+        vm.expectRevert(MustOwnIpnft.selector);
+        tokenizer.cap(tokenContract);
 
         assertEq(tokenContract.balanceOf(alice), 25_000);
         assertEq(tokenContract.balanceOf(bob), 25_000);
@@ -152,6 +155,26 @@ contract TokenizerTest is Test {
 
         vm.expectRevert(TokenCapped.selector);
         tokenizer.issue(tokenContract, 12345, bob);
+    }
+
+    function testIPNFTHolderControlsIPT() public {
+        vm.startPrank(originalOwner);
+        IPToken tokenContract = tokenizer.tokenizeIpnft(1, 100_000, "IPT", agreementCid, "");
+        tokenContract.issue(bob, 50_000);
+        ipnft.transferFrom(originalOwner, alice, 1);
+
+        vm.startPrank(alice);
+        tokenContract.issue(alice, 50_000);
+        assertEq(tokenContract.balanceOf(alice), 50_000);
+
+        //the original owner *cannot* issue tokens anymore
+        //this actually worked before 1.3 since IPTs were bound to their original owner
+        vm.startPrank(originalOwner);
+        vm.expectRevert(MustOwnIpnft.selector);
+        tokenContract.issue(alice, 50_000);
+
+        vm.expectRevert(MustOwnIpnft.selector);
+        tokenizer.issue(tokenContract, 50_000, bob);
     }
 
     function testCanBeTokenizedOnlyOnce() public {
@@ -189,7 +212,7 @@ contract TokenizerTest is Test {
 
         assertEq(tokenContract.balanceOf(address(wallet)), 100_000);
 
-        //test the SAFE can send molecules to another account
+        //test the SAFE can send IPTs to another account
         bytes memory transferCall = abi.encodeCall(tokenContract.transfer, (bob, 10_000));
         bytes32 encodedTxDataHash = wallet.getTransactionHash(
             address(tokenContract), 0, transferCall, Enum.Operation.Call, 80_000, 1 gwei, 20 gwei, address(0x0), payable(0x0), 0
