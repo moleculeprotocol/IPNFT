@@ -19,7 +19,14 @@ error IPTNotControlledByTokenizer();
 /// @notice tokenizes an IPNFT to an ERC20 token (called IPToken or IPT) and controls its supply.
 contract Tokenizer is UUPSUpgradeable, OwnableUpgradeable {
     event TokensCreated(
-        uint256 indexed ipnftId, address indexed tokenContract, address emitter, uint256 amount, string agreementCid, string name, string symbol
+        uint256 indexed moleculesId,
+        uint256 indexed ipnftId,
+        address indexed tokenContract,
+        address emitter,
+        uint256 amount,
+        string agreementCid,
+        string name,
+        string symbol
     );
 
     event IPTokenImplementationUpdated(IPToken indexed old, IPToken indexed _new);
@@ -129,7 +136,17 @@ contract Tokenizer is UUPSUpgradeable, OwnableUpgradeable {
         synthesized[ipnftId] = token;
 
         //this has been called MoleculesCreated before
-        emit TokensCreated(ipnftId, address(token), _msgSender(), tokenAmount, agreementCid, name, tokenSymbol);
+        emit TokensCreated(
+            //upwards compatibility: signaling an unique "Molecules ID" as first parameter ("sales cycle id"). This is unused and not interpreted.
+            uint256(keccak256(abi.encodePacked(ipnftId))),
+            ipnftId,
+            address(token),
+            _msgSender(),
+            tokenAmount,
+            agreementCid,
+            name,
+            tokenSymbol
+        );
         permissioner.accept(token, _msgSender(), signedAgreement);
         token.issue(_msgSender(), tokenAmount);
     }

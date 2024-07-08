@@ -6,14 +6,14 @@ import { Tokenizer } from "../../src/Tokenizer.sol";
 import { IPToken } from "../../src/IPToken.sol";
 import { console } from "forge-std/console.sol";
 
-contract RolloutTokenizerV12 is Script {
+contract RolloutTokenizerV13 is Script {
     function run() public {
         vm.startBroadcast();
 
         IPToken newIpTokenImplementation = new IPToken();
         Tokenizer newTokenizerImplementation = new Tokenizer();
 
-        bytes memory upgradeCallData = abi.encodeWithSelector(Tokenizer.setIPTokenImplementation.selector, address(newIpTokenImplementation));
+        bytes memory upgradeCallData = abi.encodeWithSelector(Tokenizer.reinit.selector, address(newIpTokenImplementation));
 
         console.log("NEWTOKENIMPLEMENTATION=%s", address(newIpTokenImplementation));
         console.log("NEWTOKENIZER=%s", address(newTokenizerImplementation));
