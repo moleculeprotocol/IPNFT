@@ -4,23 +4,21 @@
   "scripts": {
     "abis": "./makeAbis.sh",
     "codegen": "graph codegen",
-    "build": "graph codegen && graph build",
-    "prepare:local": "mustache config/local.js subgraph.template.yaml > subgraph.yaml",
-    "prepare:sepolia": "mustache config/sepolia.js subgraph.template.yaml > subgraph.yaml",
-    "prepare:mainnet": "mustache config/mainnet.js subgraph.template.yaml > subgraph.yaml",
+    "build:local": "graph codegen && graph build --network foundry",
+    "build:sepolia": "graph codegen && graph build --network sepolia",
+    "build:mainnet": "graph codegen && graph build --network mainnet",
+    "deploy:local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 moleculeprotocol/ipnft-subgraph",
     "deploy:sepolia": "env-cmd -x -f ../.env graph deploy ip-nft-sepolia --version-label 1.0.0 --node https://subgraphs.alchemy.com/api/subgraphs/deploy --ipfs https://ipfs.satsuma.xyz --deploy-key \\$SATSUMA_DEPLOY_KEY",
     "deploy:mainnet": "env-cmd -x -f ../.env graph deploy ip-nft-mainnet --version-label 1.0.0 --node https://subgraphs.alchemy.com/api/subgraphs/deploy --ipfs https://ipfs.satsuma.xyz --deploy-key \\$SATSUMA_DEPLOY_KEY",
     "create:local": "graph create --node http://localhost:8020/ moleculeprotocol/ipnft-subgraph",
     "remove:local": "graph remove --node http://localhost:8020/ moleculeprotocol/ipnft-subgraph",
-    "deploy:local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 moleculeprotocol/ipnft-subgraph",
     "test": "graph test"
   },
   "dependencies": {
-    "@graphprotocol/graph-cli": "^0.50.1",
-    "@graphprotocol/graph-ts": "^0.30.0",
+    "@graphprotocol/graph-cli": "^0.78.0",
+    "@graphprotocol/graph-ts": "^0.35.1",
     "dotenv": "^16.0.3",
-    "matchstick-as": "0.5.2",
-    "mustache": "^4.2.0"
+    "matchstick-as": "0.5.2"
   },
   "devDependencies": {
     "env-cmd": "^10.1.0"

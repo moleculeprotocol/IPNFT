@@ -1,17 +1,17 @@
-specVersion: 0.0.4
+specVersion: 1.2.0
 schema:
   file: ./schema.graphql
 dataSources:
   - kind: ethereum/contract
     name: IPNFT
-    network: {{network}}
+    network: foundry
     source:
-      address: '{{ipnft.address}}'
       abi: IPNFT
-      startBlock: {{ipnft.startBlock}}
+      address: "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512"
+      startBlock: 0
     mapping:
       kind: ethereum/events
-      apiVersion: 0.0.6
+      apiVersion: 0.0.7
       language: wasm/assemblyscript
       entities:
         - IPNFT
@@ -30,14 +30,14 @@ dataSources:
       file: ./src/ipnftMapping.ts
   - kind: ethereum/contract
     name: SchmackoSwap
-    network: {{network}}
+    network: foundry
     source:
-      address: '{{schmackoSwap.address}}'
       abi: SchmackoSwap
-      startBlock: {{schmackoSwap.startBlock}}
+      address: "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0"
+      startBlock: 0
     mapping:
       kind: ethereum/events
-      apiVersion: 0.0.6
+      apiVersion: 0.0.7
       language: wasm/assemblyscript
       entities:
         - Listing
@@ -49,21 +49,22 @@ dataSources:
           handler: handleListed
         - event: Unlisted(uint256,(address,uint256,address,address,uint256,address,uint8))
           handler: handleUnlisted
-        - event: Purchased(uint256,indexed address,(address,uint256,address,address,uint256,address,uint8))
+        - event: Purchased(uint256,indexed
+            address,(address,uint256,address,address,uint256,address,uint8))
           handler: handlePurchased
         - event: AllowlistUpdated(uint256,indexed address,bool)
           handler: handleAllowlistUpdated
       file: ./src/swapMapping.ts
   - kind: ethereum/contract
     name: Tokenizer
-    network: {{network}}
+    network: foundry
     source:
-      address: '{{tokenizer.address}}'
       abi: Tokenizer
-      startBlock: {{tokenizer.startBlock}}
+      address: "0xB7f8BC63BbcaD18155201308C8f3540b07f84F5e"
+      startBlock: 0
     mapping:
       kind: ethereum/events
-      apiVersion: 0.0.6
+      apiVersion: 0.0.7
       language: wasm/assemblyscript
       entities:
         - IPT
@@ -72,26 +73,26 @@ dataSources:
         - name: Tokenizer
           file: ./abis/Tokenizer.json
       eventHandlers:
-        - event: TokensCreated(indexed uint256,indexed address,address,uint256,string,string,string)
+        - event: TokensCreated(indexed uint256,indexed
+            address,address,uint256,string,string,string)
           handler: handleIPTsCreated
-        # legacy events, used to index mainnet
-        - event: TokensCreated(indexed uint256,indexed uint256,indexed address,address,uint256,string,string,string)
+        - event: TokensCreated(indexed uint256,indexed uint256,indexed
+            address,address,uint256,string,string,string)
           handler: handleIPTsCreated
-        - event: MoleculesCreated(indexed uint256,indexed uint256,indexed address,address,uint256,string,string,string)
+        - event: MoleculesCreated(indexed uint256,indexed uint256,indexed
+            address,address,uint256,string,string,string)
           handler: handleIPTsCreated
-        # - event: TermsAccepted(indexed uint256,indexed address,bytes)
-        #   handler: handleTermsAccepted
       file: ./src/tokenizerMapping.ts
   - kind: ethereum/contract
     name: CrowdSale
-    network: {{network}}
+    network: foundry
     source:
-      address: '{{crowdSale.address}}'
       abi: CrowdSale
-      startBlock: {{crowdSale.startBlock}}
+      address: "0x7a2088a1bFc9d81c55368AE168C2C02570cB814F"
+      startBlock: 0
     mapping:
       kind: ethereum/events
-      apiVersion: 0.0.6
+      apiVersion: 0.0.7
       language: wasm/assemblyscript
       entities:
         - CrowdSale
@@ -103,7 +104,8 @@ dataSources:
         - name: IERC20Metadata
           file: ./abis/IERC20Metadata.json
       eventHandlers:
-        - event: Started(indexed uint256,indexed address,(address,address,address,uint256,uint256,uint64,address),uint16)
+        - event: Started(indexed uint256,indexed
+            address,(address,address,address,uint256,uint256,uint64,address),uint16)
           handler: handleStarted
         - event: Settled(indexed uint256,uint256,uint256)
           handler: handleSettled
@@ -120,14 +122,14 @@ dataSources:
       file: ./src/crowdSaleMapping.ts
   - kind: ethereum/contract
     name: StakedLockingCrowdSale
-    network: {{network}}
+    network: foundry
     source:
-      address: '{{stakedLockingCrowdSale.address}}'
       abi: StakedLockingCrowdSale
-      startBlock: {{stakedLockingCrowdSale.startBlock}}
+      address: "0x0B306BF915C4d645ff596e518fAf3F9669b97016"
+      startBlock: 0
     mapping:
       kind: ethereum/events
-      apiVersion: 0.0.6
+      apiVersion: 0.0.7
       language: wasm/assemblyscript
       entities:
         - CrowdSale
@@ -139,10 +141,11 @@ dataSources:
         - name: IERC20Metadata
           file: ./abis/IERC20Metadata.json
       eventHandlers:
-      # the initial crowdsale contract didn't use any fees
-        - event: Started(indexed uint256,indexed address,(address,address,address,uint256,uint256,uint64,address),(address,address,uint256),address,uint256,uint256)
+        - event: Started(indexed uint256,indexed
+            address,(address,address,address,uint256,uint256,uint64,address),(address,address,uint256),address,uint256,uint256)
           handler: handleStartedLegacy
-        - event: Started(indexed uint256,indexed address,(address,address,address,uint256,uint256,uint64,address),(address,address,uint256),address,uint256,uint256,uint16)
+        - event: Started(indexed uint256,indexed
+            address,(address,address,address,uint256,uint256,uint64,address),(address,address,uint256),address,uint256,uint256,uint16)
           handler: handleStarted
         - event: Settled(indexed uint256,uint256,uint256)
           handler: handleSettled
@@ -165,14 +168,14 @@ dataSources:
       file: ./src/stakedLockingCrowdSaleMapping.ts
   - kind: ethereum/contract
     name: TermsAcceptedPermissioner
-    network: {{network}}
+    network: foundry
     source:
-      address: '{{termsAcceptedPermissioner.address}}'
       abi: TermsAcceptedPermissioner
-      startBlock: {{termsAcceptedPermissioner.startBlock}}
+      address: "0x8A791620dd6260079BF849Dc5567aDC3F2FdC318"
+      startBlock: 0
     mapping:
       kind: ethereum/events
-      apiVersion: 0.0.6
+      apiVersion: 0.0.7
       language: wasm/assemblyscript
       entities:
         - IPTBalance
@@ -183,16 +186,15 @@ dataSources:
         - event: TermsAccepted(indexed address,indexed address,bytes)
           handler: handleTermsAccepted
       file: ./src/termsAcceptedPermissionerMapping.ts
-
 templates:
   - name: IPToken
     kind: ethereum/contract
-    network: {{network}}
+    network: foundry
     source:
       abi: IPToken
     mapping:
       kind: ethereum/events
-      apiVersion: 0.0.6
+      apiVersion: 0.0.7
       language: wasm/assemblyscript
       file: ./src/iptMapping.ts
       entities:
@@ -205,16 +207,14 @@ templates:
           handler: handleTransfer
         - event: Capped(uint256)
           handler: handleCapped
-        # - event: SharesClaimed(indexed uint256,indexed address,uint256)
-        #   handler: handleSharesClaimed
   - name: TimelockedToken
     kind: ethereum/contract
-    network: {{network}}
+    network: foundry
     source:
       abi: TimelockedToken
     mapping:
       kind: ethereum/events
-      apiVersion: 0.0.6
+      apiVersion: 0.0.7
       language: wasm/assemblyscript
       file: ./src/timelockedTokenMapping.ts
       entities:
@@ -224,7 +224,8 @@ templates:
         - name: TimelockedToken
           file: ./abis/TimelockedToken.json
       eventHandlers:
-        - event: ScheduleCreated(indexed bytes32,indexed address,indexed address,uint256,uint64)
+        - event: ScheduleCreated(indexed bytes32,indexed address,indexed
+            address,uint256,uint64)
           handler: handleScheduled
         - event: ScheduleReleased(indexed bytes32,indexed address,uint256)
           handler: handleReleased

@@ -1,15 +1,14 @@
 #https://github.com/graphprotocol/graph-node/blob/master/docker/docker-compose.yml
-version: '3'
 services:
   anvil:
-    image: ghcr.io/foundry-rs/foundry:nightly-a117fbfa41edbaa1618ed099d78d65727bff4790
+    image: ghcr.io/foundry-rs/foundry:nightly-a470d635cfcdce68609e9dc5762a3584351bacc1
     command:
       - 'anvil --host 0.0.0.0'
     ports:
       - '8545:8545'
 
   graph-node:
-    image: graphprotocol/graph-node
+    image: graphprotocol/graph-node:845f8fa
     ports:
       - '8000:8000'
       - '8001:8001'
@@ -19,6 +18,7 @@ services:
     depends_on:
       - ipfs
       - postgres
+      - anvil
     extra_hosts:
       - host.docker.internal:host-gateway
     environment:
@@ -28,7 +28,7 @@ services:
       postgres_db: graph-node
       ipfs: 'ipfs:5001'
       ethereum: 'mainnet:http://anvil:8545'
-      GRAPH_LOG: info
+      GRAPH_LOG: debug
       GRAPH_ALLOW_NON_DETERMINISTIC_IPFS: 1
   ipfs:
     image: ipfs/kubo:v0.28.0
