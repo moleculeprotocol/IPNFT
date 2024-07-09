@@ -9,7 +9,7 @@ import { IPToken, Metadata as TokenMetadata } from "./IPToken.sol";
 import { IPermissioner } from "./Permissioner.sol";
 import { IPNFT } from "./IPNFT.sol";
 
-error MustOwnIpnft();
+error MustControlIpnft();
 error AlreadyTokenized();
 error ZeroAddress();
 error IPTNotControlledByTokenizer();
@@ -64,6 +64,10 @@ contract Tokenizer is UUPSUpgradeable, OwnableUpgradeable {
         _disableInitializers();
     }
 
+    function getIPNFTContract() public view returns (IPNFT) {
+        return ipnft;
+    }
+
     //todo: try breaking this with a faked IPToken
     modifier onlyControlledIPTs(IPToken ipToken) {
         TokenMetadata memory metadata = ipToken.metadata();
@@ -72,8 +76,8 @@ contract Tokenizer is UUPSUpgradeable, OwnableUpgradeable {
             revert IPTNotControlledByTokenizer();
         }
 
-        if (_msgSender() != ipnft.ownerOf(metadata.ipnftId)) {
-            revert MustOwnIpnft();
+        if (_msgSender() != controllerOf(metadata.ipnftId)) {
+            revert MustControlIpnft();
         }
         _;
     }
@@ -121,8 +125,8 @@ contract Tokenizer is UUPSUpgradeable, OwnableUpgradeable {
         string memory agreementCid,
         bytes calldata signedAgreement
     ) external returns (IPToken token) {
-        if (ipnft.ownerOf(ipnftId) != _msgSender()) {
-            revert MustOwnIpnft();
+        if (_msgSender() != controllerOf(ipnftId)) {
+            revert MustControlIpnft();
         }
         if (address(synthesized[ipnftId]) != address(0)) {
             revert AlreadyTokenized();
@@ -170,8 +174,8 @@ contract Tokenizer is UUPSUpgradeable, OwnableUpgradeable {
         ipToken.cap();
     }
 
-    /// @dev this will be called by IPTs to avoid handing over yet another IPNFT address (they already know this Tokenizer contract as their owner)
-    function ownerOf(uint256 ipnftId) external view returns (address) {
+    /// @dev this will be called by IPTs. Right now the controller is the IPNFT's current owner, it can be a Governor in the future.
+    function controllerOf(uint256 ipnftId) public view returns (address) {
         return ipnft.ownerOf(ipnftId);
     }
 

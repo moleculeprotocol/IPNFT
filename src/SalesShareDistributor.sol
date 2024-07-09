@@ -7,7 +7,9 @@ import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils
 import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import { ReentrancyGuardUpgradeable } from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import { IPNFT } from "./IPNFT.sol";
 import { IPToken, Metadata } from "./IPToken.sol";
+import { Tokenizer, MustControlIpnft } from "./Tokenizer.sol";
 import { SchmackoSwap, ListingState } from "./SchmackoSwap.sol";
 import { IPermissioner, TermsAcceptedPermissioner } from "./Permissioner.sol";
 
@@ -21,9 +23,9 @@ struct Sales {
 error ListingNotFulfilled();
 error ListingMismatch();
 error InsufficientBalance();
+error NotSalesBeneficiary();
 error UncappedToken();
-error OnlyIssuer();
-
+error OnlySeller();
 error NotClaimingYet();
 
 /**
@@ -90,57 +92,61 @@ contract SalesShareDistributor is UUPSUpgradeable, OwnableUpgradeable, Reentranc
     }
 
     /**
-     * @notice anyone should be able to call this function after having observed the sale
-     *         rn we restrict it to the original owner since they must provide a permissioner that controls the claiming rules
-     *         this is a deep dependency on our own sales contract
+     * @notice release sales shares for a Schmackoswap transaction
+     * @dev todo: *anyone* should be able to call this function after having observed the sale; right now we restrict it to the creator of the trade since they were in control of the IPNFT before
+     * @dev this has a deep dependency on our own swap contract
      *
-     * @param tokenContract IPToken     the tokenContract of the IPToken
+     * @param ipt IPToken     the tokenContract of the IPToken
      * @param listingId     uint256     the listing id on Schmackoswap
      * @param permissioner  IPermissioner   the permissioner that permits claims
      */
-    function afterSale(IPToken tokenContract, uint256 listingId, IPermissioner permissioner) external {
-        Metadata memory metadata = tokenContract.metadata();
-        //todo: this should be the *former* holder of the IPNFT, not the 1st owner :)
-        if (_msgSender() != metadata.originalOwner) {
-            revert OnlyIssuer();
-        }
-
-        (, uint256 ipnftId,, IERC20 _paymentToken, uint256 askPrice, address beneficiary, ListingState listingState) =
+    function afterSale(IPToken ipt, uint256 listingId, IPermissioner permissioner) external {
+        (, uint256 ipnftId, address seller, IERC20 _paymentToken, uint256 askPrice, address beneficiary, ListingState listingState) =
             schmackoSwap.listings(listingId);
+
+        if (_msgSender() != seller) {
+            revert OnlySeller();
+        }
 
         if (listingState != ListingState.FULFILLED) {
             revert ListingNotFulfilled();
         }
+        Metadata memory metadata = ipt.metadata();
         if (ipnftId != metadata.ipnftId) {
             revert ListingMismatch();
         }
         if (beneficiary != address(this)) {
-            revert InsufficientBalance();
+            revert NotSalesBeneficiary();
         }
 
-        _startClaimingPhase(tokenContract, listingId, _paymentToken, askPrice, permissioner);
+        _startClaimingPhase(ipt, listingId, _paymentToken, askPrice, permissioner);
     }
 
     //audit: ensure that no one can withdraw arbitrary amounts here
     //by simply creating a new IPToken instance and claim an arbitrary value
-
+    //todo: try breaking this by providing a fake IPT with a fake Tokenizer owner
+    //todo: this must be called by the beneficiary of a sale we don't control.
     /**
      * @notice When the sales beneficiary has not been set to the underlying erc20 token address but to the original owner's wallet instead,
-     *         they can invoke this method to start the claiming phase manually. This e.g. allows sales off the record.
+     *         they can invoke this method to start the claiming phase manually. This e.g. allows sales off the record ("OpenSea").
      *
-     *         Requires the originalOwner to behave honestly / in favor of the molecules holders
-     *         Requires the caller to have approved `price` of `paymentToken` to this contract
+     *         Requires the originalOwner to behave honestly / in favor of the IPT holders
+     *         Requires the caller to have approved `paidPrice` of `paymentToken` to this contract
      *
      * @param   tokenContract IPToken  the IPToken token contract
      * @param   paymentToken  IERC20   the payment token contract address
-     * @param   paidPrice         uint256  the price the NFT has been sold for
-     * @param permissioner  IPermissioner   the permissioner that permits claims
+     * @param   paidPrice     uint256  the price the NFT has been sold for
+     * @param   permissioner  IPermissioner   the permissioner that permits claims
      */
-    function afterSale(IPToken tokenContract, IERC20 paymentToken, uint256 paidPrice, IPermissioner permissioner) external nonReentrant {
+    function UNSAFE_afterSale(IPToken tokenContract, IERC20 paymentToken, uint256 paidPrice, IPermissioner permissioner) external nonReentrant {
         Metadata memory metadata = tokenContract.metadata();
-        //todo: this should be the *former* holder of the IPNFT, not the 1st owner :)
+
+        Tokenizer tokenizer = Tokenizer(tokenContract.owner());
+
+        //todo: this should be a selected beneficiary of the IPNFT's sales proceeds, and not the original owner :)
+        //idea is to allow *several* sales proceeds to be notified here, create unique sales ids for each and let users claim the all of them at once
         if (_msgSender() != metadata.originalOwner) {
-            revert OnlyIssuer();
+            revert MustControlIpnft();
         }
 
         //create a fake (but valid) schmackoswap listing id
@@ -148,7 +154,7 @@ contract SalesShareDistributor is UUPSUpgradeable, OwnableUpgradeable, Reentranc
             keccak256(
                 abi.encode(
                     SchmackoSwap.Listing(
-                        IERC721(address(0)), //this should be the IPNFT address
+                        IERC721(address(tokenizer.getIPNFTContract())),
                         metadata.ipnftId,
                         _msgSender(),
                         paymentToken,
@@ -164,15 +170,13 @@ contract SalesShareDistributor is UUPSUpgradeable, OwnableUpgradeable, Reentranc
         paymentToken.safeTransferFrom(_msgSender(), address(this), paidPrice);
     }
 
-    function _startClaimingPhase(IPToken tokenContract, uint256 fulfilledListingId, IERC20 _paymentToken, uint256 price, IPermissioner permissioner)
-        internal
-    {
-        //todo: this actually must be enforced before a sale starts
+    function _startClaimingPhase(IPToken ipt, uint256 fulfilledListingId, IERC20 _paymentToken, uint256 price, IPermissioner permissioner) internal {
+        //todo: this *should* be enforced before a sale starts
         // if (!tokenContract.capped()) {
         //     revert UncappedToken();
         // }
-        sales[address(tokenContract)] = Sales(fulfilledListingId, _paymentToken, price, permissioner);
-        emit SalesActivated(address(tokenContract), address(_paymentToken), price);
+        sales[address(ipt)] = Sales(fulfilledListingId, _paymentToken, price, permissioner);
+        emit SalesActivated(address(ipt), address(_paymentToken), price);
     }
 
     function _authorizeUpgrade(address newImplementation) internal override onlyOwner { }

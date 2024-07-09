@@ -87,38 +87,12 @@ VDAO_TOKEN_ADDRESS=0x19A3036b828bffB5E14da2659E950E76f8e6BAA2
 
 ---
 
-### ~~Deprecated Goerli~~
+### upgrading to Tokenizer 1.3
 
-| Contract               | Address                                                                                                                            | Actions                                                                                                                                                                                                                                                                                               |
-| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| IP-NFT                 | [0xaf7358576C9F7cD84696D28702fC5ADe33cce0e9](https://goerli.etherscan.io/address/0xaf7358576C9F7cD84696D28702fC5ADe33cce0e9#code>) | <a href="https://thirdweb.com/goerli/0xaf7358576C9F7cD84696D28702fC5ADe33cce0e9?utm_source=contract_badge" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0xaf7358576C9F7cD84696D28702fC5ADe33cce0e9&theme=dark&chainId=5" alt="View contract" /></a> |
-| SchmackoSwap           | [0x67D8ed102E2168A46FA342e39A5f7D16c103Bd0d](https://goerli.etherscan.io/address/0x67D8ed102E2168A46FA342e39A5f7D16c103Bd0d#code)  | <a href="https://thirdweb.com/goerli/0x67D8ed102E2168A46FA342e39A5f7D16c103Bd0d?utm_source=contract_badge" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0x67D8ed102E2168A46FA342e39A5f7D16c103Bd0d&theme=dark&chainId=5" alt="View contract" /></a> |
-| Tokenizer              | [0xb12494eeA6B992d0A1Db3C5423BE7a2d2337F58c](https://goerli.etherscan.io/address/0xb12494eeA6B992d0A1Db3C5423BE7a2d2337F58c#code)  | <a href="https://thirdweb.com/goerli/0xb12494eeA6B992d0A1Db3C5423BE7a2d2337F58c?utm_source=contract_badge" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0xb12494eeA6B992d0A1Db3C5423BE7a2d2337F58c&theme=dark&chainId=5" alt="View contract" /></a> |
-| Permissioner           | [0xd735d9504cce32F2cd665b779D699B4157686fcd](https://goerli.etherscan.io/address/0xd735d9504cce32F2cd665b779D699B4157686fcd#code)  | <a href="https://thirdweb.com/goerli/0xd735d9504cce32F2cd665b779D699B4157686fcd?utm_source=contract_badge" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0xd735d9504cce32F2cd665b779D699B4157686fcd&theme=dark&chainId=5" alt="View contract" /></a> |
-| Crowdsale              | [0x8c83DA72b4591bE526ca8C7cb848bC89c0e23373](https://goerli.etherscan.io/address/0x8c83DA72b4591bE526ca8C7cb848bC89c0e23373#code>) | <a href="https://thirdweb.com/goerli/0x8c83DA72b4591bE526ca8C7cb848bC89c0e23373?utm_source=contract_badge" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0x8c83DA72b4591bE526ca8C7cb848bC89c0e23373&theme=dark&chainId=5" alt="View contract" /></a> |
-| StakedLockingCrowdSale | [0x46c3369dece07176ad7164906d3593aa4c126d35](https://goerli.etherscan.io/address/0x46c3369dece07176ad7164906d3593aa4c126d35#code)  | <a href="https://thirdweb.com/goerli/0x46c3369dece07176ad7164906d3593aa4c126d35?utm_source=contract_badge" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0x46c3369dece07176ad7164906d3593aa4c126d35&theme=dark&chainId=5" alt="View contract" /></a> |
-| SignedMintAuthorizer   | [0x5e555eE24DB66825171Ac63EA614864987CEf1Af](https://goerli.etherscan.io/address/0x5e555eE24DB66825171Ac63EA614864987CEf1Af#code)  | <a href="https://thirdweb.com/goerli/0x5e555eE24DB66825171Ac63EA614864987CEf1Af?utm_source=contract_badge" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0x5e555eE24DB66825171Ac63EA614864987CEf1Af&theme=dark&chainId=5" alt="View contract" /></a> |
-| IPToken Implementation | [0x38Ca0fEEc7cd48629f9388727bfA747859a6feE7](https://goerli.etherscan.io/address/0x38Ca0fEEc7cd48629f9388727bfA747859a6feE7#code)  | <a href="https://thirdweb.com/goerli/0x38Ca0fEEc7cd48629f9388727bfA747859a6feE7?utm_source=contract_badge" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0x38Ca0fEEc7cd48629f9388727bfA747859a6feE7&theme=dark&chainId=5" alt="View contract" /></a> |
+forge script --private-key=$PRIVATE_KEY --rpc-url=$RPC_URL script/prod/RolloutTokenizerV13.s.sol --broadcast
 
-- Subgraph: https://api.thegraph.com/subgraphs/name/moleculeprotocol/ip-nft-goerli
-
-- Tokenizer Implementation 1.2: 0x18E5ae026CFC8020b2eDbA7050eA6144Fd313c02 (reinit 4) <https://goerli.etherscan.io/address/0x18E5ae026CFC8020b2eDbA7050eA6144Fd313c02#code>
-
-- Bio pricefeed: 0x8647dEFdEAAdF5448d021B364B2F17815aba4360
-  <https://goerli.etherscan.io/address/0x8647defdeaadf5448d021b364b2f17815aba4360#code>
-
-- old ("molecule") permissioner: 0x0045723801561079d94f0Bb1B65f322078E52635
-  <https://goerli.etherscan.io/address/0x0045723801561079d94f0Bb1B65f322078E52635#code>
-
-- Blind Permissioner: 0xec68a1fc8d4c2834f8dfbdb56691f9f0a3d6be11
-  <https://goerli.etherscan.io/address/0xec68a1fc8d4c2834f8dfbdb56691f9f0a3d6be11#code>
-
-#### ~~Tokens~~
-
-| Token name               | Symbol  | address                                                                                                                           |
-| ------------------------ | ------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| BioDao Test token        | BIODAO  | [0x3110a768DC64f7aAB92F7Ae6E1371e5CE581F95F](https://goerli.etherscan.io/address/0x3110a768dc64f7aab92f7ae6e1371e5ce581f95f#code) |
-| Vested BioDao Test token | vBIODAO | [0x6FFBd6325B2102F5f9AaB74d7418A27F9174c92f](https://goerli.etherscan.io/address/0x6FFBd6325B2102F5f9AaB74d7418A27F9174c92f)      |
+// 0xTokenizer 0xNewImpl 0xNewTokenImpl
+cast send --rpc-url=$RPC_URL --private-key=$PRIVATE_KEY 0xB7f8BC63BbcaD18155201308C8f3540b07f84F5e "upgradeToAndCall(address,bytes)" 0x70e0bA845a1A0F2DA3359C97E0285013525FFC49 0x84646c1f000000000000000000000000998abeb3e57409262ae5b751f60747921b33613e
 
 ## Prerequisites
 

@@ -17,7 +17,7 @@ import { IPNFT } from "../src/IPNFT.sol";
 import { AcceptAllAuthorizer } from "./helpers/AcceptAllAuthorizer.sol";
 
 import { FakeERC20 } from "../src/helpers/FakeERC20.sol";
-import { MustOwnIpnft, AlreadyTokenized, Tokenizer, ZeroAddress } from "../src/Tokenizer.sol";
+import { MustControlIpnft, AlreadyTokenized, Tokenizer, ZeroAddress } from "../src/Tokenizer.sol";
 
 import { IPToken, TokenCapped } from "../src/IPToken.sol";
 import { Molecules } from "../src/helpers/test-upgrades/Molecules.sol";
@@ -132,14 +132,14 @@ contract TokenizerTest is Test {
         tokenizer.issue(tokenContract, 50_000, originalOwner);
 
         vm.startPrank(bob);
-        vm.expectRevert(MustOwnIpnft.selector);
+        vm.expectRevert(MustControlIpnft.selector);
         tokenContract.issue(bob, 12345);
-        vm.expectRevert(MustOwnIpnft.selector);
+        vm.expectRevert(MustControlIpnft.selector);
         tokenizer.issue(tokenContract, 12345, bob);
 
-        vm.expectRevert(MustOwnIpnft.selector);
+        vm.expectRevert(MustControlIpnft.selector);
         tokenContract.cap();
-        vm.expectRevert(MustOwnIpnft.selector);
+        vm.expectRevert(MustControlIpnft.selector);
         tokenizer.cap(tokenContract);
 
         assertEq(tokenContract.balanceOf(alice), 25_000);
@@ -170,10 +170,10 @@ contract TokenizerTest is Test {
         //the original owner *cannot* issue tokens anymore
         //this actually worked before 1.3 since IPTs were bound to their original owner
         vm.startPrank(originalOwner);
-        vm.expectRevert(MustOwnIpnft.selector);
+        vm.expectRevert(MustControlIpnft.selector);
         tokenContract.issue(alice, 50_000);
 
-        vm.expectRevert(MustOwnIpnft.selector);
+        vm.expectRevert(MustControlIpnft.selector);
         tokenizer.issue(tokenContract, 50_000, bob);
     }
 
@@ -189,7 +189,7 @@ contract TokenizerTest is Test {
     function testCannotTokenizeIfNotOwner() public {
         vm.startPrank(alice);
 
-        vm.expectRevert(MustOwnIpnft.selector);
+        vm.expectRevert(MustControlIpnft.selector);
         tokenizer.tokenizeIpnft(1, 100_000, "IPT", agreementCid, "");
         vm.stopPrank();
     }

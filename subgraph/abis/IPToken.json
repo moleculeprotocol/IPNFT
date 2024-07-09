@@ -512,7 +512,7 @@
   },
   {
     "type": "error",
-    "name": "MustOwnIpnft",
+    "name": "MustControlIpnft",
     "inputs": []
   },
   {

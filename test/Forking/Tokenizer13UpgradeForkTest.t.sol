@@ -8,7 +8,7 @@ import { SafeERC20Upgradeable } from "@openzeppelin/contracts-upgradeable/token/
 
 import { IPNFT } from "../../src/IPNFT.sol";
 
-import { MustOwnIpnft, AlreadyTokenized, Tokenizer } from "../../src/Tokenizer.sol";
+import { MustControlIpnft, AlreadyTokenized, Tokenizer } from "../../src/Tokenizer.sol";
 import { Tokenizer12 } from "../../src/helpers/test-upgrades/Tokenizer12.sol";
 import { IPToken12, OnlyIssuerOrOwner } from "../../src/helpers/test-upgrades/IPToken12.sol";
 import { IPToken, TokenCapped, Metadata } from "../../src/IPToken.sol";
@@ -96,7 +96,7 @@ contract Tokenizer13UpgradeForkTest is Test {
         tokenizer13.tokenizeIpnft(2, 1_000_000 ether, "VITA-FAST", "bafkreig274nfj7srmtnb5wd5wlwm3ig2s63wovlz7i3noodjlfz2tm3n5q", bytes(""));
 
         vm.startPrank(alice);
-        vm.expectRevert(MustOwnIpnft.selector);
+        vm.expectRevert(MustControlIpnft.selector);
         tokenizer13.tokenizeIpnft(2, 1_000_000 ether, "VITA-FAST", "bafkreig274nfj7srmtnb5wd5wlwm3ig2s63wovlz7i3noodjlfz2tm3n5q", bytes(""));
     }
 
@@ -223,9 +223,9 @@ contract Tokenizer13UpgradeForkTest is Test {
         assertEq(vitaFAST13.balanceOf(bob), 1_000_000 ether);
 
         // but they cannot do that using the tokenizer:
-        vm.expectRevert(MustOwnIpnft.selector);
+        vm.expectRevert(MustControlIpnft.selector);
         tokenizer13.issue(vitaFAST13, 1_000_000 ether, alice);
-        vm.expectRevert(MustOwnIpnft.selector);
+        vm.expectRevert(MustControlIpnft.selector);
         tokenizer13.cap(vitaFAST13);
 
         //but they unfortunately also can cap the token:

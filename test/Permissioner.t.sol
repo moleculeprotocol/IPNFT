@@ -12,7 +12,7 @@ import { IPNFT } from "../src/IPNFT.sol";
 import { Safe } from "safe-global/safe-contracts/Safe.sol";
 import { SafeProxyFactory } from "safe-global/safe-contracts/proxies/SafeProxyFactory.sol";
 import { Enum } from "safe-global/safe-contracts/common/Enum.sol";
-import { MustOwnIpnft, AlreadyTokenized, Tokenizer, ZeroAddress } from "../src/Tokenizer.sol";
+import { MustControlIpnft, AlreadyTokenized, Tokenizer, ZeroAddress } from "../src/Tokenizer.sol";
 
 import "./helpers/MakeGnosisWallet.sol";
 

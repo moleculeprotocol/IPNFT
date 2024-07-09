@@ -5,7 +5,7 @@ import { ERC20BurnableUpgradeable } from "@openzeppelin/contracts-upgradeable/to
 import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 import { Base64 } from "@openzeppelin/contracts/utils/Base64.sol";
-import { Tokenizer, MustOwnIpnft } from "./Tokenizer.sol";
+import { Tokenizer, MustControlIpnft } from "./Tokenizer.sol";
 
 struct Metadata {
     uint256 ipnftId;
@@ -47,9 +47,9 @@ contract IPToken is ERC20BurnableUpgradeable, OwnableUpgradeable {
         _disableInitializers();
     }
 
-    modifier onlyTokenizerOrIPNFTHolder() {
-        if (_msgSender() != owner() && _msgSender() != Tokenizer(owner()).ownerOf(_metadata.ipnftId)) {
-            revert MustOwnIpnft();
+    modifier onlyTokenizerOrIPNFTController() {
+        if (_msgSender() != owner() && _msgSender() != Tokenizer(owner()).controllerOf(_metadata.ipnftId)) {
+            revert MustControlIpnft();
         }
         _;
     }
@@ -63,7 +63,7 @@ contract IPToken is ERC20BurnableUpgradeable, OwnableUpgradeable {
      * @param receiver address
      * @param amount uint256
      */
-    function issue(address receiver, uint256 amount) external onlyTokenizerOrIPNFTHolder {
+    function issue(address receiver, uint256 amount) external onlyTokenizerOrIPNFTController {
         if (capped) {
             revert TokenCapped();
         }
@@ -74,7 +74,7 @@ contract IPToken is ERC20BurnableUpgradeable, OwnableUpgradeable {
     /**
      * @notice mark this token as capped. After calling this, no new tokens can be `issue`d
      */
-    function cap() external onlyTokenizerOrIPNFTHolder {
+    function cap() external onlyTokenizerOrIPNFTController {
         capped = true;
         emit Capped(totalIssued);
     }
