@@ -8,6 +8,7 @@ import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 import { IPToken, Metadata as TokenMetadata } from "./IPToken.sol";
 import { IPermissioner } from "./Permissioner.sol";
 import { IPNFT } from "./IPNFT.sol";
+import { IControlIPTs } from "./IControlIPTs.sol";
 
 error MustControlIpnft();
 error AlreadyTokenized();
@@ -17,7 +18,7 @@ error IPTNotControlledByTokenizer();
 /// @title Tokenizer 1.3
 /// @author molecule.to
 /// @notice tokenizes an IPNFT to an ERC20 token (called IPToken or IPT) and controls its supply.
-contract Tokenizer is UUPSUpgradeable, OwnableUpgradeable {
+contract Tokenizer is UUPSUpgradeable, OwnableUpgradeable, IControlIPTs {
     event TokensCreated(
         uint256 indexed moleculesId,
         uint256 indexed ipnftId,
@@ -69,7 +70,7 @@ contract Tokenizer is UUPSUpgradeable, OwnableUpgradeable {
     }
 
     //todo: try breaking this with a faked IPToken
-    modifier onlyControlledIPTs(IPToken ipToken) {
+    modifier onlyController(IPToken ipToken) {
         TokenMetadata memory metadata = ipToken.metadata();
 
         if (address(synthesized[metadata.ipnftId]) != address(ipToken)) {
@@ -141,7 +142,7 @@ contract Tokenizer is UUPSUpgradeable, OwnableUpgradeable {
 
         //this has been called MoleculesCreated before
         emit TokensCreated(
-            //upwards compatibility: signaling an unique "Molecules ID" as first parameter ("sales cycle id"). This is unused and not interpreted.
+            //upwards compatibility: signaling a unique "Molecules ID" as first parameter ("sales cycle id"). This is unused and not interpreted.
             uint256(keccak256(abi.encodePacked(ipnftId))),
             ipnftId,
             address(token),
@@ -161,7 +162,7 @@ contract Tokenizer is UUPSUpgradeable, OwnableUpgradeable {
      * @param amount the amount of tokens to issue
      * @param receiver the address that receives the tokens
      */
-    function issue(IPToken ipToken, uint256 amount, address receiver) external onlyControlledIPTs(ipToken) {
+    function issue(IPToken ipToken, uint256 amount, address receiver) external onlyController(ipToken) {
         ipToken.issue(receiver, amount);
     }
 
@@ -170,12 +171,12 @@ contract Tokenizer is UUPSUpgradeable, OwnableUpgradeable {
      * @dev you must compute the ipt hash externally.
      * @param ipToken the IPToken to cap.
      */
-    function cap(IPToken ipToken) external onlyControlledIPTs(ipToken) {
+    function cap(IPToken ipToken) external onlyController(ipToken) {
         ipToken.cap();
     }
 
     /// @dev this will be called by IPTs. Right now the controller is the IPNFT's current owner, it can be a Governor in the future.
-    function controllerOf(uint256 ipnftId) public view returns (address) {
+    function controllerOf(uint256 ipnftId) public view override returns (address) {
         return ipnft.ownerOf(ipnftId);
     }
 

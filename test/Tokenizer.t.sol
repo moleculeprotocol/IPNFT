@@ -20,9 +20,27 @@ import { FakeERC20 } from "../src/helpers/FakeERC20.sol";
 import { MustControlIpnft, AlreadyTokenized, Tokenizer, ZeroAddress } from "../src/Tokenizer.sol";
 
 import { IPToken, TokenCapped } from "../src/IPToken.sol";
+import { IControlIPTs } from "../src/IControlIPTs.sol";
 import { Molecules } from "../src/helpers/test-upgrades/Molecules.sol";
 import { Synthesizer } from "../src/helpers/test-upgrades/Synthesizer.sol";
 import { IPermissioner, BlindPermissioner } from "../src/Permissioner.sol";
+
+contract GovernorOfTheFuture is IControlIPTs {
+    function controllerOf(uint256 ipnftId) external view override returns (address) {
+        return address(0); //no one but me controls IPTs!
+    }
+
+    function aMajorityWantsToIssueTokensTo(IPToken ipt, uint256 amount, address receiver) public {
+        ipt.issue(receiver, amount);
+    }
+}
+
+contract TokenizerWithHandover is Tokenizer {
+    //this oc would be gated for the current IPNFT holder
+    function handoverControl(IPToken ipt, GovernorOfTheFuture governor) external onlyController(ipt) {
+        ipt.transferOwnership(address(governor));
+    }
+}
 
 contract TokenizerTest is Test {
     using SafeERC20Upgradeable for IPToken;
@@ -227,5 +245,38 @@ contract TokenizerTest is Test {
         );
 
         assertEq(tokenContract.balanceOf(bob), 10_000);
+    }
+
+    function testTokenizerCanHandoverControl() public {
+        vm.startPrank(deployer);
+        TokenizerWithHandover htokenizer = TokenizerWithHandover(address(new ERC1967Proxy(address(new TokenizerWithHandover()), "")));
+        htokenizer.initialize(ipnft, blindPermissioner);
+        htokenizer.setIPTokenImplementation(new IPToken());
+
+        vm.startPrank(originalOwner);
+        IPToken tokenContract = htokenizer.tokenizeIpnft(1, 100_000, "IPT", agreementCid, "");
+        tokenContract.issue(bob, 50_000);
+
+        vm.startPrank(deployer);
+        GovernorOfTheFuture governor = new GovernorOfTheFuture();
+        vm.stopPrank();
+
+        vm.startPrank(originalOwner);
+        htokenizer.handoverControl(tokenContract, governor);
+
+        vm.startPrank(alice); // alice controls the governor, eg by proving that a vote has occured
+        governor.aMajorityWantsToIssueTokensTo(tokenContract, 50_000, alice);
+        assertEq(tokenContract.balanceOf(alice), 50_000);
+
+        // -- from here on, *only* the new governor is in conrol
+        vm.expectRevert(MustControlIpnft.selector);
+        tokenContract.issue(alice, 50_000);
+
+        vm.startPrank(originalOwner);
+        vm.expectRevert(MustControlIpnft.selector);
+        tokenContract.issue(bob, 50_000);
+
+        vm.expectRevert(MustControlIpnft.selector);
+        htokenizer.issue(tokenContract, 50_000, bob);
     }
 }

@@ -6,6 +6,7 @@ import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/O
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 import { Base64 } from "@openzeppelin/contracts/utils/Base64.sol";
 import { Tokenizer, MustControlIpnft } from "./Tokenizer.sol";
+import { IControlIPTs } from "./IControlIPTs.sol";
 
 struct Metadata {
     uint256 ipnftId;
@@ -48,7 +49,7 @@ contract IPToken is ERC20BurnableUpgradeable, OwnableUpgradeable {
     }
 
     modifier onlyTokenizerOrIPNFTController() {
-        if (_msgSender() != owner() && _msgSender() != Tokenizer(owner()).controllerOf(_metadata.ipnftId)) {
+        if (_msgSender() != owner() && _msgSender() != IControlIPTs(owner()).controllerOf(_metadata.ipnftId)) {
             revert MustControlIpnft();
         }
         _;
