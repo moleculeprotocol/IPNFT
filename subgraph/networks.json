@@ -10,19 +10,19 @@
     },
     "Tokenizer": {
       "address": "0xca63411FF5187431028d003eD74B57531408d2F9",
-      "startBlock": 5300057
+      "startBlock": 5300776
     },
     "CrowdSale": {
       "address": "0x8cA737E2cdaE1Ceb332bEf7ba9eA711a3a2f8037",
-      "startBlock": 5300057
+      "startBlock": 5300777      
     },
     "StakedLockingCrowdSale": {
       "address": "0xd1cE2EA7d3b0C9cAB025A4aD762FC00315141ad7",
-      "startBlock": 5300057
+      "startBlock": 5300777
     },
     "TermsAcceptedPermissioner": {
       "address": "0xC05D649368d8A5e2E98CAa205d47795de5fCB599",
-      "startBlock": 5300057
+      "startBlock": 5300776
     }
   },
   "mainnet": {
