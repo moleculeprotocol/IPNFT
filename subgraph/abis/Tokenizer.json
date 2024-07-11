@@ -6,6 +6,51 @@
   },
   {
     "type": "function",
+    "name": "cap",
+    "inputs": [
+      {
+        "name": "ipToken",
+        "type": "address",
+        "internalType": "contract IPToken"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "controllerOf",
+    "inputs": [
+      {
+        "name": "ipnftId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getIPNFTContract",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "contract IPNFT"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "initialize",
     "inputs": [
       {
@@ -34,6 +79,29 @@
       }
     ],
     "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "issue",
+    "inputs": [
+      {
+        "name": "ipToken",
+        "type": "address",
+        "internalType": "contract IPToken"
+      },
+      {
+        "name": "amount",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "receiver",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
   },
   {
     "type": "function",
@@ -79,9 +147,9 @@
     "name": "reinit",
     "inputs": [
       {
-        "name": "_permissioner",
+        "name": "_ipTokenImplementation",
         "type": "address",
-        "internalType": "contract IPermissioner"
+        "internalType": "contract IPToken"
       }
     ],
     "outputs": [],
@@ -386,7 +454,12 @@
   },
   {
     "type": "error",
-    "name": "MustOwnIpnft",
+    "name": "IPTNotControlledByTokenizer",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "MustControlIpnft",
     "inputs": []
   },
   {

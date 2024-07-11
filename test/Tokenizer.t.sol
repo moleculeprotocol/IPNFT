@@ -17,14 +17,30 @@ import { IPNFT } from "../src/IPNFT.sol";
 import { AcceptAllAuthorizer } from "./helpers/AcceptAllAuthorizer.sol";
 
 import { FakeERC20 } from "../src/helpers/FakeERC20.sol";
-import { MustOwnIpnft, AlreadyTokenized, Tokenizer, ZeroAddress } from "../src/Tokenizer.sol";
+import { MustControlIpnft, AlreadyTokenized, Tokenizer, ZeroAddress } from "../src/Tokenizer.sol";
 
-import { IPToken, OnlyIssuerOrOwner, TokenCapped } from "../src/IPToken.sol";
+import { IPToken, TokenCapped } from "../src/IPToken.sol";
+import { IControlIPTs } from "../src/IControlIPTs.sol";
 import { Molecules } from "../src/helpers/test-upgrades/Molecules.sol";
 import { Synthesizer } from "../src/helpers/test-upgrades/Synthesizer.sol";
 import { IPermissioner, BlindPermissioner } from "../src/Permissioner.sol";
 
-import { SchmackoSwap, ListingState } from "../src/SchmackoSwap.sol";
+contract GovernorOfTheFuture is IControlIPTs {
+    function controllerOf(uint256 ipnftId) external view override returns (address) {
+        return address(0); //no one but me controls IPTs!
+    }
+
+    function aMajorityWantsToIssueTokensTo(IPToken ipt, uint256 amount, address receiver) public {
+        ipt.issue(receiver, amount);
+    }
+}
+
+contract TokenizerWithHandover is Tokenizer {
+    //this oc would be gated for the current IPNFT holder
+    function handoverControl(IPToken ipt, GovernorOfTheFuture governor) external onlyController(ipt) {
+        ipt.transferOwnership(address(governor));
+    }
+}
 
 contract TokenizerTest is Test {
     using SafeERC20Upgradeable for IPToken;
@@ -50,7 +66,7 @@ contract TokenizerTest is Test {
 
     IPNFT internal ipnft;
     Tokenizer internal tokenizer;
-    SchmackoSwap internal schmackoSwap;
+
     IPermissioner internal blindPermissioner;
     FakeERC20 internal erc20;
 
@@ -63,8 +79,7 @@ contract TokenizerTest is Test {
         ipnft.initialize();
         ipnft.setAuthorizer(new AcceptAllAuthorizer());
 
-        schmackoSwap = new SchmackoSwap();
-        erc20 = new FakeERC20('Fake ERC20', 'FERC');
+        erc20 = new FakeERC20("Fake ERC20", "FERC");
         erc20.mint(ipnftBuyer, 1_000_000 ether);
 
         blindPermissioner = new BlindPermissioner();
@@ -79,7 +94,6 @@ contract TokenizerTest is Test {
         vm.startPrank(originalOwner);
         uint256 reservationId = ipnft.reserve();
         ipnft.mintReservation{ value: MINTING_FEE }(originalOwner, reservationId, ipfsUri, DEFAULT_SYMBOL, "");
-        vm.stopPrank();
     }
 
     function testSetIPTokenImplementation() public {
@@ -95,7 +109,6 @@ contract TokenizerTest is Test {
         vm.startPrank(originalOwner);
         vm.expectRevert("Ownable: caller is not the owner");
         tokenizer.setIPTokenImplementation(newIPTokenImplementation);
-        vm.stopPrank();
     }
 
     function testUrl() public {
@@ -103,7 +116,6 @@ contract TokenizerTest is Test {
         IPToken tokenContract = tokenizer.tokenizeIpnft(1, 100_000, "IPT", agreementCid, "");
         string memory uri = tokenContract.uri();
         assertGt(bytes(uri).length, 200);
-        vm.stopPrank();
     }
 
     function testIssueIPToken() public {
@@ -121,27 +133,32 @@ contract TokenizerTest is Test {
 
         vm.startPrank(originalOwner);
         tokenContract.transfer(alice, 10_000);
-        vm.stopPrank();
 
         assertEq(tokenContract.balanceOf(alice), 10_000);
         assertEq(tokenContract.balanceOf(originalOwner), 90_000);
         assertEq(tokenContract.totalSupply(), 100_000);
     }
 
-    function testIncreaseIPToken() public {
+    function testIncreaseIPTokenSupply() public {
         vm.startPrank(originalOwner);
         IPToken tokenContract = tokenizer.tokenizeIpnft(1, 100_000, "IPT", agreementCid, "");
 
         tokenContract.transfer(alice, 25_000);
         tokenContract.transfer(bob, 25_000);
 
-        tokenContract.issue(originalOwner, 100_000);
-        vm.stopPrank();
+        tokenContract.issue(originalOwner, 50_000);
+        tokenizer.issue(tokenContract, 50_000, originalOwner);
 
         vm.startPrank(bob);
-        vm.expectRevert(OnlyIssuerOrOwner.selector);
+        vm.expectRevert(MustControlIpnft.selector);
         tokenContract.issue(bob, 12345);
-        vm.stopPrank();
+        vm.expectRevert(MustControlIpnft.selector);
+        tokenizer.issue(tokenContract, 12345, bob);
+
+        vm.expectRevert(MustControlIpnft.selector);
+        tokenContract.cap();
+        vm.expectRevert(MustControlIpnft.selector);
+        tokenizer.cap(tokenContract);
 
         assertEq(tokenContract.balanceOf(alice), 25_000);
         assertEq(tokenContract.balanceOf(bob), 25_000);
@@ -149,16 +166,33 @@ contract TokenizerTest is Test {
         assertEq(tokenContract.totalSupply(), 200_000);
         assertEq(tokenContract.totalIssued(), 200_000);
 
-        vm.startPrank(bob);
-        vm.expectRevert(OnlyIssuerOrOwner.selector);
-        tokenContract.cap();
-        vm.stopPrank();
-
         vm.startPrank(originalOwner);
+        // both work and cap can be called multiple times without reverting
         tokenContract.cap();
+        tokenizer.cap(tokenContract);
+
         vm.expectRevert(TokenCapped.selector);
-        tokenContract.issue(bob, 12345);
-        vm.stopPrank();
+        tokenizer.issue(tokenContract, 12345, bob);
+    }
+
+    function testIPNFTHolderControlsIPT() public {
+        vm.startPrank(originalOwner);
+        IPToken tokenContract = tokenizer.tokenizeIpnft(1, 100_000, "IPT", agreementCid, "");
+        tokenContract.issue(bob, 50_000);
+        ipnft.transferFrom(originalOwner, alice, 1);
+
+        vm.startPrank(alice);
+        tokenContract.issue(alice, 50_000);
+        assertEq(tokenContract.balanceOf(alice), 50_000);
+
+        //the original owner *cannot* issue tokens anymore
+        //this actually worked before 1.3 since IPTs were bound to their original owner
+        vm.startPrank(originalOwner);
+        vm.expectRevert(MustControlIpnft.selector);
+        tokenContract.issue(alice, 50_000);
+
+        vm.expectRevert(MustControlIpnft.selector);
+        tokenizer.issue(tokenContract, 50_000, bob);
     }
 
     function testCanBeTokenizedOnlyOnce() public {
@@ -173,7 +207,7 @@ contract TokenizerTest is Test {
     function testCannotTokenizeIfNotOwner() public {
         vm.startPrank(alice);
 
-        vm.expectRevert(MustOwnIpnft.selector);
+        vm.expectRevert(MustControlIpnft.selector);
         tokenizer.tokenizeIpnft(1, 100_000, "IPT", agreementCid, "");
         vm.stopPrank();
     }
@@ -196,7 +230,7 @@ contract TokenizerTest is Test {
 
         assertEq(tokenContract.balanceOf(address(wallet)), 100_000);
 
-        //test the SAFE can send molecules to another account
+        //test the SAFE can send IPTs to another account
         bytes memory transferCall = abi.encodeCall(tokenContract.transfer, (bob, 10_000));
         bytes32 encodedTxDataHash = wallet.getTransactionHash(
             address(tokenContract), 0, transferCall, Enum.Operation.Call, 80_000, 1 gwei, 20 gwei, address(0x0), payable(0x0), 0
@@ -209,8 +243,40 @@ contract TokenizerTest is Test {
         wallet.execTransaction(
             address(tokenContract), 0, transferCall, Enum.Operation.Call, 80_000, 1 gwei, 20 gwei, address(0x0), payable(0x0), xsignatures
         );
-        vm.stopPrank();
 
         assertEq(tokenContract.balanceOf(bob), 10_000);
+    }
+
+    function testTokenizerCanHandoverControl() public {
+        vm.startPrank(deployer);
+        TokenizerWithHandover htokenizer = TokenizerWithHandover(address(new ERC1967Proxy(address(new TokenizerWithHandover()), "")));
+        htokenizer.initialize(ipnft, blindPermissioner);
+        htokenizer.setIPTokenImplementation(new IPToken());
+
+        vm.startPrank(originalOwner);
+        IPToken tokenContract = htokenizer.tokenizeIpnft(1, 100_000, "IPT", agreementCid, "");
+        tokenContract.issue(bob, 50_000);
+
+        vm.startPrank(deployer);
+        GovernorOfTheFuture governor = new GovernorOfTheFuture();
+        vm.stopPrank();
+
+        vm.startPrank(originalOwner);
+        htokenizer.handoverControl(tokenContract, governor);
+
+        vm.startPrank(alice); // alice controls the governor, eg by proving that a vote has occured
+        governor.aMajorityWantsToIssueTokensTo(tokenContract, 50_000, alice);
+        assertEq(tokenContract.balanceOf(alice), 50_000);
+
+        // -- from here on, *only* the new governor is in conrol
+        vm.expectRevert(MustControlIpnft.selector);
+        tokenContract.issue(alice, 50_000);
+
+        vm.startPrank(originalOwner);
+        vm.expectRevert(MustControlIpnft.selector);
+        tokenContract.issue(bob, 50_000);
+
+        vm.expectRevert(MustControlIpnft.selector);
+        htokenizer.issue(tokenContract, 50_000, bob);
     }
 }

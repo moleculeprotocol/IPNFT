@@ -1,7 +1,8 @@
 {
   "license": "MIT",
   "scripts": {
-    "test": "hardhat test --network hardhat"
+    "test": "hardhat test --network hardhat",
+    "clean": "rm -rf out cache_forge"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-foundry": "^1.0.0",

@@ -1,7 +1,7 @@
 [
   {
     "type": "function",
-    "name": "afterSale",
+    "name": "UNSAFE_afterSale",
     "inputs": [
       {
         "name": "tokenContract",
@@ -32,7 +32,7 @@
     "name": "afterSale",
     "inputs": [
       {
-        "name": "tokenContract",
+        "name": "ipt",
         "type": "address",
         "internalType": "contract IPToken"
       },
@@ -365,17 +365,22 @@
   },
   {
     "type": "error",
+    "name": "MustControlIpnft",
+    "inputs": []
+  },
+  {
+    "type": "error",
     "name": "NotClaimingYet",
     "inputs": []
   },
   {
     "type": "error",
-    "name": "OnlyIssuer",
+    "name": "NotSalesBeneficiary",
     "inputs": []
   },
   {
     "type": "error",
-    "name": "UncappedToken",
+    "name": "OnlySeller",
     "inputs": []
   }
 ]

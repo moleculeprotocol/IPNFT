@@ -1,0 +1,80 @@
+{
+  "sepolia": {
+    "IPNFT": {
+      "address": "0x152B444e60C526fe4434C721561a077269FcF61a",
+      "startBlock": 5300057
+    },
+    "SchmackoSwap": {
+      "address": "0x9e4c638e703d0Af3a3B9eb488dE79A16d402698f",
+      "startBlock": 5300057
+    },
+    "Tokenizer": {
+      "address": "0xca63411FF5187431028d003eD74B57531408d2F9",
+      "startBlock": 5300776
+    },
+    "CrowdSale": {
+      "address": "0x8cA737E2cdaE1Ceb332bEf7ba9eA711a3a2f8037",
+      "startBlock": 5300777      
+    },
+    "StakedLockingCrowdSale": {
+      "address": "0xd1cE2EA7d3b0C9cAB025A4aD762FC00315141ad7",
+      "startBlock": 5300777
+    },
+    "TermsAcceptedPermissioner": {
+      "address": "0xC05D649368d8A5e2E98CAa205d47795de5fCB599",
+      "startBlock": 5300776
+    }
+  },
+  "mainnet": {
+    "IPNFT": {
+      "address": "0xcaD88677CA87a7815728C72D74B4ff4982d54Fc1",
+      "startBlock": 17463429
+    },
+    "SchmackoSwap": {
+      "address": "0xc09b8577c762b5e97a7d640f242e1d9bfaa7eb9d",
+      "startBlock": 17441953
+    },
+    "Tokenizer": {
+      "address": "0x58EB89C69CB389DBef0c130C6296ee271b82f436",
+      "startBlock": 17464363
+    },
+    "CrowdSale": {
+      "address": "0xf0a8d23f38e9cbbe01c4ed37f23bd519b65bc6c2",
+      "startBlock": 18490640
+    },
+    "StakedLockingCrowdSale": {
+      "address": "0x35Bce29F52f51f547998717CD598068Afa2B29B7",
+      "startBlock": 17481804
+    },
+    "TermsAcceptedPermissioner": {
+      "address": "0xC837E02982992B701A1B5e4E21fA01cEB0a628fA",
+      "startBlock": 17790450
+    }
+  },
+  "foundry": {
+    "IPNFT": {
+      "address": "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
+      "startBlock": 0
+    },
+    "SchmackoSwap": {
+      "address": "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
+      "startBlock": 0
+    },
+    "Tokenizer": {
+      "address": "0xB7f8BC63BbcaD18155201308C8f3540b07f84F5e",
+      "startBlock": 0
+    },
+    "CrowdSale": {
+      "address": "0x7a2088a1bFc9d81c55368AE168C2C02570cB814F",
+      "startBlock": 0
+    },
+    "StakedLockingCrowdSale": {
+      "address": "0x0B306BF915C4d645ff596e518fAf3F9669b97016",
+      "startBlock": 0
+    },
+    "TermsAcceptedPermissioner": {
+      "address": "0x8A791620dd6260079BF849Dc5567aDC3F2FdC318",
+      "startBlock": 0
+    }
+  }
+}

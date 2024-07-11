@@ -13,7 +13,7 @@ import { IPToken, Metadata } from "../src/IPToken.sol";
 import { CrowdSale, Sale, SaleInfo, SaleState, BadDecimals } from "../src/crowdsale/CrowdSale.sol";
 import { StakedLockingCrowdSale, BadPrice } from "../src/crowdsale/StakedLockingCrowdSale.sol";
 import { IPermissioner, TermsAcceptedPermissioner, InvalidSignature, BlindPermissioner } from "../src/Permissioner.sol";
-import { MustOwnIpnft, AlreadyTokenized, Tokenizer, ZeroAddress } from "../src/Tokenizer.sol";
+import { MustControlIpnft, AlreadyTokenized, Tokenizer, ZeroAddress } from "../src/Tokenizer.sol";
 import { IPNFT } from "../src/IPNFT.sol";
 import { TokenVesting } from "@moleculeprotocol/token-vesting/TokenVesting.sol";
 import { TimelockedToken } from "../src/TimelockedToken.sol";
@@ -52,8 +52,15 @@ contract CrowdSalePermissionedTest is Test {
         ipnft.initialize();
         ipnft.setAuthorizer(new AcceptAllAuthorizer());
 
-        Tokenizer tokenizer = Tokenizer(address(new ERC1967Proxy(address(new Tokenizer()), "")));
-        tokenizer.initialize(ipnft, new BlindPermissioner());
+        Tokenizer tokenizer = Tokenizer(
+            address(
+                new ERC1967Proxy(
+                    address(new Tokenizer()),
+                    abi.encodeWithSelector(Tokenizer.initialize.selector, [address(ipnft), address(new BlindPermissioner())])
+                )
+            )
+        );
+
         tokenizer.setIPTokenImplementation(new IPToken());
 
         biddingToken = new FakeERC20("USD token", "USDC");
@@ -61,11 +68,7 @@ contract CrowdSalePermissionedTest is Test {
 
         crowdSale = new StakedLockingCrowdSale();
 
-        vestedDao = new TokenVesting(
-            daoToken,
-            string(abi.encodePacked("Vested ", daoToken.name())),
-            string(abi.encodePacked("v", daoToken.symbol()))
-        );
+        vestedDao = new TokenVesting(daoToken, string(abi.encodePacked("Vested ", daoToken.name())), string(abi.encodePacked("v", daoToken.symbol())));
         vestedDao.grantRole(vestedDao.ROLE_CREATE_SCHEDULE(), address(crowdSale));
         crowdSale.trustVestingContract(vestedDao);
         vm.stopPrank();
@@ -77,12 +80,14 @@ contract CrowdSalePermissionedTest is Test {
 
         auctionToken = tokenizer.tokenizeIpnft(1, 100_000, "IPT", agreementCid, "");
         auctionToken.issue(emitter, 500_000 ether);
+
         vm.stopPrank();
 
-        vm.startPrank(deployer);
+        // here's a funny hack we're utilizing only for this test:
+        // to make the tokenization easier, we're using a BlindPermissioner above
+        // from now on, we're switching to a TermsAcceptedPermissioner
         permissioner = new TermsAcceptedPermissioner();
-        tokenizer.reinit(permissioner);
-        vm.stopPrank();
+        vm.store(address(tokenizer), bytes32(uint256(3)), bytes32(uint256(uint160(address(permissioner)))));
 
         vm.startPrank(bidder);
         biddingToken.mint(bidder, 1_000_000 ether);
