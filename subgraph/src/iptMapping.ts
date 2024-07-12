@@ -1,6 +1,6 @@
 import { Address, BigInt, log } from '@graphprotocol/graph-ts'
 import { IPT, IPTBalance } from '../generated/schema'
-import { Transfer as TransferEvent } from '../generated/templates/IPToken/IPToken'
+import { Transfer as TransferEvent, Capped as CappedEvent } from '../generated/templates/IPToken/IPToken'
 
 function createOrUpdateBalances(
   owner: Address,
@@ -19,6 +19,16 @@ function createOrUpdateBalances(
     balance.balance = balance.balance.plus(value)
   }
   balance.save()
+}
+
+export function handleCapped(event: CappedEvent): void {
+  let ipt = IPT.load(event.address.toHexString())
+  if (!ipt) {
+    log.error('[IPT] Ipnft not found for id: {}', [event.address.toHexString()])
+    return
+  }
+  ipt.capped = true
+  ipt.save()
 }
 
 export function handleTransfer(event: TransferEvent): void {

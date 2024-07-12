@@ -19,6 +19,7 @@ export function handleIPTsCreated(event: TokensCreatedEvent): void {
   //these will be updated by the underlying IPT subgraph template
   ipt.totalIssued = BigInt.fromU32(0)
   ipt.circulatingSupply = BigInt.fromU32(0)
+  ipt.capped = false;
   IPToken.create(event.params.tokenContract)
 
   ipt.save()
