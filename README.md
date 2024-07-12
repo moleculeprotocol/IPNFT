@@ -21,9 +21,13 @@ IP-NFTs allow their users to tokenize intellectual property. This repo contains 
 API: https://subgraph.satsuma-prod.com/742d8952ab24/molecule--4039244/ip-nft-mainnet/api
 Playground: https://subgraph.satsuma-prod.com/molecule--4039244/ip-nft-mainnet/playground
 
+tokenizer implementation 1.3: 0x6517DD48908F4C1FF4eD74FfD780908241a3654C  
 tokenizer implementation 1.2: 0xE8701330F196FeFe415b28dAA767AB076F42557A
 tokenizer implementation 1.1: 0x9C70FA8c87D7e94Fd63eeCCcA657D5c4224a36f3
+
+iptoken implementation 1.3: 0x89a14Be8f7824d4775053Edad0f2fA2d6767b72B
 iptoken implementation: 0x9E4fc6E6d1A64e3429aB852d3CB31AD7aa06997A
+
 ipnft implementation 2.4: 0x6B179Dffac5E190c670176606f552cB792847f80
 
 #### Defender Relayer
