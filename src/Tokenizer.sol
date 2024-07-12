@@ -69,7 +69,6 @@ contract Tokenizer is UUPSUpgradeable, OwnableUpgradeable, IControlIPTs {
         return ipnft;
     }
 
-    //todo: try breaking this with a faked IPToken
     modifier onlyController(IPToken ipToken) {
         TokenMetadata memory metadata = ipToken.metadata();
 

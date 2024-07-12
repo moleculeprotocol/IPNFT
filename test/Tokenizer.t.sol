@@ -17,16 +17,16 @@ import { IPNFT } from "../src/IPNFT.sol";
 import { AcceptAllAuthorizer } from "./helpers/AcceptAllAuthorizer.sol";
 
 import { FakeERC20 } from "../src/helpers/FakeERC20.sol";
-import { MustControlIpnft, AlreadyTokenized, Tokenizer, ZeroAddress } from "../src/Tokenizer.sol";
+import { MustControlIpnft, AlreadyTokenized, Tokenizer, ZeroAddress, IPTNotControlledByTokenizer } from "../src/Tokenizer.sol";
 
-import { IPToken, TokenCapped } from "../src/IPToken.sol";
+import { IPToken, TokenCapped, Metadata as TokenMetadata } from "../src/IPToken.sol";
 import { IControlIPTs } from "../src/IControlIPTs.sol";
 import { Molecules } from "../src/helpers/test-upgrades/Molecules.sol";
 import { Synthesizer } from "../src/helpers/test-upgrades/Synthesizer.sol";
 import { IPermissioner, BlindPermissioner } from "../src/Permissioner.sol";
 
 contract GovernorOfTheFuture is IControlIPTs {
-    function controllerOf(uint256 ipnftId) external view override returns (address) {
+    function controllerOf(uint256) external view override returns (address) {
         return address(0); //no one but me controls IPTs!
     }
 
@@ -39,6 +39,12 @@ contract TokenizerWithHandover is Tokenizer {
     //this oc would be gated for the current IPNFT holder
     function handoverControl(IPToken ipt, GovernorOfTheFuture governor) external onlyController(ipt) {
         ipt.transferOwnership(address(governor));
+    }
+}
+
+contract FakeIPT is IPToken {
+    constructor(uint256 ipnftId) {
+        _metadata = TokenMetadata({ ipnftId: ipnftId, originalOwner: msg.sender, agreementCid: "ipfs://agreementCid" });
     }
 }
 
@@ -210,6 +216,18 @@ contract TokenizerTest is Test {
         vm.expectRevert(MustControlIpnft.selector);
         tokenizer.tokenizeIpnft(1, 100_000, "IPT", agreementCid, "");
         vm.stopPrank();
+    }
+
+    function testCannotBypassModifiersWithFakeTokens() public {
+        address attacker = makeAddr("attacker");
+        vm.startPrank(originalOwner);
+        IPToken realTokenContract = tokenizer.tokenizeIpnft(1, 100_000, "IPT", agreementCid, "");
+
+        vm.startPrank(attacker);
+        IPToken fakeIpt = new FakeIPT(1);
+
+        vm.expectRevert(IPTNotControlledByTokenizer.selector);
+        tokenizer.issue(fakeIpt, 100_000, attacker);
     }
 
     function testGnosisSafeCanInteractWithIPToken() public {
