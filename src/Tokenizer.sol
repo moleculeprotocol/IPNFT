@@ -124,7 +124,7 @@ contract Tokenizer is UUPSUpgradeable, OwnableUpgradeable, IControlIPTs {
         string memory tokenSymbol,
         string memory agreementCid,
         bytes calldata signedAgreement
-    ) external returns (IPToken token) {
+    ) public returns (IPToken token) {
         if (_msgSender() != controllerOf(ipnftId)) {
             revert MustControlIpnft();
         }
@@ -153,6 +153,14 @@ contract Tokenizer is UUPSUpgradeable, OwnableUpgradeable, IControlIPTs {
         );
         permissioner.accept(token, _msgSender(), signedAgreement);
         token.issue(_msgSender(), tokenAmount);
+    }
+
+    function reserveNewIpnftIdAndTokenize(uint256 amount, string memory tokenSymbol, string memory agreementCid, bytes calldata signedAgreement)
+        external
+        returns (uint256 reservationId, IPToken ipToken)
+    {
+        reservationId = ipnft.reserve();
+        ipToken = tokenizeIpnft(reservationId, amount, tokenSymbol, agreementCid, signedAgreement);
     }
 
     /**
