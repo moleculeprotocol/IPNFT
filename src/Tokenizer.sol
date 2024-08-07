@@ -159,7 +159,7 @@ contract Tokenizer is UUPSUpgradeable, OwnableUpgradeable, IControlIPTs {
         external
         returns (uint256 reservationId, IPToken ipToken)
     {
-        reservationId = ipnft.reserve();
+        reservationId = ipnft.reserveFor(_msgSender());
         ipToken = tokenizeIpnft(reservationId, amount, tokenSymbol, agreementCid, signedAgreement);
     }
 
@@ -184,6 +184,11 @@ contract Tokenizer is UUPSUpgradeable, OwnableUpgradeable, IControlIPTs {
 
     /// @dev this will be called by IPTs. Right now the controller is the IPNFT's current owner, it can be a Governor in the future.
     function controllerOf(uint256 ipnftId) public view override returns (address) {
+        //todo: check whether this is safe (or if I can trick myself to be the controller somehow)
+        //reservations are deleted upon mints, so this imo should be good
+        if (ipnft.reservations(ipnftId) != address(0)) {
+            return ipnft.reservations(ipnftId);
+        }
         return ipnft.ownerOf(ipnftId);
     }
 
