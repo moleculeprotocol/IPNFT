@@ -161,6 +161,18 @@ contract IPNFT is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IReser
         emit ReadAccessGranted(tokenId, reader, until);
     }
 
+    function amendMetadata(uint256 tokenId, string calldata _newTokenURI, bytes calldata authorization) external {
+        if (ownerOf(tokenId) != _msgSender()) {
+            revert Unauthorized();
+        }
+
+        if (!mintAuthorizer.authorizeMint(_msgSender(), _msgSender(), abi.encode(SignedMintAuthorization(tokenId, _newTokenURI, authorization)))) {
+            revert Unauthorized();
+        }
+
+        _setTokenURI(tokenId, _newTokenURI);
+    }
+
     /**
      * @notice check whether `reader` currently is able to access gated content behind `tokenId`
      * @param reader the address in question
@@ -177,6 +189,7 @@ contract IPNFT is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IReser
         require(success, "transfer failed");
     }
 
+    
     /// @inheritdoc UUPSUpgradeable
     function _authorizeUpgrade(address /*newImplementation*/ )
         internal
