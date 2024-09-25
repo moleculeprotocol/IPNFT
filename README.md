@@ -147,11 +147,14 @@ You can place required env vars in your `.env` file and run `source .env` to get
 - to rollout a new upgrade on a live network without calling the proxy's upgrade function, you can use `forge script script/UpgradeImplementation.s.sol:DeployImplementation` and invoke the upgrade function manually (e.g. from your multisig)
 - for the "real" thing you'll need to add `-f` and `--private-key` and finally `--broadcast` params .
 
-### Deploy for local development
+### Deploying everything locally
 
-#### Quickstart
+You need Docker.
 
-- You can use the shell script `./setupLocal.sh` to deploy all contracts and add the optional `-f` or `--fixture` flag to also run the fixture scripts.
+#### Automatically
+
+- `yarn localenv` sets up *everything* 
+- use `./setupLocal.sh` to deploy all contracts. Add the optional `-f` or `--fixture` flag to also run the fixture scripts to tokenize one IPNFT or `-fx` to create two crowdsale instances. 
 
 #### Manual
 

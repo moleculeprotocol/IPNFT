@@ -1,14 +1,15 @@
 #https://github.com/graphprotocol/graph-node/blob/master/docker/docker-compose.yml
 services:
   anvil:
-    image: ghcr.io/foundry-rs/foundry:nightly-a470d635cfcdce68609e9dc5762a3584351bacc1
+    image: ghcr.io/foundry-rs/foundry:nightly-883bb1c39f56a525657116874e59e80c2b881b10
+    platform: linux/amd64
     command:
       - 'anvil --host 0.0.0.0'
     ports:
       - '8545:8545'
 
   graph-node:
-    image: graphprotocol/graph-node:845f8fa
+    image: graphprotocol/graph-node:990ef4d
     ports:
       - '8000:8000'
       - '8001:8001'
@@ -31,7 +32,7 @@ services:
       GRAPH_LOG: debug
       GRAPH_ALLOW_NON_DETERMINISTIC_IPFS: 1
   ipfs:
-    image: ipfs/kubo:v0.28.0
+    image: ipfs/kubo:v0.30.0
     ports:
       - '5001:5001'
       - '8080:8080'
@@ -39,7 +40,7 @@ services:
       - ./deploy/001-ipfs-config.sh:/container-init.d/001-ipfs-config.sh
     #  - ./data/ipfs:/data/ipfs
   postgres:
-    image: postgres
+    image: postgres:12-alpine
     ports:
       - '5432:5432'
     command: ['postgres', '-cshared_preload_libraries=pg_stat_statements']
@@ -49,6 +50,3 @@ services:
       POSTGRES_DB: graph-node
       PGDATA: '/data/postgres'
       POSTGRES_INITDB_ARGS: '-E UTF8 --locale=C'
-
-    volumes:
-      - ./data/postgres:/var/lib/postgresql/data

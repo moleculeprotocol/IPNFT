@@ -27,6 +27,8 @@ dataSources:
           handler: handleTransfer
         - event: ReadAccessGranted(indexed uint256,indexed address,uint256)
           handler: handleReadAccess
+        - event: MetadataUpdate(uint256)
+          handler: handleMetadataUpdated
       file: ./src/ipnftMapping.ts
   - kind: ethereum/contract
     name: SchmackoSwap
