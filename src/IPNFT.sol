@@ -23,7 +23,7 @@ import { IReservable } from "./IReservable.sol";
  \▓▓▓▓▓▓\▓▓             \▓▓   \▓▓\▓▓         \▓▓
  */
 
-/// @title IPNFT V2.4
+/// @title IPNFT V2.5
 /// @author molecule.to
 /// @notice IP-NFTs capture intellectual property to be traded and synthesized
 contract IPNFT is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IReservable, UUPSUpgradeable, OwnableUpgradeable, PausableUpgradeable {
@@ -188,7 +188,6 @@ contract IPNFT is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IReser
         (bool success,) = _msgSender().call{ value: address(this).balance }("");
         require(success, "transfer failed");
     }
-
     
     /// @inheritdoc UUPSUpgradeable
     function _authorizeUpgrade(address /*newImplementation*/ )

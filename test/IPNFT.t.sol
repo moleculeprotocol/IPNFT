@@ -229,6 +229,11 @@ contract IPNFTTest is IPNFTMintHelper {
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(deployerPk, authMessageHash);
         bytes memory authorization = abi.encodePacked(r, s, v);
 
+        //the signoff only allows alice to call this
+        vm.startPrank(charlie);
+        vm.expectRevert(IPNFT.Unauthorized.selector);
+        ipnft.amendMetadata(1, "ipfs://QmNewUri", authorization);        
+
         vm.startPrank(alice);
         vm.expectEmit(true, true, false, false);
         emit MetadataUpdate(1);
