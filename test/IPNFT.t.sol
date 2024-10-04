@@ -24,6 +24,7 @@ contract IPNFTTest is IPNFTMintHelper {
     event IPNFTMinted(address indexed owner, uint256 indexed tokenId, string tokenURI, string symbol);
     event SymbolUpdated(uint256 indexed tokenId, string symbol);
     event ReadAccessGranted(uint256 indexed tokenId, address indexed reader, uint256 until);
+    event MetadataUpdate(uint256 tokenId);
 
     IPNFT internal ipnft;
 
@@ -216,4 +217,30 @@ contract IPNFTTest is IPNFTMintHelper {
         vm.warp(block.timestamp + 60);
         assertFalse(ipnft.canRead(bob, tokenId));
     }
+
+    function testOwnerCanAmendMetadataAfterSignoff() public {
+        mintAToken(ipnft, alice);
+
+        vm.startPrank(deployer);
+        ipnft.setAuthorizer(new SignedMintAuthorizer(deployer));
+        vm.stopPrank();
+
+        bytes32 authMessageHash = ECDSA.toEthSignedMessageHash(keccak256(abi.encodePacked(alice, alice, uint256(1), "ipfs://QmNewUri")));
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(deployerPk, authMessageHash);
+        bytes memory authorization = abi.encodePacked(r, s, v);
+
+        //the signoff only allows alice to call this
+        vm.startPrank(charlie);
+        vm.expectRevert(IPNFT.Unauthorized.selector);
+        ipnft.amendMetadata(1, "ipfs://QmNewUri", authorization);        
+
+        vm.startPrank(alice);
+        vm.expectEmit(true, true, false, false);
+        emit MetadataUpdate(1);
+        ipnft.amendMetadata(1, "ipfs://QmNewUri", authorization);        
+        assertEq(ipnft.tokenURI(1), "ipfs://QmNewUri");
+        vm.stopPrank();
+    }
+
+    
 }

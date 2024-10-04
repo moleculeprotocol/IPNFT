@@ -3,13 +3,16 @@ import {
   ByteArray,
   crypto,
   ethereum,
+  log,
   store
 } from '@graphprotocol/graph-ts'
 import {
   IPNFTMinted as IPNFTMintedEvent,
   Reserved as ReservedEvent,
   ReadAccessGranted as ReadAccessGrantedEvent,
-  Transfer as TransferEvent
+  Transfer as TransferEvent,
+  MetadataUpdate as MetadataUpdateEvent,
+  IPNFT as IPNFTContract
 } from '../generated/IPNFT/IPNFT'
 import { Ipnft, Reservation, CanRead } from '../generated/schema'
 
@@ -80,3 +83,19 @@ export function handleMint(event: IPNFTMintedEvent): void {
   store.remove('Reservation', event.params.tokenId.toString())
   ipnft.save()
 }
+
+export function handleMetadataUpdated(event: MetadataUpdateEvent): void {
+  let ipnft = Ipnft.load(event.params._tokenId.toString())
+  if (!ipnft) {
+    log.error('ipnft {} not found', [event.params._tokenId.toString()])
+    return
+  }
+
+  //erc4906 is not emitting the new url, we must query it ourselves
+  let _ipnftContract = IPNFTContract.bind(event.params._event.address);
+  let newUri = _ipnftContract.tokenURI(event.params._tokenId)
+
+  ipnft.tokenURI = newUri
+  ipnft.save()
+}
+

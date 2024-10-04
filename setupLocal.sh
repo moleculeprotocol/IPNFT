@@ -6,23 +6,28 @@ set -a
   . ./.env.example
 set +a
 
-fixture=0
+fixtures=false
+extrafixtures=false
 
 # Parse command-line options
-while [ "$#" -gt 0 ]; do
-  case $1 in
-    -f|--fixture)
-      fixture=1
-    ;;
+while getopts "fx" opt; do
+  case ${opt} in
+    f)
+      fixtures=true
+      ;;
+    x)
+      extrafixtures=true
+      ;;
     *)
       echo "Unknown option: $1"
       exit 1
-    ;;
+      ;;
   esac
-  shift
 done
 
-FSC="forge script  -f $RPC_URL --broadcast"
+shift $((OPTIND -1))
+
+FSC="forge script --chain 31337 --rpc-url $RPC_URL --use 0.8.18 --offline --broadcast --revert-strings debug"
 
 # Deployments
 $FSC script/dev/Ipnft.s.sol:DeployIpnftSuite 
@@ -34,11 +39,16 @@ $FSC script/dev/Tokens.s.sol:DeployFakeTokens
 $FSC script/dev/CrowdSale.s.sol:DeployCrowdSale 
 
 # optionally: fixtures
-if [ "$fixture" -eq "1" ]; then
+if $fixtures; then
   echo "Running fixture scripts."
 
   $FSC script/dev/Ipnft.s.sol:FixtureIpnft 
-  $FSC script/dev/Tokenizer.s.sol:FixtureTokenizer 
+  $FSC script/dev/Tokenizer.s.sol:FixtureTokenizer
+fi
+
+# optionally: extra fixtures
+if $extrafixtures; then
+  echo "Running extra fixture scripts (crowdsales)."
 
   $FSC script/dev/CrowdSale.s.sol:FixtureCrowdSale 
   echo "Waiting 15 seconds until claiming plain sale..."

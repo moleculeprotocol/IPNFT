@@ -2,7 +2,8 @@
   "license": "MIT",
   "scripts": {
     "test": "hardhat test --network hardhat",
-    "clean": "rm -rf out cache_forge"
+    "clean": "rm -rf out cache_forge",
+    "localenv": "./deploy/inittest.sh"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-foundry": "^1.0.0",

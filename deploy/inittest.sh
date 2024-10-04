@@ -11,7 +11,8 @@ $DC down --remove-orphans
 sleep 5
 $DC up -d
 $DC ps 
-./setupLocal.sh -f
+
+./setupLocal.sh -fx
 
 cd subgraph
 yarn codegen

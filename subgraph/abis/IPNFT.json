@@ -6,6 +6,29 @@
   },
   {
     "type": "function",
+    "name": "amendMetadata",
+    "inputs": [
+      {
+        "name": "tokenId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "_newTokenURI",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "authorization",
+        "type": "bytes",
+        "internalType": "bytes"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "approve",
     "inputs": [
       {
