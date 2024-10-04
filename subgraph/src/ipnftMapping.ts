@@ -7,14 +7,15 @@ import {
   store
 } from '@graphprotocol/graph-ts'
 import {
+  IPNFT as IPNFTContract,
   IPNFTMinted as IPNFTMintedEvent,
-  Reserved as ReservedEvent,
-  ReadAccessGranted as ReadAccessGrantedEvent,
-  Transfer as TransferEvent,
   MetadataUpdate as MetadataUpdateEvent,
-  IPNFT as IPNFTContract
+  ReadAccessGranted as ReadAccessGrantedEvent,
+  Reserved as ReservedEvent,
+  Transfer as TransferEvent
 } from '../generated/IPNFT/IPNFT'
-import { Ipnft, Reservation, CanRead } from '../generated/schema'
+import { IpnftMetadata as IpnftMetadataTemplate } from '../generated/templates'
+import { CanRead, Ipnft, Reservation } from '../generated/schema'
 
 export function handleTransfer(event: TransferEvent): void {
   if (event.params.to == Address.zero()) {
@@ -80,8 +81,14 @@ export function handleMint(event: IPNFTMintedEvent): void {
   ipnft.tokenURI = event.params.tokenURI
   ipnft.createdAt = event.block.timestamp
   ipnft.symbol = event.params.symbol
+  let ipfsLocation = event.params.tokenURI.replace('ipfs://', '');
+  ipnft.metadata = ipfsLocation
+  ipnft.updatedAtTimestamp = event.block.timestamp
+  IpnftMetadataTemplate.create(ipfsLocation)
+
   store.remove('Reservation', event.params.tokenId.toString())
   ipnft.save()
+
 }
 
 export function handleMetadataUpdated(event: MetadataUpdateEvent): void {
@@ -94,8 +101,19 @@ export function handleMetadataUpdated(event: MetadataUpdateEvent): void {
   //erc4906 is not emitting the new url, we must query it ourselves
   let _ipnftContract = IPNFTContract.bind(event.params._event.address);
   let newUri = _ipnftContract.tokenURI(event.params._tokenId)
+  if (!newUri) {
+    log.debug("no new uri found for token, likely just minted {}", [event.params._tokenId.toString()])
+    return 
+  }
 
   ipnft.tokenURI = newUri
+  
+  let ipfsLocation = newUri.replace('ipfs://', '');
+  ipnft.updatedAtTimestamp = event.block.timestamp
+  ipnft.metadata = ipfsLocation
+
+  IpnftMetadataTemplate.create(ipfsLocation)
+  
   ipnft.save()
 }
 
