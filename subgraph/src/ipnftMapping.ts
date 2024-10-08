@@ -75,19 +75,17 @@ export function handleReservation(event: ReservedEvent): void {
   reservation.save()
 }
 
-function updateIpnftMetadata(ipnft: Ipnft, uri: string, timestamp: BigInt): Ipnft {
+function updateIpnftMetadata(ipnft: Ipnft, uri: string, timestamp: BigInt): void {
     let ipfsLocation = uri.replace('ipfs://', '');
     if (!ipfsLocation || ipfsLocation == uri) {
-      log.error("Invalid URI format for tokenId {}: {}", [ipnft.id, uri]);
-      return ipnft;
+      log.error("Invalid URI format for tokenId {}: {}", [ipnft.id, uri])
+      return
     }
 
-    ipnft.tokenURI = uri;
-    ipnft.metadata = ipfsLocation;
-    ipnft.updatedAtTimestamp = timestamp;
-    IpnftMetadataTemplate.create(ipfsLocation);
-
-    return ipnft;
+    ipnft.tokenURI = uri
+    ipnft.metadata = ipfsLocation
+    ipnft.updatedAtTimestamp = timestamp
+    IpnftMetadataTemplate.create(ipfsLocation)
 }
 
 //the underlying parameter arrays are misaligned, hence we cannot cast or unify both events
@@ -96,7 +94,7 @@ export function handleMint(event: IPNFTMintedEvent): void {
   ipnft.owner = event.params.owner
   ipnft.createdAt = event.block.timestamp
   ipnft.symbol = event.params.symbol
-  ipnft = updateIpnftMetadata(ipnft, event.params.tokenURI, event.block.timestamp)
+  updateIpnftMetadata(ipnft, event.params.tokenURI, event.block.timestamp)
   store.remove('Reservation', event.params.tokenId.toString())
   ipnft.save()
 
@@ -116,7 +114,7 @@ export function handleMetadataUpdated(event: MetadataUpdateEvent): void {
     log.debug("no new uri found for token, likely just minted {}", [event.params._tokenId.toString()])
     return 
   }
-  ipnft = updateIpnftMetadata(ipnft, newUri, event.block.timestamp)  
+  updateIpnftMetadata(ipnft, newUri, event.block.timestamp)  
   ipnft.save()
 }
 
