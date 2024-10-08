@@ -7,6 +7,16 @@ type Ipnft @entity {
   listings: [Listing!] @derivedFrom(field: "ipnft")
   readers: [CanRead!] @derivedFrom(field: "ipnft")
   ipts: [IPT!] @derivedFrom(field: "ipnft")
+  metadata: IpnftMetadata
+  updatedAtTimestamp: BigInt
+}
+
+type IpnftMetadata @entity {
+  id: ID!
+  name: String!
+  image: String!
+  description: String!
+  externalURL: String!
 }
 
 type IPT @entity {

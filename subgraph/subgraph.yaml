@@ -228,3 +228,16 @@ templates:
           handler: handleScheduled
         - event: ScheduleReleased(indexed bytes32,indexed address,uint256)
           handler: handleReleased
+  - name: IpnftMetadata
+    kind: file/ipfs
+    mapping:
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      file: ./src/metadataMapping.ts
+      handler: handleMetadata
+      entities:
+        - IpnftMetadata
+      abis:
+        - name: IPNFT
+          file: ./abis/IPNFT.json
+    network: foundry

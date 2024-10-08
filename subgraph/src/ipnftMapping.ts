@@ -1,5 +1,6 @@
 import {
   Address,
+  BigInt,
   ByteArray,
   crypto,
   ethereum,
@@ -7,14 +8,15 @@ import {
   store
 } from '@graphprotocol/graph-ts'
 import {
+  IPNFT as IPNFTContract,
   IPNFTMinted as IPNFTMintedEvent,
-  Reserved as ReservedEvent,
-  ReadAccessGranted as ReadAccessGrantedEvent,
-  Transfer as TransferEvent,
   MetadataUpdate as MetadataUpdateEvent,
-  IPNFT as IPNFTContract
+  ReadAccessGranted as ReadAccessGrantedEvent,
+  Reserved as ReservedEvent,
+  Transfer as TransferEvent
 } from '../generated/IPNFT/IPNFT'
-import { Ipnft, Reservation, CanRead } from '../generated/schema'
+import { IpnftMetadata as IpnftMetadataTemplate } from '../generated/templates'
+import { CanRead, Ipnft, Reservation } from '../generated/schema'
 
 export function handleTransfer(event: TransferEvent): void {
   if (event.params.to == Address.zero()) {
@@ -73,15 +75,29 @@ export function handleReservation(event: ReservedEvent): void {
   reservation.save()
 }
 
+function updateIpnftMetadata(ipnft: Ipnft, uri: string, timestamp: BigInt): void {
+    let ipfsLocation = uri.replace('ipfs://', '');
+    if (!ipfsLocation || ipfsLocation == uri) {
+      log.error("Invalid URI format for tokenId {}: {}", [ipnft.id, uri])
+      return
+    }
+
+    ipnft.tokenURI = uri
+    ipnft.metadata = ipfsLocation
+    ipnft.updatedAtTimestamp = timestamp
+    IpnftMetadataTemplate.create(ipfsLocation)
+}
+
 //the underlying parameter arrays are misaligned, hence we cannot cast or unify both events
 export function handleMint(event: IPNFTMintedEvent): void {
   let ipnft = new Ipnft(event.params.tokenId.toString())
   ipnft.owner = event.params.owner
-  ipnft.tokenURI = event.params.tokenURI
   ipnft.createdAt = event.block.timestamp
   ipnft.symbol = event.params.symbol
+  updateIpnftMetadata(ipnft, event.params.tokenURI, event.block.timestamp)
   store.remove('Reservation', event.params.tokenId.toString())
   ipnft.save()
+
 }
 
 export function handleMetadataUpdated(event: MetadataUpdateEvent): void {
@@ -94,8 +110,11 @@ export function handleMetadataUpdated(event: MetadataUpdateEvent): void {
   //erc4906 is not emitting the new url, we must query it ourselves
   let _ipnftContract = IPNFTContract.bind(event.params._event.address);
   let newUri = _ipnftContract.tokenURI(event.params._tokenId)
-
-  ipnft.tokenURI = newUri
+  if (!newUri || newUri == "") {
+    log.debug("no new uri found for token, likely just minted {}", [event.params._tokenId.toString()])
+    return 
+  }
+  updateIpnftMetadata(ipnft, newUri, event.block.timestamp)  
   ipnft.save()
 }
 
