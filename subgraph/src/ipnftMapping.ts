@@ -1,5 +1,6 @@
 import {
   Address,
+  BigInt,
   ByteArray,
   crypto,
   ethereum,
@@ -74,18 +75,28 @@ export function handleReservation(event: ReservedEvent): void {
   reservation.save()
 }
 
+function updateIpnftMetadata(ipnft: Ipnft, uri: string, timestamp: BigInt): Ipnft {
+    let ipfsLocation = uri.replace('ipfs://', '');
+    if (!ipfsLocation || ipfsLocation == uri) {
+      log.error("Invalid URI format for tokenId {}: {}", [ipnft.id, uri]);
+      return ipnft;
+    }
+
+    ipnft.tokenURI = uri;
+    ipnft.metadata = ipfsLocation;
+    ipnft.updatedAtTimestamp = timestamp;
+    IpnftMetadataTemplate.create(ipfsLocation);
+
+    return ipnft;
+}
+
 //the underlying parameter arrays are misaligned, hence we cannot cast or unify both events
 export function handleMint(event: IPNFTMintedEvent): void {
   let ipnft = new Ipnft(event.params.tokenId.toString())
   ipnft.owner = event.params.owner
-  ipnft.tokenURI = event.params.tokenURI
   ipnft.createdAt = event.block.timestamp
   ipnft.symbol = event.params.symbol
-  let ipfsLocation = event.params.tokenURI.replace('ipfs://', '');
-  ipnft.metadata = ipfsLocation
-  ipnft.updatedAtTimestamp = event.block.timestamp
-  IpnftMetadataTemplate.create(ipfsLocation)
-
+  ipnft = updateIpnftMetadata(ipnft, event.params.tokenURI, event.block.timestamp)
   store.remove('Reservation', event.params.tokenId.toString())
   ipnft.save()
 
@@ -101,19 +112,11 @@ export function handleMetadataUpdated(event: MetadataUpdateEvent): void {
   //erc4906 is not emitting the new url, we must query it ourselves
   let _ipnftContract = IPNFTContract.bind(event.params._event.address);
   let newUri = _ipnftContract.tokenURI(event.params._tokenId)
-  if (!newUri) {
+  if (!newUri || newUri == "") {
     log.debug("no new uri found for token, likely just minted {}", [event.params._tokenId.toString()])
     return 
   }
-
-  ipnft.tokenURI = newUri
-  
-  let ipfsLocation = newUri.replace('ipfs://', '');
-  ipnft.updatedAtTimestamp = event.block.timestamp
-  ipnft.metadata = ipfsLocation
-
-  IpnftMetadataTemplate.create(ipfsLocation)
-  
+  ipnft = updateIpnftMetadata(ipnft, newUri, event.block.timestamp)  
   ipnft.save()
 }
 
