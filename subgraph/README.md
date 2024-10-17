@@ -2,13 +2,13 @@
 
 ## Sepolia
 
-API: https://subgraph.satsuma-prod.com/techs-team--4017766/moleculexyz-ipnft-sepolia/version/v0.0.1/api
-Playground: https://subgraph.satsuma-prod.com/techs-team--4017766/moleculexyz-ipnft-sepolia/playground
+API: https://subgraph.satsuma-prod.com/742d8952ab24/molecule--4039244/ip-nft-sepolia/api
+Playground: https://subgraph.satsuma-prod.com/molecule--4039244/ip-nft-sepolia/playground
 
 ## Mainnet
 
-API: https://api.thegraph.com/subgraphs/name/moleculeprotocol/ip-nft-mainnet
-Playground: https://api.thegraph.com/subgraphs/name/moleculeprotocol/ip-nft-mainnet/graphql
+API: https://subgraph.satsuma-prod.com/742d8952ab24/molecule--4039244/ip-nft-mainnet/api
+Playground: https://subgraph.satsuma-prod.com/molecule--4039244/ip-nft-mainnet/playground
 
 ## Prerequisites
 
