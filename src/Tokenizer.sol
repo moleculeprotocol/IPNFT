@@ -124,7 +124,7 @@ contract Tokenizer is UUPSUpgradeable, OwnableUpgradeable, IControlIPTs {
         string memory tokenSymbol,
         string memory agreementCid,
         bytes calldata signedAgreement
-    ) external returns (IPToken token) {
+    ) public returns (IPToken token) {
         if (_msgSender() != controllerOf(ipnftId)) {
             revert MustControlIpnft();
         }
@@ -155,6 +155,14 @@ contract Tokenizer is UUPSUpgradeable, OwnableUpgradeable, IControlIPTs {
         token.issue(_msgSender(), tokenAmount);
     }
 
+    function reserveNewIpnftIdAndTokenize(uint256 amount, string memory tokenSymbol, string memory agreementCid, bytes calldata signedAgreement)
+        external
+        returns (uint256 reservationId, IPToken ipToken)
+    {
+        reservationId = ipnft.reserveFor(_msgSender());
+        ipToken = tokenizeIpnft(reservationId, amount, tokenSymbol, agreementCid, signedAgreement);
+    }
+
     /**
      * @notice issues more IPTs when not capped. This can be used for new owners of legacy IPTs that otherwise wouldn't be able to pass their `onlyIssuerOrOwner` gate
      * @param ipToken The ip token to control
@@ -176,6 +184,11 @@ contract Tokenizer is UUPSUpgradeable, OwnableUpgradeable, IControlIPTs {
 
     /// @dev this will be called by IPTs. Right now the controller is the IPNFT's current owner, it can be a Governor in the future.
     function controllerOf(uint256 ipnftId) public view override returns (address) {
+        //todo: check whether this is safe (or if I can trick myself to be the controller somehow)
+        //reservations are deleted upon mints, so this imo should be good
+        if (ipnft.reservations(ipnftId) != address(0)) {
+            return ipnft.reservations(ipnftId);
+        }
         return ipnft.ownerOf(ipnftId);
     }
 

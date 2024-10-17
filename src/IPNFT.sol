@@ -92,14 +92,23 @@ contract IPNFT is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IReser
      * @notice reserves a new token id. Checks that the caller is authorized, according to the current implementation of IAuthorizeMints.
      * @return reservationId a new reservation id
      */
-    function reserve() external whenNotPaused returns (uint256 reservationId) {
-        if (!mintAuthorizer.authorizeReservation(_msgSender())) {
+    function reserve() external returns (uint256 reservationId) {
+        return reserveFor(_msgSender());
+    }
+
+    /**
+     * @notice reserves a new token id for an account. Checks that the caller is authorized, according to the current implementation of IAuthorizeMints.
+     * @param _for the address that will own the reserved id
+     * @return reservationId a new reservation id
+     */
+    function reserveFor(address _for) public whenNotPaused returns (uint256 reservationId) {
+        if (!mintAuthorizer.authorizeReservation(_for)) {
             revert Unauthorized();
         }
         reservationId = _reservationCounter.current();
         _reservationCounter.increment();
-        reservations[reservationId] = _msgSender();
-        emit Reserved(_msgSender(), reservationId);
+        reservations[reservationId] = _for;
+        emit Reserved(_for, reservationId);
     }
 
     /**
