@@ -8,13 +8,6 @@ struct SignedMintAuthorization {
     bytes authorization;
 }
 
-struct SignedPoiAuthorization {
-    string poi;
-    string tokenURI;
-    address to;
-    bytes authorization;
-}
-
 /// @title IAuthorizeMints
 /// @author molecule.to
 /// @notice a flexible interface to gate token mint calls on another contract, built for IP-NFTs
@@ -29,7 +22,4 @@ interface IAuthorizeMints {
     /// @notice called by the gated token contract to signal that a token has been minted and an authorization can be invalidated
     /// @param data implementation specific data
     function redeem(bytes memory data) external;
-
-    /// @notice checks whether the poi is owned by address to by verifying the trustee's signature
-    function verifyPoi(bytes memory signedAuthorization) external view returns (bool);
 }

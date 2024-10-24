@@ -3,7 +3,7 @@ pragma solidity 0.8.18;
 
 import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
-import { IAuthorizeMints, SignedMintAuthorization, SignedPoiAuthorization } from "./IAuthorizeMints.sol";
+import { IAuthorizeMints, SignedMintAuthorization } from "./IAuthorizeMints.sol";
 
 /// @title SignedMintAuthorizer
 /// @author molecule.to
@@ -30,16 +30,6 @@ contract SignedMintAuthorizer is IAuthorizeMints, Ownable {
         SignedMintAuthorization memory auth = abi.decode(signedAuthorization, (SignedMintAuthorization));
 
         bytes32 signedHash = ECDSA.toEthSignedMessageHash(keccak256(abi.encodePacked(minter, to, auth.reservationId, auth.tokenUri)));
-
-        (address signer,) = ECDSA.tryRecover(signedHash, auth.authorization);
-
-        return trustedSigners[signer];
-    }
-
-    function verifyPoi(bytes memory signedPoiAuthorization) external view override returns (bool) {
-        SignedPoiAuthorization memory auth = abi.decode(signedPoiAuthorization, (SignedPoiAuthorization));
-
-        bytes32 signedHash = ECDSA.toEthSignedMessageHash(keccak256(abi.encodePacked(auth.poi, auth.tokenURI, auth.to)));
 
         (address signer,) = ECDSA.tryRecover(signedHash, auth.authorization);
 

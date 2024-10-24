@@ -8,7 +8,7 @@ import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/O
 import { PausableUpgradeable } from "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
 import { CountersUpgradeable } from "@openzeppelin/contracts-upgradeable/utils/CountersUpgradeable.sol";
 import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-import { IAuthorizeMints, SignedMintAuthorization, SignedPoiAuthorization } from "./IAuthorizeMints.sol";
+import { IAuthorizeMints, SignedMintAuthorization } from "./IAuthorizeMints.sol";
 import { IReservable } from "./IReservable.sol";
 
 /*
@@ -103,6 +103,39 @@ contract IPNFT is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IReser
     }
 
     /**
+     * @notice mints an IPNFT with `tokenURI` as source of metadata. This IPNFT is linked a proof of idea (POI) which is a hash of any collection of files that represents an idea, anchored on any chain.
+     * @notice We are charging a nominal fee to symbolically represent the transfer of ownership rights, for a price of .001 ETH (<$2USD at current prices). This helps ensure the protocol is affordable to almost all projects, but discourages frivolous IP-NFT minting.
+     *
+     * @param to the recipient of the NFT
+     * @param poi the hash of the poi that will be computed to the tokenId
+     * @param _tokenURI a location that resolves to a valid IP-NFT metadata structure
+     * @param _symbol a symbol that represents the IPNFT's derivatives. Can be changed by the owner
+     * @param authorization a bytes encoded parameter that ensures that the poi is owned by the owner (to param)
+     * @return computedTokenId
+     */
+    function mintWithPOI(address to, bytes calldata poi, string calldata _tokenURI, string calldata _symbol, bytes calldata authorization)
+        external
+        payable
+        whenNotPaused
+        returns (uint256)
+    {
+        uint256 computedTokenId = uint256(keccak256(poi));
+        if (msg.value < SYMBOLIC_MINT_FEE) {
+            revert MintingFeeTooLow();
+        }
+
+        if (!mintAuthorizer.authorizeMint(_msgSender(), to, abi.encode(SignedMintAuthorization(computedTokenId, _tokenURI, authorization)))) {
+            revert Unauthorized();
+        }
+
+        mintAuthorizer.redeem(authorization);
+        _mint(to, computedTokenId);
+        _setTokenURI(computedTokenId, _tokenURI);
+        emit IPNFTMinted(to, computedTokenId, _tokenURI, _symbol);
+        return computedTokenId;
+    }
+
+    /**
      * @notice mints an IPNFT with `tokenURI` as source of metadata. Invalidates the reservation. Redeems `mintpassId` on the authorizer contract
      * @notice We are charging a nominal fee to symbolically represent the transfer of ownership rights, for a price of .001 ETH (<$2USD at current prices). This helps ensure the protocol is affordable to almost all projects, but discourages frivolous IP-NFT minting.
      *
@@ -140,31 +173,6 @@ contract IPNFT is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IReser
         _setTokenURI(reservationId, _tokenURI);
         emit IPNFTMinted(to, reservationId, _tokenURI, _symbol);
         return reservationId;
-    }
-
-    /**
-     * @notice mints an IPNFT with `tokenURI` as source of metadata. This IPNFT is linked a proof of idea (POI) which is a hash of any collection of files that represents an idea, anchored on any chain.
-     * @notice We are charging a nominal fee to symbolically represent the transfer of ownership rights, for a price of .001 ETH (<$2USD at current prices). This helps ensure the protocol is affordable to almost all projects, but discourages frivolous IP-NFT minting.
-     *
-     * @param to the recipient of the NFT
-     * @param _tokenURI a location that resolves to a valid IP-NFT metadata structure
-     * @param _symbol a symbol that represents the IPNFT's derivatives. Can be changed by the owner
-     * @param authorization a bytes encoded parameter that ensures that the poi is owned by the owner (to param)
-     * @param poi the hash of the poi that will be the tokenId
-     * @return reservationId the tokenId
-     */
-    function mintWithPOI(
-        address to,
-        uint256 reservationId,
-        string calldata _tokenURI,
-        string calldata _symbol,
-        bytes calldata authorization,
-        string memory poi
-    ) external payable whenNotPaused returns (uint256) {
-        if (!mintAuthorizer.verifyPoi(abi.encode(SignedPoiAuthorization(poi, _tokenURI, to, authorization)))) {
-            revert Unauthorized();
-        }
-        return this.mintReservation(to, reservationId, _tokenURI, _symbol, authorization);
     }
 
     /**
