@@ -46,6 +46,7 @@ contract IPNFT is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IReser
 
     event Reserved(address indexed reserver, uint256 indexed reservationId);
     event IPNFTMinted(address indexed owner, uint256 indexed tokenId, string tokenURI, string symbol);
+    event IPNFTPOI(uint256 indexed tokenId, bytes poi);
     event ReadAccessGranted(uint256 indexed tokenId, address indexed reader, uint256 until);
     event AuthorizerUpdated(address authorizer);
 
@@ -133,6 +134,7 @@ contract IPNFT is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IReser
         _mint(to, computedTokenId);
         _setTokenURI(computedTokenId, _tokenURI);
         emit IPNFTMinted(to, computedTokenId, _tokenURI, _symbol);
+        emit IPNFTPOI(computedTokenId, poi);
         return computedTokenId;
     }
 
