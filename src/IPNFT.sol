@@ -129,6 +129,7 @@ contract IPNFT is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IReser
         }
 
         mintAuthorizer.redeem(authorization);
+        symbol[computedTokenId] = _symbol;
         _mint(to, computedTokenId);
         _setTokenURI(computedTokenId, _tokenURI);
         emit IPNFTMinted(to, computedTokenId, _tokenURI, _symbol);
