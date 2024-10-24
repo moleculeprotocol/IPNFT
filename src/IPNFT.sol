@@ -46,6 +46,7 @@ contract IPNFT is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IReser
 
     event Reserved(address indexed reserver, uint256 indexed reservationId);
     event IPNFTMinted(address indexed owner, uint256 indexed tokenId, string tokenURI, string symbol);
+    event IPNFTPOI(uint256 indexed tokenId, bytes poi);
     event ReadAccessGranted(uint256 indexed tokenId, address indexed reader, uint256 until);
     event AuthorizerUpdated(address authorizer);
 
@@ -103,8 +104,43 @@ contract IPNFT is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IReser
     }
 
     /**
+     * @notice mints an IPNFT with `tokenURI` as source of metadata. This IPNFT is linked a proof of idea (POI) which is a hash of any collection of files that represents an idea, anchored on any chain.
+     * @notice We are charging a nominal fee to symbolically represent the transfer of ownership rights, for a price of .001 ETH (<$2USD at current prices). This helps ensure the protocol is affordable to almost all projects, but discourages frivolous IP-NFT minting.
+     *
+     * @param to the recipient of the NFT
+     * @param poi the hash of the poi that will be computed to the tokenId
+     * @param _tokenURI a location that resolves to a valid IP-NFT metadata structure
+     * @param _symbol a symbol that represents the IPNFT's derivatives. Can be changed by the owner
+     * @param authorization a bytes encoded parameter that ensures that the poi is owned by the owner (to param)
+     * @return computedTokenId
+     */
+    function mintWithPOI(address to, bytes calldata poi, string calldata _tokenURI, string calldata _symbol, bytes calldata authorization)
+        external
+        payable
+        whenNotPaused
+        returns (uint256)
+    {
+        uint256 computedTokenId = uint256(keccak256(poi));
+        if (msg.value < SYMBOLIC_MINT_FEE) {
+            revert MintingFeeTooLow();
+        }
+
+        if (!mintAuthorizer.authorizeMint(_msgSender(), to, abi.encode(SignedMintAuthorization(computedTokenId, _tokenURI, authorization)))) {
+            revert Unauthorized();
+        }
+
+        mintAuthorizer.redeem(authorization);
+        symbol[computedTokenId] = _symbol;
+        _mint(to, computedTokenId);
+        _setTokenURI(computedTokenId, _tokenURI);
+        emit IPNFTMinted(to, computedTokenId, _tokenURI, _symbol);
+        emit IPNFTPOI(computedTokenId, poi);
+        return computedTokenId;
+    }
+
+    /**
      * @notice mints an IPNFT with `tokenURI` as source of metadata. Invalidates the reservation. Redeems `mintpassId` on the authorizer contract
-     * @notice We are charging a nominal fee to symbolically represent the transfer of ownership rights, for a price of .001 ETH (<$2USD at current prices). This helps the ensure the protocol is affordable to almost all projects, but discourages frivolous IP-NFT minting.
+     * @notice We are charging a nominal fee to symbolically represent the transfer of ownership rights, for a price of .001 ETH (<$2USD at current prices). This helps ensure the protocol is affordable to almost all projects, but discourages frivolous IP-NFT minting.
      *
      * @param to the recipient of the NFT
      * @param reservationId the reserved token id that has been reserved with `reserve()`
@@ -188,7 +224,7 @@ contract IPNFT is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IReser
         (bool success,) = _msgSender().call{ value: address(this).balance }("");
         require(success, "transfer failed");
     }
-    
+
     /// @inheritdoc UUPSUpgradeable
     function _authorizeUpgrade(address /*newImplementation*/ )
         internal

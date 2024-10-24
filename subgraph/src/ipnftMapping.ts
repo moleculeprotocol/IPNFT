@@ -13,7 +13,8 @@ import {
   MetadataUpdate as MetadataUpdateEvent,
   ReadAccessGranted as ReadAccessGrantedEvent,
   Reserved as ReservedEvent,
-  Transfer as TransferEvent
+  Transfer as TransferEvent,
+  IPNFTPOI as IPNFTPOIEvent
 } from '../generated/IPNFT/IPNFT'
 import { IpnftMetadata as IpnftMetadataTemplate } from '../generated/templates'
 import { CanRead, Ipnft, Reservation } from '../generated/schema'
@@ -75,17 +76,21 @@ export function handleReservation(event: ReservedEvent): void {
   reservation.save()
 }
 
-function updateIpnftMetadata(ipnft: Ipnft, uri: string, timestamp: BigInt): void {
-    let ipfsLocation = uri.replace('ipfs://', '');
-    if (!ipfsLocation || ipfsLocation == uri) {
-      log.error("Invalid URI format for tokenId {}: {}", [ipnft.id, uri])
-      return
-    }
+function updateIpnftMetadata(
+  ipnft: Ipnft,
+  uri: string,
+  timestamp: BigInt
+): void {
+  let ipfsLocation = uri.replace('ipfs://', '')
+  if (!ipfsLocation || ipfsLocation == uri) {
+    log.error('Invalid URI format for tokenId {}: {}', [ipnft.id, uri])
+    return
+  }
 
-    ipnft.tokenURI = uri
-    ipnft.metadata = ipfsLocation
-    ipnft.updatedAtTimestamp = timestamp
-    IpnftMetadataTemplate.create(ipfsLocation)
+  ipnft.tokenURI = uri
+  ipnft.metadata = ipfsLocation
+  ipnft.updatedAtTimestamp = timestamp
+  IpnftMetadataTemplate.create(ipfsLocation)
 }
 
 //the underlying parameter arrays are misaligned, hence we cannot cast or unify both events
@@ -97,7 +102,17 @@ export function handleMint(event: IPNFTMintedEvent): void {
   updateIpnftMetadata(ipnft, event.params.tokenURI, event.block.timestamp)
   store.remove('Reservation', event.params.tokenId.toString())
   ipnft.save()
+}
 
+export function handlePOI(event: IPNFTPOIEvent): void {
+  let ipnft = Ipnft.load(event.params.tokenId.toString())
+  if (!ipnft) {
+    log.error('ipnft {} not found', [event.params.tokenId.toString()])
+    return
+  }
+
+  ipnft.poi = event.params.poi
+  ipnft.save()
 }
 
 export function handleMetadataUpdated(event: MetadataUpdateEvent): void {
@@ -108,13 +123,14 @@ export function handleMetadataUpdated(event: MetadataUpdateEvent): void {
   }
 
   //erc4906 is not emitting the new url, we must query it ourselves
-  let _ipnftContract = IPNFTContract.bind(event.params._event.address);
+  let _ipnftContract = IPNFTContract.bind(event.params._event.address)
   let newUri = _ipnftContract.tokenURI(event.params._tokenId)
-  if (!newUri || newUri == "") {
-    log.debug("no new uri found for token, likely just minted {}", [event.params._tokenId.toString()])
-    return 
+  if (!newUri || newUri == '') {
+    log.debug('no new uri found for token, likely just minted {}', [
+      event.params._tokenId.toString()
+    ])
+    return
   }
-  updateIpnftMetadata(ipnft, newUri, event.block.timestamp)  
+  updateIpnftMetadata(ipnft, newUri, event.block.timestamp)
   ipnft.save()
 }
-

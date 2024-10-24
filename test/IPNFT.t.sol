@@ -72,6 +72,27 @@ contract IPNFTTest is IPNFTMintHelper {
         assertEq(ipnft.reservations(2), bob);
     }
 
+    function testMintWithPoi() public {
+        bytes memory poiHash = "0x5d7ca63d6e6065ef928d3f7cf770062ddd621b84de99732662a71b966db97c3b";
+        uint256 tokenId = uint256(keccak256(poiHash));
+        bytes memory authorization = abi.encode("0xsignature");
+        vm.startPrank(deployer);
+        ipnft.setAuthorizer(new AcceptAllAuthorizer());
+        vm.stopPrank();
+
+        vm.startPrank(alice);
+        vm.expectRevert(IPNFT.MintingFeeTooLow.selector);
+        ipnft.mintWithPOI(alice, poiHash, ipfsUri, DEFAULT_SYMBOL, authorization);
+
+        vm.expectEmit(true, true, false, true);
+        emit IPNFTMinted(alice, tokenId, ipfsUri, DEFAULT_SYMBOL);
+        ipnft.mintWithPOI{ value: MINTING_FEE }(alice, poiHash, ipfsUri, DEFAULT_SYMBOL, authorization);
+        assertEq(ipnft.ownerOf(tokenId), alice);
+        assertEq(ipnft.tokenURI(tokenId), ipfsUri);
+        assertEq(ipnft.symbol(tokenId), DEFAULT_SYMBOL);
+        vm.stopPrank();
+    }
+
     function testMintFromReservation() public {
         vm.startPrank(deployer);
         ipnft.setAuthorizer(new SignedMintAuthorizer(deployer));
@@ -145,7 +166,6 @@ contract IPNFTTest is IPNFTMintHelper {
     /**
      * ... but when set as heir of a self destruct operation the contract accepts the money.
      */
-
     function testOwnerCanWithdrawEthFunds() public {
         vm.deal(address(bob), 10 ether);
         vm.startPrank(bob);
@@ -232,15 +252,13 @@ contract IPNFTTest is IPNFTMintHelper {
         //the signoff only allows alice to call this
         vm.startPrank(charlie);
         vm.expectRevert(IPNFT.Unauthorized.selector);
-        ipnft.amendMetadata(1, "ipfs://QmNewUri", authorization);        
+        ipnft.amendMetadata(1, "ipfs://QmNewUri", authorization);
 
         vm.startPrank(alice);
         vm.expectEmit(true, true, false, false);
         emit MetadataUpdate(1);
-        ipnft.amendMetadata(1, "ipfs://QmNewUri", authorization);        
+        ipnft.amendMetadata(1, "ipfs://QmNewUri", authorization);
         assertEq(ipnft.tokenURI(1), "ipfs://QmNewUri");
         vm.stopPrank();
     }
-
-    
 }
