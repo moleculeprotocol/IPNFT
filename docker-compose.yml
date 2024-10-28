@@ -28,7 +28,7 @@ services:
       postgres_pass: let-me-in
       postgres_db: graph-node
       ipfs: 'ipfs:5001'
-      ethereum: 'foundry:http://anvil:8545'
+      ethereum: 'mainnet:http://anvil:8545'
       GRAPH_LOG: debug
       GRAPH_ALLOW_NON_DETERMINISTIC_IPFS: 1
   ipfs:
