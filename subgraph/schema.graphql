@@ -9,7 +9,6 @@ type Ipnft @entity {
   ipts: [IPT!] @derivedFrom(field: "ipnft")
   metadata: IpnftMetadata
   updatedAtTimestamp: BigInt
-  poi: Bytes
 }
 
 type IpnftMetadata @entity {

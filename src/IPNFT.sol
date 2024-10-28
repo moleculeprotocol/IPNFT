@@ -46,7 +46,6 @@ contract IPNFT is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IReser
 
     event Reserved(address indexed reserver, uint256 indexed reservationId);
     event IPNFTMinted(address indexed owner, uint256 indexed tokenId, string tokenURI, string symbol);
-    event IPNFTPOI(uint256 indexed tokenId, bytes poi);
     event ReadAccessGranted(uint256 indexed tokenId, address indexed reader, uint256 until);
     event AuthorizerUpdated(address authorizer);
 
@@ -114,27 +113,14 @@ contract IPNFT is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IReser
      * @param authorization a bytes encoded parameter that ensures that the poi is owned by the owner (to param)
      * @return computedTokenId
      */
-    function mintWithPOI(address to, bytes calldata poi, string calldata _tokenURI, string calldata _symbol, bytes calldata authorization)
+    function mintWithPOI(address to, bytes32 poi, string calldata _tokenURI, string calldata _symbol, bytes calldata authorization)
         external
         payable
         whenNotPaused
         returns (uint256)
     {
-        uint256 computedTokenId = uint256(keccak256(poi));
-        if (msg.value < SYMBOLIC_MINT_FEE) {
-            revert MintingFeeTooLow();
-        }
-
-        if (!mintAuthorizer.authorizeMint(_msgSender(), to, abi.encode(SignedMintAuthorization(computedTokenId, _tokenURI, authorization)))) {
-            revert Unauthorized();
-        }
-
-        mintAuthorizer.redeem(authorization);
-        symbol[computedTokenId] = _symbol;
-        _mint(to, computedTokenId);
-        _setTokenURI(computedTokenId, _tokenURI);
-        emit IPNFTMinted(to, computedTokenId, _tokenURI, _symbol);
-        emit IPNFTPOI(computedTokenId, poi);
+        uint256 computedTokenId = uint256(poi);
+        _handleMint(to, computedTokenId, _tokenURI, _symbol, authorization);
         return computedTokenId;
     }
 
@@ -160,22 +146,27 @@ contract IPNFT is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IReser
             revert NotOwningReservation(reservationId);
         }
 
+     
+        _handleMint(to, reservationId, _tokenURI, _symbol, authorization);
+        delete reservations[reservationId];
+        return reservationId;
+    }
+
+    function _handleMint(address to, uint256 tokenId, string calldata _tokenURI, string calldata _symbol, bytes calldata authorization) internal {
         if (msg.value < SYMBOLIC_MINT_FEE) {
             revert MintingFeeTooLow();
         }
 
-        if (!mintAuthorizer.authorizeMint(_msgSender(), to, abi.encode(SignedMintAuthorization(reservationId, _tokenURI, authorization)))) {
+       if (!mintAuthorizer.authorizeMint(_msgSender(), to, abi.encode(SignedMintAuthorization(tokenId, _tokenURI, authorization)))) {
             revert Unauthorized();
         }
 
-        delete reservations[reservationId];
-        symbol[reservationId] = _symbol;
+        symbol[tokenId] = _symbol;
         mintAuthorizer.redeem(authorization);
 
-        _mint(to, reservationId);
-        _setTokenURI(reservationId, _tokenURI);
-        emit IPNFTMinted(to, reservationId, _tokenURI, _symbol);
-        return reservationId;
+        _mint(to, tokenId);
+        _setTokenURI(tokenId, _tokenURI);
+        emit IPNFTMinted(to, tokenId, _tokenURI, _symbol);
     }
 
     /**

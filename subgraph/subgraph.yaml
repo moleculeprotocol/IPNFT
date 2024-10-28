@@ -23,8 +23,6 @@ dataSources:
           handler: handleReservation
         - event: IPNFTMinted(indexed address,indexed uint256,string,string)
           handler: handleMint
-        - event: IPNFTPOI(indexed uint256,bytes)
-          handler: handlePOI
         - event: Transfer(indexed address,indexed address,indexed uint256)
           handler: handleTransfer
         - event: ReadAccessGranted(indexed uint256,indexed address,uint256)

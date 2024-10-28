@@ -13,8 +13,7 @@ import {
   MetadataUpdate as MetadataUpdateEvent,
   ReadAccessGranted as ReadAccessGrantedEvent,
   Reserved as ReservedEvent,
-  Transfer as TransferEvent,
-  IPNFTPOI as IPNFTPOIEvent
+  Transfer as TransferEvent
 } from '../generated/IPNFT/IPNFT'
 import { IpnftMetadata as IpnftMetadataTemplate } from '../generated/templates'
 import { CanRead, Ipnft, Reservation } from '../generated/schema'
@@ -101,17 +100,6 @@ export function handleMint(event: IPNFTMintedEvent): void {
   ipnft.symbol = event.params.symbol
   updateIpnftMetadata(ipnft, event.params.tokenURI, event.block.timestamp)
   store.remove('Reservation', event.params.tokenId.toString())
-  ipnft.save()
-}
-
-export function handlePOI(event: IPNFTPOIEvent): void {
-  let ipnft = Ipnft.load(event.params.tokenId.toString())
-  if (!ipnft) {
-    log.error('ipnft {} not found', [event.params.tokenId.toString()])
-    return
-  }
-
-  ipnft.poi = event.params.poi
   ipnft.save()
 }
 

@@ -73,23 +73,35 @@ contract IPNFTTest is IPNFTMintHelper {
     }
 
     function testMintWithPoi() public {
-        bytes memory poiHash = "0x5d7ca63d6e6065ef928d3f7cf770062ddd621b84de99732662a71b966db97c3b";
-        uint256 tokenId = uint256(keccak256(poiHash));
-        bytes memory authorization = abi.encode("0xsignature");
+        bytes32 poiHash = 0x073cb54264ef688e56531a2d09ab47b14086b5c7813e3a23a2bd7b1bb6458a52;
+        uint256 tokenId = uint256(poiHash);
+        (, uint256 maliciousSignerPk) = makeAddrAndKey("malicious");
+        bytes32 authMessageHash = ECDSA.toEthSignedMessageHash(keccak256(abi.encodePacked(alice, alice, tokenId, ipfsUri)));
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(maliciousSignerPk, authMessageHash);
+        bytes memory maliciousAuthorization = abi.encodePacked(r, s, v);
+
         vm.startPrank(deployer);
-        ipnft.setAuthorizer(new AcceptAllAuthorizer());
+        ipnft.setAuthorizer(new SignedMintAuthorizer(deployer));
         vm.stopPrank();
 
         vm.startPrank(alice);
         vm.expectRevert(IPNFT.MintingFeeTooLow.selector);
-        ipnft.mintWithPOI(alice, poiHash, ipfsUri, DEFAULT_SYMBOL, authorization);
+        ipnft.mintWithPOI(alice, poiHash, ipfsUri, DEFAULT_SYMBOL, maliciousAuthorization);
 
+        vm.expectRevert(IPNFT.Unauthorized.selector);
+        ipnft.mintWithPOI{ value: MINTING_FEE }(alice, poiHash, ipfsUri, DEFAULT_SYMBOL, maliciousAuthorization);
+
+        (v, r, s) = vm.sign(deployerPk, authMessageHash);
+        bytes memory authorization = abi.encodePacked(r, s, v);
         vm.expectEmit(true, true, false, true);
         emit IPNFTMinted(alice, tokenId, ipfsUri, DEFAULT_SYMBOL);
-        ipnft.mintWithPOI{ value: MINTING_FEE }(alice, poiHash, ipfsUri, DEFAULT_SYMBOL, authorization);
+        ipnft.mintWithPOI{ value: MINTING_FEE }(
+            alice, poiHash, ipfsUri, DEFAULT_SYMBOL, authorization
+        );
         assertEq(ipnft.ownerOf(tokenId), alice);
         assertEq(ipnft.tokenURI(tokenId), ipfsUri);
         assertEq(ipnft.symbol(tokenId), DEFAULT_SYMBOL);
+        assertEq(tokenId, 3273451770044532981553402679345217193568252544895634663440128735015952812626);
         vm.stopPrank();
     }
 
