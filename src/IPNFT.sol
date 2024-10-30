@@ -103,37 +103,17 @@ contract IPNFT is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IReser
     }
 
     /**
-     * @notice mints an IPNFT with `tokenURI` as source of metadata. This IPNFT is linked a proof of idea (POI) which is a hash of any collection of files that represents an idea, anchored on any chain.
+     * @notice mints an IPNFT with `tokenURI` as source of metadata.
+     * Minting the IPNFT can happen either with a reservation id or poi hash (Proof of Idea).
+     * if the tokenId is a reservationId then it invalidates the reservation.
      * @notice We are charging a nominal fee to symbolically represent the transfer of ownership rights, for a price of .001 ETH (<$2USD at current prices). This helps ensure the protocol is affordable to almost all projects, but discourages frivolous IP-NFT minting.
      *
      * @param to the recipient of the NFT
-     * @param poi the hash of the poi that will be computed to the tokenId
-     * @param _tokenURI a location that resolves to a valid IP-NFT metadata structure
-     * @param _symbol a symbol that represents the IPNFT's derivatives. Can be changed by the owner
-     * @param authorization a bytes encoded parameter that ensures that the poi is owned by the owner (to param)
-     * @return computedTokenId
-     */
-    function mintWithPOI(address to, bytes32 poi, string calldata _tokenURI, string calldata _symbol, bytes calldata authorization)
-        external
-        payable
-        whenNotPaused
-        returns (uint256)
-    {
-        uint256 computedTokenId = uint256(poi);
-        _handleMint(to, computedTokenId, _tokenURI, _symbol, authorization);
-        return computedTokenId;
-    }
-
-    /**
-     * @notice mints an IPNFT with `tokenURI` as source of metadata. Invalidates the reservation. Redeems `mintpassId` on the authorizer contract
-     * @notice We are charging a nominal fee to symbolically represent the transfer of ownership rights, for a price of .001 ETH (<$2USD at current prices). This helps ensure the protocol is affordable to almost all projects, but discourages frivolous IP-NFT minting.
-     *
-     * @param to the recipient of the NFT
-     * @param reservationId the reserved token id that has been reserved with `reserve()`
+     * @param reservationId the reserved token id that has been reserved with `reserve()` / or the poi hash
      * @param _tokenURI a location that resolves to a valid IP-NFT metadata structure
      * @param _symbol a symbol that represents the IPNFT's derivatives. Can be changed by the owner
      * @param authorization a bytes encoded parameter that's handed to the current authorizer
-     * @return the `reservationId`
+     * @return the `tokenId`
      */
     function mintReservation(address to, uint256 reservationId, string calldata _tokenURI, string calldata _symbol, bytes calldata authorization)
         external
@@ -142,31 +122,25 @@ contract IPNFT is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IReser
         whenNotPaused
         returns (uint256)
     {
-        if (reservations[reservationId] != _msgSender()) {
+        bool isPoi = reservationId > type(uint128).max;
+        if (!isPoi && reservations[reservationId] != _msgSender()) {
             revert NotOwningReservation(reservationId);
         }
 
-     
-        _handleMint(to, reservationId, _tokenURI, _symbol, authorization);
-        delete reservations[reservationId];
-        return reservationId;
-    }
-
-    function _handleMint(address to, uint256 tokenId, string calldata _tokenURI, string calldata _symbol, bytes calldata authorization) internal {
         if (msg.value < SYMBOLIC_MINT_FEE) {
             revert MintingFeeTooLow();
         }
 
-       if (!mintAuthorizer.authorizeMint(_msgSender(), to, abi.encode(SignedMintAuthorization(tokenId, _tokenURI, authorization)))) {
+        if (!mintAuthorizer.authorizeMint(_msgSender(), to, abi.encode(SignedMintAuthorization(reservationId, _tokenURI, authorization)))) {
             revert Unauthorized();
         }
-
-        symbol[tokenId] = _symbol;
+        symbol[reservationId] = _symbol;
         mintAuthorizer.redeem(authorization);
 
-        _mint(to, tokenId);
-        _setTokenURI(tokenId, _tokenURI);
-        emit IPNFTMinted(to, tokenId, _tokenURI, _symbol);
+        _mint(to, reservationId);
+        _setTokenURI(reservationId, _tokenURI);
+        emit IPNFTMinted(to, reservationId, _tokenURI, _symbol);
+        return reservationId;
     }
 
     /**

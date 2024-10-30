@@ -86,22 +86,19 @@ contract IPNFTTest is IPNFTMintHelper {
 
         vm.startPrank(alice);
         vm.expectRevert(IPNFT.MintingFeeTooLow.selector);
-        ipnft.mintWithPOI(alice, poiHash, ipfsUri, DEFAULT_SYMBOL, maliciousAuthorization);
+        ipnft.mintReservation(alice, tokenId, ipfsUri, DEFAULT_SYMBOL, maliciousAuthorization);
 
         vm.expectRevert(IPNFT.Unauthorized.selector);
-        ipnft.mintWithPOI{ value: MINTING_FEE }(alice, poiHash, ipfsUri, DEFAULT_SYMBOL, maliciousAuthorization);
+        ipnft.mintReservation{ value: MINTING_FEE }(alice, tokenId, ipfsUri, DEFAULT_SYMBOL, maliciousAuthorization);
 
         (v, r, s) = vm.sign(deployerPk, authMessageHash);
         bytes memory authorization = abi.encodePacked(r, s, v);
         vm.expectEmit(true, true, false, true);
         emit IPNFTMinted(alice, tokenId, ipfsUri, DEFAULT_SYMBOL);
-        ipnft.mintWithPOI{ value: MINTING_FEE }(
-            alice, poiHash, ipfsUri, DEFAULT_SYMBOL, authorization
-        );
+        ipnft.mintReservation{ value: MINTING_FEE }(alice, tokenId, ipfsUri, DEFAULT_SYMBOL, authorization);
         assertEq(ipnft.ownerOf(tokenId), alice);
         assertEq(ipnft.tokenURI(tokenId), ipfsUri);
         assertEq(ipnft.symbol(tokenId), DEFAULT_SYMBOL);
-        assertEq(tokenId, 3273451770044532981553402679345217193568252544895634663440128735015952812626);
         vm.stopPrank();
     }
 
@@ -133,8 +130,6 @@ contract IPNFTTest is IPNFTMintHelper {
         assertEq(ipnft.ownerOf(1), alice);
         assertEq(ipnft.tokenURI(1), ipfsUri);
         assertEq(ipnft.symbol(reservationId), DEFAULT_SYMBOL);
-
-        assertEq(ipnft.reservations(1), address(0));
 
         vm.stopPrank();
     }
