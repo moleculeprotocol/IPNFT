@@ -59,7 +59,7 @@ dataSources:
       file: ./src/swapMapping.ts
   - kind: ethereum/contract
     name: Tokenizer
-    network: foundry
+    network: mainnet
     source:
       abi: Tokenizer
       address: "0xB7f8BC63BbcaD18155201308C8f3540b07f84F5e"
@@ -84,7 +84,7 @@ dataSources:
       file: ./src/tokenizerMapping.ts
   - kind: ethereum/contract
     name: CrowdSale
-    network: foundry
+    network: mainnet
     source:
       abi: CrowdSale
       address: "0x7a2088a1bFc9d81c55368AE168C2C02570cB814F"
@@ -121,7 +121,7 @@ dataSources:
       file: ./src/crowdSaleMapping.ts
   - kind: ethereum/contract
     name: StakedLockingCrowdSale
-    network: foundry
+    network: mainnet
     source:
       abi: StakedLockingCrowdSale
       address: "0x0B306BF915C4d645ff596e518fAf3F9669b97016"
@@ -167,7 +167,7 @@ dataSources:
       file: ./src/stakedLockingCrowdSaleMapping.ts
   - kind: ethereum/contract
     name: TermsAcceptedPermissioner
-    network: foundry
+    network: mainnet
     source:
       abi: TermsAcceptedPermissioner
       address: "0x8A791620dd6260079BF849Dc5567aDC3F2FdC318"
@@ -188,7 +188,7 @@ dataSources:
 templates:
   - name: IPToken
     kind: ethereum/contract
-    network: foundry
+    network: mainnet
     source:
       abi: IPToken
     mapping:
@@ -208,7 +208,7 @@ templates:
           handler: handleCapped
   - name: TimelockedToken
     kind: ethereum/contract
-    network: foundry
+    network: mainnet
     source:
       abi: TimelockedToken
     mapping:
@@ -240,4 +240,4 @@ templates:
       abis:
         - name: IPNFT
           file: ./abis/IPNFT.json
-    network: foundry
+    network: mainnet

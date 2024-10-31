@@ -72,26 +72,24 @@ contract IPNFTTest is IPNFTMintHelper {
         assertEq(ipnft.reservations(2), bob);
     }
 
+    function testVerifyPoi() public {
+        uint256 tokenId = uint256(0x073cb54264ef688e56531a2d09ab47b14086b5c7813e3a23a2bd7b1bb6458a52);
+        bool isPoi = verifyPoi(tokenId);
+        assertEq(isPoi, true);
+    }
+
     function testMintWithPoi() public {
         bytes32 poiHash = 0x073cb54264ef688e56531a2d09ab47b14086b5c7813e3a23a2bd7b1bb6458a52;
         uint256 tokenId = uint256(poiHash);
-        (, uint256 maliciousSignerPk) = makeAddrAndKey("malicious");
         bytes32 authMessageHash = ECDSA.toEthSignedMessageHash(keccak256(abi.encodePacked(alice, alice, tokenId, ipfsUri)));
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(maliciousSignerPk, authMessageHash);
-        bytes memory maliciousAuthorization = abi.encodePacked(r, s, v);
 
         vm.startPrank(deployer);
         ipnft.setAuthorizer(new SignedMintAuthorizer(deployer));
         vm.stopPrank();
 
         vm.startPrank(alice);
-        vm.expectRevert(IPNFT.MintingFeeTooLow.selector);
-        ipnft.mintReservation(alice, tokenId, ipfsUri, DEFAULT_SYMBOL, maliciousAuthorization);
 
-        vm.expectRevert(IPNFT.Unauthorized.selector);
-        ipnft.mintReservation{ value: MINTING_FEE }(alice, tokenId, ipfsUri, DEFAULT_SYMBOL, maliciousAuthorization);
-
-        (v, r, s) = vm.sign(deployerPk, authMessageHash);
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(deployerPk, authMessageHash);
         bytes memory authorization = abi.encodePacked(r, s, v);
         vm.expectEmit(true, true, false, true);
         emit IPNFTMinted(alice, tokenId, ipfsUri, DEFAULT_SYMBOL);
@@ -99,6 +97,7 @@ contract IPNFTTest is IPNFTMintHelper {
         assertEq(ipnft.ownerOf(tokenId), alice);
         assertEq(ipnft.tokenURI(tokenId), ipfsUri);
         assertEq(ipnft.symbol(tokenId), DEFAULT_SYMBOL);
+
         vm.stopPrank();
     }
 

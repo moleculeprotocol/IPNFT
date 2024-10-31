@@ -36,4 +36,8 @@ abstract contract IPNFTMintHelper is Test {
         vm.stopPrank();
         return reservationId;
     }
+
+    function verifyPoi(uint256 tokenId) public pure returns (bool) {
+        return tokenId > type(uint128).max;
+    }
 }

@@ -122,7 +122,7 @@ contract IPNFT is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IReser
         whenNotPaused
         returns (uint256)
     {
-        bool isPoi = reservationId > type(uint128).max;
+        bool isPoi = _verifyPoi(reservationId);
         if (!isPoi && reservations[reservationId] != _msgSender()) {
             revert NotOwningReservation(reservationId);
         }
@@ -134,6 +134,10 @@ contract IPNFT is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IReser
         if (!mintAuthorizer.authorizeMint(_msgSender(), to, abi.encode(SignedMintAuthorization(reservationId, _tokenURI, authorization)))) {
             revert Unauthorized();
         }
+        if(!isPoi) {
+            delete reservations[reservationId];
+        }
+
         symbol[reservationId] = _symbol;
         mintAuthorizer.redeem(authorization);
 
@@ -200,6 +204,10 @@ contract IPNFT is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IReser
     /// @inheritdoc ERC721Upgradeable
     function _burn(uint256 tokenId) internal virtual override(ERC721URIStorageUpgradeable, ERC721Upgradeable) {
         super._burn(tokenId);
+    }
+
+    function _verifyPoi(uint256 poi) internal pure returns (bool) {
+        return poi > type(uint128).max;
     }
 
     /// @inheritdoc ERC721Upgradeable
