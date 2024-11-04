@@ -44,6 +44,9 @@ contract IPNFT is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IReser
     /// @notice an IPNFT's base symbol, to be determined by the minter / owner, e.g. BIO-00001
     mapping(uint256 => string) public symbol;
 
+    /// @dev the highest possible reservation id
+    uint256 private constant MAX_RESERVATION_ID = type(uint128).max; 
+
     event Reserved(address indexed reserver, uint256 indexed reservationId);
     event IPNFTMinted(address indexed owner, uint256 indexed tokenId, string tokenURI, string symbol);
     event ReadAccessGranted(uint256 indexed tokenId, address indexed reader, uint256 until);
@@ -206,8 +209,10 @@ contract IPNFT is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IReser
         super._burn(tokenId);
     }
 
-    function isPoi(uint256 poi) public pure returns (bool) {
-        return poi > type(uint128).max;
+    /// @notice checks whether a token id is a Proof of Idea
+    /// @param tokenId the token id, either a reserved id or a poi hash
+    function isPoi(uint256 tokenId) public pure returns (bool) {
+        return tokenId > MAX_RESERVATION_ID;
     }
 
     /// @inheritdoc ERC721Upgradeable
