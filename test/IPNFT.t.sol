@@ -74,7 +74,7 @@ contract IPNFTTest is IPNFTMintHelper {
 
     function testVerifyPoi() public {
         uint256 tokenId = uint256(0x073cb54264ef688e56531a2d09ab47b14086b5c7813e3a23a2bd7b1bb6458a52);
-        bool isPoi = verifyPoi(tokenId);
+        bool isPoi = ipnft.isPoi(tokenId);
         assertEq(isPoi, true);
     }
 

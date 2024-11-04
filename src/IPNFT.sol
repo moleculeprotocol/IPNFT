@@ -21,9 +21,9 @@ import { IReservable } from "./IReservable.sol";
  _| ▓▓_| ▓▓            | ▓▓ \▓▓▓▓ ▓▓        | ▓▓
 |   ▓▓ \ ▓▓            | ▓▓  \▓▓▓ ▓▓        | ▓▓
  \▓▓▓▓▓▓\▓▓             \▓▓   \▓▓\▓▓         \▓▓
- */
+*/
 
-/// @title IPNFT V2.5
+/// @title IPNFT V2.5.1
 /// @author molecule.to
 /// @notice IP-NFTs capture intellectual property to be traded and synthesized
 contract IPNFT is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IReservable, UUPSUpgradeable, OwnableUpgradeable, PausableUpgradeable {
@@ -122,8 +122,8 @@ contract IPNFT is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IReser
         whenNotPaused
         returns (uint256)
     {
-        bool isPoi = _verifyPoi(reservationId);
-        if (!isPoi && reservations[reservationId] != _msgSender()) {
+        bool _isPoi = isPoi(reservationId);
+        if (!_isPoi && reservations[reservationId] != _msgSender()) {
             revert NotOwningReservation(reservationId);
         }
 
@@ -134,7 +134,7 @@ contract IPNFT is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IReser
         if (!mintAuthorizer.authorizeMint(_msgSender(), to, abi.encode(SignedMintAuthorization(reservationId, _tokenURI, authorization)))) {
             revert Unauthorized();
         }
-        if(!isPoi) {
+        if (!_isPoi) {
             delete reservations[reservationId];
         }
 
@@ -206,7 +206,7 @@ contract IPNFT is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IReser
         super._burn(tokenId);
     }
 
-    function _verifyPoi(uint256 poi) internal pure returns (bool) {
+    function isPoi(uint256 poi) public pure returns (bool) {
         return poi > type(uint128).max;
     }
 
