@@ -85,12 +85,13 @@ contract IPNFTTest is IPNFTMintHelper {
 
         vm.startPrank(deployer);
         ipnft.setAuthorizer(new SignedMintAuthorizer(deployer));
-        vm.stopPrank();
-
-        vm.startPrank(alice);
-
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(deployerPk, authMessageHash);
         bytes memory authorization = abi.encodePacked(r, s, v);
+        
+        vm.startPrank(alice);
+        vm.expectRevert(IPNFT.Unauthorized.selector);
+        ipnft.mintReservation{ value: MINTING_FEE }(alice, tokenId, ipfsUri, DEFAULT_SYMBOL, bytes("abcde"));
+
         vm.expectEmit(true, true, false, true);
         emit IPNFTMinted(alice, tokenId, ipfsUri, DEFAULT_SYMBOL);
         ipnft.mintReservation{ value: MINTING_FEE }(alice, tokenId, ipfsUri, DEFAULT_SYMBOL, authorization);
