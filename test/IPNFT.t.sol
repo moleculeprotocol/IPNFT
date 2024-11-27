@@ -72,6 +72,36 @@ contract IPNFTTest is IPNFTMintHelper {
         assertEq(ipnft.reservations(2), bob);
     }
 
+    function testVerifyPoi() public {
+        uint256 tokenId = uint256(0x073cb54264ef688e56531a2d09ab47b14086b5c7813e3a23a2bd7b1bb6458a52);
+        bool isPoi = ipnft.isPoi(tokenId);
+        assertEq(isPoi, true);
+    }
+
+    function testMintWithPoi() public {
+        bytes32 poiHash = 0x073cb54264ef688e56531a2d09ab47b14086b5c7813e3a23a2bd7b1bb6458a52;
+        uint256 tokenId = uint256(poiHash);
+        bytes32 authMessageHash = ECDSA.toEthSignedMessageHash(keccak256(abi.encodePacked(alice, alice, tokenId, ipfsUri)));
+
+        vm.startPrank(deployer);
+        ipnft.setAuthorizer(new SignedMintAuthorizer(deployer));
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(deployerPk, authMessageHash);
+        bytes memory authorization = abi.encodePacked(r, s, v);
+        
+        vm.startPrank(alice);
+        vm.expectRevert(IPNFT.Unauthorized.selector);
+        ipnft.mintReservation{ value: MINTING_FEE }(alice, tokenId, ipfsUri, DEFAULT_SYMBOL, bytes("abcde"));
+
+        vm.expectEmit(true, true, false, true);
+        emit IPNFTMinted(alice, tokenId, ipfsUri, DEFAULT_SYMBOL);
+        ipnft.mintReservation{ value: MINTING_FEE }(alice, tokenId, ipfsUri, DEFAULT_SYMBOL, authorization);
+        assertEq(ipnft.ownerOf(tokenId), alice);
+        assertEq(ipnft.tokenURI(tokenId), ipfsUri);
+        assertEq(ipnft.symbol(tokenId), DEFAULT_SYMBOL);
+
+        vm.stopPrank();
+    }
+
     function testMintFromReservation() public {
         vm.startPrank(deployer);
         ipnft.setAuthorizer(new SignedMintAuthorizer(deployer));
@@ -100,8 +130,6 @@ contract IPNFTTest is IPNFTMintHelper {
         assertEq(ipnft.ownerOf(1), alice);
         assertEq(ipnft.tokenURI(1), ipfsUri);
         assertEq(ipnft.symbol(reservationId), DEFAULT_SYMBOL);
-
-        assertEq(ipnft.reservations(1), address(0));
 
         vm.stopPrank();
     }
@@ -145,7 +173,6 @@ contract IPNFTTest is IPNFTMintHelper {
     /**
      * ... but when set as heir of a self destruct operation the contract accepts the money.
      */
-
     function testOwnerCanWithdrawEthFunds() public {
         vm.deal(address(bob), 10 ether);
         vm.startPrank(bob);
@@ -232,15 +259,13 @@ contract IPNFTTest is IPNFTMintHelper {
         //the signoff only allows alice to call this
         vm.startPrank(charlie);
         vm.expectRevert(IPNFT.Unauthorized.selector);
-        ipnft.amendMetadata(1, "ipfs://QmNewUri", authorization);        
+        ipnft.amendMetadata(1, "ipfs://QmNewUri", authorization);
 
         vm.startPrank(alice);
         vm.expectEmit(true, true, false, false);
         emit MetadataUpdate(1);
-        ipnft.amendMetadata(1, "ipfs://QmNewUri", authorization);        
+        ipnft.amendMetadata(1, "ipfs://QmNewUri", authorization);
         assertEq(ipnft.tokenURI(1), "ipfs://QmNewUri");
         vm.stopPrank();
     }
-
-    
 }

@@ -21,9 +21,9 @@ import { IReservable } from "./IReservable.sol";
  _| ▓▓_| ▓▓            | ▓▓ \▓▓▓▓ ▓▓        | ▓▓
 |   ▓▓ \ ▓▓            | ▓▓  \▓▓▓ ▓▓        | ▓▓
  \▓▓▓▓▓▓\▓▓             \▓▓   \▓▓\▓▓         \▓▓
- */
+*/
 
-/// @title IPNFT V2.5
+/// @title IPNFT V2.5.1
 /// @author molecule.to
 /// @notice IP-NFTs capture intellectual property to be traded and synthesized
 contract IPNFT is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IReservable, UUPSUpgradeable, OwnableUpgradeable, PausableUpgradeable {
@@ -43,6 +43,9 @@ contract IPNFT is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IReser
 
     /// @notice an IPNFT's base symbol, to be determined by the minter / owner, e.g. BIO-00001
     mapping(uint256 => string) public symbol;
+
+    /// @dev the highest possible reservation id
+    uint256 private constant MAX_RESERVATION_ID = type(uint128).max; 
 
     event Reserved(address indexed reserver, uint256 indexed reservationId);
     event IPNFTMinted(address indexed owner, uint256 indexed tokenId, string tokenURI, string symbol);
@@ -103,15 +106,17 @@ contract IPNFT is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IReser
     }
 
     /**
-     * @notice mints an IPNFT with `tokenURI` as source of metadata. Invalidates the reservation. Redeems `mintpassId` on the authorizer contract
-     * @notice We are charging a nominal fee to symbolically represent the transfer of ownership rights, for a price of .001 ETH (<$2USD at current prices). This helps the ensure the protocol is affordable to almost all projects, but discourages frivolous IP-NFT minting.
+     * @notice mints an IPNFT with `tokenURI` as source of metadata.
+     * Minting the IPNFT can happen either with a reservation id or poi hash (Proof of Idea).
+     * if the tokenId is a reservationId then it invalidates the reservation.
+     * @notice We are charging a nominal fee to symbolically represent the transfer of ownership rights, for a price of .001 ETH (<$2USD at current prices). This helps ensure the protocol is affordable to almost all projects, but discourages frivolous IP-NFT minting.
      *
      * @param to the recipient of the NFT
-     * @param reservationId the reserved token id that has been reserved with `reserve()`
+     * @param reservationId the reserved token id that has been reserved with `reserve()` / or the poi hash
      * @param _tokenURI a location that resolves to a valid IP-NFT metadata structure
      * @param _symbol a symbol that represents the IPNFT's derivatives. Can be changed by the owner
      * @param authorization a bytes encoded parameter that's handed to the current authorizer
-     * @return the `reservationId`
+     * @return the `tokenId`
      */
     function mintReservation(address to, uint256 reservationId, string calldata _tokenURI, string calldata _symbol, bytes calldata authorization)
         external
@@ -120,7 +125,8 @@ contract IPNFT is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IReser
         whenNotPaused
         returns (uint256)
     {
-        if (reservations[reservationId] != _msgSender()) {
+        bool _isPoi = isPoi(reservationId);
+        if (!_isPoi && reservations[reservationId] != _msgSender()) {
             revert NotOwningReservation(reservationId);
         }
 
@@ -131,8 +137,10 @@ contract IPNFT is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IReser
         if (!mintAuthorizer.authorizeMint(_msgSender(), to, abi.encode(SignedMintAuthorization(reservationId, _tokenURI, authorization)))) {
             revert Unauthorized();
         }
+        if (!_isPoi) {
+            delete reservations[reservationId];
+        }
 
-        delete reservations[reservationId];
         symbol[reservationId] = _symbol;
         mintAuthorizer.redeem(authorization);
 
@@ -188,7 +196,7 @@ contract IPNFT is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IReser
         (bool success,) = _msgSender().call{ value: address(this).balance }("");
         require(success, "transfer failed");
     }
-    
+
     /// @inheritdoc UUPSUpgradeable
     function _authorizeUpgrade(address /*newImplementation*/ )
         internal
@@ -199,6 +207,12 @@ contract IPNFT is ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, IReser
     /// @inheritdoc ERC721Upgradeable
     function _burn(uint256 tokenId) internal virtual override(ERC721URIStorageUpgradeable, ERC721Upgradeable) {
         super._burn(tokenId);
+    }
+
+    /// @notice checks whether a token id is a Proof of Idea
+    /// @param tokenId the token id, either a reserved id or a poi hash
+    function isPoi(uint256 tokenId) public pure returns (bool) {
+        return tokenId > MAX_RESERVATION_ID;
     }
 
     /// @inheritdoc ERC721Upgradeable
