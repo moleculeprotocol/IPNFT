@@ -154,7 +154,7 @@ contract FixtureStakedCrowdSale is FixtureCrowdSale {
     function startSale() internal override returns (uint256 saleId) {
         Sale memory _sale = prepareRun();
         vm.startBroadcast(bob);
-        saleId = _slCrowdSale.startSale(_sale, daoToken, vestedDaoToken, 1e18, 7 days);
+        saleId = _slCrowdSale.startSale(_sale, daoToken, vestedDaoToken, 1e18, 7 days, 7 days);
         vm.stopBroadcast();
     }
 

@@ -25,10 +25,14 @@ contract LockingCrowdSale is CrowdSale {
     /// @notice map from token address to reusable TimelockedToken contracts
     mapping(address => TimelockedToken) public lockingContracts;
 
-    address immutable lockingTokenImplementation = address(new TimelockedToken());
+    address immutable public TIMELOCKED_TOKEN_IMPLEMENTATION;
 
     event Started(uint256 indexed saleId, address indexed issuer, Sale sale, TimelockedToken lockingToken, uint256 lockingDuration, uint16 feeBp);
     event LockingContractCreated(TimelockedToken indexed lockingContract, IERC20Metadata indexed underlyingToken);
+
+    constructor(TimelockedToken _timelockedTokenImplementation) {
+        TIMELOCKED_TOKEN_IMPLEMENTATION = address(_timelockedTokenImplementation);
+    }
 
     /// @dev disable parent sale starting functions
     function startSale(Sale calldata) public pure override returns (uint256) {
@@ -114,7 +118,7 @@ contract LockingCrowdSale is CrowdSale {
      * @return lockedTokenContract address of the new timelocked token contract
      */
     function _makeNewLockedTokenContract(IERC20Metadata auctionToken) private returns (TimelockedToken lockedTokenContract) {
-        lockedTokenContract = TimelockedToken(Clones.clone(lockingTokenImplementation));
+        lockedTokenContract = TimelockedToken(Clones.clone(TIMELOCKED_TOKEN_IMPLEMENTATION));
         lockedTokenContract.initialize(auctionToken);
         emit LockingContractCreated(lockedTokenContract, auctionToken);
     }
