@@ -31,16 +31,13 @@ contract DeployCrowdSale is CommonScript {
     }
 }
 
-/**
- * @title deploy crowdSale
- * @author
- */
 contract DeployStakedCrowdSale is CommonScript {
     function run() public {
         prepareAddresses();
         vm.startBroadcast(deployer);
-        StakedLockingCrowdSale stakedLockingCrowdSale = new StakedLockingCrowdSale();
-
+        TimelockedToken lockingCrowdsaleImplementation = new TimelockedToken();
+        StakedLockingCrowdSale stakedLockingCrowdSale = new StakedLockingCrowdSale(lockingCrowdsaleImplementation);
+        
         TokenVesting vestedDaoToken = TokenVesting(vm.envAddress("VDAO_TOKEN_ADDRESS"));
         vestedDaoToken.grantRole(vestedDaoToken.ROLE_CREATE_SCHEDULE(), address(stakedLockingCrowdSale));
         stakedLockingCrowdSale.trustVestingContract(vestedDaoToken);
