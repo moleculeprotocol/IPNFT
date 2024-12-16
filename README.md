@@ -46,7 +46,10 @@ Deprecated after migrating to Defender 2 (was 0x3D30452c48F2448764d5819a9A2b684A
 | Terms Permissioner | 0xC05D649368d8A5e2E98CAa205d47795de5fCB599 | <a href="https://sepolia.etherscan.io/address/0xC05D649368d8A5e2E98CAa205d47795de5fCB599#code" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0xC05D649368d8A5e2E98CAa205d47795de5fCB599&theme=dark&chainId=1" alt="View contract" /></a> |
 | Tokenizer          | 0xca63411FF5187431028d003eD74B57531408d2F9 | <a href="https://sepolia.etherscan.io/address/0xca63411FF5187431028d003eD74B57531408d2F9#code" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0xca63411FF5187431028d003eD74B57531408d2F9&theme=dark&chainId=1" alt="View contract" /></a> |
 | Crowdsale          | 0x8cA737E2cdaE1Ceb332bEf7ba9eA711a3a2f8037 | <a href="https://sepolia.etherscan.io/address/0x8cA737E2cdaE1Ceb332bEf7ba9eA711a3a2f8037#code" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0x8cA737E2cdaE1Ceb332bEf7ba9eA711a3a2f8037&theme=dark&chainId=1" alt="View contract" /></a> |
-| Staked Crowdsale   | 0xd1cE2EA7d3b0C9cAB025A4aD762FC00315141ad7 | <a href="https://sepolia.etherscan.io/address/0xd1cE2EA7d3b0C9cAB025A4aD762FC00315141ad7#code" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0xd1cE2EA7d3b0C9cAB025A4aD762FC00315141ad7&theme=dark&chainId=1" alt="View contract" /></a> |
+| Staked Crowdsale   | 0x7eeb7113f90893fb95c6666e3930235850f2bc6A | <a href="https://sepolia.etherscan.io/address/0x7eeb7113f90893fb95c6666e3930235850f2bc6A#code" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0x7eeb7113f90893fb95c6666e3930235850f2bc6A&theme=dark&chainId=11155111" alt="View contract" /></a> |
+| Old Staked Crowdsale   | 0xd1cE2EA7d3b0C9cAB025A4aD762FC00315141ad7 |  |
+
+timelocked token implementation=0xF8F79c1E02387b0Fc9DE0945cD9A2c06F127D851
 
 #### Subgraphs
 
@@ -203,6 +206,9 @@ The crowdsale computation model can be tried out here: <https://docs.google.com/
 
 Deploying and verifying a single contract without the help of any script
 `forge create --rpc-url $RPC_URL --private-key $PRIVATE_KEY --chain 5 --etherscan-api-key $ETHERSCAN_API_KEY --verify src/crowdsale/StakedLockingCrowdSale.sol:StakedLockingCrowdSale`
+
+Verifying a the staked crowdsale crowdsale
+`forge verify-contract --chain-id=11155111 --etherscan-api-key=$ETHERSCAN_API_KEY --constructor-args $(cast abi-encode "constructor(address)" 0xF8F79c1E02387b0Fc9DE0945cD9A2c06F127D851) 0x7eeb7113f90893fb95c6666e3930235850f2bc6A src/crowdsale/StakedLockingCrowdSale.sol:StakedLockingCrowdSale`
 
 ### Deploying (vested) test tokens
 

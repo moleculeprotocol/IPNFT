@@ -43,6 +43,7 @@ contract DeployStakedCrowdSale is CommonScript {
         stakedLockingCrowdSale.trustVestingContract(vestedDaoToken);
         vm.stopBroadcast();
 
+        console.log("timelocked token implementation=%s", address(lockingCrowdsaleImplementation));
         console.log("STAKED_LOCKING_CROWDSALE_ADDRESS=%s", address(stakedLockingCrowdSale));
     }
 }
