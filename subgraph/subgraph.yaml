@@ -119,52 +119,25 @@ dataSources:
         - event: ClaimedAuctionTokens(indexed uint256)
           handler: handleClaimedFailedSale
       file: ./src/crowdSaleMapping.ts
+  
   - kind: ethereum/contract
-    name: StakedLockingCrowdSale
+    name: InitializeCrowdsaleContracts
     network: foundry
     source:
       abi: StakedLockingCrowdSale
-      address: "0x959922bE3CAee4b8Cd9a407cc3ac1C251C2007B1"
       startBlock: 0
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
       language: wasm/assemblyscript
-      entities:
-        - CrowdSale
-        - Contribution
-        - ERC20Token
+      file: ./src/stakedLockingCrowdSaleMapping.ts
       abis:
         - name: StakedLockingCrowdSale
           file: ./abis/StakedLockingCrowdSale.json
-        - name: IERC20Metadata
-          file: ./abis/IERC20Metadata.json
-      eventHandlers:
-        - event: Started(indexed uint256,indexed
-            address,(address,address,address,uint256,uint256,uint64,address),(address,address,uint256),address,uint256,uint256)
-          handler: handleStartedLegacy
-        - event: Started(indexed uint256,indexed
-            address,(address,address,address,uint256,uint256,uint64,address),(address,address,uint256),address,uint256,uint256,uint16)
-          handler: handleStarted
-        - event: Settled(indexed uint256,uint256,uint256)
-          handler: handleSettled
-        - event: Failed(indexed uint256)
-          handler: handleFailed
-        - event: Bid(indexed uint256,indexed address,uint256)
-          handler: handleBid
-        - event: Staked(indexed uint256,indexed address,uint256,uint256)
-          handler: handleStaked
-        - event: Claimed(indexed uint256,indexed address,uint256,uint256)
-          handler: handleClaimed
-        - event: ClaimedStakes(indexed uint256,indexed address,uint256,uint256)
-          handler: handleClaimedStakes
-        - event: LockingContractCreated(indexed address,indexed address)
-          handler: handleLockingContractCreated
-        - event: ClaimedFundingGoal(indexed uint256)
-          handler: handleClaimedSuccessfulSale
-        - event: ClaimedAuctionTokens(indexed uint256)
-          handler: handleClaimedFailedSale
-      file: ./src/stakedLockingCrowdSaleMapping.ts
+      blockHandlers:
+        - handler: initializeCrowdsaleTemplatesOnce
+          filter:
+            kind: once
   - kind: ethereum/contract
     name: TermsAcceptedPermissioner
     network: foundry
@@ -228,6 +201,51 @@ templates:
           handler: handleScheduled
         - event: ScheduleReleased(indexed bytes32,indexed address,uint256)
           handler: handleReleased
+  - name: StakedLockingCrowdSale
+    kind: ethereum/contract
+    network: foundry
+    source:
+      abi: StakedLockingCrowdSale
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      file: ./src/stakedLockingCrowdSaleMapping.ts
+      entities:
+        - TimelockedToken
+        - CrowdSale
+        - Contribution
+        - ERC20Token
+      abis:
+        - name: StakedLockingCrowdSale
+          file: ./abis/StakedLockingCrowdSale.json
+        - name: IERC20Metadata
+          file: ./abis/IERC20Metadata.json
+      eventHandlers:
+        - event: Started(indexed uint256,indexed
+            address,(address,address,address,uint256,uint256,uint64,address),(address,address,uint256),address,uint256,uint256)
+          handler: handleStartedLegacy
+        - event: Started(indexed uint256,indexed
+            address,(address,address,address,uint256,uint256,uint64,address),(address,address,uint256),address,uint256,uint256,uint16)
+          handler: handleStarted
+        - event: Settled(indexed uint256,uint256,uint256)
+          handler: handleSettled
+        - event: Failed(indexed uint256)
+          handler: handleFailed
+        - event: Bid(indexed uint256,indexed address,uint256)
+          handler: handleBid
+        - event: Staked(indexed uint256,indexed address,uint256,uint256)
+          handler: handleStaked
+        - event: Claimed(indexed uint256,indexed address,uint256,uint256)
+          handler: handleClaimed
+        - event: ClaimedStakes(indexed uint256,indexed address,uint256,uint256)
+          handler: handleClaimedStakes
+        - event: LockingContractCreated(indexed address,indexed address)
+          handler: handleLockingContractCreated
+        - event: ClaimedFundingGoal(indexed uint256)
+          handler: handleClaimedSuccessfulSale
+        - event: ClaimedAuctionTokens(indexed uint256)
+          handler: handleClaimedFailedSale
   - name: IpnftMetadata
     kind: file/ipfs
     mapping:
