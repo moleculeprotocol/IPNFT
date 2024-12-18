@@ -120,6 +120,7 @@ enum SaleState {
 
 enum SaleType {
   CROWDSALE
+  LOCKING_CROWDSALE
   STAKED_LOCKING_CROWDSALE
 }
 
@@ -146,6 +147,7 @@ type CrowdSale @entity {
   contributions: [Contribution!] @derivedFrom(field: "crowdSale")
   feeBp: Int # the percentage fee that will be cut from the crowdsale upon its success
   type: SaleType!
+  contractInstance: ID # the address of the crowdsale contract
 }
 
 type Contribution @entity {

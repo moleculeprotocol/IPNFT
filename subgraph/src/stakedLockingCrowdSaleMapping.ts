@@ -28,7 +28,7 @@ import * as GenericCrowdSale from './genericCrowdSale'
 
 import { Contribution, CrowdSale, ERC20Token, IPT } from '../generated/schema'
 
-import { TimelockedToken as TimelockedTokenTemplate } from '../generated/templates'
+import { StakedLockingCrowdSale as StakedLockingCrowdSaleTemplate, TimelockedToken as TimelockedTokenTemplate } from '../generated/templates'
 import { makeERC20Token, makeTimelockedToken } from './common'
 
 export function handleStartedLegacy(event: LegacyStartedEvent): void {
@@ -52,6 +52,10 @@ export function handleStartedLegacy(event: LegacyStartedEvent): void {
 }
 
 export function handleStarted(event: StartedEvent): void {
+  if (event.parameters.length < 8) {
+    return handleStartedLegacy(event)
+  }
+
   const _plain = new PlainStartedEvent(
     event.address,
     event.logIndex,
@@ -255,5 +259,18 @@ export function handleClaimedFailedSale(
   GenericCrowdSale.handleClaimedFailedSale(
     event.params.saleId.toString(),
     event.block.timestamp
+  )
+}
+
+export function initializeCrowdsaleTemplatesOnce(block: ethereum.Block): void {
+  
+  StakedLockingCrowdSaleTemplate.create(block.)
+
+  let context = new DataSourceContext()
+  context.setBytes('ipt', Bytes.fromHexString('0x'))
+  context.setBytes('lockingContract', Bytes.fromHexString('0x'))
+  TimelockedTokenTemplate.createWithContext(
+    Bytes.fromHexString('0x'),
+    context
   )
 }

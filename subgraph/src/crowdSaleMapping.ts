@@ -25,6 +25,10 @@ export function handleStarted(event: StartedEvent): void {
     return
   }
 
+  if (event.receipt) {
+    crowdSale.contractInstance = changetype<string>(event.receipt.contractAddress)
+  }
+
   crowdSale.ipt = ipt.id
   crowdSale.issuer = event.params.issuer
   crowdSale.feeBp = event.params.feeBp
