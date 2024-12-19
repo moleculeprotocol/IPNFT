@@ -46,11 +46,12 @@ Deprecated after migrating to Defender 2 (was 0x3D30452c48F2448764d5819a9A2b684A
 | Terms Permissioner | 0xC05D649368d8A5e2E98CAa205d47795de5fCB599 | <a href="https://sepolia.etherscan.io/address/0xC05D649368d8A5e2E98CAa205d47795de5fCB599#code" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0xC05D649368d8A5e2E98CAa205d47795de5fCB599&theme=dark&chainId=1" alt="View contract" /></a> |
 | Tokenizer          | 0xca63411FF5187431028d003eD74B57531408d2F9 | <a href="https://sepolia.etherscan.io/address/0xca63411FF5187431028d003eD74B57531408d2F9#code" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0xca63411FF5187431028d003eD74B57531408d2F9&theme=dark&chainId=1" alt="View contract" /></a> |
 | Crowdsale          | 0x8cA737E2cdaE1Ceb332bEf7ba9eA711a3a2f8037 | <a href="https://sepolia.etherscan.io/address/0x8cA737E2cdaE1Ceb332bEf7ba9eA711a3a2f8037#code" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0x8cA737E2cdaE1Ceb332bEf7ba9eA711a3a2f8037&theme=dark&chainId=1" alt="View contract" /></a> |
-| Locking Crowdsale          | 0xaf7358576C9F7cD84696D28702fC5ADe33cce0e9 | <a href="https://sepolia.etherscan.io/address/0xaf7358576C9F7cD84696D28702fC5ADe33cce0e9#code" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0xaf7358576C9F7cD84696D28702fC5ADe33cce0e9&theme=dark&chainId=1" alt="View contract" /></a> |
+| Locking Crowdsale          | 0x67D8ed102E2168A46FA342e39A5f7D16c103Bd0d | <a href="https://sepolia.etherscan.io/address/0x67D8ed102E2168A46FA342e39A5f7D16c103Bd0d#code" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0x67D8ed102E2168A46FA342e39A5f7D16c103Bd0d&theme=dark&chainId=1" alt="View contract" /></a> |
 | Staked Crowdsale   | 0xd1cE2EA7d3b0C9cAB025A4aD762FC00315141ad7 | <a href="https://sepolia.etherscan.io/address/0xd1cE2EA7d3b0C9cAB025A4aD762FC00315141ad7#code" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0xd1cE2EA7d3b0C9cAB025A4aD762FC00315141ad7&theme=dark&chainId=11155111" alt="View contract" /></a> |
 
+
 timelocked token implementation=0xF8F79c1E02387b0Fc9DE0945cD9A2c06F127D851  
-new staked crowdsale (not used yet HUBS-224) 0x7eeb7113f90893fb95c6666e3930235850f2bc6A)
+~~new staked crowdsale (not used yet HUBS-224) 0x7eeb7113f90893fb95c6666e3930235850f2bc6A)~~
 
 #### Subgraphs
 
