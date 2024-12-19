@@ -32,6 +32,7 @@ contract RolloutV25LockingSale is Script {
     function run() public {
         //mainnet 0xCfA0F84660fB33bFd07C369E5491Ab02C449f71B;
         address moleculeDevMultisig = 0x9d5a6ae551f1117946FF6e0e86ef9A1B20C90Cb0;
+        address stakedLockingCrowdsale = 0xd1cE2EA7d3b0C9cAB025A4aD762FC00315141ad7;
         TimelockedToken timelockedTokenImplementation = TimelockedToken(0xF8F79c1E02387b0Fc9DE0945cD9A2c06F127D851); 
 
         vm.startBroadcast();

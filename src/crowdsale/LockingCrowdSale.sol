@@ -12,18 +12,26 @@ import { CrowdSale, Sale } from "./CrowdSale.sol";
 error UnsupportedInitializer();
 error InvalidDuration();
 
+interface ITrustedLockingContracts {
+    function lockingContracts(address) external view returns (TimelockedToken);
+}
+
 /**
  * @title LockingCrowdSale
  * @author molecule.to
  * @notice a fixed price sales base contract that locks the sold tokens for a configurable duration
  */
-contract LockingCrowdSale is CrowdSale {
+contract LockingCrowdSale is CrowdSale, ITrustedLockingContracts {
     using SafeERC20 for IERC20Metadata;
 
     mapping(uint256 => uint256) public salesLockingDuration;
 
     /// @notice map from token address to reusable TimelockedToken contracts
     mapping(address => TimelockedToken) public lockingContracts;
+
+    ///@notice this can be another contract registry that takes care of locking contracts
+    ///        to reuse implementations
+    ITrustedLockingContracts public lockingContractTrustee;
 
     address immutable public TIMELOCKED_TOKEN_IMPLEMENTATION;
 
@@ -39,6 +47,10 @@ contract LockingCrowdSale is CrowdSale {
         revert UnsupportedInitializer();
     }
 
+    function trustLockingContractSource(ITrustedLockingContracts _lockingContractTrustee) public onlyOwner {
+        lockingContractTrustee = _lockingContractTrustee;
+    }
+
     /**
      * @notice allows anyone to create a timelocked token that's controlled by this sale contract
      *         helpful if you want to reuse the timelocked token for your own custom schedules
@@ -50,8 +62,13 @@ contract LockingCrowdSale is CrowdSale {
         lockedTokenContract = lockingContracts[address(underlyingToken)];
 
         if (address(lockedTokenContract) == address(0)) {
-            lockedTokenContract = _makeNewLockedTokenContract(underlyingToken);
-            lockingContracts[address(underlyingToken)] = lockedTokenContract;
+            if (address(lockingContractTrustee) != address(0)) {
+                lockedTokenContract = lockingContractTrustee.lockingContracts(address(underlyingToken));
+            }
+            if (address(lockedTokenContract) == address(0)) {
+                lockedTokenContract = _makeNewLockedTokenContract(underlyingToken);
+                lockingContracts[address(underlyingToken)] = lockedTokenContract;
+            }
         }
     }
 

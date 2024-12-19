@@ -455,4 +455,8 @@ contract CrowdSaleLockedStakedTest is Test {
         assertEq(daoToken.balanceOf(bidder2), 1_000_000 ether);
         // vm.stopPrank();
     }
+
+    function skipTestReuseLockingContracts() public {
+        //todo: write a test that demonstrates how the locking crowdsale reuses locking contracts from the slcs
+    }
 }
