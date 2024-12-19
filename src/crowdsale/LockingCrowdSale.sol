@@ -67,8 +67,8 @@ contract LockingCrowdSale is CrowdSale, ITrustedLockingContracts {
             }
             if (address(lockedTokenContract) == address(0)) {
                 lockedTokenContract = _makeNewLockedTokenContract(underlyingToken);
-                lockingContracts[address(underlyingToken)] = lockedTokenContract;
-            }
+            } 
+            lockingContracts[address(underlyingToken)] = lockedTokenContract;
         }
     }
 

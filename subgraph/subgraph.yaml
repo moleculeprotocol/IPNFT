@@ -120,6 +120,45 @@ dataSources:
           handler: handleClaimedFailedSale
       file: ./src/crowdSaleMapping.ts
   - kind: ethereum/contract
+    name: LockingCrowdSale
+    network: foundry
+    source:
+      abi: LockingCrowdSale
+      address: "0xbaadf00dbaadf00dbaadf00dbaadf00dbaadf00d"
+      startBlock: 0
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - CrowdSale
+        - Contribution
+        - ERC20Token
+      abis:
+        - name: LockingCrowdSale
+          file: ./abis/LockingCrowdSale.json
+        - name: IERC20Metadata
+          file: ./abis/IERC20Metadata.json
+      eventHandlers:
+        - event: Started(indexed uint256,indexed
+            address,(address,address,address,uint256,uint256,uint64,address),address,uint256,uint16)
+          handler: handleStarted
+        - event: Settled(indexed uint256,uint256,uint256)
+          handler: handleSettled
+        - event: Failed(indexed uint256)
+          handler: handleFailed
+        - event: Bid(indexed uint256,indexed address,uint256)
+          handler: handleBid
+        - event: LockingContractCreated(indexed address,indexed address)
+          handler: handleLockingContractCreated
+        - event: Claimed(indexed uint256,indexed address,uint256,uint256)
+          handler: handleClaimed
+        - event: ClaimedFundingGoal(indexed uint256)
+          handler: handleClaimedSuccessfulSale
+        - event: ClaimedAuctionTokens(indexed uint256)
+          handler: handleClaimedFailedSale
+      file: ./src/lockingCrowdSaleMapping.ts
+  - kind: ethereum/contract
     name: StakedLockingCrowdSale
     network: foundry
     source:
