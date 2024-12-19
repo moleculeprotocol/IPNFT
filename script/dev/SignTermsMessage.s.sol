@@ -6,7 +6,7 @@ import "forge-std/console.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
 contract SignTermsMessage is Script {
-    function run() public {
+    function run() public view {
         uint256 pk = vm.envUint("PRIVATE_KEY");
         string memory terms =
             "As an IP token holder of IPNFT #10, I accept all terms that I've read here: ipfs://bafkreigk5dvqblnkdniges6ft5kmuly47ebw4vho6siikzmkaovq6sjstq\n\nChain Id: 31337\nVersion: 1";

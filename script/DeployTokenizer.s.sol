@@ -11,6 +11,7 @@ import { BioPriceFeed } from "../src/BioPriceFeed.sol";
 import { IPermissioner, TermsAcceptedPermissioner } from "../src/Permissioner.sol";
 import { CrowdSale } from "../src/crowdsale/CrowdSale.sol";
 import { StakedLockingCrowdSale } from "../src/crowdsale/StakedLockingCrowdSale.sol";
+import { TimelockedToken } from "../src/TimelockedToken.sol";
 
 contract DeployTokenizerInfrastructure is Script {
     function run() public {
@@ -27,13 +28,16 @@ contract DeployTokenizerInfrastructure is Script {
         tokenizer.setIPTokenImplementation(initialIpTokenImplementation);
 
         CrowdSale crowdSale = new CrowdSale();
-        StakedLockingCrowdSale stakedLockingCrowdSale = new StakedLockingCrowdSale();
+        //this allows the default TimelockedToken implementation to be verified on chain explorers
+        TimelockedToken timelockedTokenImplementation = new TimelockedToken();
+        StakedLockingCrowdSale stakedLockingCrowdSale = new StakedLockingCrowdSale(timelockedTokenImplementation);
         vm.stopBroadcast();
 
         console.log("TERMS_ACCEPTED_PERMISSIONER_ADDRESS=%s", address(permissioner));
         console.log("TOKENIZER_ADDRESS=%s", address(tokenizer));
         console.log("CROWDSALE_ADDRESS=%s", address(crowdSale));
         console.log("STAKED_LOCKING_CROWDSALE_ADDRESS=%s", address(stakedLockingCrowdSale));
+        console.log("timelocked token implementation=%s", address(timelockedTokenImplementation));
         console.log("initial IP Token implementation=%s", address(initialIpTokenImplementation));
     }
 }

@@ -152,35 +152,6 @@
   },
   {
     "type": "function",
-    "name": "getClaimableStakes",
-    "inputs": [
-      {
-        "name": "saleId",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "refunds",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "refundedStakes",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "vestedStakes",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
     "name": "getSaleInfo",
     "inputs": [
       {
@@ -321,54 +292,6 @@
   },
   {
     "type": "function",
-    "name": "salesStakeVestingDuration",
-    "inputs": [
-      {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "salesStaking",
-    "inputs": [
-      {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "stakedToken",
-        "type": "address",
-        "internalType": "contract IERC20Metadata"
-      },
-      {
-        "name": "stakesVestingContract",
-        "type": "address",
-        "internalType": "contract TokenVesting"
-      },
-      {
-        "name": "wadFixedStakedPerBidPrice",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
     "name": "setCurrentFeesBp",
     "inputs": [
       {
@@ -392,30 +315,6 @@
     ],
     "outputs": [],
     "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "stakesOf",
-    "inputs": [
-      {
-        "name": "saleId",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "bidder",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "view"
   },
   {
     "type": "function",
@@ -464,27 +363,7 @@
         ]
       },
       {
-        "name": "stakedToken",
-        "type": "address",
-        "internalType": "contract IERC20Metadata"
-      },
-      {
-        "name": "stakesVestingContract",
-        "type": "address",
-        "internalType": "contract TokenVesting"
-      },
-      {
-        "name": "wadFixedStakedPerBidPrice",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
         "name": "lockingDuration",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "stakesVestingDuration",
         "type": "uint256",
         "internalType": "uint256"
       }
@@ -497,67 +376,6 @@
       }
     ],
     "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "startSale",
-    "inputs": [
-      {
-        "name": "",
-        "type": "tuple",
-        "internalType": "struct Sale",
-        "components": [
-          {
-            "name": "auctionToken",
-            "type": "address",
-            "internalType": "contract IERC20Metadata"
-          },
-          {
-            "name": "biddingToken",
-            "type": "address",
-            "internalType": "contract IERC20Metadata"
-          },
-          {
-            "name": "beneficiary",
-            "type": "address",
-            "internalType": "address"
-          },
-          {
-            "name": "fundingGoal",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          {
-            "name": "salesAmount",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          {
-            "name": "closingTime",
-            "type": "uint64",
-            "internalType": "uint64"
-          },
-          {
-            "name": "permissioner",
-            "type": "address",
-            "internalType": "contract IPermissioner"
-          }
-        ]
-      },
-      {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "pure"
   },
   {
     "type": "function",
@@ -642,51 +460,6 @@
     "stateMutability": "nonpayable"
   },
   {
-    "type": "function",
-    "name": "trustVestingContract",
-    "inputs": [
-      {
-        "name": "stakesVestingContract",
-        "type": "address",
-        "internalType": "contract TokenVesting"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "trustedVestingContracts",
-    "inputs": [
-      {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "bool",
-        "internalType": "bool"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "untrustVestingContract",
-    "inputs": [
-      {
-        "name": "stakesVestingContract",
-        "type": "address",
-        "internalType": "contract TokenVesting"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
     "type": "event",
     "name": "Bid",
     "inputs": [
@@ -763,37 +536,6 @@
         "name": "saleId",
         "type": "uint256",
         "indexed": true,
-        "internalType": "uint256"
-      }
-    ],
-    "anonymous": false
-  },
-  {
-    "type": "event",
-    "name": "ClaimedStakes",
-    "inputs": [
-      {
-        "name": "saleId",
-        "type": "uint256",
-        "indexed": true,
-        "internalType": "uint256"
-      },
-      {
-        "name": "claimer",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
-      },
-      {
-        "name": "stakesClaimed",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
-      },
-      {
-        "name": "stakesRefunded",
-        "type": "uint256",
-        "indexed": false,
         "internalType": "uint256"
       }
     ],
@@ -890,146 +632,6 @@
   },
   {
     "type": "event",
-    "name": "Staked",
-    "inputs": [
-      {
-        "name": "saleId",
-        "type": "uint256",
-        "indexed": true,
-        "internalType": "uint256"
-      },
-      {
-        "name": "bidder",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
-      },
-      {
-        "name": "stakedAmount",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
-      },
-      {
-        "name": "price",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
-      }
-    ],
-    "anonymous": false
-  },
-  {
-    "type": "event",
-    "name": "Started",
-    "inputs": [
-      {
-        "name": "saleId",
-        "type": "uint256",
-        "indexed": true,
-        "internalType": "uint256"
-      },
-      {
-        "name": "issuer",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
-      },
-      {
-        "name": "sale",
-        "type": "tuple",
-        "indexed": false,
-        "internalType": "struct Sale",
-        "components": [
-          {
-            "name": "auctionToken",
-            "type": "address",
-            "internalType": "contract IERC20Metadata"
-          },
-          {
-            "name": "biddingToken",
-            "type": "address",
-            "internalType": "contract IERC20Metadata"
-          },
-          {
-            "name": "beneficiary",
-            "type": "address",
-            "internalType": "address"
-          },
-          {
-            "name": "fundingGoal",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          {
-            "name": "salesAmount",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          {
-            "name": "closingTime",
-            "type": "uint64",
-            "internalType": "uint64"
-          },
-          {
-            "name": "permissioner",
-            "type": "address",
-            "internalType": "contract IPermissioner"
-          }
-        ]
-      },
-      {
-        "name": "staking",
-        "type": "tuple",
-        "indexed": false,
-        "internalType": "struct StakingInfo",
-        "components": [
-          {
-            "name": "stakedToken",
-            "type": "address",
-            "internalType": "contract IERC20Metadata"
-          },
-          {
-            "name": "stakesVestingContract",
-            "type": "address",
-            "internalType": "contract TokenVesting"
-          },
-          {
-            "name": "wadFixedStakedPerBidPrice",
-            "type": "uint256",
-            "internalType": "uint256"
-          }
-        ]
-      },
-      {
-        "name": "lockingToken",
-        "type": "address",
-        "indexed": false,
-        "internalType": "contract TimelockedToken"
-      },
-      {
-        "name": "lockingDuration",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
-      },
-      {
-        "name": "stakingDuration",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
-      },
-      {
-        "name": "feeBp",
-        "type": "uint16",
-        "indexed": false,
-        "internalType": "uint16"
-      }
-    ],
-    "anonymous": false
-  },
-  {
-    "type": "event",
     "name": "Started",
     "inputs": [
       {
@@ -1172,25 +774,6 @@
         "type": "uint16",
         "indexed": false,
         "internalType": "uint16"
-      }
-    ],
-    "anonymous": false
-  },
-  {
-    "type": "event",
-    "name": "UpdatedTrustedTokenVestings",
-    "inputs": [
-      {
-        "name": "tokenVesting",
-        "type": "address",
-        "indexed": true,
-        "internalType": "contract TokenVesting"
-      },
-      {
-        "name": "trusted",
-        "type": "bool",
-        "indexed": false,
-        "internalType": "bool"
       }
     ],
     "anonymous": false
@@ -1203,11 +786,6 @@
   {
     "type": "error",
     "name": "BadDecimals",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "BadPrice",
     "inputs": []
   },
   {
@@ -1248,11 +826,6 @@
   },
   {
     "type": "error",
-    "name": "IncompatibleVestingContract",
-    "inputs": []
-  },
-  {
-    "type": "error",
     "name": "InvalidDuration",
     "inputs": []
   },
@@ -1284,120 +857,7 @@
   },
   {
     "type": "error",
-    "name": "UnmanageableVestingContract",
-    "inputs": []
-  },
-  {
-    "type": "error",
     "name": "UnsupportedInitializer",
     "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "UnsupportedVestingContract",
-    "inputs": []
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "uint256",
-        "name": "saleId",
-        "type": "uint256"
-      },
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "issuer",
-        "type": "address"
-      },
-      {
-        "components": [
-          {
-            "internalType": "contract IERC20Metadata",
-            "name": "auctionToken",
-            "type": "address"
-          },
-          {
-            "internalType": "contract IERC20Metadata",
-            "name": "biddingToken",
-            "type": "address"
-          },
-          {
-            "internalType": "address",
-            "name": "beneficiary",
-            "type": "address"
-          },
-          {
-            "internalType": "uint256",
-            "name": "fundingGoal",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "salesAmount",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint64",
-            "name": "closingTime",
-            "type": "uint64"
-          },
-          {
-            "internalType": "contract IPermissioner",
-            "name": "permissioner",
-            "type": "address"
-          }
-        ],
-        "indexed": false,
-        "internalType": "struct Sale",
-        "name": "sale",
-        "type": "tuple"
-      },
-      {
-        "components": [
-          {
-            "internalType": "contract IERC20Metadata",
-            "name": "stakedToken",
-            "type": "address"
-          },
-          {
-            "internalType": "contract TokenVesting",
-            "name": "stakesVestingContract",
-            "type": "address"
-          },
-          {
-            "internalType": "uint256",
-            "name": "wadFixedStakedPerBidPrice",
-            "type": "uint256"
-          }
-        ],
-        "indexed": false,
-        "internalType": "struct StakingInfo",
-        "name": "staking",
-        "type": "tuple"
-      },
-      {
-        "indexed": false,
-        "internalType": "contract TimelockedToken",
-        "name": "lockingToken",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "lockingDuration",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "stakingDuration",
-        "type": "uint256"
-      }
-    ],
-    "name": "Started",
-    "type": "event"
   }
 ]

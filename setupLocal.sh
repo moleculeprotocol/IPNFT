@@ -9,6 +9,14 @@ set +a
 fixtures=false
 extrafixtures=false
 
+show_help() {
+    echo "Usage: setupLocal.sh [OPTION]"
+    echo "Sets up the local environment for the IPNFT contracts."
+    echo "Options:"
+    echo "  -f  also runs basic fixture scripts"
+    echo "  -x  also runs extra fixture scripts (crowdsales)"
+}
+
 # Parse command-line options
 while getopts "fx" opt; do
   case ${opt} in

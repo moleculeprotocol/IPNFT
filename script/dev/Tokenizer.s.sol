@@ -25,7 +25,7 @@ contract DeployTokenizer is CommonScript {
 
         vm.stopBroadcast();
         console.log("TOKENIZER_ADDRESS=%s", address(tokenizer));
-        console.log("IPTOKEN_IMPLEMENTATION_ADDRESS=%s", address(initialIpTokenImplementation));
+        console.log("iptoken implementation=%s", address(initialIpTokenImplementation));
     }
 }
 

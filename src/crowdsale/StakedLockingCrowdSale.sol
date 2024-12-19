@@ -38,6 +38,8 @@ contract StakedLockingCrowdSale is LockingCrowdSale {
     mapping(uint256 => mapping(address => uint256)) internal stakes;
     mapping(address => bool) public trustedVestingContracts;
 
+    mapping(uint256 => uint256) public salesStakeVestingDuration;
+
     event Started(
         uint256 indexed saleId,
         address indexed issuer,
@@ -51,6 +53,8 @@ contract StakedLockingCrowdSale is LockingCrowdSale {
     event Staked(uint256 indexed saleId, address indexed bidder, uint256 stakedAmount, uint256 price);
     event ClaimedStakes(uint256 indexed saleId, address indexed claimer, uint256 stakesClaimed, uint256 stakesRefunded);
     event UpdatedTrustedTokenVestings(TokenVesting indexed tokenVesting, bool trusted);
+
+    constructor(TimelockedToken _timelockedTokenImplementation) LockingCrowdSale(_timelockedTokenImplementation) { }
 
     /// @dev disable parent sale starting functions
     function startSale(Sale calldata, uint256) public pure override returns (uint256) {
@@ -81,9 +85,9 @@ contract StakedLockingCrowdSale is LockingCrowdSale {
      * @param stakedToken the ERC20 contract for staking tokens
      * @param stakesVestingContract the TokenVesting contract for vested staking tokens. Will revert when not trusted.
      * @param wadFixedStakedPerBidPrice the 10e18 based float price for stakes/bid tokens
-     * @param lockingDuration duration in seconds until stakes and auction tokens are vested or locked after the sale has settled
-     *        NOTE: If `lockingDuration` is < 7 days, the the vesting contract schedules will stil have a 7 days cliff as required by the underlying TokenVesting contract.
+     * @param lockingDuration duration in seconds after the sale has settled until auction tokens locked
      *        timelocks for auction tokens can be >= 0
+     * @param stakesVestingDuration duration in seconds  until staking tokens are vested, min 7 days as required by TokenVesting
      * @return saleId
      */
     function startSale(
@@ -91,7 +95,8 @@ contract StakedLockingCrowdSale is LockingCrowdSale {
         IERC20Metadata stakedToken,
         TokenVesting stakesVestingContract,
         uint256 wadFixedStakedPerBidPrice,
-        uint256 lockingDuration
+        uint256 lockingDuration,
+        uint256 stakesVestingDuration
     ) public returns (uint256 saleId) {
         if (IERC20Metadata(address(stakedToken)).decimals() != 18) {
             revert BadDecimals();
@@ -118,6 +123,12 @@ contract StakedLockingCrowdSale is LockingCrowdSale {
 
         saleId = uint256(keccak256(abi.encode(sale)));
         salesStaking[saleId] = StakingInfo(stakedToken, stakesVestingContract, wadFixedStakedPerBidPrice);
+
+        if (stakesVestingDuration < 7 days) {
+            revert InvalidDuration();
+        } 
+
+        salesStakeVestingDuration[saleId] = stakesVestingDuration;
         super.startSale(sale, lockingDuration);
     }
 
@@ -132,7 +143,6 @@ contract StakedLockingCrowdSale is LockingCrowdSale {
      * @dev emits a custom event for this crowdsale class
      */
     function _afterSaleStarted(uint256 saleId) internal virtual override {
-        uint256 stakingDuration = salesLockingDuration[saleId] < 7 days ? 7 days : salesLockingDuration[saleId];
         emit Started(
             saleId,
             msg.sender,
@@ -140,7 +150,7 @@ contract StakedLockingCrowdSale is LockingCrowdSale {
             salesStaking[saleId],
             lockingContracts[address(_sales[saleId].auctionToken)],
             salesLockingDuration[saleId],
-            stakingDuration,
+            salesStakeVestingDuration[saleId],
             _saleInfo[saleId].feeBp
         );
     }
@@ -183,7 +193,7 @@ contract StakedLockingCrowdSale is LockingCrowdSale {
      * @inheritdoc CrowdSale
      */
     function claim(uint256 saleId, uint256 tokenAmount, uint256 refunds) internal virtual override {
-        uint256 duration = salesLockingDuration[saleId];
+        uint256 vestingDuration = salesStakeVestingDuration[saleId];
         StakingInfo storage staking = salesStaking[saleId];
         (uint256 refundedStakes, uint256 vestedStakes) = getClaimableStakes(saleId, refunds);
 
@@ -204,14 +214,12 @@ contract StakedLockingCrowdSale is LockingCrowdSale {
             return;
         }
 
-        //the minimum vesting duration of `TokenVesting` is 7 days
-        uint256 _duration = duration < 7 days ? 7 days : duration;
-        if (block.timestamp > _sales[saleId].closingTime + _duration) {
+        if (block.timestamp > _sales[saleId].closingTime + vestingDuration) {
             //no need for vesting when duration already expired.
             staking.stakedToken.safeTransfer(msg.sender, vestedStakes);
         } else {
             staking.stakedToken.safeTransfer(address(staking.stakesVestingContract), vestedStakes);
-            staking.stakesVestingContract.createVestingSchedule(msg.sender, _sales[saleId].closingTime, _duration, _duration, 60, false, vestedStakes);
+            staking.stakesVestingContract.createVestingSchedule(msg.sender, _sales[saleId].closingTime, vestingDuration, vestingDuration, 60, false, vestedStakes);
         }
     }
 
