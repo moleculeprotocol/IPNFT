@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.18;
 
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { SafeCast } from "@openzeppelin/contracts/utils/math/SafeCast.sol";
@@ -12,26 +13,19 @@ import { CrowdSale, Sale } from "./CrowdSale.sol";
 error UnsupportedInitializer();
 error InvalidDuration();
 
-interface ITrustedLockingContracts {
-    function lockingContracts(address) external view returns (TimelockedToken);
-}
 
 /**
  * @title LockingCrowdSale
  * @author molecule.to
  * @notice a fixed price sales base contract that locks the sold tokens for a configurable duration
  */
-contract LockingCrowdSale is CrowdSale, ITrustedLockingContracts {
+contract LockingCrowdSale is CrowdSale {
     using SafeERC20 for IERC20Metadata;
 
     mapping(uint256 => uint256) public salesLockingDuration;
 
     /// @notice map from token address to reusable TimelockedToken contracts
     mapping(address => TimelockedToken) public lockingContracts;
-
-    ///@notice this can be another contract registry that takes care of locking contracts
-    ///        to reuse implementations
-    ITrustedLockingContracts public lockingContractTrustee;
 
     address immutable public TIMELOCKED_TOKEN_IMPLEMENTATION;
 
@@ -47,8 +41,14 @@ contract LockingCrowdSale is CrowdSale, ITrustedLockingContracts {
         revert UnsupportedInitializer();
     }
 
-    function trustLockingContractSource(ITrustedLockingContracts _lockingContractTrustee) public onlyOwner {
-        lockingContractTrustee = _lockingContractTrustee;
+    /**
+     * @notice allows the owner to trust a timelocked token contract for a specific underlying token so it's not registered again.
+     * 
+     * @param token the underlying token
+     * @param _lockingContract the timelocked token contract to trust
+     */
+    function trustLockingContract(IERC20 token, TimelockedToken _lockingContract) public onlyOwner {
+        lockingContracts[address(token)] = _lockingContract;
     }
 
     /**
@@ -62,12 +62,7 @@ contract LockingCrowdSale is CrowdSale, ITrustedLockingContracts {
         lockedTokenContract = lockingContracts[address(underlyingToken)];
 
         if (address(lockedTokenContract) == address(0)) {
-            if (address(lockingContractTrustee) != address(0)) {
-                lockedTokenContract = lockingContractTrustee.lockingContracts(address(underlyingToken));
-            }
-            if (address(lockedTokenContract) == address(0)) {
-                lockedTokenContract = _makeNewLockedTokenContract(underlyingToken);
-            } 
+            lockedTokenContract = _makeNewLockedTokenContract(underlyingToken);
             lockingContracts[address(underlyingToken)] = lockedTokenContract;
         }
     }
