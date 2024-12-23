@@ -1,9 +1,7 @@
 import {
   BigInt,
-  Bytes,
-  DataSourceContext,
-  log,
-  ethereum
+  ethereum,
+  log
 } from '@graphprotocol/graph-ts'
 import { IERC20Metadata } from '../generated/CrowdSale/IERC20Metadata'
 import {
@@ -13,25 +11,25 @@ import {
   ClaimedFundingGoal as ClaimedFundingGoalEvent,
   ClaimedStakes as ClaimedStakesEvent,
   Failed as FailedEvent,
+  Started3 as LegacyStartedEvent,
   LockingContractCreated as LockingContractCreatedEvent,
   Settled as SettledEvent,
   Staked as StakedEvent,
-  Started3 as LegacyStartedEvent,
   Started as StartedEvent
 } from '../generated/StakedLockingCrowdSale/StakedLockingCrowdSale'
+import { LockingContractCreated as LockedLockingContractCreatedEvent } from '../generated/LockingCrowdSale/LockingCrowdSale'
 
 import { Started as PlainStartedEvent } from '../generated/CrowdSale/CrowdSale'
 import { Started as LockingStartedEvent } from '../generated/LockingCrowdSale/LockingCrowdSale'
 
 import { handleStarted as plainHandleStarted } from './crowdSaleMapping'
-import { lockingHandleStarted, handleLockingContractCreated as lockedHandleLockingContractCreated } from './lockingCrowdSaleMapping'
+import { handleLockingContractCreated as lockedHandleLockingContractCreated, lockingHandleStarted } from './lockingCrowdSaleMapping'
 
 import * as GenericCrowdSale from './genericCrowdSale'
 
-import { Contribution, CrowdSale, ERC20Token, IPT } from '../generated/schema'
+import { Contribution, CrowdSale } from '../generated/schema'
 
-import { TimelockedToken as TimelockedTokenTemplate } from '../generated/templates'
-import { makeERC20Token, makeTimelockedToken } from './common'
+import { makeERC20Token } from './common'
 
 /**
  * there are contracts that emit the started event without fees 
@@ -153,7 +151,8 @@ export function handleClaimed(event: ClaimedEvent): void {
 export function handleLockingContractCreated(
   event: LockingContractCreatedEvent
 ): void {
-  lockedHandleLockingContractCreated(event)
+  //xing fingers that this works!
+  lockedHandleLockingContractCreated(changetype<LockedLockingContractCreatedEvent>(event))
 }
 
 export function handleStaked(event: StakedEvent): void {

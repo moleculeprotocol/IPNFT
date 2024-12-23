@@ -24,7 +24,8 @@ export function handleStarted(event: StartedEvent): void {
     ])
     return
   }
-
+  
+  crowdSale.contract = event.address
   crowdSale.ipt = ipt.id
   crowdSale.issuer = event.params.issuer
   crowdSale.feeBp = event.params.feeBp

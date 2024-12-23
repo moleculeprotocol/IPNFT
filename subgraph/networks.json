@@ -16,17 +16,17 @@
       "address": "0x8cA737E2cdaE1Ceb332bEf7ba9eA711a3a2f8037",
       "startBlock": 5300777      
     },
-    "LockingCrowdSale": {
-      "address": "0xaf7358576C9F7cD84696D28702fC5ADe33cce0e9",
-      "startBlock": 7306191      
-    },
     "StakedLockingCrowdSale": {
       "address": "0xd1cE2EA7d3b0C9cAB025A4aD762FC00315141ad7",
       "startBlock": 5300777
     },
+    "LockingCrowdSale": {
+      "address": "0x0Da77f361bB56f065Aa21647d885685eb7cAE10F",
+      "startBlock": 7339034      
+    },
     "StakedLockingCrowdSale2": {
-      "address": "0xbaadf00dbaadf00dbaadf00dbaadf00dbaadf00d",
-      "startBlock": 7306191
+      "address": "0x2d309CF13dC3872f9c9B1B06Ebf6F60caDe08d55",
+      "startBlock": 7339082
     },
     "TermsAcceptedPermissioner": {
       "address": "0xC05D649368d8A5e2E98CAa205d47795de5fCB599",
@@ -50,13 +50,13 @@
       "address": "0xf0a8d23f38e9cbbe01c4ed37f23bd519b65bc6c2",
       "startBlock": 18490640
     },
-    "LockingCrowdSale": {
-      "address": "0xbaadf00dbaadf00dbaadf00dbaadf00dbaadf00d",
-      "startBlock": 21431344      
-    },
     "StakedLockingCrowdSale": {
       "address": "0x35Bce29F52f51f547998717CD598068Afa2B29B7",
       "startBlock": 17481804
+    },
+    "LockingCrowdSale": {
+      "address": "0xbaadf00dbaadf00dbaadf00dbaadf00dbaadf00d",
+      "startBlock": 21431344      
     },
     "StakedLockingCrowdSale2": {
       "address": "0xbaadf00dbaadf00dbaadf00dbaadf00dbaadf00d",

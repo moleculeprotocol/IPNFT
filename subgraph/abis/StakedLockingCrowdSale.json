@@ -227,19 +227,6 @@
   },
   {
     "type": "function",
-    "name": "lockingContractTrustee",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "address",
-        "internalType": "contract ITrustedLockingContracts"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
     "name": "lockingContracts",
     "inputs": [
       {
@@ -630,12 +617,17 @@
   },
   {
     "type": "function",
-    "name": "trustLockingContractSource",
+    "name": "trustLockingContract",
     "inputs": [
       {
-        "name": "_lockingContractTrustee",
+        "name": "token",
         "type": "address",
-        "internalType": "contract ITrustedLockingContracts"
+        "internalType": "contract IERC20"
+      },
+      {
+        "name": "_timelockedToken",
+        "type": "address",
+        "internalType": "contract TimelockedToken"
       }
     ],
     "outputs": [],
