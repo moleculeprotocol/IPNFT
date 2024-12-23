@@ -21,8 +21,10 @@ import {
 } from '../generated/StakedLockingCrowdSale/StakedLockingCrowdSale'
 
 import { Started as PlainStartedEvent } from '../generated/CrowdSale/CrowdSale'
+import { Started as LockingStartedEvent } from '../generated/LockingCrowdSale/LockingCrowdSale'
 
 import { handleStarted as plainHandleStarted } from './crowdSaleMapping'
+import { lockingHandleStarted, handleLockingContractCreated as lockedHandleLockingContractCreated } from './lockingCrowdSaleMapping'
 
 import * as GenericCrowdSale from './genericCrowdSale'
 
@@ -31,6 +33,9 @@ import { Contribution, CrowdSale, ERC20Token, IPT } from '../generated/schema'
 import { TimelockedToken as TimelockedTokenTemplate } from '../generated/templates'
 import { makeERC20Token, makeTimelockedToken } from './common'
 
+/**
+ * there are contracts that emit the started event without fees 
+ */
 export function handleStartedLegacy(event: LegacyStartedEvent): void {
   const parameters = event.parameters
   parameters[7] = new ethereum.EventParam(
@@ -60,15 +65,34 @@ export function handleStarted(event: StartedEvent): void {
     event.block,
     event.transaction,
     [
-      event.parameters[0],
-      event.parameters[1],
-      event.parameters[2],
-      event.parameters[7]
+      event.parameters[0], // uint256 saleId
+      event.parameters[1], // address issuer
+      event.parameters[2], // struct  Sale
+      event.parameters[7]  // uint16  feeBp
     ],
     event.receipt
   )
 
   plainHandleStarted(_plain)
+
+  const _locking = new LockingStartedEvent(
+    event.address,
+    event.logIndex,
+    event.transactionLogIndex,
+    event.logType,
+    event.block,
+    event.transaction,
+    [
+      event.parameters[0], // uint256 saleId
+      event.parameters[1], // address issuer
+      event.parameters[2], // struct  Sale
+      event.parameters[4], // TimelockedToken
+      event.parameters[5], // uint256 lockingDuration
+      event.parameters[7]  // uint16  feeBp
+    ],
+    event.receipt
+  )
+  lockingHandleStarted(_locking)
 
   let crowdSale = CrowdSale.load(event.params.saleId.toString())
   if (!crowdSale) {
@@ -77,31 +101,6 @@ export function handleStarted(event: StartedEvent): void {
     ])
     return
   }
-
-  let ipt = IPT.load(event.params.sale.auctionToken.toHexString())
-  if (!ipt) {
-    log.error('[Crowdsale] Ipt not found for id: {}', [
-      event.params.sale.auctionToken.toHexString()
-    ])
-    return
-  }
-
-  if (!ipt.lockedToken) {
-    ipt.lockedToken = event.params.lockingToken
-    ipt.save()
-  } else {
-    let _ipt = changetype<Bytes>(ipt.lockedToken).toHexString()
-    let _newToken = event.params.lockingToken.toHexString()
-    if (_ipt != _newToken) {
-      log.error('the locking token per IPT should be unique {} != {}', [
-        _ipt,
-        _newToken
-      ])
-    }
-  }
-
-  crowdSale.amountStaked = BigInt.fromU32(0)
-  crowdSale.auctionLockingDuration = event.params.lockingDuration
 
   crowdSale.stakingToken = makeERC20Token(
     IERC20Metadata.bind(event.params.staking.stakedToken)
@@ -127,29 +126,6 @@ export function handleFailed(event: FailedEvent): void {
   GenericCrowdSale.handleFailed(event.params.saleId.toString())
 }
 
-export function handleLockingContractCreated(
-  event: LockingContractCreatedEvent
-): void {
-  let context = new DataSourceContext()
-  context.setBytes('ipt', event.params.underlyingToken)
-  context.setBytes('lockingContract', event.params.lockingContract)
-  TimelockedTokenTemplate.createWithContext(
-    event.params.lockingContract,
-    context
-  )
-  const _underlyingTokenContract: IERC20Metadata = IERC20Metadata.bind(
-    event.params.underlyingToken
-  )
-  const underlyingErc20Token: ERC20Token = makeERC20Token(
-    _underlyingTokenContract
-  )
-
-  makeTimelockedToken(
-    IERC20Metadata.bind(event.params.lockingContract),
-    underlyingErc20Token
-  )
-}
-
 export function handleBid(event: BidEvent): void {
   GenericCrowdSale.handleBid(
     new GenericCrowdSale.BidEventParams(
@@ -159,6 +135,25 @@ export function handleBid(event: BidEvent): void {
       event.block.timestamp
     )
   )
+}
+
+export function handleClaimed(event: ClaimedEvent): void {
+  GenericCrowdSale.handleClaimed(
+    new GenericCrowdSale.ClaimedEventParams(
+      event.params.saleId,
+      event.params.claimer,
+      event.params.claimed,
+      event.params.refunded,
+      event.block.timestamp,
+      event.transaction
+    )
+  )
+}
+
+export function handleLockingContractCreated(
+  event: LockingContractCreatedEvent
+): void {
+  lockedHandleLockingContractCreated(event)
 }
 
 export function handleStaked(event: StakedEvent): void {
@@ -202,19 +197,6 @@ export function handleStaked(event: StakedEvent): void {
   )
 
   contribution.save()
-}
-
-export function handleClaimed(event: ClaimedEvent): void {
-  GenericCrowdSale.handleClaimed(
-    new GenericCrowdSale.ClaimedEventParams(
-      event.params.saleId,
-      event.params.claimer,
-      event.params.claimed,
-      event.params.refunded,
-      event.block.timestamp,
-      event.transaction
-    )
-  )
 }
 
 export function handleClaimedStakes(event: ClaimedStakesEvent): void {

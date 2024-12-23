@@ -45,10 +45,10 @@ contract LockingCrowdSale is CrowdSale {
      * @notice allows the owner to trust a timelocked token contract for a specific underlying token so it's not registered again.
      * 
      * @param token the underlying token
-     * @param _lockingContract the timelocked token contract to trust
+     * @param _timelockedToken the timelocked token contract to trust
      */
-    function trustLockingContract(IERC20 token, TimelockedToken _lockingContract) public onlyOwner {
-        lockingContracts[address(token)] = _lockingContract;
+    function trustLockingContract(IERC20 token, TimelockedToken _timelockedToken) public onlyOwner {
+        lockingContracts[address(token)] = _timelockedToken;
     }
 
     /**

@@ -2,8 +2,7 @@ import {
   BigInt,
   Bytes,
   DataSourceContext,
-  log,
-  ethereum
+  log
 } from '@graphprotocol/graph-ts'
 import { IERC20Metadata } from '../generated/CrowdSale/IERC20Metadata'
 
@@ -13,7 +12,7 @@ import { handleStarted as plainHandleStarted } from './crowdSaleMapping'
 
 import * as GenericCrowdSale from './genericCrowdSale'
 
-import { Contribution, CrowdSale, ERC20Token, IPT } from '../generated/schema'
+import { CrowdSale, ERC20Token, IPT } from '../generated/schema'
 
 import { TimelockedToken as TimelockedTokenTemplate } from '../generated/templates'
 import { makeERC20Token, makeTimelockedToken } from './common'
@@ -29,25 +28,7 @@ import {
   Started as StartedEvent
 } from '../generated/LockingCrowdSale/LockingCrowdSale'
 
-export function handleStarted(event: StartedEvent): void {
-  const _plain = new PlainStartedEvent(
-    event.address,
-    event.logIndex,
-    event.transactionLogIndex,
-    event.logType,
-    event.block,
-    event.transaction,
-    [
-      event.parameters[0],
-      event.parameters[1],
-      event.parameters[2],
-      event.parameters[5]
-    ],
-    event.receipt
-  )
-
-  plainHandleStarted(_plain)
-
+export function lockingHandleStarted(event: StartedEvent): void {
   let crowdSale = CrowdSale.load(event.params.saleId.toString())
   if (!crowdSale) {
     log.error('[Crowdsale] Creation failed for: {}', [
@@ -81,9 +62,30 @@ export function handleStarted(event: StartedEvent): void {
   crowdSale.amountStaked = BigInt.fromU32(0)
   crowdSale.auctionLockingDuration = event.params.lockingDuration
 
-  crowdSale.type = 'STAKED_LOCKING_CROWDSALE'
+  crowdSale.type = 'LOCKING_CROWDSALE'
   crowdSale.save()
   log.info('[handleStarted] locking crowdsale {}', [crowdSale.id])
+}
+
+export function handleStarted(event: StartedEvent): void {
+  const _plain = new PlainStartedEvent(
+    event.address,
+    event.logIndex,
+    event.transactionLogIndex,
+    event.logType,
+    event.block,
+    event.transaction,
+    [
+      event.parameters[0], // uint256 saleId
+      event.parameters[1], // address issuer
+      event.parameters[2], // struct  Sale
+      event.parameters[5]  // uint16  feeBp
+    ],
+    event.receipt
+  )
+
+  plainHandleStarted(_plain)
+  lockingHandleStarted(event)
 }
 
 export function handleSettled(event: SettledEvent): void {
@@ -92,29 +94,6 @@ export function handleSettled(event: SettledEvent): void {
 
 export function handleFailed(event: FailedEvent): void {
   GenericCrowdSale.handleFailed(event.params.saleId.toString())
-}
-
-export function handleLockingContractCreated(
-  event: LockingContractCreatedEvent
-): void {
-  let context = new DataSourceContext()
-  context.setBytes('ipt', event.params.underlyingToken)
-  context.setBytes('lockingContract', event.params.lockingContract)
-  TimelockedTokenTemplate.createWithContext(
-    event.params.lockingContract,
-    context
-  )
-  const _underlyingTokenContract: IERC20Metadata = IERC20Metadata.bind(
-    event.params.underlyingToken
-  )
-  const underlyingErc20Token: ERC20Token = makeERC20Token(
-    _underlyingTokenContract
-  )
-
-  makeTimelockedToken(
-    IERC20Metadata.bind(event.params.lockingContract),
-    underlyingErc20Token
-  )
 }
 
 export function handleBid(event: BidEvent): void {
@@ -138,6 +117,29 @@ export function handleClaimed(event: ClaimedEvent): void {
       event.block.timestamp,
       event.transaction
     )
+  )
+}
+
+export function handleLockingContractCreated(
+  event: LockingContractCreatedEvent
+): void {
+  let context = new DataSourceContext()
+  context.setBytes('ipt', event.params.underlyingToken)
+  context.setBytes('lockingContract', event.params.lockingContract)
+  TimelockedTokenTemplate.createWithContext(
+    event.params.lockingContract,
+    context
+  )
+  const _underlyingTokenContract: IERC20Metadata = IERC20Metadata.bind(
+    event.params.underlyingToken
+  )
+  const underlyingErc20Token: ERC20Token = makeERC20Token(
+    _underlyingTokenContract
+  )
+
+  makeTimelockedToken(
+    IERC20Metadata.bind(event.params.lockingContract),
+    underlyingErc20Token
   )
 }
 
