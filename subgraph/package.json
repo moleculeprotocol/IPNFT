@@ -8,7 +8,7 @@
     "build:sepolia": "graph codegen && graph build --network sepolia",
     "build:mainnet": "graph codegen && graph build --network mainnet",
     "deploy:local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 moleculeprotocol/ipnft-subgraph",
-    "deploy:sepolia": "env-cmd -x -f ../.env graph deploy ip-nft-sepolia --version-label 1.3.0-dev.1 --node https://subgraphs.alchemy.com/api/subgraphs/deploy --ipfs https://ipfs.satsuma.xyz --deploy-key \\$SATSUMA_DEPLOY_KEY",
+    "deploy:sepolia": "env-cmd -x -f ../.env graph deploy ip-nft-sepolia --version-label 1.3.0-dev.2 --node https://subgraphs.alchemy.com/api/subgraphs/deploy --ipfs https://ipfs.satsuma.xyz --deploy-key \\$SATSUMA_DEPLOY_KEY",
     "deploy:mainnet": "env-cmd -x -f ../.env graph deploy ip-nft-mainnet --version-label 1.2.1 --node https://subgraphs.alchemy.com/api/subgraphs/deploy --ipfs https://ipfs.satsuma.xyz --deploy-key \\$SATSUMA_DEPLOY_KEY",
     "create:local": "graph create --node http://localhost:8020/ moleculeprotocol/ipnft-subgraph",
     "remove:local": "graph remove --node http://localhost:8020/ moleculeprotocol/ipnft-subgraph",
