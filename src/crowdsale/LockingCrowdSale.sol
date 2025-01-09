@@ -13,7 +13,6 @@ import { CrowdSale, Sale } from "./CrowdSale.sol";
 error UnsupportedInitializer();
 error InvalidDuration();
 
-
 /**
  * @title LockingCrowdSale
  * @author molecule.to

@@ -12,10 +12,9 @@ import { TimelockedToken } from "../../src/TimelockedToken.sol";
 import { TokenVesting } from "@moleculeprotocol/token-vesting/TokenVesting.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
-TimelockedToken constant timelockedTokenImplementation = TimelockedToken(0xF8F79c1E02387b0Fc9DE0945cD9A2c06F127D851); 
+TimelockedToken constant timelockedTokenImplementation = TimelockedToken(0x625ed621d814645AA81C50c4f333D4a407576e8F); 
 
-//mainnet 0xCfA0F84660fB33bFd07C369E5491Ab02C449f71B;
-address constant moleculeDevMultisig = 0x9d5a6ae551f1117946FF6e0e86ef9A1B20C90Cb0;
+address constant moleculeDevMultisig = 0xCfA0F84660fB33bFd07C369E5491Ab02C449f71B;
 
 contract DeployTimelockedTokenTemplate is Script {
     function run() public {
