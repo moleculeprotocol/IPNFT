@@ -9,7 +9,6 @@ import {
   Started as StartedEvent
 } from '../generated/CrowdSale/CrowdSale'
 import { IERC20Metadata } from '../generated/CrowdSale/IERC20Metadata'
-
 import { CrowdSale, IPT } from '../generated/schema'
 import { makeERC20Token } from './common'
 import * as GenericCrowdSale from './genericCrowdSale'

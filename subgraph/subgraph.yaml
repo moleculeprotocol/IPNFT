@@ -204,14 +204,15 @@ dataSources:
         - event: ClaimedAuctionTokens(indexed uint256)
           handler: handleClaimedFailedSale
       file: ./src/stakedLockingCrowdSaleMapping.ts
-  - kind: ethereum/contract
-    name: StakedLockingCrowdSale2
-    network: foundry
-    source:
-      abi: StakedLockingCrowdSale
-      address: "0xbaadf00dbaadf00dbaadf00dbaadf00dbaadf00d"
-      startBlock: 0
-    mapping: *stakedLockingCrowdSaleMapping
+  # in case you need to watch another crowdsale contract this is how it could work:
+  # - kind: ethereum/contract
+  #   name: StakedLockingCrowdSale2
+  #   network: foundry
+  #   source:
+  #     abi: StakedLockingCrowdSale
+  #     address: "0xbaadf00dbaadf00dbaadf00dbaadf00dbaadf00d"
+  #     startBlock: 0
+  #   mapping: *stakedLockingCrowdSaleMapping
       
   - kind: ethereum/contract
     name: TermsAcceptedPermissioner

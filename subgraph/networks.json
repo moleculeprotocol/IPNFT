@@ -24,10 +24,6 @@
       "address": "0x0Da77f361bB56f065Aa21647d885685eb7cAE10F",
       "startBlock": 7339034      
     },
-    "StakedLockingCrowdSale2": {
-      "address": "0x2d309CF13dC3872f9c9B1B06Ebf6F60caDe08d55",
-      "startBlock": 7339082
-    },
     "TermsAcceptedPermissioner": {
       "address": "0xC05D649368d8A5e2E98CAa205d47795de5fCB599",
       "startBlock": 5300776
@@ -58,10 +54,6 @@
       "address": "0xbaadf00dbaadf00dbaadf00dbaadf00dbaadf00d",
       "startBlock": 21431344      
     },
-    "StakedLockingCrowdSale2": {
-      "address": "0xbaadf00dbaadf00dbaadf00dbaadf00dbaadf00d",
-      "startBlock": 21431344
-    },
     "TermsAcceptedPermissioner": {
       "address": "0xC837E02982992B701A1B5e4E21fA01cEB0a628fA",
       "startBlock": 17790450
@@ -90,10 +82,6 @@
     },
     "StakedLockingCrowdSale": {
       "address": "0x959922bE3CAee4b8Cd9a407cc3ac1C251C2007B1",
-      "startBlock": 0
-    },
-    "StakedLockingCrowdSale2": {
-      "address": "0xbaadf00dbaadf00dbaadf00dbaadf00dbaadf00d",
       "startBlock": 0
     },
     "TermsAcceptedPermissioner": {
