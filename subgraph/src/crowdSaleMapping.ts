@@ -9,7 +9,6 @@ import {
   Started as StartedEvent
 } from '../generated/CrowdSale/CrowdSale'
 import { IERC20Metadata } from '../generated/CrowdSale/IERC20Metadata'
-
 import { CrowdSale, IPT } from '../generated/schema'
 import { makeERC20Token } from './common'
 import * as GenericCrowdSale from './genericCrowdSale'
@@ -24,7 +23,8 @@ export function handleStarted(event: StartedEvent): void {
     ])
     return
   }
-
+  
+  crowdSale.contract = event.address
   crowdSale.ipt = ipt.id
   crowdSale.issuer = event.params.issuer
   crowdSale.feeBp = event.params.feeBp

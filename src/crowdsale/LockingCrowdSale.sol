@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.18;
 
+import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { SafeCast } from "@openzeppelin/contracts/utils/math/SafeCast.sol";
@@ -25,14 +26,28 @@ contract LockingCrowdSale is CrowdSale {
     /// @notice map from token address to reusable TimelockedToken contracts
     mapping(address => TimelockedToken) public lockingContracts;
 
-    address immutable lockingTokenImplementation = address(new TimelockedToken());
+    address immutable public TIMELOCKED_TOKEN_IMPLEMENTATION;
 
     event Started(uint256 indexed saleId, address indexed issuer, Sale sale, TimelockedToken lockingToken, uint256 lockingDuration, uint16 feeBp);
     event LockingContractCreated(TimelockedToken indexed lockingContract, IERC20Metadata indexed underlyingToken);
 
+    constructor(TimelockedToken _timelockedTokenImplementation) {
+        TIMELOCKED_TOKEN_IMPLEMENTATION = address(_timelockedTokenImplementation);
+    }
+
     /// @dev disable parent sale starting functions
     function startSale(Sale calldata) public pure override returns (uint256) {
         revert UnsupportedInitializer();
+    }
+
+    /**
+     * @notice allows the owner to trust a timelocked token contract for a specific underlying token so it's not registered again.
+     * 
+     * @param token the underlying token
+     * @param _timelockedToken the timelocked token contract to trust
+     */
+    function trustLockingContract(IERC20 token, TimelockedToken _timelockedToken) public onlyOwner {
+        lockingContracts[address(token)] = _timelockedToken;
     }
 
     /**
@@ -114,7 +129,7 @@ contract LockingCrowdSale is CrowdSale {
      * @return lockedTokenContract address of the new timelocked token contract
      */
     function _makeNewLockedTokenContract(IERC20Metadata auctionToken) private returns (TimelockedToken lockedTokenContract) {
-        lockedTokenContract = TimelockedToken(Clones.clone(lockingTokenImplementation));
+        lockedTokenContract = TimelockedToken(Clones.clone(TIMELOCKED_TOKEN_IMPLEMENTATION));
         lockedTokenContract.initialize(auctionToken);
         emit LockingContractCreated(lockedTokenContract, auctionToken);
     }

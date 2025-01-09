@@ -87,7 +87,7 @@ dataSources:
     network: foundry
     source:
       abi: CrowdSale
-      address: "0x7a2088a1bFc9d81c55368AE168C2C02570cB814F"
+      address: "0x09635F643e140090A9A8Dcd712eD6285858ceBef"
       startBlock: 0
     mapping:
       kind: ethereum/events
@@ -120,13 +120,52 @@ dataSources:
           handler: handleClaimedFailedSale
       file: ./src/crowdSaleMapping.ts
   - kind: ethereum/contract
+    name: LockingCrowdSale
+    network: foundry
+    source:
+      abi: LockingCrowdSale
+      address: "0xbaadf00dbaadf00dbaadf00dbaadf00dbaadf00d"
+      startBlock: 0
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - CrowdSale
+        - Contribution
+        - ERC20Token
+      abis:
+        - name: LockingCrowdSale
+          file: ./abis/LockingCrowdSale.json
+        - name: IERC20Metadata
+          file: ./abis/IERC20Metadata.json
+      eventHandlers:
+        - event: Started(indexed uint256,indexed
+            address,(address,address,address,uint256,uint256,uint64,address),address,uint256,uint16)
+          handler: handleStarted
+        - event: Settled(indexed uint256,uint256,uint256)
+          handler: handleSettled
+        - event: Failed(indexed uint256)
+          handler: handleFailed
+        - event: Bid(indexed uint256,indexed address,uint256)
+          handler: handleBid
+        - event: LockingContractCreated(indexed address,indexed address)
+          handler: handleLockingContractCreated
+        - event: Claimed(indexed uint256,indexed address,uint256,uint256)
+          handler: handleClaimed
+        - event: ClaimedFundingGoal(indexed uint256)
+          handler: handleClaimedSuccessfulSale
+        - event: ClaimedAuctionTokens(indexed uint256)
+          handler: handleClaimedFailedSale
+      file: ./src/lockingCrowdSaleMapping.ts
+  - kind: ethereum/contract
     name: StakedLockingCrowdSale
     network: foundry
     source:
       abi: StakedLockingCrowdSale
-      address: "0x0B306BF915C4d645ff596e518fAf3F9669b97016"
+      address: "0x959922bE3CAee4b8Cd9a407cc3ac1C251C2007B1"
       startBlock: 0
-    mapping:
+    mapping: &stakedLockingCrowdSaleMapping
       kind: ethereum/events
       apiVersion: 0.0.7
       language: wasm/assemblyscript
@@ -139,7 +178,7 @@ dataSources:
           file: ./abis/StakedLockingCrowdSale.json
         - name: IERC20Metadata
           file: ./abis/IERC20Metadata.json
-      eventHandlers:
+      eventHandlers: 
         - event: Started(indexed uint256,indexed
             address,(address,address,address,uint256,uint256,uint64,address),(address,address,uint256),address,uint256,uint256)
           handler: handleStartedLegacy
@@ -165,6 +204,16 @@ dataSources:
         - event: ClaimedAuctionTokens(indexed uint256)
           handler: handleClaimedFailedSale
       file: ./src/stakedLockingCrowdSaleMapping.ts
+  # in case you need to watch another crowdsale contract this is how it could work:
+  # - kind: ethereum/contract
+  #   name: StakedLockingCrowdSale2
+  #   network: foundry
+  #   source:
+  #     abi: StakedLockingCrowdSale
+  #     address: "0xbaadf00dbaadf00dbaadf00dbaadf00dbaadf00d"
+  #     startBlock: 0
+  #   mapping: *stakedLockingCrowdSaleMapping
+      
   - kind: ethereum/contract
     name: TermsAcceptedPermissioner
     network: foundry

@@ -66,7 +66,8 @@ contract CrowdSalePermissionedTest is Test {
         biddingToken = new FakeERC20("USD token", "USDC");
         daoToken = new FakeERC20("DAO token", "DAO");
 
-        crowdSale = new StakedLockingCrowdSale();
+        TimelockedToken timelockedTokenImplementation = new TimelockedToken();
+        crowdSale = new StakedLockingCrowdSale(timelockedTokenImplementation);
 
         vestedDao = new TokenVesting(daoToken, string(abi.encodePacked("Vested ", daoToken.name())), string(abi.encodePacked("v", daoToken.symbol())));
         vestedDao.grantRole(vestedDao.ROLE_CREATE_SCHEDULE(), address(crowdSale));
@@ -103,7 +104,7 @@ contract CrowdSalePermissionedTest is Test {
         _sale.permissioner = permissioner;
         auctionToken.approve(address(crowdSale), 400_000 ether);
 
-        uint256 saleId = crowdSale.startSale(_sale, daoToken, vestedDao, 1e18, 60 days);
+        uint256 saleId = crowdSale.startSale(_sale, daoToken, vestedDao, 1e18, 60 days, 60 days);
         vm.stopPrank();
 
         string memory terms = permissioner.specificTermsV1(auctionToken);
