@@ -103,6 +103,12 @@ forge script --private-key=$PRIVATE_KEY --rpc-url=$RPC_URL script/prod/RolloutTo
 // 0xTokenizer 0xNewImpl 0xNewTokenImpl
 cast send --rpc-url=$RPC_URL --private-key=$PRIVATE_KEY 0xB7f8BC63BbcaD18155201308C8f3540b07f84F5e "upgradeToAndCall(address,bytes)" 0x70e0bA845a1A0F2DA3359C97E0285013525FFC49 0x84646c1f000000000000000000000000998abeb3e57409262ae5b751f60747921b33613e
 
+### Timelocked Tokens
+
+originally the "timelocked token" was an inline concept of the slcs. Timelock contracts weren't reusable among cs impls. This changes as of beginning of 2025. As a rather simple but not very elegant (and certainly not correct) solution we decided to "trust" external locking contracts so you can reuse them among crowdsale instances. This was needed for the VitaRNA crowdsale that's supposed to just support locks, no stakes - and hence required another crowdsale instance. During this upgrade we decided to externalize the timelock token template so upcoming instances can be verified on chain.
+
+--- 
+
 ## Prerequisites
 
 To work with this repository you have to install Foundry (<https://getfoundry.sh>). Run the following command in your terminal, then follow the onscreen instructions (macOS and Linux):

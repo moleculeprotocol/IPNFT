@@ -10,13 +10,39 @@ import { StakedLockingCrowdSale } from "../../src/crowdsale/StakedLockingCrowdSa
 import { LockingCrowdSale } from "../../src/crowdsale/LockingCrowdSale.sol";
 import { TimelockedToken } from "../../src/TimelockedToken.sol";
 import { TokenVesting } from "@moleculeprotocol/token-vesting/TokenVesting.sol";
+import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 TimelockedToken constant timelockedTokenImplementation = TimelockedToken(0xF8F79c1E02387b0Fc9DE0945cD9A2c06F127D851); 
-address constant moleculeDevMultisig = 0x9d5a6ae551f1117946FF6e0e86ef9A1B20C90Cb0;
 
 //mainnet 0xCfA0F84660fB33bFd07C369E5491Ab02C449f71B;
+address constant moleculeDevMultisig = 0x9d5a6ae551f1117946FF6e0e86ef9A1B20C90Cb0;
 
-contract RolloutV25Sale is Script {
+contract DeployTimelockedTokenTemplate is Script {
+    function run() public {
+        vm.startBroadcast();
+        TimelockedToken impl = new TimelockedToken();
+        impl.initialize(IERC20Metadata(address(0x0)));
+        vm.stopBroadcast();
+
+        console.log("timelocked token implementation=%s", address(impl));
+    }
+}
+
+contract RolloutV25LockingSale is Script {
+    function run() public {
+    
+        vm.startBroadcast();
+        LockingCrowdSale lockingCrowdsale = new LockingCrowdSale(timelockedTokenImplementation);
+        //lockingCrowdsale.transferOwnership(moleculeDevMultisig);
+        vm.stopBroadcast();
+
+        console.log("LOCKING_CROWDSALE_ADDRESS=%s", address(lockingCrowdsale));
+        console.log("timelocked token implementation=%s", address(timelockedTokenImplementation));
+    }
+}
+
+
+contract RolloutV25StakedSale is Script {
     function run() public {
 
         TokenVesting vesting = TokenVesting(0x8f80d1183CD983B01B0C9AC6777cC732Ec9800de); //Moldao
@@ -30,22 +56,6 @@ contract RolloutV25Sale is Script {
         vm.stopBroadcast();
 
         console.log("STAKED_LOCKING_CROWDSALE_ADDRESS=%s", address(stakedLockingCrowdSale));
-        console.log("timelocked token implementation=%s", address(timelockedTokenImplementation));
-        // 0x7c36c64DA1c3a2065074caa9C48e7648FB733aAB
-        // vestedDaoToken.grantRole(vestedDaoToken.ROLE_CREATE_SCHEDULE(), address(stakedLockingCrowdSale));
-        // stakedLockingCrowdSale.trustVestingContract(vestedDaoToken);
-    }
-}
-
-contract RolloutV25LockingSale is Script {
-    function run() public {
-    
-        vm.startBroadcast();
-        LockingCrowdSale lockingCrowdsale = new LockingCrowdSale(timelockedTokenImplementation);
-        //lockingCrowdsale.transferOwnership(moleculeDevMultisig);
-        vm.stopBroadcast();
-
-        console.log("LOCKING_CROWDSALE_ADDRESS=%s", address(lockingCrowdsale));
         console.log("timelocked token implementation=%s", address(timelockedTokenImplementation));
         // 0x7c36c64DA1c3a2065074caa9C48e7648FB733aAB
         // vestedDaoToken.grantRole(vestedDaoToken.ROLE_CREATE_SCHEDULE(), address(stakedLockingCrowdSale));
