@@ -17,6 +17,22 @@ type IpnftMetadata @entity {
   image: String!
   description: String!
   externalURL: String!
+  initialSymbol: String!
+  projectDetails: IpnftProjectDetails!
+}
+
+type IpnftProjectDetails @entity {
+  id: ID! # pd-metadataId
+  organization: String!
+  topic: String!
+
+  researchLead_name: String
+  researchLead_email: String
+  
+  fundingAmount_value: Int!
+  fundingAmount_decimals: Int8!
+  fundingAmount_currency: String!
+  fundingAmount_currencyType: String!
 }
 
 type IPT @entity {
