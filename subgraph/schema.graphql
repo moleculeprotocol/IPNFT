@@ -18,11 +18,6 @@ type IpnftMetadata @entity {
   description: String!
   externalURL: String!
   initialSymbol: String!
-  projectDetails: IpnftProjectDetails!
-}
-
-type IpnftProjectDetails @entity {
-  id: ID! # pd-metadataId
   organization: String!
   topic: String!
 
@@ -34,6 +29,7 @@ type IpnftProjectDetails @entity {
   fundingAmount_currency: String!
   fundingAmount_currencyType: String!
 }
+
 
 type IPT @entity {
   id: ID! # ipt address

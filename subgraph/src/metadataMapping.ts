@@ -1,5 +1,5 @@
 import { json, Bytes, dataSource,  } from '@graphprotocol/graph-ts'
-import { IpnftMetadata, IpnftProjectDetails } from '../generated/schema'
+import { IpnftMetadata } from '../generated/schema'
 
 export function handleMetadata(content: Bytes): void {
   const value = json.fromBytes(content).toObject()
@@ -25,7 +25,6 @@ export function handleMetadata(content: Bytes): void {
           ipnftMetadata.initialSymbol = initial_symbol.toString()
         }
 
-        let details = new IpnftProjectDetails("pd-"+ dataSource.stringParam())
         const _project_details = properties.get('project_details')
 
         if (_project_details) {
@@ -33,12 +32,12 @@ export function handleMetadata(content: Bytes): void {
 
           let _organization = projectDetails.get('organization')
           if (_organization) {
-            details.organization = _organization.toString()
+            ipnftMetadata.organization = _organization.toString()
           }
 
           let _topic = projectDetails.get('topic')
           if (_topic) {
-            details.topic = _topic.toString()
+            ipnftMetadata.topic = _topic.toString()
           }
 
           let _research_lead = projectDetails.get('research_lead')
@@ -49,8 +48,8 @@ export function handleMetadata(content: Bytes): void {
             let researchLead_name = researchLead.get('name')
             
             if (researchLead_email && researchLead_name) {
-              details.researchLead_email = researchLead_email.toString()
-              details.researchLead_name = researchLead_name.toString()
+              ipnftMetadata.researchLead_email = researchLead_email.toString()
+              ipnftMetadata.researchLead_name = researchLead_name.toString()
             }
           }
 
@@ -63,15 +62,13 @@ export function handleMetadata(content: Bytes): void {
             let _fundingAmount_currencyType = funding_amount.get('currency_type')
             
             if (_fundingAmount_value && _fundingAmount_decimals && _fundingAmount_currency && _fundingAmount_currencyType) {
-              details.fundingAmount_value = i32(_fundingAmount_value.toI64())
-              details.fundingAmount_decimals = i8(_fundingAmount_decimals.toI64())
-              details.fundingAmount_currency = _fundingAmount_currency.toString()
-              details.fundingAmount_currencyType = _fundingAmount_currencyType.toString()
+              ipnftMetadata.fundingAmount_value = i32(_fundingAmount_value.toI64())
+              ipnftMetadata.fundingAmount_decimals = i8(_fundingAmount_decimals.toI64())
+              ipnftMetadata.fundingAmount_currency = _fundingAmount_currency.toString()
+              ipnftMetadata.fundingAmount_currencyType = _fundingAmount_currencyType.toString()
             }
           }
         }
-        details.save()
-        ipnftMetadata.projectDetails = details.id
       }
 
       ipnftMetadata.save()

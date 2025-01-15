@@ -32,7 +32,7 @@ services:
       GRAPH_LOG: debug
       GRAPH_ALLOW_NON_DETERMINISTIC_IPFS: 1
   ipfs:
-    image: ipfs/kubo:v0.30.0
+    image: ipfs/kubo:master-2025-01-15-1768204
     ports:
       - '5001:5001'
       - '8080:8080'
