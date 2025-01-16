@@ -106,7 +106,7 @@ export function handleMint(event: IPNFTMintedEvent): void {
 export function handleMetadataUpdated(event: MetadataUpdateEvent): void {
   let ipnft = Ipnft.load(event.params._tokenId.toString())
   if (!ipnft) {
-    log.error('ipnft {} not found', [event.params._tokenId.toString()])
+    log.error('[handleMetadataUpdated] ipnft {} not found', [event.params._tokenId.toString()])
     return
   }
 
@@ -114,7 +114,7 @@ export function handleMetadataUpdated(event: MetadataUpdateEvent): void {
   let _ipnftContract = IPNFTContract.bind(event.params._event.address)
   let newUri = _ipnftContract.tokenURI(event.params._tokenId)
   if (!newUri || newUri == '') {
-    log.debug('no new uri found for token, likely just minted {}', [
+    log.debug('[handleMetadataUpdated] no new uri found for token, likely just minted {}', [
       event.params._tokenId.toString()
     ])
     return

@@ -3,7 +3,7 @@ import { TokensCreated as TokensCreatedEvent } from '../generated/Tokenizer/Toke
 
 import { IPToken } from '../generated/templates'
 
-import { IPT } from '../generated/schema'
+import { IPT, Ipnft } from '../generated/schema'
 
 export function handleIPTsCreated(event: TokensCreatedEvent): void {
   let ipt = new IPT(event.params.tokenContract.toHexString())
@@ -23,4 +23,10 @@ export function handleIPTsCreated(event: TokensCreatedEvent): void {
   IPToken.create(event.params.tokenContract)
 
   ipt.save()
+
+  let ipnft = Ipnft.load(event.params.ipnftId.toString());
+  if (ipnft) {
+    ipnft.ipToken = event.params.tokenContract
+    ipnft.save()
+  }
 }

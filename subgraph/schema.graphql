@@ -9,6 +9,9 @@ type Ipnft @entity {
   ipts: [IPT!] @derivedFrom(field: "ipnft")
   metadata: IpnftMetadata
   updatedAtTimestamp: BigInt
+
+  # as of 1.3 the Tokenizer only will create 1 ipt instance, in contrast to the ipts field above.
+  ipToken: Bytes 
 }
 
 type IpnftMetadata @entity {
@@ -17,17 +20,18 @@ type IpnftMetadata @entity {
   image: String!
   description: String!
   externalURL: String!
-  initialSymbol: String!
-  organization: String!
-  topic: String!
+
+  initialSymbol: String
+  organization: String
+  topic: String
 
   researchLead_name: String
   researchLead_email: String
   
-  fundingAmount_value: Int!
-  fundingAmount_decimals: Int8!
-  fundingAmount_currency: String!
-  fundingAmount_currencyType: String!
+  fundingAmount_value: String
+  fundingAmount_decimals: Int8
+  fundingAmount_currency: String
+  fundingAmount_currencyType: String
 }
 
 
