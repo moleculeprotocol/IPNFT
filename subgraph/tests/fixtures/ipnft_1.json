@@ -1,0 +1,83 @@
+{
+  "schema_version": "0.0.1",
+  "name": "Our awesome test IP-NFT",
+  "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua...",
+  "image": "ipfs://bafkreih5d2453qzkprn35zm4gj5ff6ezroevnaaygxqlwcbqq2tg7ebbe4",
+  "external_url": "https://testnet.mint.molecule.to/ipnft/76",
+  "terms_signature": "0x1f030b9f1a91d74610cb296aa87f12b2207d2b336766fffad8c53b825f1bee7d30f3665076102fe635dd3664d564ae1e5e746794b58e8861feafacfa6767ea491b",
+  "properties": {
+    "type": "IP-NFT",
+    "initial_symbol": "AWSOME",
+    "agreements": [
+      {
+        "type": "Research Agreement",
+        "url": "ipfs://bafkreigqttkfe2vsgddhy4ohf3qs3eyacdz2vwindo33y7jefox3377yqq",
+        "mime_type": "application/pdf",
+        "content_hash": "bagaaiera7ftqs3jmnoph3zgq67bgjrszlqtxkk5ygadgjvnihukrqioipndq",
+        "encryption": {
+          "protocol": "lit",
+          "encrypted_sym_key": "abcdefedcba0123443210",
+          "access_control_conditions": [
+            {
+              "conditionType": "evmContract",
+              "contractAddress": "0x152B444e60C526fe4434C721561a077269FcF61a",
+              "chain": "sepolia",
+              "functionName": "canRead",
+              "functionParams": [":userAddress", "76"],
+              "functionAbi": {
+                "inputs": [
+                  {
+                    "internalType": "address",
+                    "name": "reader",
+                    "type": "address"
+                  },
+                  {
+                    "internalType": "uint256",
+                    "name": "tokenId",
+                    "type": "uint256"
+                  }
+                ],
+                "name": "canRead",
+                "outputs": [
+                  {
+                    "internalType": "bool",
+                    "name": "",
+                    "type": "bool"
+                  }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+              },
+              "returnValueTest": {
+                "key": "",
+                "comparator": "=",
+                "value": "true"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "type": "Assignment Agreement",
+        "url": "ipfs://bafkreihzm4ew2ldltz66juhxyjsmmwk4e52sxobqazsnlkb5cumcdsd3i4",
+        "mime_type": "application/pdf",
+        "content_hash": "bagaaiera7ftqs3jmnoph3zgq67bgjrszlqtxkk5ygadgjvnihukrqioipndq"
+      }
+    ],
+    "project_details": {
+      "industry": "Space Exploration",
+      "organization": "NASA",
+      "topic": "Wormholes",
+      "funding_amount": {
+        "value": 1234.5678,
+        "decimals": 2,
+        "currency": "USD",
+        "currency_type": "ISO4217"
+      },
+      "research_lead": {
+        "name": "Carl Sagan",
+        "email": "carl@example.com"
+      }
+    }
+  }
+}

@@ -15,13 +15,13 @@ $DC ps
 ./setupLocal.sh -fx
 
 cd subgraph
-pnpm codegen
-pnpm build:local
-pnpm create:local
+yarn codegen
+yarn build:local
+yarn create:local
 # that's a bad local config hack still required: the root's subgraph.yaml's network must be "mainnet" for foundry
 sed -i '' -e 's/network\: foundry/network\: mainnet/g' build/subgraph.yaml
 sed -i '' -e 's/network\: foundry/network\: mainnet/g' subgraph.yaml
-pnpm deploy:local -l v0.0.1
+yarn deploy:local -l v0.0.1
 sed -i '' -e 's/network\: mainnet/network\: foundry/g' subgraph.yaml
 cd ..
 

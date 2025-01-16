@@ -16,12 +16,12 @@ export function handleMetadata(content: Bytes): void {
       ipnftMetadata.image = image.toString()
       ipnftMetadata.externalURL = externalURL.toString()
       ipnftMetadata.description = description.toString()
-  
+      
       ipnftMetadata.save()
     } else {
       log.info("[handlemetadata] name, image, description, external_url not found", [])
     }
-
+    
     let _properties = value.get('properties')
     if (_properties) {
       let properties = _properties.toObject()
@@ -61,14 +61,15 @@ export function handleMetadata(content: Bytes): void {
           }
         }
 
-        let _funding_amount = properties.get('funding_amount')
+        let _funding_amount = projectDetails.get('funding_amount')
+        
         if (_funding_amount) {
           let funding_amount = _funding_amount.toObject()
           let _fundingAmount_value = funding_amount.get('value')
           let _fundingAmount_decimals = funding_amount.get('decimals')
           let _fundingAmount_currency = funding_amount.get('currency')
           let _fundingAmount_currencyType = funding_amount.get('currency_type')
-          
+
           if (_fundingAmount_value && _fundingAmount_decimals && _fundingAmount_currency && _fundingAmount_currencyType) {
             // on json metadata this can be a decimal value. I'm using a string to store as there's imo no f64 compatible decimal type on the schema scalar types
             // https://thegraph.com/docs/en/subgraphs/developing/creating/ql-schema/#built-in-scalar-types
