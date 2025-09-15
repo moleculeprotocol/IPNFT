@@ -5,20 +5,21 @@ import { UUPSUpgradeable } from "@openzeppelin/contracts-upgradeable/proxy/utils
 import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import { Clones } from "@openzeppelin/contracts/proxy/Clones.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
-import { IPToken12 as IPToken, Metadata as TokenMetadata } from "./IPToken12.sol";
+import { IPToken } from "../../IPToken.sol";
+import { Metadata as TokenMetadata } from "../../IIPToken.sol";
 import { IPermissioner } from "../../Permissioner.sol";
 import { IPNFT } from "../../IPNFT.sol";
+import { IControlIPTs } from "../../IControlIPTs.sol";
 
-import { IPToken as NewIPtoken } from "../../IPToken.sol";
-
-error MustOwnIpnft();
+error MustControlIpnft();
 error AlreadyTokenized();
 error ZeroAddress();
+error IPTNotControlledByTokenizer();
 
-/// @title Tokenizer 1.2
+/// @title Tokenizer 1.3
 /// @author molecule.to
 /// @notice tokenizes an IPNFT to an ERC20 token (called IPToken or IPT) and controls its supply.
-contract Tokenizer12 is UUPSUpgradeable, OwnableUpgradeable {
+contract Tokenizer13 is UUPSUpgradeable, OwnableUpgradeable, IControlIPTs {
     event TokensCreated(
         uint256 indexed moleculesId,
         uint256 indexed ipnftId,
@@ -45,7 +46,7 @@ contract Tokenizer12 is UUPSUpgradeable, OwnableUpgradeable {
     /// @dev the permissioner checks if senders have agreed to legal requirements
     IPermissioner public permissioner;
 
-    /// @notice the IPToken implementation this Tokenizer spawns
+    /// @notice the IPToken implementation this Tokenizer clones from
     IPToken public ipTokenImplementation;
 
     /**
@@ -65,11 +66,28 @@ contract Tokenizer12 is UUPSUpgradeable, OwnableUpgradeable {
         _disableInitializers();
     }
 
+    function getIPNFTContract() public view returns (IPNFT) {
+        return ipnft;
+    }
+
+    modifier onlyController(IPToken ipToken) {
+        TokenMetadata memory metadata = ipToken.metadata();
+
+        if (address(synthesized[metadata.ipnftId]) != address(ipToken)) {
+            revert IPTNotControlledByTokenizer();
+        }
+
+        if (_msgSender() != controllerOf(metadata.ipnftId)) {
+            revert MustControlIpnft();
+        }
+        _;
+    }
+
     /**
      * @notice sets the new implementation address of the IPToken
      * @param _ipTokenImplementation address pointing to the new implementation
      */
-    function setIPTokenImplementation(IPToken _ipTokenImplementation) external onlyOwner {
+    function setIPTokenImplementation(IPToken _ipTokenImplementation) public onlyOwner {
         /*
         could call some functions on old contract to make sure its tokenizer not another contract behind a proxy for safety
         */
@@ -82,16 +100,18 @@ contract Tokenizer12 is UUPSUpgradeable, OwnableUpgradeable {
     }
 
     /**
-     * @dev called after an upgrade to reinitialize a new permissioner impl.
-     * @param _permissioner the new TermsPermissioner
+     * @dev sets legacy IPTs on the tokenized mapping
      */
-    function reinit(IPermissioner _permissioner) public onlyOwner reinitializer(4) {
-        permissioner = _permissioner;
+    function reinit(IPToken _ipTokenImplementation) public onlyOwner reinitializer(5) {
+        synthesized[2] = IPToken(0x6034e0d6999741f07cb6Fb1162cBAA46a1D33d36);
+        synthesized[28] = IPToken(0x7b66E84Be78772a3afAF5ba8c1993a1B5D05F9C2);
+        synthesized[37] = IPToken(0xBcE56276591128047313e64744b3EBE03998783f);
+
+        setIPTokenImplementation(_ipTokenImplementation);
     }
 
     /**
-     * @notice initializes synthesis on ipnft#id for the current asset holder.
-     *         IPTokens are identified by the original token holder and the token id
+     * @notice tokenizes ipnft#id for the current asset holder.
      * @param ipnftId the token id on the underlying nft collection
      * @param tokenAmount the initially issued supply of IP tokens
      * @param tokenSymbol the ip token's ticker symbol
@@ -106,27 +126,58 @@ contract Tokenizer12 is UUPSUpgradeable, OwnableUpgradeable {
         string memory agreementCid,
         bytes calldata signedAgreement
     ) external returns (IPToken token) {
-        if (ipnft.ownerOf(ipnftId) != _msgSender()) {
-            revert MustOwnIpnft();
+        if (_msgSender() != controllerOf(ipnftId)) {
+            revert MustControlIpnft();
+        }
+        if (address(synthesized[ipnftId]) != address(0)) {
+            revert AlreadyTokenized();
         }
 
         // https://github.com/OpenZeppelin/workshops/tree/master/02-contracts-clone
         token = IPToken(Clones.clone(address(ipTokenImplementation)));
         string memory name = string.concat("IP Tokens of IPNFT #", Strings.toString(ipnftId));
-        token.initialize(name, tokenSymbol, TokenMetadata(ipnftId, _msgSender(), agreementCid));
+        token.initialize(ipnftId, name, tokenSymbol, _msgSender(), agreementCid);
 
-        uint256 tokenHash = token.hash();
-        // ensure we can only call this once per sales cycle
-        if (address(synthesized[tokenHash]) != address(0)) {
-            revert AlreadyTokenized();
-        }
-
-        synthesized[tokenHash] = token;
+        synthesized[ipnftId] = token;
 
         //this has been called MoleculesCreated before
-        emit TokensCreated(tokenHash, ipnftId, address(token), _msgSender(), tokenAmount, agreementCid, name, tokenSymbol);
-        permissioner.accept(NewIPtoken(address(token)), _msgSender(), signedAgreement);
+        emit TokensCreated(
+            //upwards compatibility: signaling a unique "Molecules ID" as first parameter ("sales cycle id"). This is unused and not interpreted.
+            uint256(keccak256(abi.encodePacked(ipnftId))),
+            ipnftId,
+            address(token),
+            _msgSender(),
+            tokenAmount,
+            agreementCid,
+            name,
+            tokenSymbol
+        );
+        permissioner.accept(token, _msgSender(), signedAgreement);
         token.issue(_msgSender(), tokenAmount);
+    }
+
+    /**
+     * @notice issues more IPTs when not capped. This can be used for new owners of legacy IPTs that otherwise wouldn't be able to pass their `onlyIssuerOrOwner` gate
+     * @param ipToken The ip token to control
+     * @param amount the amount of tokens to issue
+     * @param receiver the address that receives the tokens
+     */
+    function issue(IPToken ipToken, uint256 amount, address receiver) external onlyController(ipToken) {
+        ipToken.issue(receiver, amount);
+    }
+
+    /**
+     * @notice caps the supply of an IPT. After calling this, no new tokens can be `issue`d
+     * @dev you must compute the ipt hash externally.
+     * @param ipToken the IPToken to cap.
+     */
+    function cap(IPToken ipToken) external onlyController(ipToken) {
+        ipToken.cap();
+    }
+
+    /// @dev this will be called by IPTs. Right now the controller is the IPNFT's current owner, it can be a Governor in the future.
+    function controllerOf(uint256 ipnftId) public view override returns (address) {
+        return ipnft.ownerOf(ipnftId);
     }
 
     /// @notice upgrade authorization logic

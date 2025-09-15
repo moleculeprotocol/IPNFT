@@ -5,7 +5,10 @@ import "forge-std/Script.sol";
 import "forge-std/console.sol";
 import { IPNFT } from "../../src/IPNFT.sol";
 import { Tokenizer } from "../../src/Tokenizer.sol";
-import { Metadata, IPToken } from "../../src/IPToken.sol";
+import { Metadata } from "../../src/IIPToken.sol";
+import { IPToken } from "../../src/IPToken.sol";
+import { WrappedIPToken } from "../../src/WrappedIPToken.sol";
+
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import { IPermissioner, TermsAcceptedPermissioner } from "../../src/Permissioner.sol";
 import { CommonScript } from "./Common.sol";
@@ -23,9 +26,13 @@ contract DeployTokenizer is CommonScript {
         IPToken initialIpTokenImplementation = new IPToken();
         tokenizer.setIPTokenImplementation(initialIpTokenImplementation);
 
+        WrappedIPToken initialWrappedIpTokenImplementation = new WrappedIPToken();
+        tokenizer.setWrappedIPTokenImplementation(initialWrappedIpTokenImplementation);
+
         vm.stopBroadcast();
         console.log("TOKENIZER_ADDRESS=%s", address(tokenizer));
         console.log("iptoken implementation=%s", address(initialIpTokenImplementation));
+        console.log("wrapped iptoken implementation=%s", address(initialWrappedIpTokenImplementation));
     }
 }
 

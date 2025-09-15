@@ -1,14 +1,18 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.18;
 
-import { ERC20Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 import { ERC20BurnableUpgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20BurnableUpgradeable.sol";
 import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 import { Base64 } from "@openzeppelin/contracts/utils/Base64.sol";
-import { Tokenizer, MustControlIpnft } from "./Tokenizer.sol";
-import { IControlIPTs } from "./IControlIPTs.sol";
-import { IIPToken, Metadata } from "./IIPToken.sol";
+import { Tokenizer, MustControlIpnft } from "../../Tokenizer.sol";
+import { IControlIPTs } from "../../IControlIPTs.sol";
+
+struct Metadata {
+    uint256 ipnftId;
+    address originalOwner;
+    string agreementCid;
+}
 
 error TokenCapped();
 
@@ -20,7 +24,7 @@ error TokenCapped();
  *         The owner can increase the token supply as long as it's not explicitly capped.
  * @dev formerly known as "molecules"
  */
-contract IPToken is IIPToken, ERC20Upgradeable, ERC20BurnableUpgradeable, OwnableUpgradeable {
+contract IPToken13 is ERC20BurnableUpgradeable, OwnableUpgradeable {
     event Capped(uint256 atSupply);
 
     /// @notice the amount of tokens that ever have been issued (not necessarily == supply)
@@ -31,12 +35,12 @@ contract IPToken is IIPToken, ERC20Upgradeable, ERC20BurnableUpgradeable, Ownabl
 
     Metadata internal _metadata;
 
-    function initialize(uint256 ipnftId, string calldata name_, string calldata symbol_, address originalOwner, string memory agreementCid)
+    function initialize(uint256 ipnftId, string calldata name, string calldata symbol, address originalOwner, string memory agreementCid)
         external
         initializer
     {
         __Ownable_init();
-        __ERC20_init(name_, symbol_);
+        __ERC20_init(name, symbol);
         _metadata = Metadata({ ipnftId: ipnftId, originalOwner: originalOwner, agreementCid: agreementCid });
     }
 
@@ -55,27 +59,11 @@ contract IPToken is IIPToken, ERC20Upgradeable, ERC20BurnableUpgradeable, Ownabl
         return _metadata;
     }
 
-    function balanceOf(address account) public view override(ERC20Upgradeable, IIPToken) returns (uint256) {
-        return ERC20Upgradeable.balanceOf(account);
-    }
-
-    function name() public view override(ERC20Upgradeable, IIPToken) returns (string memory) {
-        return ERC20Upgradeable.name();
-    }
-
-    function symbol() public view override(ERC20Upgradeable, IIPToken) returns (string memory) {
-        return ERC20Upgradeable.symbol();
-    }
-
-    function decimals() public view override(ERC20Upgradeable, IIPToken) returns (uint8) {
-        return ERC20Upgradeable.decimals();
-    }
     /**
      * @notice the supply of IP Tokens is controlled by the tokenizer contract.
      * @param receiver address
      * @param amount uint256
      */
-
     function issue(address receiver, uint256 amount) external onlyTokenizerOrIPNFTController {
         if (capped) {
             revert TokenCapped();
@@ -121,7 +109,7 @@ contract IPToken is IIPToken, ERC20Upgradeable, ERC20BurnableUpgradeable, Ownabl
                     string.concat(
                         '{"name": "IP Tokens of IPNFT #',
                         tokenId,
-                        '","description": "IP Tokens, derived from IP-NFTs, are ERC-20 tokens governing IP pools.","decimals": 18,"external_url": "https://molecule.xyz","image": "",',
+                        '","description": "IP Tokens, derived from IP-NFTs, are ERC-20 tokens governing IP pools.","decimals": 18,"external_url": "https://molecule.to","image": "",',
                         props,
                         "}"
                     )

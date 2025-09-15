@@ -25,10 +25,11 @@ jobs:
       - name: Install node dependencies
         run: yarn --frozen-lockfile
 
+        #todo: forge build --sizes
       - name: Run Forge build
         run: |
           forge --version
-          forge build --sizes
+          forge build
         id: build
 
       - name: Run Forge tests

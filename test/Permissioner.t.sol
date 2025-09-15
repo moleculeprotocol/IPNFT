@@ -3,7 +3,9 @@ pragma solidity ^0.8.18;
 
 import "forge-std/Test.sol";
 import { InvalidSignature, IPermissioner, TermsAcceptedPermissioner, BlindPermissioner } from "../src/Permissioner.sol";
-import { IPToken, Metadata } from "../src/IPToken.sol";
+import { IPToken } from "../src/IPToken.sol";
+import { Metadata } from "../src/IIPToken.sol";
+
 import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
 import { AcceptAllAuthorizer } from "./helpers/AcceptAllAuthorizer.sol";

@@ -4,7 +4,7 @@ pragma solidity 0.8.18;
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import { SignatureChecker } from "@openzeppelin/contracts/utils/cryptography/SignatureChecker.sol";
-import { IPToken, Metadata } from "./IPToken.sol";
+import { IIPToken, Metadata } from "./IIPToken.sol";
 
 error InvalidSignature();
 error Denied();
@@ -16,17 +16,17 @@ interface IPermissioner {
      * @param _for address
      * @param data bytes
      */
-    function accept(IPToken tokenContract, address _for, bytes calldata data) external;
+    function accept(IIPToken tokenContract, address _for, bytes calldata data) external;
 }
 
 contract BlindPermissioner is IPermissioner {
-    function accept(IPToken tokenContract, address _for, bytes calldata data) external {
+    function accept(IIPToken tokenContract, address _for, bytes calldata data) external {
         //empty
     }
 }
 
 contract ForbidAllPermissioner is IPermissioner {
-    function accept(IPToken, address, bytes calldata) external pure {
+    function accept(IIPToken, address, bytes calldata) external pure {
         revert Denied();
     }
 }
@@ -44,7 +44,7 @@ contract TermsAcceptedPermissioner is IPermissioner {
      * @param _for address the account that has created `signature`
      * @param signature bytes encoded signature, for eip155: `abi.encodePacked(r, s, v)`
      */
-    function accept(IPToken tokenContract, address _for, bytes calldata signature) external {
+    function accept(IIPToken tokenContract, address _for, bytes calldata signature) external {
         if (!isValidSignature(tokenContract, _for, signature)) {
             revert InvalidSignature();
         }
@@ -55,7 +55,7 @@ contract TermsAcceptedPermissioner is IPermissioner {
      * @notice checks whether `signer`'s `signature` of `specificTermsV1` on `tokenContract.metadata.ipnftId` is valid
      * @param tokenContract IPToken
      */
-    function isValidSignature(IPToken tokenContract, address signer, bytes calldata signature) public view returns (bool) {
+    function isValidSignature(IIPToken tokenContract, address signer, bytes calldata signature) public view returns (bool) {
         bytes32 termsHash = ECDSA.toEthSignedMessageHash(bytes(specificTermsV1(tokenContract)));
         return SignatureChecker.isValidSignatureNow(signer, termsHash, signature);
     }
@@ -78,7 +78,7 @@ contract TermsAcceptedPermissioner is IPermissioner {
      * @notice this yields the message text that claimers must present to proof they have accepted all terms
      * @param tokenContract IPToken
      */
-    function specificTermsV1(IPToken tokenContract) public view returns (string memory) {
+    function specificTermsV1(IIPToken tokenContract) public view returns (string memory) {
         return (specificTermsV1(tokenContract.metadata()));
     }
 }

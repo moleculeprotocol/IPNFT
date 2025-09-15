@@ -100,12 +100,12 @@ VDAO_TOKEN_ADDRESS=0x19A3036b828bffB5E14da2659E950E76f8e6BAA2
 
 ---
 
-### upgrading to Tokenizer 1.3
+### upgrading to Tokenizer 1.4
 
-forge script --private-key=$PRIVATE_KEY --rpc-url=$RPC_URL script/prod/RolloutTokenizerV13.s.sol --broadcast
+forge script --private-key=$PRIVATE_KEY --rpc-url=$RPC_URL script/prod/RolloutTokenizerV14.s.sol --broadcast
 
-// 0xTokenizer 0xNewImpl 0xNewTokenImpl
-cast send --rpc-url=$RPC_URL --private-key=$PRIVATE_KEY 0xB7f8BC63BbcaD18155201308C8f3540b07f84F5e "upgradeToAndCall(address,bytes)" 0x70e0bA845a1A0F2DA3359C97E0285013525FFC49 0x84646c1f000000000000000000000000998abeb3e57409262ae5b751f60747921b33613e
+// 0xTokenizer (address, bytes)(0xNewImpl, 0xNewWrappedIPTokenImpl 0xNewIPTokenImpl)
+cast send --rpc-url=$RPC_URL --private-key=$PRIVATE_KEY 0x58EB89C69CB389DBef0c130C6296ee271b82f436 "upgradeToAndCall(address,bytes)" 0x34A1D3fff3958843C43aD80F30b94c510645C316 0x8b3d19bb0000000000000000000000007fa9385be102ac3eac297483dd6233d62b3e14960000000000000000000000005b73c5498c1e3b4dba84de0f1833c4a029d90519
 
 ### Timelocked Tokens
 
