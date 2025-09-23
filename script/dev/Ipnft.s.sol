@@ -85,12 +85,13 @@ contract FixtureIpnft is CommonScript {
     function run() public {
         prepareAddresses();
 
-        uint256 tokenId = mintIpnft(bob, bob);
+        uint256 token1Id = mintIpnft(bob, bob);
+        uint256 token2Id = mintIpnft(bob, bob);
 
         dealERC20(bob, 1000 ether, usdc);
         dealERC20(alice, 1000 ether, usdc);
 
-        uint256 listingId = createListing(bob, tokenId, 1 ether, usdc);
+        uint256 listingId = createListing(bob, token1Id, 1 ether, usdc);
         //we're *NOT* accepting the listing here because of inconsistent listing ids on anvil
         //execute ApproveAndBuy.s.sol if you want to do that.
         console.log("listing id %s", listingId);

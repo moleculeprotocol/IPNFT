@@ -1,0 +1,38 @@
+{
+  "lib/ERC721B": {
+    "branch": {
+      "name": "0.2.1",
+      "rev": "254530019373cfb2aa3cb6e975768857f829823d"
+    }
+  },
+  "lib/forge-std": {
+    "rev": "87a2a0afc5fafd6297538a45a52ac19e71a84562"
+  },
+  "lib/openzeppelin-contracts": {
+    "branch": {
+      "name": "release-v4.8",
+      "rev": "281550b71c3df9a83e6b80ceefc700852c287570"
+    }
+  },
+  "lib/openzeppelin-contracts-upgradeable": {
+    "rev": "43b82754979c35abcd3ccad7b795754146c62ade"
+  },
+  "lib/safe-contracts": {
+    "branch": {
+      "name": "v1.4.0",
+      "rev": "e870f514ad34cd9654c72174d6d4a839e3c6639f"
+    }
+  },
+  "lib/solidity-base64": {
+    "rev": "537095980643f59e9e00b7b76d341bb9da438eaf"
+  },
+  "lib/solmate": {
+    "branch": {
+      "name": "v7",
+      "rev": "ed67feda67b24fdeff8ad1032360f0ee6047ba0a"
+    }
+  },
+  "lib/token-vesting-contract": {
+    "rev": "b1f3e05bb6f07bec70d2b7b588d622c06f70ae39"
+  }
+}
