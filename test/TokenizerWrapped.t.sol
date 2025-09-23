@@ -8,12 +8,14 @@ import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy
 import { IPNFT } from "../src/IPNFT.sol";
 import { AcceptAllAuthorizer } from "./helpers/AcceptAllAuthorizer.sol";
 
-import { FakeERC20 } from "../src/helpers/FakeERC20.sol";
-import { Tokenizer, ZeroAddress, InvalidTokenContract, InvalidTokenDecimals } from "../src/Tokenizer.sol";
 import { IIPToken } from "../src/IIPToken.sol";
 import { IPToken } from "../src/IPToken.sol";
+
+import { BlindPermissioner, IPermissioner } from "../src/Permissioner.sol";
+import { InvalidTokenContract, InvalidTokenDecimals, Tokenizer, ZeroAddress } from "../src/Tokenizer.sol";
 import { WrappedIPToken } from "../src/WrappedIPToken.sol";
-import { IPermissioner, BlindPermissioner } from "../src/Permissioner.sol";
+import { FakeERC20 } from "../src/helpers/FakeERC20.sol";
+
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 // Test helper contract with invalid decimals
@@ -89,10 +91,11 @@ contract TokenizerWrappedTest is Test {
 
         IIPToken tokenContract = tokenizer.attachIpt(1, agreementCid, "", erc20);
 
-        assertEq(tokenContract.balanceOf(originalOwner), 1_000_000 ether);
+        WrappedIPToken wrappedImpl = WrappedIPToken(address(tokenContract));
+        assertEq(wrappedImpl.balanceOf(originalOwner), 1_000_000 ether);
         assertNotEq(address(tokenizer.synthesized(1)), address(erc20)); // the synthesized member tracks the wrapped ipt
         assertEq(tokenContract.totalIssued(), 1_000_000 ether);
-        assertEq(tokenContract.name(), "URORiif");
+        assertEq(wrappedImpl.name(), "URORiif");
     }
 
     function testCannotAttachInvalidTokenContract() public {
@@ -127,10 +130,10 @@ contract TokenizerWrappedTest is Test {
 
         // Verify wrapped token properties
         assertEq(address(wrappedToken.wrappedToken()), address(erc20));
-        assertEq(tokenContract.balanceOf(originalOwner), 1_000_000 ether);
+        assertEq(wrappedToken.balanceOf(originalOwner), 1_000_000 ether);
         assertEq(tokenContract.totalIssued(), 1_000_000 ether);
-        assertEq(tokenContract.name(), "TestToken");
-        assertEq(tokenContract.symbol(), "TEST");
+        assertEq(wrappedToken.name(), "TestToken");
+        assertEq(wrappedToken.symbol(), "TEST");
     }
 
     function testWrappedTokenCannotIssueOrCap() public {

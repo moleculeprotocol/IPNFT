@@ -2,11 +2,9 @@
 pragma solidity 0.8.18;
 
 import { IIPToken, Metadata } from "./IIPToken.sol";
-
+import { IPTokenUtils } from "./libraries/IPTokenUtils.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-import { Base64 } from "@openzeppelin/contracts/utils/Base64.sol";
-import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 
 /**
  * @title WrappedIPToken
@@ -38,30 +36,50 @@ contract WrappedIPToken is IIPToken, Initializable {
     /**
      * @dev Returns the name of the token.
      */
-    function name() public view override returns (string memory) {
+    function name() public view returns (string memory) {
         return wrappedToken.name();
     }
 
     /**
      * @dev Returns the symbol of the token.
      */
-    function symbol() public view override returns (string memory) {
+    function symbol() public view returns (string memory) {
         return wrappedToken.symbol();
     }
 
     /**
      * @dev Returns the decimals places of the token.
      */
-    function decimals() public view override returns (uint8) {
+    function decimals() public view returns (uint8) {
         return wrappedToken.decimals();
+    }
+
+    function totalSupply() public view returns (uint256) {
+        return wrappedToken.totalSupply();
+    }
+
+    function balanceOf(address account) public view returns (uint256) {
+        return wrappedToken.balanceOf(account);
+    }
+
+    function transfer(address to, uint256 amount) public returns (bool) {
+        return wrappedToken.transfer(to, amount);
+    }
+
+    function allowance(address owner, address spender) public view returns (uint256) {
+        return wrappedToken.allowance(owner, spender);
+    }
+
+    function approve(address spender, uint256 amount) public returns (bool) {
+        return wrappedToken.approve(spender, amount);
+    }
+
+    function transferFrom(address from, address to, uint256 amount) public returns (bool) {
+        return wrappedToken.transferFrom(from, to, amount);
     }
 
     function totalIssued() public view override returns (uint256) {
         return wrappedToken.totalSupply();
-    }
-
-    function balanceOf(address account) public view override returns (uint256) {
-        return wrappedToken.balanceOf(account);
     }
 
     function issue(address, uint256) public virtual override {
@@ -73,38 +91,6 @@ contract WrappedIPToken is IIPToken, Initializable {
     }
 
     function uri() external view override returns (string memory) {
-        string memory tokenId = Strings.toString(_metadata.ipnftId);
-
-        string memory props = string.concat(
-            '"properties": {',
-            '"ipnft_id": ',
-            tokenId,
-            ',"agreement_content": "ipfs://',
-            _metadata.agreementCid,
-            '","original_owner": "',
-            Strings.toHexString(_metadata.originalOwner),
-            '","erc20_contract": "',
-            Strings.toHexString(address(wrappedToken)),
-            '","supply": "',
-            Strings.toString(wrappedToken.totalSupply()),
-            '"}'
-        );
-
-        return string.concat(
-            "data:application/json;base64,",
-            Base64.encode(
-                bytes(
-                    string.concat(
-                        '{"name": "IP Tokens of IPNFT #',
-                        tokenId,
-                        '","description": "IP Tokens, derived from IP-NFTs, are ERC-20 tokens governing IP pools.","decimals": ',
-                        Strings.toString(wrappedToken.decimals()),
-                        ',"external_url": "https://molecule.xyz","image": "",',
-                        props,
-                        "}"
-                    )
-                )
-            )
-        );
+        return IPTokenUtils.generateURI(_metadata, address(wrappedToken), wrappedToken.totalSupply());
     }
 }

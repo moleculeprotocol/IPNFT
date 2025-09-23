@@ -8,17 +8,21 @@ import { SafeERC20Upgradeable } from "@openzeppelin/contracts-upgradeable/token/
 
 import { IPNFT } from "../../src/IPNFT.sol";
 
-import { MustControlIpnft, AlreadyTokenized, Tokenizer } from "../../src/Tokenizer.sol";
-import { Tokenizer13 } from "../../src/helpers/test-upgrades/Tokenizer13.sol";
-import { IPToken13 } from "../../src/helpers/test-upgrades/IPToken13.sol";
-import { IPToken, TokenCapped } from "../../src/IPToken.sol";
 import { Metadata } from "../../src/IIPToken.sol";
-import { OnlyIssuerOrOwner } from "../../src/helpers/test-upgrades/IPToken12.sol";
+
 import { IIPToken } from "../../src/IIPToken.sol";
+import { IPToken, TokenCapped } from "../../src/IPToken.sol";
+
+import { BlindPermissioner, IPermissioner } from "../../src/Permissioner.sol";
+import { AlreadyTokenized, MustControlIpnft, Tokenizer } from "../../src/Tokenizer.sol";
 import { WrappedIPToken } from "../../src/WrappedIPToken.sol";
-import { IPermissioner, BlindPermissioner } from "../../src/Permissioner.sol";
-import { AcceptAllAuthorizer } from "../helpers/AcceptAllAuthorizer.sol";
+
 import { FakeERC20 } from "../../src/helpers/FakeERC20.sol";
+import { OnlyIssuerOrOwner } from "../../src/helpers/test-upgrades/IPToken12.sol";
+import { IPToken13 } from "../../src/helpers/test-upgrades/IPToken13.sol";
+import { Tokenizer13 } from "../../src/helpers/test-upgrades/Tokenizer13.sol";
+
+import { AcceptAllAuthorizer } from "../helpers/AcceptAllAuthorizer.sol";
 
 contract Tokenizer14UpgradeForkTest is Test {
     using SafeERC20Upgradeable for IPToken;
@@ -270,10 +274,10 @@ contract Tokenizer14UpgradeForkTest is Test {
         IIPToken iiptToken = IIPToken(address(newToken));
 
         // Test interface functions work
-        assertEq(iiptToken.name(), string.concat("IP Tokens of IPNFT #", vm.toString(newIpnftId)));
-        assertEq(iiptToken.symbol(), "NEW-IPT");
-        assertEq(iiptToken.decimals(), 18);
-        assertEq(iiptToken.balanceOf(alice), 1_000_000 ether);
+        assertEq(newToken.name(), string.concat("IP Tokens of IPNFT #", vm.toString(newIpnftId)));
+        assertEq(newToken.symbol(), "NEW-IPT");
+        assertEq(newToken.decimals(), 18);
+        assertEq(newToken.balanceOf(alice), 1_000_000 ether);
         assertEq(iiptToken.totalIssued(), 1_000_000 ether);
 
         // Test that metadata is accessible through interface
@@ -337,11 +341,8 @@ contract Tokenizer14UpgradeForkTest is Test {
         // Test that both IPToken and IIPToken interfaces work identically
         IIPToken interfaceToken = IIPToken(address(newToken));
 
-        // Compare results from both interfaces
-        assertEq(newToken.name(), interfaceToken.name());
-        assertEq(newToken.symbol(), interfaceToken.symbol());
-        assertEq(newToken.decimals(), interfaceToken.decimals());
-        assertEq(newToken.balanceOf(alice), interfaceToken.balanceOf(alice));
+        // Compare results from both interfaces (only IP-specific functions available on interface)
+        assertEq(newToken.totalIssued(), interfaceToken.totalIssued());
         assertEq(newToken.totalIssued(), interfaceToken.totalIssued());
 
         // Test metadata access
@@ -386,10 +387,11 @@ contract Tokenizer14UpgradeForkTest is Test {
         assertEq(address(tokenizer14.synthesized(newIpnftId)), address(wrappedToken));
 
         // Test the wrapped token implements IIPToken interface
-        assertEq(wrappedToken.name(), "Test Wrapped Token");
-        assertEq(wrappedToken.symbol(), "TWT");
-        assertEq(wrappedToken.decimals(), 18);
-        assertEq(wrappedToken.balanceOf(alice), 5_000_000 ether);
+        WrappedIPToken wrappedImpl = WrappedIPToken(address(wrappedToken));
+        assertEq(wrappedImpl.name(), "Test Wrapped Token");
+        assertEq(wrappedImpl.symbol(), "TWT");
+        assertEq(wrappedImpl.decimals(), 18);
+        assertEq(wrappedImpl.balanceOf(alice), 5_000_000 ether);
         assertEq(wrappedToken.totalIssued(), 5_000_000 ether);
 
         // Test metadata is accessible through interface
