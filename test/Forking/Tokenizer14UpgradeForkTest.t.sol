@@ -414,6 +414,9 @@ contract Tokenizer14UpgradeForkTest is Test {
         vm.expectRevert(); // WrappedIPToken should not allow cap operations
         WrappedIPToken(address(wrappedToken)).cap();
 
+        // Test that WrappedIPToken only implements IIPToken state-changing operations (which revert)
+        // ERC20 state-changing functions are no longer implemented
+
         // Test that we cannot attach another token to the same IPNFT
         FakeERC20 anotherToken = new FakeERC20("Another Token", "ANT");
         vm.expectRevert(AlreadyTokenized.selector);

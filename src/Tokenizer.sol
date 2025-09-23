@@ -37,6 +37,7 @@ contract Tokenizer is UUPSUpgradeable, OwnableUpgradeable, IControlIPTs {
         string symbol
     );
 
+    // @dev @TODO: index these topics
     event TokenWrapped(IERC20Metadata tokenContract, IIPToken wrappedIpt);
     event IPTokenImplementationUpdated(IIPToken indexed old, IIPToken indexed _new);
     event WrappedIPTokenImplementationUpdated(WrappedIPToken indexed old, WrappedIPToken indexed _new);

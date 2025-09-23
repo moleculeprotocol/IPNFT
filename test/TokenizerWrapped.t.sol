@@ -144,11 +144,75 @@ contract TokenizerWrappedTest is Test {
         IIPToken tokenContract = tokenizer.attachIpt(1, agreementCid, "", erc20);
 
         // Wrapped tokens should not be able to issue or cap
-        vm.expectRevert("WrappedIPToken: cannot issue");
+        vm.expectRevert("WrappedIPToken: read-only wrapper - use underlying token for minting");
         tokenContract.issue(alice, 1000);
 
-        vm.expectRevert("WrappedIPToken: cannot cap");
+        vm.expectRevert("WrappedIPToken: read-only wrapper - use underlying token for cappping");
         tokenContract.cap();
+    }
+
+    function testWrappedTokenStateChangingOperationsRevert() public {
+        vm.startPrank(originalOwner);
+        erc20 = new FakeERC20("TestToken", "TEST");
+        erc20.mint(originalOwner, 1_000_000 ether);
+
+        IIPToken tokenContract = tokenizer.attachIpt(1, agreementCid, "", erc20);
+
+        // Test that IIPToken state-changing operations revert with proper messages
+        vm.expectRevert("WrappedIPToken: read-only wrapper - use underlying token for minting");
+        tokenContract.issue(alice, 1000);
+
+        vm.expectRevert("WrappedIPToken: read-only wrapper - use underlying token for cappping");
+        tokenContract.cap();
+    }
+
+    function testWrappedTokenReadOnlyOperationsWork() public {
+        vm.startPrank(originalOwner);
+        erc20 = new FakeERC20("TestToken", "TEST");
+        erc20.mint(originalOwner, 1_000_000 ether);
+
+        IIPToken tokenContract = tokenizer.attachIpt(1, agreementCid, "", erc20);
+        WrappedIPToken wrappedToken = WrappedIPToken(address(tokenContract));
+
+        // Test that read-only operations still work
+        assertEq(wrappedToken.balanceOf(originalOwner), 1_000_000 ether);
+        assertEq(wrappedToken.totalSupply(), 1_000_000 ether);
+        assertEq(wrappedToken.name(), "TestToken");
+        assertEq(wrappedToken.symbol(), "TEST");
+        assertEq(wrappedToken.decimals(), 18);
+        assertEq(wrappedToken.totalIssued(), 1_000_000 ether);
+
+        // Test IP metadata functions work
+        assertEq(wrappedToken.metadata().ipnftId, 1);
+        assertEq(wrappedToken.metadata().originalOwner, originalOwner);
+        assertEq(wrappedToken.metadata().agreementCid, agreementCid);
+
+        // Test URI function works
+        string memory uri = wrappedToken.uri();
+        assertTrue(bytes(uri).length > 0);
+    }
+
+    function testUnderlyingTokenOperationsStillWork() public {
+        vm.startPrank(originalOwner);
+        erc20 = new FakeERC20("TestToken", "TEST");
+        erc20.mint(originalOwner, 1_000_000 ether);
+
+        IIPToken tokenContract = tokenizer.attachIpt(1, agreementCid, "", erc20);
+
+        // Users can still use the underlying token directly for transfers
+        assertTrue(erc20.transfer(alice, 100_000 ether));
+        assertEq(erc20.balanceOf(alice), 100_000 ether);
+        assertEq(erc20.balanceOf(originalOwner), 900_000 ether);
+
+        // Approvals work on the underlying token
+        assertTrue(erc20.approve(alice, 50_000 ether));
+        assertEq(erc20.allowance(originalOwner, alice), 50_000 ether);
+
+        // Transfer from works on the underlying token
+        vm.startPrank(alice);
+        assertTrue(erc20.transferFrom(originalOwner, alice, 25_000 ether));
+        assertEq(erc20.balanceOf(alice), 125_000 ether);
+        assertEq(erc20.balanceOf(originalOwner), 875_000 ether);
     }
 
     // Helper function to check if a string contains a substring

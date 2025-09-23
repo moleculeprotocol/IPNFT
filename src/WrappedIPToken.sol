@@ -9,8 +9,11 @@ import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/I
 /**
  * @title WrappedIPToken
  * @author molecule.xyz
- * @notice this is a template contract that's cloned by the Tokenizer
- * @notice this contract is used to wrap an ERC20 token and extend its metadata
+ * @notice A read-only wrapper that extends existing ERC20 tokens with IP metadata
+ * @dev This contract provides IP metadata for an existing ERC20 token without proxying
+ *      state-changing operations. It only implements IIPToken interface functions and
+ *      read-only ERC20 view functions. Users must interact with the underlying token
+ *      directly for transfers, approvals, and other state changes.
  */
 contract WrappedIPToken is IIPToken, Initializable {
     IERC20Metadata public wrappedToken;
@@ -62,32 +65,16 @@ contract WrappedIPToken is IIPToken, Initializable {
         return wrappedToken.balanceOf(account);
     }
 
-    function transfer(address to, uint256 amount) public returns (bool) {
-        return wrappedToken.transfer(to, amount);
-    }
-
-    function allowance(address owner, address spender) public view returns (uint256) {
-        return wrappedToken.allowance(owner, spender);
-    }
-
-    function approve(address spender, uint256 amount) public returns (bool) {
-        return wrappedToken.approve(spender, amount);
-    }
-
-    function transferFrom(address from, address to, uint256 amount) public returns (bool) {
-        return wrappedToken.transferFrom(from, to, amount);
-    }
-
     function totalIssued() public view override returns (uint256) {
         return wrappedToken.totalSupply();
     }
 
     function issue(address, uint256) public virtual override {
-        revert("WrappedIPToken: cannot issue");
+        revert("WrappedIPToken: read-only wrapper - use underlying token for minting");
     }
 
     function cap() public virtual override {
-        revert("WrappedIPToken: cannot cap");
+        revert("WrappedIPToken: read-only wrapper - use underlying token for cappping");
     }
 
     function uri() external view override returns (string memory) {
