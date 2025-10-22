@@ -343,7 +343,6 @@ contract Tokenizer14UpgradeForkTest is Test {
 
         // Compare results from both interfaces (only IP-specific functions available on interface)
         assertEq(newToken.totalIssued(), interfaceToken.totalIssued());
-        assertEq(newToken.totalIssued(), interfaceToken.totalIssued());
 
         // Test metadata access
         Metadata memory directMetadata = newToken.metadata();
