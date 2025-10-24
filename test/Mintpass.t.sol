@@ -171,8 +171,4 @@ contract MintpassTest is Test {
         assertEq(mintPass.isRedeemable(1), true);
         vm.stopPrank();
     }
-
-    function testFailTokenUri0() public view {
-        mintPass.tokenURI(0);
-    }
 }

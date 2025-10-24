@@ -17,20 +17,23 @@ IP-NFTs allow their users to tokenize intellectual property. This repo contains 
 | Locking Crowdsale      | [0xfbfd266bf3b49Db8746155AA318D4533Cc66DB26](https://etherscan.io/address/0xfbfd266bf3b49Db8746155AA318D4533Cc66DB26#code) | <a href="https://thirdweb.com/ethereum/0xfbfd266bf3b49Db8746155AA318D4533Cc66DB26?utm_source=contract_badge" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0xfbfd266bf3b49Db8746155AA318D4533Cc66DB26&theme=dark&chainId=1" alt="View contract" /></a> |
 | StakedLockingCrowdSale | [0x35Bce29F52f51f547998717CD598068Afa2B29B7](https://etherscan.io/address/0x35Bce29F52f51f547998717CD598068Afa2B29B7#code) | <a href="https://thirdweb.com/ethereum/0x35Bce29F52f51f547998717CD598068Afa2B29B7?utm_source=contract_badge" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0x35Bce29F52f51f547998717CD598068Afa2B29B7&theme=dark&chainId=1" alt="View contract" /></a> |
 
-timelocked token implementation=0x625ed621d814645AA81C50c4f333D4a407576e8F  
-
+timelocked token implementation=0x625ed621d814645AA81C50c4f333D4a407576e8F
 
 #### Subgraph
 
 API: https://subgraph.satsuma-prod.com/742d8952ab24/molecule--4039244/ip-nft-mainnet/api
 Playground: https://subgraph.satsuma-prod.com/molecule--4039244/ip-nft-mainnet/playground
 
-tokenizer implementation 1.3: 0x6517DD48908F4C1FF4eD74FfD780908241a3654C  
+tokenizer implementation 1.4: 0x0d781edf9c75cf9136aac6600873d0a20a6dd43f
+tokenizer implementation 1.3: 0x6517DD48908F4C1FF4eD74FfD780908241a3654C
 tokenizer implementation 1.2: 0xE8701330F196FeFe415b28dAA767AB076F42557A
 tokenizer implementation 1.1: 0x9C70FA8c87D7e94Fd63eeCCcA657D5c4224a36f3
 
+iptoken implementation 1.4: 0xd79fe2c4879b3a3d732df11294329a60cff3a0a9
 iptoken implementation 1.3: 0x89a14Be8f7824d4775053Edad0f2fA2d6767b72B
 iptoken implementation: 0x9E4fc6E6d1A64e3429aB852d3CB31AD7aa06997A
+
+wrapped iptoken implementation: 0x0ca5f50a8a59a59ef8c8d610f5ebf99e41f1352f
 
 ipnft implementation 2.4: 0x6B179Dffac5E190c670176606f552cB792847f80
 
@@ -42,18 +45,24 @@ Deprecated after migrating to Defender 2 (was 0x3D30452c48F2448764d5819a9A2b684A
 
 ### Sepolia
 
-| Contract           | Address                                    | Explorer                                                                                                                                                                                                                                                                                  |
-| ------------------ | ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| IPNFT              | 0x152B444e60C526fe4434C721561a077269FcF61a | <a href="https://sepolia.etherscan.io/address/0x152B444e60C526fe4434C721561a077269FcF61a#code" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0x152B444e60C526fe4434C721561a077269FcF61a&theme=dark&chainId=1" alt="View contract" /></a> |
-| Swap               | 0x9e4c638e703d0Af3a3B9eb488dE79A16d402698f | <a href="https://sepolia.etherscan.io/address/0x9e4c638e703d0Af3a3B9eb488dE79A16d402698f#code" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0x9e4c638e703d0Af3a3B9eb488dE79A16d402698f&theme=dark&chainId=1" alt="View contract" /></a> |
-| Authorizer         | 0x7a9F3773352e4ee0Da6307Cd32C45fE89602129A | <a href="https://sepolia.etherscan.io/address/0x7a9F3773352e4ee0Da6307Cd32C45fE89602129A#code" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0x7a9F3773352e4ee0Da6307Cd32C45fE89602129A&theme=dark&chainId=1" alt="View contract" /></a> |
-| Terms Permissioner | 0xC05D649368d8A5e2E98CAa205d47795de5fCB599 | <a href="https://sepolia.etherscan.io/address/0xC05D649368d8A5e2E98CAa205d47795de5fCB599#code" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0xC05D649368d8A5e2E98CAa205d47795de5fCB599&theme=dark&chainId=1" alt="View contract" /></a> |
-| Tokenizer          | 0xca63411FF5187431028d003eD74B57531408d2F9 | <a href="https://sepolia.etherscan.io/address/0xca63411FF5187431028d003eD74B57531408d2F9#code" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0xca63411FF5187431028d003eD74B57531408d2F9&theme=dark&chainId=1" alt="View contract" /></a> |
-| Crowdsale          | 0x8cA737E2cdaE1Ceb332bEf7ba9eA711a3a2f8037 | <a href="https://sepolia.etherscan.io/address/0x8cA737E2cdaE1Ceb332bEf7ba9eA711a3a2f8037#code" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0x8cA737E2cdaE1Ceb332bEf7ba9eA711a3a2f8037&theme=dark&chainId=1" alt="View contract" /></a> |
-| Locking Crowdsale          | 0x0Da77f361bB56f065Aa21647d885685eb7cAE10F | <a href="https://sepolia.etherscan.io/address/0x0Da77f361bB56f065Aa21647d885685eb7cAE10F#code" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0x0Da77f361bB56f065Aa21647d885685eb7cAE10F&theme=dark&chainId=1" alt="View contract" /></a> |
+| Contract           | Address                                    | Explorer                                                                                                                                                                                                                                                                                         |
+| ------------------ | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| IPNFT              | 0x152B444e60C526fe4434C721561a077269FcF61a | <a href="https://sepolia.etherscan.io/address/0x152B444e60C526fe4434C721561a077269FcF61a#code" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0x152B444e60C526fe4434C721561a077269FcF61a&theme=dark&chainId=1" alt="View contract" /></a>        |
+| Swap               | 0x9e4c638e703d0Af3a3B9eb488dE79A16d402698f | <a href="https://sepolia.etherscan.io/address/0x9e4c638e703d0Af3a3B9eb488dE79A16d402698f#code" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0x9e4c638e703d0Af3a3B9eb488dE79A16d402698f&theme=dark&chainId=1" alt="View contract" /></a>        |
+| Authorizer         | 0x7a9F3773352e4ee0Da6307Cd32C45fE89602129A | <a href="https://sepolia.etherscan.io/address/0x7a9F3773352e4ee0Da6307Cd32C45fE89602129A#code" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0x7a9F3773352e4ee0Da6307Cd32C45fE89602129A&theme=dark&chainId=1" alt="View contract" /></a>        |
+| Terms Permissioner | 0xC05D649368d8A5e2E98CAa205d47795de5fCB599 | <a href="https://sepolia.etherscan.io/address/0xC05D649368d8A5e2E98CAa205d47795de5fCB599#code" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0xC05D649368d8A5e2E98CAa205d47795de5fCB599&theme=dark&chainId=1" alt="View contract" /></a>        |
+| Tokenizer          | 0xca63411FF5187431028d003eD74B57531408d2F9 | <a href="https://sepolia.etherscan.io/address/0xca63411FF5187431028d003eD74B57531408d2F9#code" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0xca63411FF5187431028d003eD74B57531408d2F9&theme=dark&chainId=1" alt="View contract" /></a>        |
+| Crowdsale          | 0x8cA737E2cdaE1Ceb332bEf7ba9eA711a3a2f8037 | <a href="https://sepolia.etherscan.io/address/0x8cA737E2cdaE1Ceb332bEf7ba9eA711a3a2f8037#code" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0x8cA737E2cdaE1Ceb332bEf7ba9eA711a3a2f8037&theme=dark&chainId=1" alt="View contract" /></a>        |
+| Locking Crowdsale  | 0x0Da77f361bB56f065Aa21647d885685eb7cAE10F | <a href="https://sepolia.etherscan.io/address/0x0Da77f361bB56f065Aa21647d885685eb7cAE10F#code" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0x0Da77f361bB56f065Aa21647d885685eb7cAE10F&theme=dark&chainId=1" alt="View contract" /></a>        |
 | Staked Crowdsale   | 0xd1cE2EA7d3b0C9cAB025A4aD762FC00315141ad7 | <a href="https://sepolia.etherscan.io/address/0xd1cE2EA7d3b0C9cAB025A4aD762FC00315141ad7#code" target="_blank"><img width="200" height="45" src="https://badges.thirdweb.com/contract?address=0xd1cE2EA7d3b0C9cAB025A4aD762FC00315141ad7&theme=dark&chainId=11155111" alt="View contract" /></a> |
 
-timelocked token implementation=0xF8F79c1E02387b0Fc9DE0945cD9A2c06F127D851  
+timelocked token implementation=0xF8F79c1E02387b0Fc9DE0945cD9A2c06F127D851
+
+tokenizer implementation 1.4: 0x4166362c3b9fb7d43c79ae8668e4517799aed0e0
+
+iptoken implementation 1.4: 0xacadd6dd9e7af053f42425a03f68da9920287d5b
+
+wrapped iptoken implementation: 0xa3b844450e31e541e604217b11d48c111419a6a6
 
 new SLCS with support for verifiable timelocks & distinctly configurable staking / locking periods: https://sepolia.etherscan.io/address/0x2d309CF13dC3872f9c9B1B06Ebf6F60caDe08d55#code
 
@@ -100,18 +109,18 @@ VDAO_TOKEN_ADDRESS=0x19A3036b828bffB5E14da2659E950E76f8e6BAA2
 
 ---
 
-### upgrading to Tokenizer 1.3
+### upgrading to Tokenizer 1.4
 
-forge script --private-key=$PRIVATE_KEY --rpc-url=$RPC_URL script/prod/RolloutTokenizerV13.s.sol --broadcast
+forge script --private-key=$PRIVATE_KEY --rpc-url=$RPC_URL script/prod/RolloutTokenizerV14.s.sol --broadcast
 
-// 0xTokenizer 0xNewImpl 0xNewTokenImpl
-cast send --rpc-url=$RPC_URL --private-key=$PRIVATE_KEY 0xB7f8BC63BbcaD18155201308C8f3540b07f84F5e "upgradeToAndCall(address,bytes)" 0x70e0bA845a1A0F2DA3359C97E0285013525FFC49 0x84646c1f000000000000000000000000998abeb3e57409262ae5b751f60747921b33613e
+// 0xTokenizer (address, bytes)(0xNewImpl, 0xNewWrappedIPTokenImpl 0xNewIPTokenImpl)
+cast send --rpc-url=$RPC_URL --private-key=$PRIVATE_KEY 0x58EB89C69CB389DBef0c130C6296ee271b82f436 "upgradeToAndCall(address,bytes)" 0x4166362c3b9fb7d43c79ae8668e4517799aed0e0 0x8b3d19bb0000000000000000000000000ca5f50a8a59a59ef8c8d610f5ebf99e41f1352f000000000000000000000000d79fe2c4879b3a3d732df11294329a60cff3a0a9
 
 ### Timelocked Tokens
 
 originally the "timelocked token" was an inline concept of the slcs. Timelock contracts weren't reusable among cs impls. This changes as of beginning of 2025. As a rather simple but not very elegant (and certainly not correct) solution we decided to "trust" external locking contracts so you can reuse them among crowdsale instances. This was needed for the VitaRNA crowdsale that's supposed to just support locks, no stakes - and hence required another crowdsale instance. During this upgrade we decided to externalize the timelock token template so upcoming instances can be verified on chain.
 
---- 
+---
 
 ## Prerequisites
 
@@ -168,8 +177,8 @@ You need Docker.
 
 #### Automatically
 
-- `yarn localenv` sets up *everything* 
-- use `./setupLocal.sh` to deploy all contracts. Add the optional `-f` or `--fixture` flag to also run the fixture scripts to tokenize one IPNFT or `-fx` to create two crowdsale instances. 
+- `yarn localenv` sets up _everything_
+- use `./setupLocal.sh` to deploy all contracts. Add the optional `-f` or `--fixture` flag to also run the fixture scripts to tokenize one IPNFT or `-fx` to create two crowdsale instances.
 
 #### Manual
 

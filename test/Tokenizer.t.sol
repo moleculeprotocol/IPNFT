@@ -2,11 +2,9 @@
 pragma solidity ^0.8.18;
 
 import "forge-std/Test.sol";
-import { console } from "forge-std/console.sol";
 
 import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
-import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import { SafeERC20Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 
 import { Safe } from "safe-global/safe-contracts/Safe.sol";
@@ -19,14 +17,13 @@ import { AcceptAllAuthorizer } from "./helpers/AcceptAllAuthorizer.sol";
 import { FakeERC20 } from "../src/helpers/FakeERC20.sol";
 import { MustControlIpnft, AlreadyTokenized, Tokenizer, ZeroAddress, IPTNotControlledByTokenizer } from "../src/Tokenizer.sol";
 
-import { IPToken, TokenCapped, Metadata as TokenMetadata } from "../src/IPToken.sol";
+import { Metadata as TokenMetadata } from "../src/IIPToken.sol";
+import { IPToken, TokenCapped } from "../src/IPToken.sol";
 import { IControlIPTs } from "../src/IControlIPTs.sol";
-import { Molecules } from "../src/helpers/test-upgrades/Molecules.sol";
-import { Synthesizer } from "../src/helpers/test-upgrades/Synthesizer.sol";
 import { IPermissioner, BlindPermissioner } from "../src/Permissioner.sol";
 
 contract GovernorOfTheFuture is IControlIPTs {
-    function controllerOf(uint256) external view override returns (address) {
+    function controllerOf(uint256) external pure override returns (address) {
         return address(0); //no one but me controls IPTs!
     }
 
@@ -221,7 +218,7 @@ contract TokenizerTest is Test {
     function testCannotBypassModifiersWithFakeTokens() public {
         address attacker = makeAddr("attacker");
         vm.startPrank(originalOwner);
-        IPToken realTokenContract = tokenizer.tokenizeIpnft(1, 100_000, "IPT", agreementCid, "");
+        tokenizer.tokenizeIpnft(1, 100_000, "IPT", agreementCid, "");
 
         vm.startPrank(attacker);
         IPToken fakeIpt = new FakeIPT(1);
@@ -296,5 +293,26 @@ contract TokenizerTest is Test {
 
         vm.expectRevert(MustControlIpnft.selector);
         htokenizer.issue(tokenContract, 50_000, bob);
+    }
+
+    function testPreviousOwnerCannotIssueTokensAfterIPNFTTransfer() public {
+        vm.startPrank(originalOwner);
+        IPToken tokenContract = tokenizer.tokenizeIpnft(1, 100_000, "IPT", agreementCid, "");
+
+        // Original owner can initially issue tokens
+        tokenContract.issue(alice, 50_000);
+        assertEq(tokenContract.balanceOf(alice), 50_000);
+
+        // Transfer IPNFT to bob
+        ipnft.transferFrom(originalOwner, bob, 1);
+
+        // Original owner can no longer issue tokens
+        vm.expectRevert(MustControlIpnft.selector);
+        tokenContract.issue(alice, 25_000);
+
+        // But new owner (bob) can issue tokens
+        vm.startPrank(bob);
+        tokenContract.issue(alice, 25_000);
+        assertEq(tokenContract.balanceOf(alice), 75_000);
     }
 }

@@ -1,17 +1,18 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.18;
 
-import "forge-std/Script.sol";
-import "forge-std/console.sol";
-import { IPNFT } from "../src/IPNFT.sol";
-import { Tokenizer } from "../src/Tokenizer.sol";
-import { IPToken } from "../src/IPToken.sol";
-import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import { BioPriceFeed } from "../src/BioPriceFeed.sol";
+import { IPNFT } from "../src/IPNFT.sol";
+import { IPToken } from "../src/IPToken.sol";
 import { IPermissioner, TermsAcceptedPermissioner } from "../src/Permissioner.sol";
+
+import { TimelockedToken } from "../src/TimelockedToken.sol";
+import { Tokenizer } from "../src/Tokenizer.sol";
 import { CrowdSale } from "../src/crowdsale/CrowdSale.sol";
 import { StakedLockingCrowdSale } from "../src/crowdsale/StakedLockingCrowdSale.sol";
-import { TimelockedToken } from "../src/TimelockedToken.sol";
+import { ERC1967Proxy } from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+import "forge-std/Script.sol";
+import "forge-std/console.sol";
 
 contract DeployTokenizerInfrastructure is Script {
     function run() public {

@@ -1,18 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.18;
 
-import { ERC20BurnableUpgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20BurnableUpgradeable.sol";
-import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
-import { Base64 } from "@openzeppelin/contracts/utils/Base64.sol";
-import { Tokenizer, MustControlIpnft } from "./Tokenizer.sol";
 import { IControlIPTs } from "./IControlIPTs.sol";
-
-struct Metadata {
-    uint256 ipnftId;
-    address originalOwner;
-    string agreementCid;
-}
+import { IIPToken, Metadata } from "./IIPToken.sol";
+import { MustControlIpnft, Tokenizer } from "./Tokenizer.sol";
+import { IPTokenUtils } from "./libraries/IPTokenUtils.sol";
+import { OwnableUpgradeable } from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import { ERC20Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
+import { ERC20BurnableUpgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20BurnableUpgradeable.sol";
 
 error TokenCapped();
 
@@ -24,7 +19,7 @@ error TokenCapped();
  *         The owner can increase the token supply as long as it's not explicitly capped.
  * @dev formerly known as "molecules"
  */
-contract IPToken is ERC20BurnableUpgradeable, OwnableUpgradeable {
+contract IPToken is IIPToken, ERC20Upgradeable, ERC20BurnableUpgradeable, OwnableUpgradeable {
     event Capped(uint256 atSupply);
 
     /// @notice the amount of tokens that ever have been issued (not necessarily == supply)
@@ -35,12 +30,12 @@ contract IPToken is ERC20BurnableUpgradeable, OwnableUpgradeable {
 
     Metadata internal _metadata;
 
-    function initialize(uint256 ipnftId, string calldata name, string calldata symbol, address originalOwner, string memory agreementCid)
+    function initialize(uint256 ipnftId, string calldata name_, string calldata symbol_, address originalOwner, string memory agreementCid)
         external
         initializer
     {
         __Ownable_init();
-        __ERC20_init(name, symbol);
+        __ERC20_init(name_, symbol_);
         _metadata = Metadata({ ipnftId: ipnftId, originalOwner: originalOwner, agreementCid: agreementCid });
     }
 
@@ -55,8 +50,45 @@ contract IPToken is ERC20BurnableUpgradeable, OwnableUpgradeable {
         _;
     }
 
-    function metadata() external view returns (Metadata memory) {
+    function metadata() external view override returns (Metadata memory) {
         return _metadata;
+    }
+
+    // Override ERC20 functions to resolve diamond inheritance
+    function totalSupply() public view override returns (uint256) {
+        return ERC20Upgradeable.totalSupply();
+    }
+
+    function balanceOf(address account) public view override returns (uint256) {
+        return ERC20Upgradeable.balanceOf(account);
+    }
+
+    function transfer(address to, uint256 amount) public override returns (bool) {
+        return ERC20Upgradeable.transfer(to, amount);
+    }
+
+    function allowance(address owner, address spender) public view override returns (uint256) {
+        return ERC20Upgradeable.allowance(owner, spender);
+    }
+
+    function approve(address spender, uint256 amount) public override returns (bool) {
+        return ERC20Upgradeable.approve(spender, amount);
+    }
+
+    function transferFrom(address from, address to, uint256 amount) public override returns (bool) {
+        return ERC20Upgradeable.transferFrom(from, to, amount);
+    }
+
+    function name() public view override returns (string memory) {
+        return ERC20Upgradeable.name();
+    }
+
+    function symbol() public view override returns (string memory) {
+        return ERC20Upgradeable.symbol();
+    }
+
+    function decimals() public view override returns (uint8) {
+        return ERC20Upgradeable.decimals();
     }
 
     /**
@@ -64,7 +96,7 @@ contract IPToken is ERC20BurnableUpgradeable, OwnableUpgradeable {
      * @param receiver address
      * @param amount uint256
      */
-    function issue(address receiver, uint256 amount) external onlyTokenizerOrIPNFTController {
+    function issue(address receiver, uint256 amount) external override onlyTokenizerOrIPNFTController {
         if (capped) {
             revert TokenCapped();
         }
@@ -75,7 +107,7 @@ contract IPToken is ERC20BurnableUpgradeable, OwnableUpgradeable {
     /**
      * @notice mark this token as capped. After calling this, no new tokens can be `issue`d
      */
-    function cap() external onlyTokenizerOrIPNFTController {
+    function cap() external override onlyTokenizerOrIPNFTController {
         capped = true;
         emit Capped(totalIssued);
     }
@@ -84,37 +116,7 @@ contract IPToken is ERC20BurnableUpgradeable, OwnableUpgradeable {
      * @notice contract metadata, compatible to ERC1155
      * @return string base64 encoded data url
      */
-    function uri() external view returns (string memory) {
-        string memory tokenId = Strings.toString(_metadata.ipnftId);
-
-        string memory props = string.concat(
-            '"properties": {',
-            '"ipnft_id": ',
-            tokenId,
-            ',"agreement_content": "ipfs://',
-            _metadata.agreementCid,
-            '","original_owner": "',
-            Strings.toHexString(_metadata.originalOwner),
-            '","erc20_contract": "',
-            Strings.toHexString(address(this)),
-            '","supply": "',
-            Strings.toString(totalIssued),
-            '"}'
-        );
-
-        return string.concat(
-            "data:application/json;base64,",
-            Base64.encode(
-                bytes(
-                    string.concat(
-                        '{"name": "IP Tokens of IPNFT #',
-                        tokenId,
-                        '","description": "IP Tokens, derived from IP-NFTs, are ERC-20 tokens governing IP pools.","decimals": 18,"external_url": "https://molecule.to","image": "",',
-                        props,
-                        "}"
-                    )
-                )
-            )
-        );
+    function uri() external view override returns (string memory) {
+        return IPTokenUtils.generateURI(_metadata, address(this), totalIssued);
     }
 }
