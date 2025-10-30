@@ -193,12 +193,12 @@
         "internalType": "uint256"
       },
       {
-        "name": "name",
+        "name": "name_",
         "type": "string",
         "internalType": "string"
       },
       {
-        "name": "symbol",
+        "name": "symbol_",
         "type": "string",
         "internalType": "string"
       },

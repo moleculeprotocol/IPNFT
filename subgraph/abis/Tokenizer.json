@@ -6,6 +6,40 @@
   },
   {
     "type": "function",
+    "name": "attachIpt",
+    "inputs": [
+      {
+        "name": "ipnftId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "agreementCid",
+        "type": "string",
+        "internalType": "string"
+      },
+      {
+        "name": "signedAgreement",
+        "type": "bytes",
+        "internalType": "bytes"
+      },
+      {
+        "name": "tokenContract",
+        "type": "address",
+        "internalType": "contract IERC20Metadata"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "contract IIPToken"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "cap",
     "inputs": [
       {
@@ -147,6 +181,11 @@
     "name": "reinit",
     "inputs": [
       {
+        "name": "_wrappedIpTokenImplementation",
+        "type": "address",
+        "internalType": "contract WrappedIPToken"
+      },
+      {
         "name": "_ipTokenImplementation",
         "type": "address",
         "internalType": "contract IPToken"
@@ -177,6 +216,19 @@
   },
   {
     "type": "function",
+    "name": "setWrappedIPTokenImplementation",
+    "inputs": [
+      {
+        "name": "_wrappedIpTokenImplementation",
+        "type": "address",
+        "internalType": "contract WrappedIPToken"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "synthesized",
     "inputs": [
       {
@@ -189,7 +241,7 @@
       {
         "name": "",
         "type": "address",
-        "internalType": "contract IPToken"
+        "internalType": "contract IIPToken"
       }
     ],
     "stateMutability": "view"
@@ -278,6 +330,19 @@
     "stateMutability": "payable"
   },
   {
+    "type": "function",
+    "name": "wrappedTokenImplementation",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "contract WrappedIPToken"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
     "type": "event",
     "name": "AdminChanged",
     "inputs": [
@@ -317,13 +382,13 @@
         "name": "old",
         "type": "address",
         "indexed": true,
-        "internalType": "contract IPToken"
+        "internalType": "contract IIPToken"
       },
       {
         "name": "_new",
         "type": "address",
         "indexed": true,
-        "internalType": "contract IPToken"
+        "internalType": "contract IIPToken"
       }
     ],
     "anonymous": false
@@ -375,6 +440,25 @@
         "type": "address",
         "indexed": true,
         "internalType": "contract IPermissioner"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "TokenWrapped",
+    "inputs": [
+      {
+        "name": "tokenContract",
+        "type": "address",
+        "indexed": false,
+        "internalType": "contract IERC20Metadata"
+      },
+      {
+        "name": "wrappedIpt",
+        "type": "address",
+        "indexed": false,
+        "internalType": "contract IIPToken"
       }
     ],
     "anonymous": false
@@ -448,6 +532,25 @@
     "anonymous": false
   },
   {
+    "type": "event",
+    "name": "WrappedIPTokenImplementationUpdated",
+    "inputs": [
+      {
+        "name": "old",
+        "type": "address",
+        "indexed": true,
+        "internalType": "contract WrappedIPToken"
+      },
+      {
+        "name": "_new",
+        "type": "address",
+        "indexed": true,
+        "internalType": "contract WrappedIPToken"
+      }
+    ],
+    "anonymous": false
+  },
+  {
     "type": "error",
     "name": "AlreadyTokenized",
     "inputs": []
@@ -455,6 +558,16 @@
   {
     "type": "error",
     "name": "IPTNotControlledByTokenizer",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidTokenContract",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidTokenDecimals",
     "inputs": []
   },
   {
