@@ -6,7 +6,7 @@
       {
         "name": "tokenContract",
         "type": "address",
-        "internalType": "contract IPToken"
+        "internalType": "contract IIPToken"
       },
       {
         "name": "_for",
@@ -29,7 +29,7 @@
       {
         "name": "tokenContract",
         "type": "address",
-        "internalType": "contract IPToken"
+        "internalType": "contract IIPToken"
       },
       {
         "name": "signer",
@@ -94,7 +94,7 @@
       {
         "name": "tokenContract",
         "type": "address",
-        "internalType": "contract IPToken"
+        "internalType": "contract IIPToken"
       }
     ],
     "outputs": [

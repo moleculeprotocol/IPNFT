@@ -1,13 +1,38 @@
-import { json, Bytes, dataSource, log  } from '@graphprotocol/graph-ts'
+import { json, Bytes, dataSource, log, JSONValue  } from '@graphprotocol/graph-ts'
 import { IpnftMetadata } from '../generated/schema'
 
 export function handleMetadata(content: Bytes): void {
-  const value = json.fromBytes(content).toObject()
-  if (value) {
-    const image = value.get('image')
-    const name = value.get('name')
-    const description = value.get('description')
-    const externalURL = value.get('external_url')
+  // Validate that content is not empty
+  if (content.length == 0) {
+    log.warning('[handleMetadata] Empty content received for {}', [dataSource.stringParam()])
+    return
+  }
+
+  // Check if content looks like JSON (starts with { or [)
+  if (content[0] != 123 && content[0] != 91) { // 123 = '{', 91 = '['
+    log.warning('[handleMetadata] Content does not appear to be JSON for {}. First bytes: {}', [
+      dataSource.stringParam(),
+      content.toHexString().slice(0, 20)
+    ])
+    return
+  }
+
+  // Try to parse JSON with error handling
+  let value = json.try_fromBytes(content)
+  if (value.isError) {
+    log.error('[handleMetadata] Failed to parse JSON for {}: {}', [
+      dataSource.stringParam(),
+      value.value.toString()
+    ])
+    return
+  }
+  
+  let parsedValue = value.value.toObject()
+  if (parsedValue) {
+    const image = parsedValue.get('image')
+    const name = parsedValue.get('name')
+    const description = parsedValue.get('description')
+    const externalURL = parsedValue.get('external_url')
     
     let ipnftMetadata = new IpnftMetadata(dataSource.stringParam())
     
@@ -22,7 +47,7 @@ export function handleMetadata(content: Bytes): void {
       log.info("[handlemetadata] name, image, description, external_url not found", [])
     }
     
-    let _properties = value.get('properties')
+    let _properties = parsedValue.get('properties')
     if (_properties) {
       let properties = _properties.toObject()
       let _initial_symbol = properties.get('initial_symbol')
