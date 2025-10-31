@@ -1,9 +1,0 @@
-{
-  "name": "@moleculeprotocol/web3-actions",
-  "private": true,
-  "scripts": {},
-  "dependencies": {
-    "@tenderly/actions": "^0.2.0",
-    "axios": "^1.4.0"
-  }
-}
