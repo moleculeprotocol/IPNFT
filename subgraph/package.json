@@ -8,8 +8,8 @@
     "build:sepolia": "graph codegen && graph build --network sepolia",
     "build:mainnet": "graph codegen && graph build --network mainnet",
     "deploy:local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 moleculeprotocol/ipnft-subgraph",
-    "deploy:sepolia": "env-cmd -x -f ../.env goldsky subgraph deploy ip-nft-sepolia/v1.3.2 --from-ipfs-hash \\$IPFS_HASH --ipfs-gateway https://ipfs.satsuma.xyz --deploy-key \\$SATSUMA_DEPLOY_KEY",
-    "deploy:mainnet": "env-cmd -x -f ../.env goldsky subgraph deploy ip-nft-mainnet/v1.3.2 --from-ipfs-hash \\$IPFS_HASH --ipfs-gateway https://ipfs.satsuma.xyz --deploy-key \\$SATSUMA_DEPLOY_KEY",
+    "deploy:sepolia": "env-cmd -x -f ../.env goldsky subgraph deploy ip-nft-sepolia/1.3.2 --from-ipfs-hash \\$IPFS_HASH --ipfs-gateway https://ipfs.satsuma.xyz --deploy-key \\$SATSUMA_DEPLOY_KEY",
+    "deploy:mainnet": "env-cmd -x -f ../.env goldsky subgraph deploy ip-nft-mainnet/1.3.2 --from-ipfs-hash \\$IPFS_HASH --ipfs-gateway https://ipfs.satsuma.xyz --deploy-key \\$SATSUMA_DEPLOY_KEY",
     "create:local": "graph create --node http://localhost:8020/ moleculeprotocol/ipnft-subgraph",
     "remove:local": "graph remove --node http://localhost:8020/ moleculeprotocol/ipnft-subgraph",
     "test": "graph test"
