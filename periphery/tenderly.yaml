@@ -1,30 +1,14 @@
 account_id: ''
-project_slug: ''
 actions:
-  moleculeprotocol/project:
+  tech_prod/catalyst:
     runtime: v2
-    sources: tenderly
+    sources: tenderly-actions
     specs:
-      BidEventGoerli:
-        description: BidEvent on Goerli StakedLockingCrowdSale contract
-        function: dune:triggerDuneQuery
-        trigger:
-          type: transaction
-          transaction:
-            filters:
-              - eventEmitted:
-                  contract:
-                    address: 0x46c3369dEce07176Ad7164906D3593AA4C126d35
-                  name: Bid
-                network: 5
-            status:
-              - mined
-        execution_type: ''
-      BidEventMainnet:
+      bideventmainnet:
         description: BidEvent on Mainnet StakedLockingCrowdSale contract
+        execution_type: ''
         function: dune:triggerDuneQuery
         trigger:
-          type: transaction
           transaction:
             filters:
               - eventEmitted:
@@ -34,5 +18,49 @@ actions:
                 network: 1
             status:
               - mined
+          type: transaction
+      bideventsepolia:
+        description: BidEvent on Sepolia StakedLockingCrowdSale contract
         execution_type: ''
-
+        function: dune:triggerDuneQuery
+        trigger:
+          transaction:
+            filters:
+              - eventEmitted:
+                  contract:
+                    address: 0xd1cE2EA7d3b0C9cAB025A4aD762FC00315141ad7
+                  name: Bid
+                network: 11155111
+            status:
+              - mined
+          type: transaction
+      plainbideventmainnet:
+        description: BidEvent on Mainnet PlainCrowdsale contract
+        execution_type: ''
+        function: dune:triggerDuneQuery
+        trigger:
+          transaction:
+            filters:
+              - eventEmitted:
+                  contract:
+                    address: 0xf0a8d23f38e9cbbe01c4ed37f23bd519b65bc6c2
+                  name: Bid
+                network: 1
+            status:
+              - mined
+          type: transaction
+      plainbideventsepolia:
+        description: BidEvent on Sepolia PlainCrowdsale contract
+        execution_type: ''
+        function: dune:triggerDuneQuery
+        trigger:
+          transaction:
+            filters:
+              - eventEmitted:
+                  contract:
+                    address: 0x8cA737E2cdaE1Ceb332bEf7ba9eA711a3a2f8037
+                  name: Bid
+                network: 11155111
+            status:
+              - mined
+          type: transaction
